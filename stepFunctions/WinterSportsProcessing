@@ -1,0 +1,171 @@
+{
+  "Comment": "Winter Sports Resort Processing Workflow",
+  "StartAt": "Initialize_Parameters",
+  "States": {
+    "Initialize_Parameters": {
+      "Type": "Pass",
+      "Comment": "Initialize parameters with defaults",
+      "Parameters": {
+        "input.$": "$",
+        "defaults": {
+          "country": "US",
+          "resort_name": "",
+          "params": {
+            "limit": 50
+          }
+        }
+      },
+      "Next": "Set_Country"
+    },
+    "Set_Country": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.input.country",
+          "IsPresent": true,
+          "Next": "Set_Resort_Name"
+        }
+      ],
+      "Default": "Set_Default_Country"
+    },
+    "Set_Default_Country": {
+      "Type": "Pass",
+      "Parameters": {
+        "input": {
+          "country.$": "$.defaults.country",
+          "resort_name.$": "$.input.resort_name"
+        },
+        "defaults.$": "$.defaults"
+      },
+      "Next": "Set_Resort_Name"
+    },
+    "Set_Resort_Name": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.input.resort_name",
+          "IsPresent": true,
+          "Next": "Prepare_Query"
+        }
+      ],
+      "Default": "Set_Empty_Resort_Name"
+    },
+    "Set_Empty_Resort_Name": {
+      "Type": "Pass",
+      "Parameters": {
+        "input": {
+          "country.$": "$.input.country",
+          "resort_name.$": "$.defaults.resort_name"
+        },
+        "defaults.$": "$.defaults"
+      },
+      "Next": "Prepare_Query"
+    },
+    "Prepare_Query": {
+      "Type": "Pass",
+      "Parameters": {
+        "country.$": "$.input.country",
+        "resort_name.$": "$.input.resort_name",
+        "params.$": "$.defaults.params"
+      },
+      "Next": "Query_OSM"
+    },
+    "Query_OSM": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "step1_query_osm",
+        "Payload": {
+          "country.$": "$.country",
+          "resort_name.$": "$.resort_name"
+        }
+      },
+      "ResultPath": "$.queryResult",
+      "Next": "Check_Elements_Exist"
+    },
+    "Check_Elements_Exist": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.queryResult.Payload.total",
+          "IsPresent": false,
+          "Next": "No_Results_Found"
+        },
+        {
+          "Variable": "$.queryResult.Payload.total",
+          "NumericEquals": 0,
+          "Next": "No_Results_Found"
+        },
+        {
+          "Variable": "$.queryResult.Payload.queueUrl",
+          "IsPresent": true,
+          "Next": "Start_Queue_Processing"
+        }
+      ],
+      "Default": "No_Results_Found"
+    },
+    "Start_Queue_Processing": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "process_resort_queue",
+        "Payload": {
+          "queueUrl.$": "$.queryResult.Payload.queueUrl",
+          "totalResorts.$": "$.queryResult.Payload.total"
+        }
+      },
+      "ResultPath": "$.queueResult",
+      "Next": "Wait_For_Processing"
+    },
+    "Wait_For_Processing": {
+      "Type": "Wait",
+      "Seconds": 10,
+      "Next": "Check_Queue_Status"
+    },
+    "Check_Queue_Status": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "check_queue_status",
+        "Payload": {
+          "queueUrl.$": "$.queryResult.Payload.queueUrl"
+        }
+      },
+      "ResultPath": "$.queueStatus",
+      "Next": "Evaluate_Queue_Status"
+    },
+    "Evaluate_Queue_Status": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.queueStatus.Payload.isEmpty",
+          "BooleanEquals": true,
+          "Next": "Export_Results"
+        }
+      ],
+      "Default": "Wait_For_Processing"
+    },
+    "Export_Results": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "step4_download_resort_data",
+        "Payload": {
+          "country.$": "$.country",
+          "resort_name.$": "$.resort_name",
+          "processed_count.$": "$.queueStatus.Payload.processedCount"
+        }
+      },
+      "ResultPath": "$.exportResult",
+      "Next": "Success"
+    },
+    "No_Results_Found": {
+      "Type": "Fail",
+      "Error": "NoResultsFound",
+      "Cause": "No winter sports areas found for the given parameters"
+    },
+    "Success": {
+      "Type": "Succeed"
+    }
+  }
+}

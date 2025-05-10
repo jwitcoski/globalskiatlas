@@ -1,0 +1,53 @@
+<h2>AWS Architecture for Ski Resort Atlas</h2>
+<p class="blog-date">December 15, 2024</p>
+
+<div class="blog-content">
+    <div class="image main">
+        <img src="images/AtlasArchitecture.jpg" alt="AWS Architecture Diagram for Ski Resort Atlas" />
+    </div>
+    
+    <h3>Serverless Architecture Overview</h3>
+    <p>The Global Ski Atlas leverages a sophisticated serverless AWS architecture to collect, process, and serve data about ski resorts worldwide. This architecture minimizes operational overhead while providing scalability and reliability.</p>
+    
+    <h3>Data Ingestion Pipeline</h3>
+    <p>The left side of the diagram shows our data ingestion pipeline, which starts with OpenStreetMap data and processes it through a series of AWS Lambda functions orchestrated by Step Functions:</p>
+    <ul>
+        <li><strong>step1_query_osm</strong>: Fetches winter sports areas from OpenStreetMap</li>
+        <li><strong>process_resort_queue</strong>: Distributes processing work through SQS</li>
+        <li><strong>check_queue_status</strong>: Monitors processing progress</li>
+        <li><strong>step4_download_resort_data</strong>: Consolidates processed resort data</li>
+    </ul>
+    
+    <h3>Data Storage</h3>
+    <p>The processed resort data is stored in two primary locations:</p>
+    <ul>
+        <li><strong>DynamoDB</strong>: Stores resort metadata and statistics for fast retrieval</li>
+        <li><strong>S3 Bucket</strong>: Stores larger resort assets like map files and images</li>
+    </ul>
+    
+    <h3>API Layer</h3>
+    <p>The center of the diagram shows our API layer, which consists of two primary API Gateway endpoints:</p>
+    <ul>
+        <li><strong>Resort Selection API</strong>: Provides endpoints for fetching countries, states, and resorts</li>
+        <li><strong>AI Description API</strong>: Generates natural language descriptions of resorts using Amazon AI services</li>
+    </ul>
+    
+    <h3>User Interface</h3>
+    <p>The right side shows how the browser interacts with our architecture:</p>
+    <ul>
+        <li><strong>resortSelector.js</strong>: Handles the dropdown selection interface</li>
+        <li><strong>aiWriter.js</strong>: Manages AI description generation and display</li>
+        <li><strong>Map Visualization</strong>: Renders resort boundaries, lifts, and trails</li>
+    </ul>
+    
+    <h3>Future Enhancements</h3>
+    <p>In upcoming releases, we plan to enhance the architecture with:</p>
+    <ul>
+        <li>Real-time weather data integration</li>
+        <li>User accounts and saved favorites</li>
+        <li>Advanced filtering options for resort selection</li>
+        <li>Mobile app with offline map capabilities</li>
+    </ul>
+    
+    <p>This serverless architecture has allowed us to create a powerful, scalable application without managing servers, while keeping operational costs proportional to actual usage.</p>
+</div> 

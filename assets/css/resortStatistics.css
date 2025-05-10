@@ -1,0 +1,93 @@
+/* Resort Statistics Styles - Update to remove the close button and make always visible */
+#resort-stats-container {
+    background-color: rgba(30, 35, 50, 0.95);
+    border-radius: 5px;
+    padding: 15px;
+    color: #fff;
+    margin-top: 20px;
+}
+
+.statistics-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+/* Remove the close button */
+.close-stats {
+    display: none;
+}
+
+.chart-container {
+    background-color: #ffffff;
+    border-radius: 5px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.chart-container h3 {
+    color: #333;
+    margin-top: 0;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.stat-box {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+    padding: 10px;
+    text-align: center;
+}
+
+.stat-icon {
+    font-size: 24px;
+    margin-bottom: 5px;
+}
+
+.stat-label {
+    font-size: 12px;
+    margin-bottom: 3px;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.stat-value {
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.lift-types {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+    padding: 15px;
+}
+
+.lift-types h3 {
+    margin-top: 0;
+}
+
+.lift-types ul {
+    columns: 2;
+    list-style-type: none;
+    padding-left: 0;
+}
+
+.lift-types li {
+    margin-bottom: 5px;
+    text-transform: capitalize;
+}
+
+@media (max-width: 700px) {
+    .stats-grid {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    }
+    
+    .lift-types ul {
+        columns: 1;
+    }
+} 

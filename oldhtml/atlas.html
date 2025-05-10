@@ -1,0 +1,90 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>Atlas - Global Ski Atlas</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<link rel="stylesheet" href="assets/css/main.css" />
+		<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
+	</head>
+	<body class="is-preload">
+		<div id="page-wrapper">
+
+			<!-- Header -->
+			<header include-html="assets/html/navmain.html"></header>
+
+			<!-- Main -->
+				<div id="main" class="wrapper style1">
+					<div class="container">
+						<header class="major">
+							<h2>Ski Resort Atlas</h2>
+							<p id="resort-count">Explore our ski resorts worldwide</p>
+						</header>
+
+						<!-- Content -->
+							<section id="content">
+								<a href="#" class="image fit"><img src="images/atlas_map.jpg" alt="Ski Resort Map" /></a>
+								<h3>Interactive Ski Resort Map</h3>
+								<p>Welcome to our comprehensive ski resort atlas, featuring detailed information on over 500 ski resorts across North America and beyond. Use the interactive map and filters below to explore resorts by location, size, difficulty level, and amenities.</p>
+								
+								<div id="map-container">
+									<!-- Interactive map will be inserted here via JavaScript -->
+									<p>Loading interactive map...</p>
+								</div>
+								
+								<div class="filter-container">
+									<div class="filter-section">
+										<h4>Resort Selection</h4>
+										<div class="resort-selector">
+											<select id="continentSelect">
+												<option value="">Select a continent</option>
+											</select>
+											<select id="countrySelect" disabled>
+												<option value="">Select a country</option>
+											</select>
+											<select id="stateSelect" disabled>
+												<option value="">Select a state</option>
+											</select>
+											<select id="resortSelect" disabled>
+												<option value="">Select a ski resort</option>
+											</select>
+											<button id="goButton" class="button primary">Go</button>
+										</div>
+										<div id="thumbnailContainer">
+											<img id="thumbnailImage" alt="Ski Resort Map">
+											<div id="noMapMessage">No Map Available Yet</div>
+										</div>
+									</div>
+								</div>
+								
+								<div id="resort-results">
+									<!-- Resort results will be displayed here -->
+									<p>Select a resort above to view details</p>
+								</div>
+							</section>
+
+					</div>
+				</div>
+
+			<!-- Footer -->
+			<footer include-html="assets/html/footer.html"></footer>
+
+		</div>
+
+		<!-- Scripts -->
+			<script src="assets/js/includeHTML.js"></script>
+			<script src="assets/js/jquery.min.js"></script>
+			<script src="assets/js/jquery.scrolly.min.js"></script>
+			<script src="assets/js/jquery.dropotron.min.js"></script>
+			<script src="assets/js/jquery.scrollex.min.js"></script>
+			<script src="assets/js/browser.min.js"></script>
+			<script src="assets/js/breakpoints.min.js"></script>
+			<script src="assets/js/util.js"></script>
+			<script src="assets/js/main.js"></script>
+			<script src="assets/js/showThumbnail.js"></script>
+			<script src="assets/js/fetchResortData.js"></script>
+			<script src="assets/js/populateDropdowns.js"></script>
+			<script src="assets/js/atlas.js"></script>
+
+	</body>
+</html> 

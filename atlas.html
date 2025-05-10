@@ -1,0 +1,319 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>Ski Resort Atlas</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		
+		<!-- Load CSS in the correct order -->
+		<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+		<link rel="stylesheet" href="assets/css/main.css" />
+		<link rel="stylesheet" href="assets/css/noscript.css" />
+		<link rel="stylesheet" href="assets/css/map/map.css" />
+		<link rel="stylesheet" href="assets/css/resortStatistics.css" />
+		<link rel="stylesheet" href="assets/css/atlaspage.css" />
+		<link rel="stylesheet" href="assets/css/aiWriter.css" />
+		
+		<!-- Load scripts -->
+		<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+		<script src="https://d3js.org/d3.v6.min.js"></script>
+		<script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
+	</head>
+	<body class="is-preload">
+		<div id="page-wrapper">
+
+			<!-- Header -->
+				<header include-html="assets/html/navmain.html"></header>
+
+			<!-- Main -->
+				<div id="main" class="wrapper style1">
+					<div class="container">
+						<header class="major">
+							<h2>Interactive Ski Resort Map</h2>
+							<p>Explore resort boundaries, lifts, and terrain details</p>
+						</header>
+						
+						<!-- Add Resort Selection Filter -->
+						<section id="resort-selection">
+							<div class="filter-container">
+								<div class="filter-section">
+									<h4>Resort Selection</h4>
+									<div class="resort-selector">
+										<select id="countrySelect">
+											<option value="">Select a country</option>
+										</select>
+										<select id="stateSelect" disabled>
+											<option value="">Select a state</option>
+										</select>
+										<select id="resortSelect" disabled>
+											<option value="">Select a ski resort</option>
+										</select>
+										<button id="goButton" class="button primary">Go</button>
+									</div>
+								</div>
+							</div>
+						</section>
+						
+						<div class="row gtr-150">
+							<div class="col-8 col-12-medium">
+
+								<!-- Map Content -->
+									<section id="content" style="display: none;">
+										<div id="map-container">
+											<div class="north-arrow">⬆</div>
+											<!-- The map.js and mapLegend.js scripts will handle adding the legend and controls -->
+										</div>
+										
+										<h3>Resort Information</h3>
+										<p>Select a resort on the map to view detailed information.</p>
+									</section>
+
+								<!-- AI Description Section -->
+									<section id="ai-description" class="dark-section" style="display: none;">
+										<h4>AI-Generated Resort Description</h4>
+										<p class="ai-attribution">Powered by amazon.nova-micro-v1</p>
+										<div id="ai-output">
+											<p>This ski resort offers a variety of terrain for all skill levels. From gentle beginner slopes to challenging expert runs, visitors will find well-groomed trails and modern lift systems. The resort boasts impressive vertical drop and reliable snowfall, making it a favorite destination for winter sports enthusiasts. With panoramic mountain views and excellent facilities, it provides an exceptional alpine experience in a stunning natural setting.</p>
+										</div>
+										<div class="ai-controls">
+											<button id="generate-description" class="button small">Generate New Description</button>
+											<span id="ai-status" class="status-indicator"></span>
+										</div>
+									</section>
+
+							</div>
+							<div class="col-4 col-12-medium">
+
+								<!-- Sidebar - Resort Statistics -->
+									<section id="sidebar">
+										<section id="resort-stats-container" style="display: none;">
+											<div class="detailed-statistics-section">
+												<div class="statistics-header">
+													<h3>Resort Statistics</h3>
+												</div>
+												<div class="chart-container">
+													<div id="trail-chart" style="width: 100%; height: 250px;"></div>
+												</div>
+												<div class="stats-grid">
+													<!-- Statistics will be filled by the JavaScript -->
+												</div>
+												<div class="lift-types">
+													<h3>Lift Types</h3>
+													<ul>
+														<!-- Lift types will be filled by the JavaScript -->
+													</ul>
+												</div>
+											</div>
+										</section>
+									</section>
+
+							</div>
+						</div>
+					</div>
+				</div>
+
+			<!-- Footer -->
+				<footer include-html="assets/html/footer.html"></footer>
+
+		</div>
+
+		<!-- Scripts -->
+			<script src="assets/js/jquery.min.js"></script>
+			<script src="assets/js/jquery.scrolly.min.js"></script>
+			<script src="assets/js/jquery.dropotron.min.js"></script>
+			<script src="assets/js/jquery.scrollex.min.js"></script>
+			<script src="assets/js/browser.min.js"></script>
+			<script src="assets/js/breakpoints.min.js"></script>
+			<script src="assets/js/util.js"></script>
+			<script src="assets/js/main.js"></script>
+			
+			<!-- Map Scripts - Load only resortSelector.js initially -->
+			<script src="assets/js/map/resortSelector.js"></script>
+
+			<!-- Load other scripts dynamically when needed -->
+			<script>
+			function clearPreviousData() {
+				// Clear map container if it exists
+				if (window.map) {
+					window.map.remove();
+					window.map = null;
+				}
+				
+				// Reset statistics container
+				document.querySelector('.stats-grid').innerHTML = '';
+				document.querySelector('.lift-types ul').innerHTML = '';
+				
+				// Clear any charts
+				if (document.getElementById('trail-chart')) {
+					document.getElementById('trail-chart').innerHTML = '';
+				}
+				
+				// Reset AI description
+				if (document.getElementById('ai-output')) {
+					document.getElementById('ai-output').innerHTML = '<p>Select a resort to generate a description.</p>';
+				}
+				
+				// Clear AI prompt controls to prevent duplication
+				if (document.querySelector('.ai-controls')) {
+					// Keep only the generate button, remove any prompt selectors
+					const aiControls = document.querySelector('.ai-controls');
+					const generateButton = document.getElementById('generate-description');
+					const statusIndicator = document.getElementById('ai-status');
+					
+					// Clear the controls and re-add only the essential elements
+					aiControls.innerHTML = '';
+					if (generateButton) aiControls.appendChild(generateButton);
+					if (statusIndicator) aiControls.appendChild(statusIndicator);
+					
+					// Remove any prompt selector elements
+					const promptSelectors = document.querySelectorAll('.prompt-selector');
+					promptSelectors.forEach(selector => selector.remove());
+				}
+				
+				// Reset any other resort-specific elements
+				console.log('Cleared previous resort data');
+			}
+			
+			function loadMapScripts() {
+				// Clear previous data before loading new resort
+				clearPreviousData();
+				
+				// Remove any previously loaded map scripts to prevent variable redeclaration errors
+				const previousScripts = document.querySelectorAll('script[data-map-script]');
+				previousScripts.forEach(script => script.remove());
+				
+				// Only load these scripts after user selects a resort
+				const scripts = [
+					// First load the map style modules
+					'assets/js/map/mapstyles/styleFeature.js',
+					'assets/js/map/mapstyles/createForestTriangles.js',
+					'assets/js/map/mapstyles/addLabelsToMap.js',
+					'assets/js/map/mapstyles/addLiftStations.js',
+					'assets/js/map/mapstyles/addBoundaryLabels.js',
+					'assets/js/map/mapIntegration.js',
+					
+					// Then load the main map scripts
+					'assets/js/map/map.js',
+					'assets/js/map/mapLegend.js',
+					'assets/js/map/resortStatistics.js',
+					'assets/js/map/aiWriter.js'
+				];
+				
+				let loaded = 0;
+				scripts.forEach(src => {
+					const script = document.createElement('script');
+					script.src = src;
+					// Add data attribute to identify script as a map script
+					script.setAttribute('data-map-script', 'true');
+					script.onload = () => {
+						loaded++;
+						if (loaded === scripts.length) {
+							console.log('All map scripts loaded');
+							// After all scripts are loaded, trigger the init function
+							if (window.initMapWithResort && window.selectedResortId) {
+								window.initMapWithResort(window.selectedResortId);
+							}
+						}
+					};
+					document.body.appendChild(script);
+				});
+			}
+			</script>
+            
+            <!-- Architecture Info Popup -->
+            <div id="architecture-info" class="architecture-popup">
+                <div class="architecture-button">
+                    <button onclick="toggleArchitectureInfo()" class="button small">
+                        <span id="arch-button-text">Show AWS Architecture</span>
+                    </button>
+                </div>
+                <div id="architecture-content" class="architecture-content" style="display: none;">
+                    <h3>AWS Architecture for Ski Resort Atlas</h3>
+                    <div class="image main">
+                        <img src="images/AtlasArchitecture.jpg" alt="AWS Architecture Diagram for Ski Resort Atlas" />
+                    </div>
+                    
+                    <h4>Serverless Architecture Overview</h4>
+                    <p>The Global Ski Atlas leverages a sophisticated serverless AWS architecture to collect, process, and serve data about ski resorts worldwide.</p>
+                    
+                    <h4>Data Ingestion Pipeline</h4>
+                    <p>Resort data is collected from OpenStreetMap through a Step Functions workflow that orchestrates Lambda functions to process and store resort information.</p>
+                    
+                    <h4>API Layer</h4>
+                    <p>Two API Gateway endpoints serve the frontend:</p>
+                    <ul>
+                        <li>Resort Selection API: Provides dropdown menu data</li>
+                        <li>AI Description API: Generates resort descriptions</li>
+                    </ul>
+                    
+                    <p>For more details, visit our <a href="blog.html" onclick="localStorage.setItem('openBlogPost', 'atlas-architecture');">blog post</a> about the architecture.</p>
+                    
+                    <div class="architecture-close">
+                        <button onclick="toggleArchitectureInfo()" class="button small">Close</button>
+                    </div>
+                </div>
+            </div>
+            
+            <script>
+                function toggleArchitectureInfo() {
+                    const content = document.getElementById('architecture-content');
+                    const buttonText = document.getElementById('arch-button-text');
+                    
+                    if (content.style.display === 'none') {
+                        content.style.display = 'block';
+                        buttonText.textContent = 'Hide AWS Architecture';
+                    } else {
+                        content.style.display = 'none';
+                        buttonText.textContent = 'Show AWS Architecture';
+                    }
+                }
+            </script>
+            
+            <!-- Add CSS for the architecture popup -->
+            <style>
+                .architecture-popup {
+                    position: fixed;
+                    bottom: 20px;
+                    right: 20px;
+                    z-index: 1000;
+                }
+                
+                .architecture-button {
+                    text-align: right;
+                }
+                
+                .architecture-content {
+                    background-color: rgba(255, 255, 255, 0.95);
+                    border-radius: 8px;
+                    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+                    max-width: 800px;
+                    max-height: 80vh;
+                    overflow-y: auto;
+                    padding: 20px;
+                    margin-top: 10px;
+                }
+                
+                .architecture-content img {
+                    max-width: 100%;
+                    margin-bottom: 15px;
+                }
+                
+                .architecture-close {
+                    text-align: center;
+                    margin-top: 15px;
+                }
+                
+                @media screen and (max-width: 768px) {
+                    .architecture-popup {
+                        left: 10px;
+                        right: 10px;
+                        bottom: 10px;
+                    }
+                    
+                    .architecture-content {
+                        max-width: 100%;
+                    }
+                }
+            </style>
+	</body>
+</html> 

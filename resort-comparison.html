@@ -1,0 +1,1083 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>Ski Resort Size Comparison - Global Ski Atlas</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<link rel="stylesheet" href="assets/css/main.css" />
+		<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
+		
+		<!-- Added from compareskiareas.html -->
+		<meta name="google-adsense-account" content="ca-pub-4372859798489282">
+		<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4372859798489282"
+		 crossorigin="anonymous"></script>
+		<!-- Google tag (gtag.js) -->
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-KJGNL3KJL0"></script>
+		<script>
+		  window.dataLayer = window.dataLayer || [];
+		  function gtag(){dataLayer.push(arguments);}
+		  gtag('js', new Date());
+
+		  gtag('config', 'G-KJGNL3KJL0');
+		</script>
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+		<script src="https://d3js.org/d3.v7.min.js"></script>
+		
+		<style>
+			.content-wrapper {
+				display: flex;
+				gap: 20px;
+				margin-top: 20px;
+			}
+			.map-container {
+				flex: 1;
+				background-color: #f8f8f8;
+			}
+			svg {
+				display: block;
+				background-color: #f5f5f5;
+				border: 1px solid #ddd;
+				width: 100%;
+				height: auto;
+				shape-rendering: geometricPrecision;
+			}
+			.polygon {
+				stroke-width: 1;
+				vector-effect: non-scaling-stroke;
+			}
+			.trail-line {
+				vector-effect: non-scaling-stroke;
+			}
+			.resort-label {
+				pointer-events: none;
+			}
+			.controls {
+				width: 300px;
+				display: flex;
+				flex-direction: column;
+				gap: 15px;
+			}
+			/* Add search box styling */
+			.search-container {
+				position: relative;
+				margin-bottom: 10px;
+			}
+			.search-container input {
+				width: 100%;
+				padding: 8px 12px;
+				padding-left: 32px;
+				border: 1px solid #ddd;
+				border-radius: 4px;
+				font-size: 14px;
+			}
+			.search-icon {
+				position: absolute;
+				left: 10px;
+				top: 50%;
+				transform: translateY(-50%);
+				color: #888;
+			}
+			.no-results {
+				padding: 10px;
+				color: #666;
+				font-style: italic;
+				text-align: center;
+			}
+			.resort-list {
+				max-height: 500px;
+				overflow-y: auto;
+				border: 1px solid #ddd;
+				border-radius: 4px;
+				padding: 10px;
+			}
+			.resort-item {
+				display: flex;
+				align-items: center;
+				margin-bottom: 8px;
+			}
+			.resort-item input {
+				margin-right: 8px;
+			}
+			.color-indicator {
+				width: 16px;
+				height: 16px;
+				display: inline-block;
+				margin-right: 8px;
+				border-radius: 3px;
+			}
+			.control-buttons {
+				display: flex;
+				gap: 10px;
+			}
+			.resort-group.hidden {
+				display: none;
+			}
+			/* Make sure checkboxes are visible */
+			.resort-item input[type="checkbox"] {
+				display: inline-block !important;
+				visibility: visible !important;
+				opacity: 1 !important;
+				margin-right: 8px !important;
+				width: 16px !important;
+				height: 16px !important;
+				position: static !important;
+				-webkit-appearance: checkbox !important;
+				-moz-appearance: checkbox !important;
+				appearance: checkbox !important;
+				pointer-events: auto !important;
+				z-index: 100 !important;
+			}
+			/* Make sure labels are visible and properly positioned */
+			.resort-item label {
+				display: inline-block !important;
+				position: static !important;
+				padding-left: 0 !important;
+				margin-left: 0 !important;
+			}
+			/* Fix any template styling that might override checkbox appearance */
+			.controls button {
+				padding: 8px 12px;
+				border: 1px solid #ccc;
+				border-radius: 4px;
+				cursor: pointer;
+				flex: 1;
+			}
+			/* Add styles for citation section */
+			.citation-section {
+				margin-top: 40px;
+				padding-top: 20px;
+				border-top: 1px solid #ddd;
+				font-size: 14px;
+				color: #555;
+				text-align: center;
+			}
+			
+			.citation-section p {
+				margin-bottom: 10px;
+				line-height: 1.5;
+			}
+			
+			.license-info {
+				font-size: 12px;
+				margin-top: 15px;
+			}
+			
+			.citation-section a {
+				color: #0078A8;
+				text-decoration: none;
+			}
+			
+			.citation-section a:hover {
+				text-decoration: underline;
+			}
+			
+			@media (max-width: 768px) {
+				.content-wrapper {
+					flex-direction: column;
+				}
+				.controls {
+					width: 100%;
+				}
+			}
+			
+			/* Line styles - based on Lines.qml */
+			.ski-route {
+				stroke-width: 2px;
+				stroke-linecap: round;
+				stroke-linejoin: round;
+			}
+
+			.easy-route {
+				stroke: rgb(47, 154, 47);
+				stroke-width: 3px;
+			}
+
+			.intermediate-route {
+				stroke: rgb(0, 0, 255);
+				stroke-width: 3px;
+			}
+
+			.advanced-route {
+				stroke: rgb(0, 0, 0);
+				stroke-width: 3px;
+			}
+
+			.expert-route {
+				stroke: rgb(255, 0, 0);
+				stroke-width: 3px;
+			}
+
+			.freeride-route {
+				stroke: rgb(252, 84, 28);
+				stroke-opacity: 0.8;
+				stroke-width: 2.5px;
+				stroke-dasharray: 5, 3;
+			}
+
+			.snow-park {
+				stroke: rgb(252, 84, 28);
+				stroke-opacity: 0.5;
+				stroke-width: 2px;
+			}
+
+			.arrow-line {
+				marker-end: url(#arrow);
+			}
+
+			/* Point styles - based on Points.qml */
+			.peak {
+				fill: #808080;
+				stroke: #505050;
+				stroke-width: 0.2px;
+			}
+
+			.peak-label {
+				font-family: "Segoe UI", sans-serif;
+				font-size: 14px;
+				color: #323232;
+				text-anchor: middle;
+			}
+
+			.marker {
+				fill: rgba(255, 255, 255, 0.5);
+				stroke: #232323;
+				stroke-width: 0.5px;
+			}
+
+			/* Polygon styles - based on Polygons.qml */
+			.ski-resort-boundary {
+				fill: rgba(100, 149, 237, 0.1);
+				stroke: rgb(100, 149, 237);
+				stroke-width: 1.5px;
+				stroke-dasharray: 5, 3;
+			}
+
+			.parking-lot {
+				fill: rgba(128, 128, 128, 0.3);
+				stroke: #4d4d4d;
+				stroke-width: 0.5px;
+			}
+
+			.bare-rock {
+				fill: rgba(200, 200, 200, 0.8);
+				stroke: none;
+				background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><circle cx="5" cy="5" r="1" fill="rgb(50,50,50)"/></svg>');
+				background-size: 10px 10px;
+			}
+
+			.water {
+				fill: rgba(0, 120, 190, 0.7);
+				stroke: rgb(0, 120, 190);
+				stroke-width: 0.5px;
+			}
+
+			.forest {
+				fill: rgba(1, 3, 0, 0.5);
+			}
+
+			.scrub {
+				fill: rgba(200, 215, 195, 0.5);
+				background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"><circle cx="10" cy="10" r="3" fill="rgba(1,50,32,0.6)"/></svg>');
+				background-size: 20px 20px;
+			}
+
+			/* Outline styles - based on Outline.qml */
+			.outline {
+				fill: none;
+				stroke: #000;
+				stroke-width: 1px;
+				stroke-opacity: 0.8;
+			}
+
+			/* Arrow marker definition for use with line-arrow class */
+			/* Include this in your SVG defs section */
+			.svg-defs {
+				position: absolute;
+				width: 0;
+				height: 0;
+			}
+		</style>
+	</head>
+	<body class="is-preload">
+		<div id="page-wrapper">
+
+			<!-- Header -->
+			<header include-html="assets/html/navmain.html"></header>
+
+			<!-- Main -->
+			<div id="main" class="wrapper style1">
+				<div class="container">
+					<header class="major">
+						<h2>Ski Resort Size Comparison</h2>
+						<p>Compare ski resort sizes and trail layouts visually</p>
+					</header>
+
+					<!-- Content -->
+					<section id="content">
+						<p>Explore and compare the geographical sizes and layouts of ski resorts from around the world. Use the checkboxes to select which resorts you want to view and compare side-by-side.</p>
+						
+						<div class="content-wrapper">
+							<div class="map-container" id="map-container"></div>
+							<div class="controls">
+								<div class="control-buttons">
+									<button id="select-all">Select All</button>
+									<button id="deselect-all">Deselect All</button>
+								</div>
+								<div class="search-container">
+									<i class="fas fa-search search-icon"></i>
+									<input type="text" id="resort-search" placeholder="Search resorts...">
+								</div>
+								<div class="resort-list" id="resort-list">
+									<!-- Checkboxes will be added here -->
+								</div>
+							</div>
+						</div>
+						
+						<!-- Citation section -->
+						<div class="citation-section">
+							<p>All of these data and the background map are provided by OpenStreetMap, a free editable map of the whole world. It is made by people like you. 
+							They covered ski pistes with their GPS or their smartphones to record their track, others have used open satellite imagery.</p>
+							
+							<p><strong>Data, background map:</strong> ©OpenStreetMap.org & contributors</p>
+							
+							<p class="license-info">OpenStreetMap data is available under the <a href="https://www.openstreetmap.org/copyright" target="_blank">Open Database License</a>.</p>
+						</div>
+					</section>
+				</div>
+			</div>
+
+			<!-- Footer -->
+			<footer include-html="assets/html/footer.html"></footer>
+
+		</div>
+
+		<!-- Scripts -->
+		<script src="assets/js/jquery.min.js"></script>
+		<script src="assets/js/jquery.scrolly.min.js"></script>
+		<script src="assets/js/jquery.dropotron.min.js"></script>
+		<script src="assets/js/jquery.scrollex.min.js"></script>
+		<script src="assets/js/browser.min.js"></script>
+		<script src="assets/js/breakpoints.min.js"></script>
+		<script src="assets/js/util.js"></script>
+		<script src="assets/js/main.js"></script>
+		<script src="assets/js/includeHTML.js"></script>
+		
+		<!-- Ski resort comparison script -->
+		<script>
+			// SVG dimensions - increased for larger resorts
+			const width = 1200;
+			const height = 800;
+			const padding = 50;
+			
+			// Create SVG element with high-quality rendering
+			const svg = d3.create('svg')
+				.attr('width', width)
+				.attr('height', height)
+				.attr('viewBox', `0 0 ${width} ${height}`)
+				.attr('preserveAspectRatio', 'xMidYMid meet')
+				.style('shape-rendering', 'geometricPrecision');
+					
+			// Add a title that will be updated dynamically
+			const mapTitle = svg.append('text')
+				.attr('x', width / 2)
+				.attr('y', 30)
+				.attr('text-anchor', 'middle')
+				.style('font-size', '18px')
+				.style('font-weight', 'bold')
+				.text('Ski Resort Size Comparison');
+					
+			// Create a group for all resorts
+			const resortsGroup = svg.append('g')
+				.attr('transform', `translate(${padding}, ${height - padding})`)
+				.attr('id', 'resorts-group');
+					
+			// Create a resort list container
+			const resortList = d3.select('#resort-list');
+			
+			// Add auto-zoom toggle
+			const autoZoomToggle = d3.select('.controls')
+				.insert('div', ':first-child')
+				.style('margin-bottom', '10px')
+				.style('display', 'flex')
+				.style('align-items', 'center');
+				
+			autoZoomToggle.append('input')
+				.attr('type', 'checkbox')
+				.attr('id', 'auto-zoom-toggle')
+				.attr('checked', true)
+				.style('margin-right', '8px');
+				
+			autoZoomToggle.append('label')
+				.attr('for', 'auto-zoom-toggle')
+				.text('Auto-zoom to selected resorts');
+				
+			// Add offset toggle
+			const offsetToggle = d3.select('.controls')
+				.insert('div', ':first-child')
+				.style('margin-bottom', '10px')
+				.style('display', 'flex')
+				.style('align-items', 'center');
+				
+			offsetToggle.append('input')
+				.attr('type', 'checkbox')
+				.attr('id', 'offset-toggle')
+				.style('margin-right', '8px')
+				.on('change', applyOffsetToResorts);
+				
+			offsetToggle.append('label')
+				.attr('for', 'offset-toggle')
+				.text('Apply offset to separate overlapping resorts');
+			
+			// Color scale for the resorts
+			const colorScale = d3.scaleOrdinal(d3.schemeCategory10);
+			
+			// Define difficulty colors
+			const difficultyColors = {
+				'novice': '#008000',      // Green
+				'easy': '#008000',        // Green
+				'intermediate': '#0000FF', // Blue
+				'advanced': '#000000',    // Black
+				'expert': '#000000',      // Black
+				'freeride': '#FF0000'     // Red
+			};
+			
+			// Store resort data for zooming
+			let resortBounds = [];
+				
+			// Fetch the GeoJSON data for resort boundaries
+			fetch('https://raw.githubusercontent.com/jwitcoski/JSON/refs/heads/main/SkiPolygons.geojson')
+				.then(response => response.json())
+				.then(data => {
+					// Store resort data
+					const resortData = data;
+					
+					// Fetch the ski trail polygons data
+					fetch('https://raw.githubusercontent.com/jwitcoski/JSON/main/SkiTrailPolygons.geojson')
+						.then(response => response.json())
+						.then(trailPolygonData => {
+							// Fetch the ski trail lines data
+							fetch('https://raw.githubusercontent.com/jwitcoski/JSON/main/SkiTrailLines.geojson')
+								.then(response => response.json())
+								.then(trailLineData => {
+									// Sort resort features alphabetically by name
+									const sortedFeatures = [...resortData.features].sort((a, b) => {
+										return a.properties.name.localeCompare(b.properties.name);
+									});
+									
+									// Process and display all datasets with sorted features
+									displayResorts(sortedFeatures, trailPolygonData.features, trailLineData.features);
+									
+									// Set up select/deselect all buttons
+									setupControlButtons();
+									
+									// Initially select only 2 random resorts instead of all
+									selectRandomResorts(2);
+									
+									// Initial auto-zoom
+									setTimeout(autoZoomToSelection, 500);
+								})
+								.catch(error => console.error('Error fetching trail line data:', error));
+						})
+						.catch(error => console.error('Error fetching trail polygon data:', error));
+				})
+				.catch(error => console.error('Error fetching resort data:', error));
+			
+			function setupControlButtons() {
+				// Select all button
+				d3.select('#select-all').on('click', function() {
+					d3.selectAll('.resort-checkbox').property('checked', true);
+					d3.selectAll('.resort-group').classed('hidden', false);
+					updateMapTitle();
+					
+					// Apply offset if enabled, otherwise reset zoom
+					if (d3.select('#offset-toggle').property('checked')) {
+						applyOffsetToResorts();
+					} else {
+						resetZoom();
+					}
+				});
+				
+				// Deselect all button
+				d3.select('#deselect-all').on('click', function() {
+					d3.selectAll('.resort-checkbox').property('checked', false);
+					d3.selectAll('.resort-group').classed('hidden', true);
+					updateMapTitle();
+				});
+				
+				// Add search functionality
+				d3.select('#resort-search').on('input', function() {
+					const searchText = this.value.toLowerCase();
+					let visibleCount = 0;
+					
+					// Filter resort items
+					d3.selectAll('.resort-item').each(function() {
+						const resortName = d3.select(this).select('label').text().toLowerCase();
+						const isMatch = resortName.includes(searchText);
+						d3.select(this).style('display', isMatch ? 'flex' : 'none');
+						
+						if (isMatch) visibleCount++;
+					});
+					
+					// Show "no results" message if needed
+					const noResultsMsg = d3.select('.no-results');
+					if (visibleCount === 0 && searchText !== '') {
+						if (noResultsMsg.empty()) {
+							d3.select('#resort-list').append('div')
+								.attr('class', 'no-results')
+								.text('No resorts found');
+						}
+					} else {
+						noResultsMsg.remove();
+					}
+				});
+			}
+			
+			function autoZoomToSelection() {
+				// Check if auto-zoom is enabled
+				if (!d3.select('#auto-zoom-toggle').property('checked')) {
+					return;
+				}
+				
+				// Get all visible resorts
+				const visibleResorts = [];
+				d3.selectAll('.resort-checkbox').each(function(d, i) {
+					if (d3.select(this).property('checked')) {
+						visibleResorts.push(i);
+					}
+				});
+				
+				if (visibleResorts.length === 0) {
+					return; // No resorts selected
+				}
+				
+				// If offset is enabled, we need a different approach to calculate bounds
+				const useOffset = d3.select('#offset-toggle').property('checked');
+				
+				if (useOffset && visibleResorts.length > 1) {
+					// When using offset, we need to account for the grid layout
+					const offsetX = 50; // Same as in applyOffsetToResorts
+					const offsetY = 50;
+					
+					// Calculate how many rows and columns we need
+					const cols = Math.min(3, visibleResorts.length);
+					const rows = Math.ceil(visibleResorts.length / 3);
+					
+					// Find the overall bounds including offsets
+					let overallMinX = Infinity, overallMinY = Infinity;
+					let overallMaxX = -Infinity, overallMaxY = -Infinity;
+					
+					visibleResorts.forEach((resortIndex, i) => {
+						const bounds = resortBounds[resortIndex];
+						const row = Math.floor(i / 3);
+						const col = i % 3;
+						
+						// Adjust bounds by offset
+						const adjustedMinX = bounds.minX + (col * offsetX);
+						const adjustedMaxX = bounds.maxX + (col * offsetX);
+						const adjustedMinY = bounds.minY + (row * offsetY);
+						const adjustedMaxY = bounds.maxY + (row * offsetY);
+						
+						overallMinX = Math.min(overallMinX, adjustedMinX);
+						overallMinY = Math.min(overallMinY, adjustedMinY);
+						overallMaxX = Math.max(overallMaxX, adjustedMaxX);
+						overallMaxY = Math.max(overallMaxY, adjustedMaxY);
+					});
+					
+					// Add padding
+					const paddingFactor = 0.1;
+					const viewWidth = overallMaxX - overallMinX;
+					const viewHeight = overallMaxY - overallMinY;
+					overallMinX -= viewWidth * paddingFactor;
+					overallMaxX += viewWidth * paddingFactor;
+					overallMinY -= viewHeight * paddingFactor;
+					overallMaxY += viewHeight * paddingFactor;
+					
+					// Calculate scale
+					const scale = Math.min(
+						(width - 2 * padding) / (overallMaxX - overallMinX),
+						(height - 2 * padding) / (overallMaxY - overallMinY)
+					);
+					
+					// Apply transformation to the group containing all resorts
+					resortsGroup.transition()
+						.duration(750)
+						.attr('transform', `translate(${padding - overallMinX * scale}, ${height - padding - overallMinY * scale}) scale(${scale})`);
+					
+					// Update text sizes
+					d3.selectAll('.resort-label')
+						.style('font-size', `${12/scale}px`);
+				} else {
+					// Use the original zooming method for non-offset or single resort
+					// Calculate the bounds of visible resorts
+					let minX = Infinity, minY = Infinity;
+					let maxX = -Infinity, maxY = -Infinity;
+					
+					visibleResorts.forEach(index => {
+						const bounds = resortBounds[index];
+						minX = Math.min(minX, bounds.minX);
+						minY = Math.min(minY, bounds.minY);
+						maxX = Math.max(maxX, bounds.maxX);
+						maxY = Math.max(maxY, bounds.maxY);
+					});
+					
+					// Add some padding
+					const paddingFactor = 0.1;
+					const viewWidth = maxX - minX;
+					const viewHeight = maxY - minY;
+					minX -= viewWidth * paddingFactor;
+					maxX += viewWidth * paddingFactor;
+					minY -= viewHeight * paddingFactor;
+					maxY += viewHeight * paddingFactor;
+					
+					// Calculate scale and translation
+					const scale = Math.min(
+						(width - 2 * padding) / (maxX - minX),
+						(height - 2 * padding) / (maxY - minY)
+					);
+					
+					// Apply the transformation
+					resortsGroup.transition()
+						.duration(750)
+						.attr('transform', `translate(${padding - minX * scale}, ${height - padding - minY * scale}) scale(${scale})`);
+					
+					// Update text sizes inversely proportional to zoom
+					d3.selectAll('.resort-label')
+						.style('font-size', `${12/scale}px`);
+				}
+			}
+			
+			function resetZoom() {
+				// Reset to original transformation
+				resortsGroup.transition()
+					.duration(750)
+					.attr('transform', `translate(${padding}, ${height - padding}) scale(1)`);
+				
+				// Reset text sizes
+				d3.selectAll('.resort-label')
+					.style('font-size', '12px');
+			}
+				
+			function displayResorts(resortFeatures, trailPolygonFeatures, trailLineFeatures) {
+				// First, find the global scale factor based on the largest resort
+				let globalMaxDimension = 0;
+				
+				// Calculate the actual geographic dimensions of each resort
+				resortFeatures.forEach(feature => {
+					const coordinates = feature.geometry.coordinates[0][0];
+					
+					// Find the minimum and maximum coordinates
+					let minX = Infinity, minY = Infinity;
+					let maxX = -Infinity, maxY = -Infinity;
+					
+					coordinates.forEach(coord => {
+						minX = Math.min(minX, coord[0]);
+						minY = Math.min(minY, coord[1]);
+						maxX = Math.max(maxX, coord[0]);
+						maxY = Math.max(maxY, coord[1]);
+					});
+					
+					// Calculate width and height
+					const width = maxX - minX;
+					const height = maxY - minY;
+					
+					// Update global max dimension
+					globalMaxDimension = Math.max(globalMaxDimension, width, height);
+				});
+				
+				// Calculate global scale factor - use a smaller value to fit larger resorts
+				// Reduced to 0.8 of available width to ensure everything fits
+				const globalScaleFactor = (width - 2 * padding) * 0.8 / globalMaxDimension;
+				
+				// Group trails by resort name
+				const trailPolygonsByResort = {};
+				trailPolygonFeatures.forEach(feature => {
+					if (feature.properties.name_2) {
+						const resortName = feature.properties.name_2;
+						if (!trailPolygonsByResort[resortName]) {
+							trailPolygonsByResort[resortName] = [];
+						}
+						trailPolygonsByResort[resortName].push(feature);
+					}
+				});
+				
+				// Group trail lines by resort name
+				const trailLinesByResort = {};
+				trailLineFeatures.forEach(feature => {
+					if (feature.properties.name_2) {
+						const resortName = feature.properties.name_2;
+						if (!trailLinesByResort[resortName]) {
+							trailLinesByResort[resortName] = [];
+						}
+						trailLinesByResort[resortName].push(feature);
+					}
+				});
+				
+				// Process each resort
+				resortFeatures.forEach((feature, index) => {
+					const name = feature.properties.name;
+					const coords = feature.geometry.coordinates[0][0];
+					
+					// Find the minimum coordinates for this resort
+					let resortMinX = Infinity, resortMinY = Infinity;
+					coords.forEach(coord => {
+						resortMinX = Math.min(resortMinX, coord[0]);
+						resortMinY = Math.min(resortMinY, coord[1]);
+					});
+					
+					// Normalize coordinates
+					const normalizedCoords = coords.map(coord => [
+						(coord[0] - resortMinX) * globalScaleFactor,
+						(coord[1] - resortMinY) * globalScaleFactor
+					]);
+					
+					// Calculate bounds for this resort (for zooming)
+					let minX = Infinity, minY = Infinity;
+					let maxX = -Infinity, maxY = -Infinity;
+					
+					normalizedCoords.forEach(coord => {
+						minX = Math.min(minX, coord[0]);
+						minY = Math.min(minY, coord[1]);
+						maxX = Math.max(maxX, coord[0]);
+						maxY = Math.max(maxY, coord[1]);
+					});
+					
+					// Store bounds for later use in zooming
+					resortBounds[index] = { minX, minY, maxX, maxY };
+					
+					// Create a group for this resort
+					const resortGroup = resortsGroup.append('g')
+						.attr('id', `resort-${index}`)
+						.attr('class', 'resort-group');
+					
+					// Add trail polygons for this resort if available
+					if (trailPolygonsByResort[name]) {
+						trailPolygonsByResort[name].forEach(trail => {
+							// Get difficulty
+							const difficulty = trail.properties.piste_difficulty || 
+									          trail.properties['piste:difficulty'] || 
+									          'intermediate';
+							
+							// Process trail coordinates
+							if (trail.geometry.type === 'Polygon') {
+								// Normalize trail coordinates relative to resort's minimum coordinates
+								const trailCoords = trail.geometry.coordinates[0].map(coord => [
+									(coord[0] - resortMinX) * globalScaleFactor,
+									(coord[1] - resortMinY) * globalScaleFactor
+								]);
+								
+								// Create trail polygon
+								resortGroup.append('path')
+									.datum(trailCoords)
+									.attr('class', 'polygon')
+									.attr('fill', difficultyColors[difficulty] || '#808080')
+									.attr('fill-opacity', 0.3)
+									.attr('stroke', difficultyColors[difficulty] || '#808080')
+									.attr('stroke-width', 1)
+									.attr('vector-effect', 'non-scaling-stroke')
+									.attr('d', d3.line()
+										.x(d => d[0])
+										.y(d => -d[1])
+									);
+							}
+						});
+					}
+					
+					// Add trail lines for this resort if available
+					if (trailLinesByResort[name]) {
+						trailLinesByResort[name].forEach(trail => {
+							// Get difficulty
+							const difficulty = trail.properties.piste_difficulty || 
+									          trail.properties['piste:difficulty'] || 
+									          'intermediate';
+							
+							// Process trail coordinates
+							if (trail.geometry.type === 'LineString') {
+								// Normalize trail coordinates relative to resort's minimum coordinates
+								const trailCoords = trail.geometry.coordinates.map(coord => [
+									(coord[0] - resortMinX) * globalScaleFactor,
+									(coord[1] - resortMinY) * globalScaleFactor
+								]);
+								
+								// Create trail line
+								resortGroup.append('path')
+									.datum(trailCoords)
+									.attr('class', 'trail-line')
+									.attr('fill', 'none')
+									.attr('stroke', difficultyColors[difficulty] || '#808080')
+									.attr('stroke-width', 1.5)
+									.attr('stroke-opacity', 0.8)
+									.attr('vector-effect', 'non-scaling-stroke')
+									.attr('d', d3.line()
+										.x(d => d[0])
+										.y(d => -d[1])
+									);
+							} else if (trail.geometry.type === 'MultiLineString') {
+								trail.geometry.coordinates.forEach(line => {
+									// Normalize trail coordinates relative to resort's minimum coordinates
+									const trailCoords = line.map(coord => [
+										(coord[0] - resortMinX) * globalScaleFactor,
+										(coord[1] - resortMinY) * globalScaleFactor
+									]);
+									
+									// Create trail line
+									resortGroup.append('path')
+										.datum(trailCoords)
+										.attr('class', 'trail-line')
+										.attr('fill', 'none')
+										.attr('stroke', difficultyColors[difficulty] || '#808080')
+										.attr('stroke-width', 1.5)
+										.attr('stroke-opacity', 0.8)
+										.attr('vector-effect', 'non-scaling-stroke')
+										.attr('d', d3.line()
+											.x(d => d[0])
+											.y(d => -d[1])
+										);
+								});
+							}
+						});
+					}
+					
+					// Create the resort boundary polygon
+					const color = colorScale(index);
+					resortGroup.append('path')
+						.datum(normalizedCoords)
+						.attr('class', 'polygon')
+						.attr('fill', 'none')
+						.attr('stroke', d3.rgb(color).darker())
+						.attr('stroke-width', 2)
+						.attr('vector-effect', 'non-scaling-stroke')
+						.attr('d', d3.line()
+							.x(d => d[0])
+							.y(d => -d[1]) // Negate y to flip coordinates (SVG y-axis is inverted)
+						);
+					
+					// Find the maximum x and y for label positioning
+					let labelMaxX = 0, labelMaxY = 0;
+					normalizedCoords.forEach(coord => {
+						labelMaxX = Math.max(labelMaxX, coord[0]);
+						labelMaxY = Math.max(labelMaxY, coord[1]);
+					});
+					
+					// Add the resort name
+					resortGroup.append('text')
+						.attr('x', labelMaxX / 2)
+						.attr('y', -labelMaxY - 10)
+						.attr('text-anchor', 'middle')
+						.attr('class', 'resort-label')
+						.style('font-size', '12px')
+						.style('fill', d3.rgb(color).darker())
+						.style('pointer-events', 'none')
+						.text(name);
+					
+					// Add to resort list with checkbox
+					const resortItem = resortList.append('div')
+						.attr('class', 'resort-item');
+					
+					// Create checkbox
+					const checkbox = resortItem.append('input')
+						.attr('type', 'checkbox')
+						.attr('id', `checkbox-${index}`)
+						.attr('class', 'resort-checkbox')
+						.property('checked', true)
+						.style('display', 'inline-block')
+						.style('visibility', 'visible')
+						.style('opacity', '1')
+						.style('width', '16px')
+						.style('height', '16px')
+						.style('position', 'static')
+						.style('appearance', 'checkbox')
+						.style('-webkit-appearance', 'checkbox')
+						.style('-moz-appearance', 'checkbox')
+						.style('pointer-events', 'auto')
+						.style('z-index', '100')
+						.on('change', setupResortCheckbox(index, name));
+					
+					// Add color indicator
+					resortItem.append('span')
+						.attr('class', 'color-indicator')
+						.style('background-color', color);
+					
+					// Add resort name
+					resortItem.append('label')
+						.attr('for', `checkbox-${index}`)
+						.text(name);
+				});
+				
+				// Append the SVG to the container
+				document.getElementById('map-container').appendChild(svg.node());
+				
+				// Add difficulty legend
+				const legendDiv = d3.select('.controls').append('div')
+					.attr('class', 'difficulty-legend')
+					.style('margin-top', '20px')
+					.style('border', '1px solid #ddd')
+					.style('border-radius', '4px')
+					.style('padding', '10px');
+					
+				legendDiv.append('h4')
+					.style('margin-top', '0')
+					.style('margin-bottom', '10px')
+					.text('Trail Difficulty');
+					
+				Object.entries(difficultyColors).forEach(([difficulty, color]) => {
+					const item = legendDiv.append('div')
+						.style('display', 'flex')
+						.style('align-items', 'center')
+						.style('margin-bottom', '5px');
+						
+					item.append('span')
+						.style('width', '16px')
+						.style('height', '16px')
+						.style('background-color', color)
+						.style('display', 'inline-block')
+						.style('margin-right', '8px')
+						.style('border-radius', '3px');
+						
+					item.append('span')
+						.text(difficulty.charAt(0).toUpperCase() + difficulty.slice(1));
+				});
+			}
+
+			// Function to update the map title based on selected resorts
+			function updateMapTitle() {
+				// Get all selected resort names
+				const selectedResorts = [];
+				d3.selectAll('.resort-checkbox').each(function() {
+					if (d3.select(this).property('checked')) {
+						const resortName = d3.select(this.parentNode).select('label').text();
+						selectedResorts.push(resortName);
+					}
+				});
+				
+				// Create title text based on selected resorts
+				let titleText = 'Ski Resort Size Comparison';
+				
+				if (selectedResorts.length === 1) {
+					titleText = selectedResorts[0];
+				} else if (selectedResorts.length === 2) {
+					titleText = `${selectedResorts[0]} vs ${selectedResorts[1]}`;
+				} else if (selectedResorts.length > 2 && selectedResorts.length <= 4) {
+					titleText = selectedResorts.join(' vs ');
+				} else if (selectedResorts.length > 4) {
+					titleText = `${selectedResorts.length} Ski Resorts Selected`;
+				}
+				
+				// Update the map title
+				mapTitle.text(titleText);
+			}
+
+			// Modify existing checkbox change handler to update title
+			function setupResortCheckbox(index, name) {
+				return function() {
+					// Toggle visibility based on checkbox state
+					const isChecked = d3.select(this).property('checked');
+					d3.select(`#resort-${index}`).classed('hidden', !isChecked);
+					
+					// Update the map title
+					updateMapTitle();
+					
+					// Apply offset if enabled
+					if (d3.select('#offset-toggle').property('checked')) {
+						applyOffsetToResorts();
+					} else {
+						// Auto-zoom after a short delay to allow for multiple checkbox changes
+						clearTimeout(window.zoomTimeout);
+						window.zoomTimeout = setTimeout(autoZoomToSelection, 300);
+					}
+				};
+			}
+
+			// Add function to select random resorts
+			function selectRandomResorts(count) {
+				// First deselect all
+				d3.selectAll('.resort-checkbox').property('checked', false);
+				d3.selectAll('.resort-group').classed('hidden', true);
+				
+				// Get all checkboxes
+				const checkboxes = Array.from(document.querySelectorAll('.resort-checkbox'));
+				
+				// Make sure we don't try to select more resorts than available
+				const selectCount = Math.min(count, checkboxes.length);
+				
+				// Get random indices
+				const resortCount = checkboxes.length;
+				const randomIndices = [];
+				
+				while (randomIndices.length < selectCount) {
+					const randomIndex = Math.floor(Math.random() * resortCount);
+					if (!randomIndices.includes(randomIndex)) {
+						randomIndices.push(randomIndex);
+					}
+				}
+				
+				// Select the random resorts
+				randomIndices.forEach(index => {
+					const checkbox = checkboxes[index];
+					checkbox.checked = true;
+					
+					// Get the resort ID from the checkbox ID
+					const resortId = checkbox.id.replace('checkbox-', 'resort-');
+					
+					// Show the resort
+					d3.select(`#${resortId}`).classed('hidden', false);
+				});
+				
+				// Update the map title
+				updateMapTitle();
+				
+				// Apply offset if enabled
+				if (d3.select('#offset-toggle').property('checked')) {
+					applyOffsetToResorts();
+				}
+			}
+
+			// Function to apply offset to visible resorts
+			function applyOffsetToResorts() {
+				const useOffset = d3.select('#offset-toggle').property('checked');
+				
+				// Get all visible resorts
+				const visibleResorts = [];
+				d3.selectAll('.resort-checkbox').each(function(d, i) {
+					if (d3.select(this).property('checked')) {
+						visibleResorts.push(i);
+					}
+				});
+				
+				if (visibleResorts.length <= 1) {
+					return; // No need for offset with 0 or 1 resort
+				}
+				
+				// Calculate offset based on number of visible resorts
+				const offsetX = useOffset ? 50 : 0; // 50px horizontal offset
+				const offsetY = useOffset ? 50 : 0; // 50px vertical offset
+				
+				// Apply offset to each visible resort
+				visibleResorts.forEach((resortIndex, i) => {
+					const resortGroup = d3.select(`#resort-${resortIndex}`);
+					
+					if (useOffset) {
+						// Create a grid-like layout based on index
+						const row = Math.floor(i / 3); // 3 resorts per row
+						const col = i % 3;
+						
+						// Apply transformation with both zoom and offset
+						resortGroup.transition()
+							.duration(500)
+							.attr('transform', `translate(${col * offsetX}, ${row * offsetY})`);
+					} else {
+						// Remove offset when toggle is off
+						resortGroup.transition()
+							.duration(500)
+							.attr('transform', 'translate(0, 0)');
+					}
+				});
+				
+				// After applying offset, adjust the zoom
+				if (d3.select('#auto-zoom-toggle').property('checked')) {
+					setTimeout(autoZoomToSelection, 600); // Wait for offset transition to complete
+				}
+			}
+		</script>
+	</body>
+</html> 
