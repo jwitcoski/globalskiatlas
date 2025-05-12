@@ -10,6 +10,8 @@
     const goButton = document.getElementById('goButton');
     const thumbnailImage = document.getElementById('thumbnailImage');
     const noMapMessage = document.getElementById('noMapMessage');
+    const searchInput = document.getElementById('resortSearchInput');
+    const searchButton = document.getElementById('searchButton');
     
     // API Endpoints
     const API_BASE_URL = 'https://h7ji2md7tc.execute-api.us-east-1.amazonaws.com/prod/selector'; // Updated API endpoint
@@ -35,6 +37,14 @@
         stateSelect.addEventListener('change', handleStateChange);
         resortSelect.addEventListener('change', handleResortChange);
         goButton.addEventListener('click', handleGoButtonClick);
+        
+        // Set up search functionality event listeners
+        searchButton.addEventListener('click', handleSearch);
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                handleSearch();
+            }
+        });
     }
     
     /**
@@ -354,6 +364,134 @@
     function resetDropdown(dropdown, defaultText) {
         dropdown.innerHTML = `<option value="">${defaultText}</option>`;
         dropdown.disabled = true;
+    }
+    
+    /**
+     * Handle resort search
+     */
+    async function handleSearch() {
+        const searchTerm = searchInput.value.trim();
+        
+        if (!searchTerm) {
+            alert('Please enter a resort name to search.');
+            return;
+        }
+        
+        try {
+            // Show loading state
+            searchButton.disabled = true;
+            searchButton.textContent = 'Searching...';
+            
+            // Fetch resorts matching the search term
+            const response = await fetch(`${API_BASE_URL}/search?q=${encodeURIComponent(searchTerm)}`);
+            const data = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(`API returned status: ${response.status}`);
+            }
+            
+            // Reset search UI
+            searchButton.disabled = false;
+            searchButton.textContent = 'Search';
+            
+            const results = data.resorts || [];
+            
+            if (results.length === 0) {
+                alert('No resorts found matching your search. Please try a different name.');
+                return;
+            }
+            
+            if (results.length === 1) {
+                // Direct match found - select this resort
+                selectResortFromSearchResult(results[0]);
+            } else {
+                // Multiple matches - show them in a dropdown
+                showSearchResults(results);
+            }
+            
+        } catch (error) {
+            console.error('Error searching for resorts:', error);
+            alert('An error occurred while searching. Please try again.');
+            searchButton.disabled = false;
+            searchButton.textContent = 'Search';
+        }
+    }
+    
+    /**
+     * Select a resort directly from search result
+     */
+    function selectResortFromSearchResult(resort) {
+        // Save the selected resort ID
+        window.selectedResortId = resort.id;
+        
+        // Show the previously hidden sections
+        document.getElementById('content').style.display = 'block';
+        document.getElementById('ai-description').style.display = 'block';
+        document.getElementById('resort-stats-container').style.display = 'block';
+        
+        // Load the map scripts
+        if (typeof loadMapScripts === 'function') {
+            loadMapScripts();
+        } else {
+            console.error('loadMapScripts function not available');
+        }
+        
+        // Scroll to the map section
+        document.getElementById('content').scrollIntoView({ behavior: 'smooth' });
+        
+        // Update page URL to include the resort
+        const resortName = resort.name.toLowerCase().replace(/\s+/g, '-');
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.set('resort', resort.id);
+        window.history.pushState({}, '', newUrl);
+    }
+    
+    /**
+     * Show search results in the resort dropdown
+     */
+    function showSearchResults(results) {
+        // Reset the dropdowns to search results mode
+        resetDropdown(countrySelect, 'Search Results');
+        resetDropdown(stateSelect, 'Search Results');
+        countrySelect.disabled = true;
+        stateSelect.disabled = true;
+        
+        // Populate resort dropdown with search results
+        resortSelect.innerHTML = '<option value="">Select from search results</option>';
+        
+        results.forEach(resort => {
+            const option = document.createElement('option');
+            option.value = resort.id;
+            
+            // Include location info in the display name
+            let displayText = resort.name;
+            if (resort.province && resort.country) {
+                displayText += ` (${resort.province}, ${resort.country})`;
+            } else if (resort.country) {
+                displayText += ` (${resort.country})`;
+            }
+            
+            option.textContent = displayText;
+            
+            // Add data attributes for resort details
+            if (resort.hasMap) {
+                option.dataset.hasMap = "true";
+            }
+            if (resort.thumbnailUrl) {
+                option.dataset.thumbnailUrl = resort.thumbnailUrl;
+            }
+            if (resort.mapUrl) {
+                option.dataset.mapUrl = resort.mapUrl;
+            }
+            
+            resortSelect.appendChild(option);
+        });
+        
+        // Enable the resort dropdown
+        resortSelect.disabled = false;
+        
+        // Focus on the resort dropdown
+        resortSelect.focus();
     }
     
     // Initialize when DOM is loaded

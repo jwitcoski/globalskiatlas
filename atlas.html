@@ -38,6 +38,12 @@
 							<div class="filter-container">
 								<div class="filter-section">
 									<h4>Resort Selection</h4>
+									<!-- Add search box -->
+									<div class="resort-search">
+										<input type="text" id="resortSearchInput" placeholder="Search resort by name..." />
+										<button id="searchButton" class="button primary small">Search</button>
+									</div>
+									<p class="separator-text">- or select from dropdowns -</p>
 									<div class="resort-selector">
 										<select id="countrySelect">
 											<option value="">Select a country</option>
@@ -313,6 +319,26 @@
                     .architecture-content {
                         max-width: 100%;
                     }
+                }
+            </style>
+            
+            <!-- Add CSS for the resort search -->
+            <style>
+                .resort-search {
+                    display: flex;
+                    margin-bottom: 15px;
+                    gap: 10px;
+                }
+                
+                .resort-search input {
+                    flex-grow: 1;
+                }
+                
+                .separator-text {
+                    text-align: center;
+                    margin: 10px 0;
+                    color: #888;
+                    font-size: 0.9em;
                 }
             </style>
 	</body>
