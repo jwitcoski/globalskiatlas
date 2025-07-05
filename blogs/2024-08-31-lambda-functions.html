@@ -1,0 +1,214 @@
+<button class="collapsible">Lambda Functions for Global Ski Atlas Website <span> - Date: 2024-08-31</span></button>
+<div class="content">
+    <p>I currently have three Lambda functions deployed via API Gateway to populate the Global Ski Atlas website.</p>
+    <img src="images/AWS_Diagram.png" alt="AWS_Diagram" class="author-image">
+    <div class="image-credit">Here is a simple diagram I created of my Serverless framework using <a href="https://app.draft1.ai/">draft1.ai</a></div>
+    <h3>Lambda Function 1: Updating the DynamoDB Table</h3>
+    <p>This function updates the DynamoDB table with ski resort data exported from a Google Sheets CSV file.</p>
+    <pre><code>
+import boto3
+import csv
+
+dynamodb = boto3.resource('dynamodb')
+table = dynamodb.Table('GlobalSkiAtlasDatabase')
+s3 = boto3.client('s3')
+
+def lambda_handler(event, context):
+    # Path to the CSV file in S3
+    csv_file_path = 'globalskiatlas.com/GlobalSkiresorts.csv'
+    
+    # Read the CSV file
+    response = s3.get_object(Bucket='globalskiatlas.com', Key='GlobalSkiresorts.csv')
+    csv_content = response['Body'].read().decode('utf-8').splitlines()
+    
+    csv_reader = csv.DictReader(csv_content)
+    
+    # Create a set of keys from the CSV for easy lookup
+    csv_keys = {}
+    for row in csv_reader:
+        try:
+            key = row['OfficalName']  # Use 'OfficialName' as the primary key
+            csv_keys[key] = row
+        except KeyError:
+            print(f"Row skipped due to missing 'OfficialName': {row}")
+
+    # Fetch existing items from DynamoDB
+    existing_items = table.scan()
+    existing_keys = {item['OfficalName']: item for item in existing_items['Items']}  # Use 'OfficialName' as the primary key
+
+    # Add or update items in DynamoDB
+    for key, row in csv_keys.items():
+        table.put_item(Item=row)  # This will add or update the item
+
+    # Delete items that are in DynamoDB but not in the CSV
+    for key in existing_keys.keys() - csv_keys.keys():
+        table.delete_item(Key={'OfficalName': key})  # Use 'OfficialName' as the primary key
+
+    return {
+        'statusCode': 200,
+        'body': 'DynamoDB table updated successfully'
+    }
+    </code></pre>
+
+    <h3>Lambda Function 2: Populating Dropdown Menus and Datasets</h3>
+    <p>This function populates dropdown menus and other datasets on the main page of the website.</p>
+    <pre><code>
+import json
+import boto3
+
+def lambda_handler(event, context):
+    dynamodb = boto3.client('dynamodb')
+    
+    try:
+        # Define expression attribute names to avoid reserved keywords
+        expression_attribute_names = {
+            '#S': 'State',          # Placeholder for State
+            '#C': 'Country',        # Placeholder for Country
+            '#CONT': 'Continent',   # Placeholder for Continent
+            '#ON': 'OfficalName'   # Placeholder for OfficalName
+        }
+
+        # Scan the DynamoDB table to get all relevant attributes
+        response = dynamodb.scan(
+            TableName='GlobalSkiAtlasDatabase',
+            ProjectionExpression='#CONT, #C, #S, #ON',  # Use placeholders
+            ExpressionAttributeNames=expression_attribute_names  # Pass the attribute names
+        )
+        
+        # Log the response for debugging
+        print("DynamoDB Response:", response)
+
+        # Create a nested structure to hold the data
+        resort_data = {}
+
+        # Organize the data into a nested dictionary
+        for item in response['Items']:
+            continent = item['Continent']['S']  # Use the actual attribute name
+            country = item['Country']['S']        # Use the actual attribute name
+            state = item['State']['S']            # Use the actual attribute name
+            Offical_name = item['OfficalName']['S']  # Use the actual attribute name
+
+            if continent not in resort_data:
+                resort_data[continent] = {}
+            if country not in resort_data[continent]:
+                resort_data[continent][country] = {}
+            if state not in resort_data[continent][country]:
+                resort_data[continent][country][state] = []
+
+            resort_data[continent][country][state].append(Offical_name)
+
+        # Return the structured data as a JSON response
+        return {
+            'statusCode': 200,
+            'body': json.dumps(resort_data),  # Return the entire resort data structure
+            'headers': {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': 'GET,OPTIONS',
+                'Access-Control-Allow-Headers': 'Content-Type, x-api-key'
+            }
+        }
+    except Exception as e:
+        print(f"Error scanning DynamoDB: {str(e)}")
+        return {
+            'statusCode': 500,
+            'body': json.dumps({'error': str(e)}),
+            'headers': {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': 'GET,OPTIONS',
+                'Access-Control-Allow-Headers': 'Content-Type, x-api-key'
+            }
+        }
+    </code></pre>
+
+    <h3>Lambda Function 3: Populating the Resort Page</h3>
+    <p>This function populates the resort page with data from the DynamoDB table based on the user’s query.</p>
+    <pre><code>
+import json
+import boto3
+from html import escape as escape_html
+
+def get_image_url(resort_name):
+    # Function to construct image URLs
+    bucket_name = 'globalskiatlas.com'
+    image_url = f"https://{bucket_name}.s3.amazonaws.com/resortimages/{resort_name}.jpg"
+    return image_url
+
+def lambda_handler(event, context):
+    dynamodb = boto3.client('dynamodb')
+    resort_name = event['queryStringParameters']['OfficalName']
+
+    try:
+        # Define expression attribute names to avoid reserved keywords
+        expression_attribute_names = {
+            '#ON': 'OfficalName',  # Placeholder for OfficalName
+        }
+
+        # Query DynamoDB for the specific ski resort
+        response = dynamodb.query(
+            TableName='GlobalSkiAtlasDatabase',
+            KeyConditionExpression='#ON = :val',
+            ExpressionAttributeNames=expression_attribute_names,
+            ExpressionAttributeValues={':val': {'S': resort_name}}
+        )
+        
+        # Log the response for debugging
+        print("DynamoDB Response:", response)
+
+        if 'Items' in response and len(response['Items']) > 0:
+            item = response['Items'][0]
+            acreage = escape_html(item['Acreage']['S'])
+            snowfall = escape_html(item['Annual Snowfall']['S'])
+            lifts = escape_html(item['Lifts']['S'])
+            runs = escape_html(item['NumberOfRuns']['S'])
+            state = escape_html(item['State']['S'])
+            image_url = get_image_url(resort_name)  # Construct the image URL
+
+            html_content = f'''
+                <div class="resort-info">
+                    <h2>{escape_html(resort_name)}</h2>
+                    <img src="{escape_html(image_url)}" alt="{escape_html(resort_name)}" class="resort-image">
+                    <p><strong>Location:</strong> {escape_html(state)}</p>
+                    <p><strong>Acreage:</strong> {acreage}</p>
+                    <p><strong>Annual Snowfall:</strong> {snowfall}</p>
+                    <p><strong>Number of Lifts:</strong> {lifts}</p>
+                    <p><strong>Number of Runs:</strong> {runs}</p>
+                </div>
+            '''
+
+            return {
+                'statusCode': 200,
+                'body': html_content,
+                'headers': {
+                    'Content-Type': 'text/html',
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Methods': 'GET,OPTIONS',
+                    'Access-Control-Allow-Headers': 'Content-Type, x-api-key'
+                }
+            }
+        else:
+            return {
+                'statusCode': 404,
+                'body': '<p>Resort not found.</p>',
+                'headers': {
+                    'Content-Type': 'text/html',
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Methods': 'GET,OPTIONS',
+                    'Access-Control-Allow-Headers': 'Content-Type, x-api-key'
+                }
+            }
+    except Exception as e:
+        print(f"Error querying DynamoDB: {str(e)}")
+        return {
+            'statusCode': 500,
+            'body': json.dumps({'error': str(e)}),
+            'headers': {
+                'Content-Type': 'text/html',
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': 'GET,OPTIONS',
+                'Access-Control-Allow-Headers': 'Content-Type, x-api-key'
+            }
+        }
+    </code></pre>
+</div> 

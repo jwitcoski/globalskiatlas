@@ -1,0 +1,102 @@
+.ai-writer-container {
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 10px;
+    padding: 2em;
+    margin-top: 2em;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+}
+
+.ai-content {
+    min-height: 200px;
+    margin-bottom: 1.5em;
+    line-height: 1.6;
+}
+
+.placeholder-text {
+    color: #999;
+    font-style: italic;
+}
+
+.ai-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.status-indicator {
+    display: inline-block;
+    font-size: 0.9em;
+}
+
+.status-indicator.loading {
+    color: #f39c12;
+}
+
+.status-indicator.success {
+    color: #2ecc71;
+}
+
+.status-indicator.error {
+    color: #e74c3c;
+}
+
+/* AI Description Section Styling */
+#ai-description {
+    background-color: #1c1d26;
+    color: rgba(255, 255, 255, 0.8);
+    padding: 1.5em;
+    margin-top: 2em;
+    border-radius: 4px;
+}
+
+#ai-description h4 {
+    color: #fff;
+    margin-bottom: 0.5em;
+}
+
+.ai-attribution {
+    font-size: 0.8em;
+    color: rgba(255, 255, 255, 0.5);
+    margin-bottom: 1.5em;
+    font-style: italic;
+}
+
+#ai-output {
+    line-height: 1.6;
+    margin-bottom: 1.5em;
+}
+
+.ai-controls {
+    display: flex;
+    align-items: center;
+    gap: 1em;
+    margin-top: 1em;
+}
+
+.status-indicator {
+    font-size: 0.8em;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.status-indicator.loading {
+    color: #f39c12;
+}
+
+.status-indicator.success {
+    color: #2ecc71;
+}
+
+.status-indicator.error {
+    color: #e74c3c;
+}
+
+/* Make button subtle but visible */
+#generate-description {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+#generate-description:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+} 

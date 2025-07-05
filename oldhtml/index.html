@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta name="google-adsense-account" content="ca-pub-4372859798489282">
+	<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4372859798489282"
+     crossorigin="anonymous"></script>
+	 <!-- Google tag (gtag.js) -->
+	<script async src="https://www.googletagmanager.com/gtag/js?id=G-KJGNL3KJL0"></script>
+	<script>
+	  window.dataLayer = window.dataLayer || [];
+	  function gtag(){dataLayer.push(arguments);}
+	  gtag('js', new Date());
+
+	  gtag('config', 'G-KJGNL3KJL0');
+	</script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Global Ski Atlas</title>
+    <link rel="stylesheet" href="assets/css/styles.css">
+    <style>
+        #thumbnailContainer {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            padding: 0 15px;
+        }
+        #thumbnailImage {
+            max-width: 200px;
+            height: auto;
+            display: none;
+        }
+        #noMapMessage {
+            display: none;
+            color: #333;
+            font-size: 16px;
+        }
+        .hero-content div {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            padding: 0 15px;
+        }
+        select, button {
+            flex: 1 1 200px;
+            max-width: 300px;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+        .hero-content {
+            padding: 20px;
+            text-align: center;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .hero-content h1 {
+            font-size: clamp(2rem, 5vw, 3.5rem);
+        }
+        .hero-content p {
+            font-size: clamp(1rem, 2vw, 1.2rem);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .intro {
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        @media (max-width: 768px) {
+            .ski-image {
+                margin: 20px 0;
+            }
+            .image-credit {
+                font-size: 0.9rem;
+                padding: 0 15px;
+            }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in {
+            opacity: 0;
+            animation: fadeIn 1s ease-out forwards;
+        }
+        .fade-in.delay-1 { animation-delay: 0.2s; }
+        .fade-in.delay-2 { animation-delay: 0.4s; }
+        .fade-in.delay-3 { animation-delay: 0.6s; }
+        .fade-in.delay-4 { animation-delay: 0.8s; }
+        .coffee-table-btn {
+            display: inline-block;
+            padding: 10px 20px;
+            width: 200px !important;
+            max-width: 200px !important;
+            margin: 20px auto;
+            background-color: #000;
+            border: none;
+            color: white;
+            cursor: pointer;
+            flex: none !important;
+        }
+
+        .coffee-table-btn a {
+            color: white;
+            text-decoration: none;
+            font-size: 1rem;
+            display: block;
+            width: 100%;
+        }
+
+        .coffee-table-btn:hover {
+            background-color: #333;
+        }
+    </style>
+</head>
+<body>
+    <header include-html="assets/html/navmain.html"></header>
+    <main>
+        <section class="hero">
+            <div class="hero-content">
+                <h1 class="fade-in">Global Ski Atlas</h1>
+                <p class="fade-in delay-1">Independently made maps of ski resorts around the world.</p>
+                <div class="fade-in delay-2">
+                    <select id="continentSelect">
+                        <option value="">Select a continent</option>
+                    </select>
+                    <select id="countrySelect" disabled>
+                        <option value="">Select a country</option>
+                    </select>
+                    <select id="stateSelect" disabled>
+                        <option value="">Select a state</option>
+                    </select>
+                    <select id="resortSelect" disabled>
+                        <option value="">Select a ski resort</option>
+                    </select>
+                    <button id="goButton">Go</button>
+                </div>
+                <div id="thumbnailContainer" class="fade-in delay-3">
+                    <img id="thumbnailImage" alt="Ski Resort Map">
+                    <div id="noMapMessage">No Map Available Yet</div>
+                </div>
+                <button class="coffee-table-btn fade-in delay-4">
+                    <a href="coffeetablebook.html">Coffee Table Book</a>
+                </button>
+                <div class="coming-soon fade-in delay-4">Coming Soon</div>
+            </div>
+        </section>
+        <section class="ski-image">
+            <img src="images/erik-odiin-YDB1P399ijc-unsplash.jpg" alt="Ski Image Sample">
+            <div class="image-credit">
+                Photo by <a href="https://unsplash.com/@odiin?utm_content=creditCopyText&utm_medium=referral&utm_source=unsplash">Erik Odiin</a> on <a href="https://unsplash.com/photos/person-riding-cable-train-above-snow-covered-field-YDB1P399ijc?utm_content=creditCopyText&utm_medium=referral&utm_source=unsplash">Unsplash</a>
+            </div>
+        </section>
+        <section class="intro">
+            <p>We started this project out of frustration with the lack of standardized information available for ski resorts. Each resort typically has a custom-made map, often beautiful hand-drawn pieces of art, but this variability makes it difficult to compare resorts, especially with the advent of multi-resort passes that grant access to numerous resorts within driving distance of our homes. To address this need, we decided to create a comprehensive skiing atlas that independently compiles essential statistics such as acreage and the length of ski runs using OpenStreetMap data and QGIS open-source software. This atlas aims to provide clear, standardized information to help skiers make informed decisions about their next destination.</p>
+            
+            <img src="images/AWS_Diagram.png" alt="AWS_Diagram" class="author-image">
+            <div class="image-credit">System Architecture Overview</a></div>
+        </section>
+    </main>
+    <footer include-html="assets/html/footer.html"></footer>
+    
+    <script src="assets/js/includeHTML.js"></script>
+    <script src="assets/js/showThumbnail.js"></script>
+    <script src="assets/js/fetchResortData.js"></script>
+    <script src="assets/js/main.js"></script>
+    <script src="assets/js/populateDropdowns.js"></script> <!-- Link to the new JavaScript file -->
+</body>
+</html>

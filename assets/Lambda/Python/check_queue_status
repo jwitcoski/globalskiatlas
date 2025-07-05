@@ -1,0 +1,32 @@
+import json
+import boto3
+
+def lambda_handler(event, context):
+    queue_url = event['queueUrl']
+    
+    sqs = boto3.client('sqs')
+    
+    # Get queue attributes to check messages
+    response = sqs.get_queue_attributes(
+        QueueUrl=queue_url,
+        AttributeNames=['ApproximateNumberOfMessages', 'ApproximateNumberOfMessagesNotVisible']
+    )
+    
+    visible = int(response['Attributes']['ApproximateNumberOfMessages'])
+    in_flight = int(response['Attributes']['ApproximateNumberOfMessagesNotVisible'])
+    total_remaining = visible + in_flight
+    
+    # Get processed count from DynamoDB (count of items)
+    dynamodb = boto3.resource('dynamodb')
+    table = dynamodb.Table('WinterSportsResorts')
+    
+    # Only count items created in this run
+    processed_count = table.scan(
+        Select='COUNT'
+    )['Count']
+    
+    return {
+        'isEmpty': total_remaining == 0,
+        'messagesRemaining': total_remaining,
+        'processedCount': processed_count
+    }

@@ -1,0 +1,474 @@
+/* General Styles */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Header Styles */
+header {
+    background: #fff;
+    padding: 10px 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.nav-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background-color: #fff; /* Adjust as needed */
+}
+
+.logo {
+    font-size: 1.5em;
+    font-weight: bold;
+}
+
+.logo a {
+    text-decoration: none;
+    color: inherit;
+}
+
+/* General Navigation Styles */
+.nav-links {
+    list-style: none;
+    display: flex;
+    flex-direction: row;
+    margin: 0;
+    padding: 0;
+}
+
+.nav-links li {
+    margin: 0 1rem;
+}
+
+.nav-links a {
+    text-decoration: none;
+    color: #333;
+    font-size: 1em;
+}
+
+.hamburger {
+    display: none; /* Hidden by default */
+    font-size: 1.5rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+    .nav-links {
+        display: none; /* Hide links by default */
+        flex-direction: column; /* Stack links vertically */
+        position: absolute;
+        top: 60px; /* Adjust based on your nav height */
+        left: 0;
+        right: 0;
+        background-color: #fff; /* Background for dropdown */
+        z-index: 1000; /* Ensure it appears above other content */
+    }
+
+    .nav-links.active {
+        display: flex; /* Show links when active */
+    }
+
+    .hamburger {
+        display: block; /* Show hamburger icon */
+    }
+}
+
+/* Media Queries for Responsiveness */
+@media (max-width: 768px) {
+  .nav-links {
+    flex-wrap: wrap; /* Changed from display: none; */
+    justify-content: center; /* Added for centering */
+  }
+
+    .nav-links li {
+        margin-left: 0;
+        margin-bottom: 10px;
+    }
+
+    .nav-links a {
+        font-size: 1.2em;
+    }
+}
+
+@media (max-width: 480px) {
+    .nav-links a {
+        font-size: 1.5em;
+    }
+}
+/* Hero Section Styles */
+.hero {
+    position: relative;
+    background-color: #f0f0f0; /* Light gray background */
+    height: 60vh;
+    color: #333; /* Darker text color for better contrast */
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.hero-content {
+    text-align: center;
+    padding: 20px;
+    background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent white background */
+    border-radius: 10px;
+}
+
+.hero h1 {
+    font-size: 3em;
+    font-weight: bold;
+    color: #000;
+    margin: 0 0 20px 0;
+}
+
+.hero p {
+    font-size: 1.5em;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.hero button {
+    background: #000;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    font-size: 1em;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: background-color 0.3s ease;
+}
+
+.hero button:hover {
+    background-color: #333;
+}
+
+.hero button a {
+    text-decoration: none;
+    color: #fff;
+}
+
+/* Intro Section Styles */
+.intro {
+    padding: 20px;
+    text-align: center;
+}
+
+/* Image Credit Styles */
+.image-credit {
+    text-align: center;
+    margin-top: 10px;
+    font-size: 0.8em;
+    color: #666;
+}
+
+/* Explore Section Styles */
+.explore {
+    padding: 20px;
+}
+
+.explore-content {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    flex-wrap: wrap;
+}
+
+.explore-text {
+    flex: 1;
+    max-width: 50%;
+    padding-right: 20px;
+    text-align: center;
+    margin: auto;
+}
+
+.explore h2 {
+    margin: 0;
+    font-size: 2em;
+    font-weight: bold;
+}
+
+.explore p {
+    font-size: 1.2em;
+    margin: 10px 0;
+}
+
+.explore .buttons {
+    margin-top: 20px;
+}
+
+.explore .buttons button {
+    background: #000;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    font-size: 1em;
+    cursor: pointer;
+    margin: 5px;
+}
+
+.explore .buttons button a {
+    text-decoration: none;
+    color: #fff;
+}
+
+.explore-image {
+    flex: 1;
+    max-width: 50%;
+    text-align: right;
+}
+
+.explore-image img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Ski Image Styles */
+.ski-image {
+    text-align: center;
+    padding: 20px 0;
+}
+
+.ski-image img {
+    height: 434px;
+    max-width: 100%;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Footer Styles */
+footer {
+    background: #333;
+    color: #fff;
+    padding: 20px;
+    text-align: center;
+}
+
+.footer-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.footer-title {
+    font-size: 18px;
+    font-weight: bold;
+    margin: 0;
+    align-items: left;
+}
+
+.footer-content p {
+    margin: 0;
+    flex: 1;
+}
+
+.social-media {
+    display: flex;
+    align-items: center;
+}
+
+.social-media a {
+    text-decoration: none;
+    color: #fff;
+    margin: 0 10px;
+    font-size: 1.5em;
+}
+
+/* Coming Soon Styles */
+.coming-soon {
+    text-align: center;
+    font-size: 0.8em;
+    color: #666;
+}
+
+/* Button Container Styles */
+.button-container {
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+/* Author Image Styles */
+.author-image {
+    display: block;
+    margin: 0 auto;
+    max-width: 400px; /* Adjust the size as needed */
+}
+
+/* Book Content Styles */
+.book-content {
+    padding: 20px;
+}
+
+.book-details {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.book-image {
+    width: 200px;
+    height: auto;
+}
+
+.book-info {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.book-gallery {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.book-page {
+    width: 100%;
+    height: auto;
+    cursor: pointer;
+}
+
+/* Buy Link Styles */
+.buy-link {
+    background-color: #FF9900;
+    color: white;
+    padding: 10px 20px;
+    text-decoration: none;
+    border-radius: 5px;
+    text-align: center;
+    display: inline-block;
+}
+
+/* Lightbox Styles */
+.lightbox img {
+    max-width: 90%;
+    max-height: 90%;
+}
+
+.lightbox .lb-number {
+    display: none;
+}
+
+/* Gallery Styles */
+.gallery-container {
+    text-align: center;
+}
+
+.gallery {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.gallery a {
+    display: block;
+    width: 150px;
+    height: 150px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: transform 0.3s;
+}
+
+.gallery a:hover {
+    transform: scale(1.05);
+}
+
+.gallery img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Prompt Styles */
+.prompt {
+    font-size: 1.2em;
+    color: #555;
+}
+
+/* Media Queries for Responsiveness */
+@media (max-width: 1200px) {
+    .explore-content {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .explore-text, .explore-image {
+        max-width: 100%;
+        padding: 0;
+    }
+}
+
+@media (max-width: 768px) {
+    .nav-links {
+        display: none;
+    }
+
+    .hero h1 {
+        font-size: 2.5em;
+    }
+
+    .hero p {
+        font-size: 1.2em;
+    }
+
+    .explore h2 {
+        font-size: 1.8em;
+    }
+
+    .explore p {
+        font-size: 1em;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero h1 {
+        font-size: 2em;
+    }
+
+    .hero p {
+        font-size: 1em;
+    }
+
+    .explore h2 {
+        font-size: 1.5em;
+    }
+
+    .explore p {
+        font-size: 0.9em;
+    }
+
+    .book-details {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .book-image {
+        width: 100%;
+    }
+
+    .book-gallery {
+        grid-template-columns: 1fr;
+    }
+}
+.image-container {
+    text-align: center; /* Center the content */
+}
+
+.standardized-image {
+    width: 100%; /* Set width to 100% of the container */
+    max-width: 400px; /* Set a maximum width for the images */
+    height: auto; /* Maintain aspect ratio */
+    margin: 0 auto; /* Center the image */
+}

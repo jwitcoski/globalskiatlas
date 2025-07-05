@@ -1,0 +1,160 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>Ski Resort - Global Ski Atlas</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<meta name="google-adsense-account" content="ca-pub-4372859798489282">
+		<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4372859798489282" crossorigin="anonymous"></script>
+		<!-- Google tag (gtag.js) -->
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-KJGNL3KJL0"></script>
+		<script>
+			window.dataLayer = window.dataLayer || [];
+			function gtag(){dataLayer.push(arguments);}
+			gtag('js', new Date());
+			gtag('config', 'G-KJGNL3KJL0');
+		</script>
+		<link rel="stylesheet" href="assets/css/main.css" />
+		<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
+	</head>
+	<body class="is-preload">
+		<div id="page-wrapper">
+
+			<!-- Header -->
+			<header id="header">
+				<h1 id="logo"><a href="index.html">Global Ski Atlas</a></h1>
+				<nav id="nav">
+					<ul>
+						<li><a href="index.html">Home</a></li>
+						<li><a href="atlas.html">Atlas</a></li>
+						<li><a href="coffee-table-book.html">Coffee Table Book</a></li>
+						<li><a href="resort-comparison.html">Ski Resort Comparison</a></li>
+						<li><a href="skiing-ai.html">AI Skiing Assistant</a></li>
+						<li><a href="about.html">About</a></li>
+						<li><a href="blog.html">Blog</a></li>
+						<li><a href="#" class="button primary">Sign Up</a></li>
+					</ul>
+				</nav>
+				<a href="#navPanel" class="navPanelToggle"><span class="fa fa-bars"></span></a>
+				<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4372859798489282" crossorigin="anonymous"></script>
+			</header>
+
+			<!-- Main -->
+			<div id="main" class="wrapper style1">
+				<div class="container">
+					<div id="resortContent">
+						<!-- Resort content will be dynamically inserted here -->
+						<p>Loading resort information...</p>
+					</div>
+				</div>
+			</div>
+
+			<!-- Footer -->
+			<footer id="footer">
+				<ul class="icons">
+					<li><a href="#" class="icon brands alt fa-facebook-f"><span class="label">Facebook</span></a></li>
+					<li><a href="#" class="icon brands alt fa-linkedin-in"><span class="label">LinkedIn</span></a></li>
+					<li><a href="#" class="icon brands alt fa-instagram"><span class="label">Instagram</span></a></li>
+					<li><a href="#" class="icon brands alt fa-youtube"><span class="label">YouTube</span></a></li>
+				</ul>
+				<ul class="copyright">
+					<li>&copy; Global Ski Atlas. All rights reserved.</li>
+					<li>Design: <a href="http://html5up.net">HTML5 UP</a></li>
+				</ul>
+			</footer>
+
+		</div>
+
+		<!-- Scripts -->
+		<script src="assets/js/jquery.min.js"></script>
+		<script src="assets/js/jquery.scrolly.min.js"></script>
+		<script src="assets/js/jquery.dropotron.min.js"></script>
+		<script src="assets/js/jquery.scrollex.min.js"></script>
+		<script src="assets/js/browser.min.js"></script>
+		<script src="assets/js/breakpoints.min.js"></script>
+		<script src="assets/js/util.js"></script>
+		<script src="assets/js/main.js"></script>
+		<script>
+			document.addEventListener('DOMContentLoaded', () => {
+				console.log('DOM content loaded in resort.html');
+				const urlParams = new URLSearchParams(window.location.search);
+				const resortName = urlParams.get('official_name');
+				console.log('Resort name from URL:', resortName);
+
+				if (resortName) {
+					const resortData = sessionStorage.getItem('resortData');
+					if (resortData) {
+						console.log('Resort data found in sessionStorage');
+						try {
+							const resortContent = document.getElementById('resortContent');
+							if (resortContent) {
+								resortContent.innerHTML = resortData;
+								console.log('Resort data inserted into DOM');
+								
+								// Add this to ensure images become clickable once loaded
+								let images = document.querySelectorAll('#resortContent img');
+								images.forEach(img => {
+									img.onclick = function() {
+										// Open image in a larger view or modal if needed
+										window.open(this.src, '_blank');
+									}
+								});
+							} else {
+								console.error('resortContent element not found in DOM');
+							}
+						} catch (error) {
+							console.error('Error inserting resort data into DOM:', error);
+						}
+						sessionStorage.removeItem('resortData'); // Clear the data after using it
+					} else {
+						console.log('No resort data in sessionStorage, fetching from API');
+						fetchResortData(resortName);
+					}
+				} else {
+					console.error('No resort specified in URL');
+					document.getElementById('resortContent').innerHTML = '<p>No resort specified. Please select a resort from the atlas page.</p>';
+				}
+			});
+
+			function fetchResortData(resortName) {
+				console.log('Fetching resort data for:', resortName);
+				document.getElementById('resortContent').innerHTML = '<p>Loading resort information...</p>';
+				
+				fetch(`https://sjtdu9sez2.execute-api.us-east-1.amazonaws.com/deploy/?official_name=${encodeURIComponent(resortName)}`)
+					.then(response => {
+						if (!response.ok) {
+							throw new Error('Network response was not ok: ' + response.status);
+						}
+						return response.text();
+					})
+					.then(data => {
+						console.log('Resort data received');
+						try {
+							const resortContent = document.getElementById('resortContent');
+							if (resortContent) {
+								resortContent.innerHTML = data;
+								console.log('Resort data inserted into DOM');
+								
+								// Add this to ensure images become clickable once loaded
+								let images = document.querySelectorAll('#resortContent img');
+								images.forEach(img => {
+									img.onclick = function() {
+										// Open image in a larger view or modal if needed
+										window.open(this.src, '_blank');
+									}
+								});
+							} else {
+								console.error('resortContent element not found in DOM');
+							}
+						} catch (error) {
+							console.error('Error inserting resort data into DOM:', error);
+						}
+					})
+					.catch(error => {
+						console.error('Error fetching resort data:', error);
+						document.getElementById('resortContent').innerHTML = '<p>Error loading resort data. Please try again later.</p>';
+					});
+			}
+		</script>
+	</body>
+</html> 

@@ -1,0 +1,89 @@
+<button class="collapsible">Gathering Weather Data for Ski Resorts <span> - Date: 2024-11-30</span></button>
+<div class="content">
+    <p>The first logical idea on gathering weather data is to gather it directly from the National Weather Service.</p>
+    
+    <h3>Process Overview</h3>
+    <ol>
+        <li>
+            After downloading all #OSM "winter_sports" locations and NOAA weather data stations, 5 hours of Python Panda magic to find the nearest weather stations, we now have the closest weather station to 400+ resorts in the U.S. 🚠❄️
+        </li>
+        <li>
+            We can then move the weather stations in question to their own dataset. Each year is around 1 GB of data. 30 years of data is 30+ GB. Pairing this down to 400+ datapoints, we can move that down to 289 MB over 30 years. This can be easily stored cheaply in a DynamoDB table.
+        </li>
+        <li>
+            We can then start looking at the data. And it turns out that many of the weather stations sadly don't include snowfall.
+        </li>
+        <li>
+            After browsing the internet, it looks like something like <a href="https://openweathermap.org/api">OpenWeather API</a> may be a better option.
+        </li>
+    </ol>
+
+    <h3>Python Code Implementation</h3>
+    <p>Here's the Python code used to process the weather station and ski resort data:</p>
+    
+    <pre><code class="python">
+import pandas as pd
+import numpy as np
+from math import radians, sin, cos, sqrt, atan2
+
+def haversine_distance(lat1, lon1, lat2, lon2):
+    """
+    Calculate the great circle distance between two points 
+    on the earth (specified in decimal degrees)
+    """
+    # Convert decimal degrees to radians
+    lat1, lon1, lat2, lon2 = map(radians, [lat1, lon1, lat2, lon2])
+    
+    # Haversine formula
+    dlat = lat2 - lat1
+    dlon = lon2 - lon1
+    a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+    c = 2 * atan2(sqrt(a), sqrt(1-a))
+    r = 6371 # Radius of earth in kilometers
+    
+    return c * r
+
+# Read the datasets
+ski_resorts = pd.read_csv('ski_resorts.csv')
+weather_stations = pd.read_csv('weather_stations.csv')
+
+# Initialize lists to store closest stations
+closest_stations = []
+distances = []
+
+# Find closest weather station for each ski resort
+for idx, resort in ski_resorts.iterrows():
+    min_dist = float('inf')
+    closest_station = None
+    
+    for _, station in weather_stations.iterrows():
+        dist = haversine_distance(
+            resort['latitude'], 
+            resort['longitude'],
+            station['latitude'], 
+            station['longitude']
+        )
+        
+        if dist < min_dist:
+            min_dist = dist
+            closest_station = station
+    
+    closest_stations.append(closest_station)
+    distances.append(min_dist)
+
+# Add results to ski resorts dataframe
+ski_resorts['closest_station_id'] = [s['station_id'] for s in closest_stations]
+ski_resorts['station_distance_km'] = distances
+
+# Export results
+ski_resorts.to_csv('ski_resorts_with_stations.csv', index=False)
+    </code></pre>
+
+    <h3>Data Visualization</h3>
+    <p>The results were visualized using Leaflet.js to create an interactive map showing the connections between ski resorts and their nearest weather stations. You can view the map below:</p>
+    
+    <iframe src="https://globalskiatlas.com/SkiResortsWeatherStationsConnectedMap.html" width="100%" height="600" style="border:none;"></iframe>
+
+    <h3>Next Steps</h3>
+    <p>Given the limitations of NOAA weather station data (particularly the lack of snowfall data), we're exploring alternative data sources like the OpenWeather API. This could provide more comprehensive and reliable weather data for our ski resorts database.</p>
+</div>

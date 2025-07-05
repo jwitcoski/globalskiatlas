@@ -1,0 +1,128 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>About - Global Ski Atlas</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<link rel="stylesheet" href="assets/css/main.css" />
+		<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
+	</head>
+	<body class="is-preload">
+		<div id="page-wrapper">
+
+			<!-- Header -->
+			<header id="header">
+				<h1 id="logo"><a href="index.html">Global Ski Atlas</a></h1>
+				<nav id="nav">
+					<ul>
+						<li><a href="index.html">Home</a></li>
+						<li><a href="atlas.html">Atlas</a></li>
+						<li><a href="coffee-table-book.html">Coffee Table Book</a></li>
+						<li><a href="resort-comparison.html">Ski Resort Comparison</a></li>
+						<li><a href="skiing-ai.html">AI Skiing Assistant</a></li>
+						<li><a href="about.html">About</a></li>
+						<li><a href="blog.html">Blog</a></li>
+						<li><a href="#" class="button primary">Sign Up</a></li>
+					</ul>
+				</nav>
+				<a href="#navPanel" class="navPanelToggle"><span class="fa fa-bars"></span></a>
+				<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4372859798489282" crossorigin="anonymous"></script>
+			</header>
+
+			<!-- Main -->
+				<div id="main" class="wrapper style1">
+					<div class="container">
+						<header class="major">
+							<h2>About Global Ski Atlas</h2>
+							<p>The story behind the atlas and its creator</p>
+						</header>
+						<div class="row gtr-150">
+							<div class="col-4 col-12-medium">
+
+								<!-- Sidebar -->
+									<section id="sidebar">
+										<section>
+											<h3>The Mission</h3>
+											<p>Global Ski Atlas aims to provide standardized, comprehensive information about ski resorts to help skiers make informed decisions about their next destination. By using consistent data collection methods and visualization techniques, the atlas makes it easier to compare resorts across different regions.</p>
+											<footer>
+												<ul class="actions">
+													<li><a href="https://www.linkedin.com/in/jonathan-witcoski/" class="button">Connect on LinkedIn</a></li>
+												</ul>
+											</footer>
+										</section>
+										<hr />
+										<section>
+											<a href="https://witcoskitech.com" class="image fit"><img src="images/team_photo.jpg" alt="Jonathan Witcoski" /></a>
+											<h3>About the Creator</h3>
+											<p>Global Ski Atlas is a solo project by Jonathan Witcoski. To learn more about me and my other projects, please visit my personal website.</p>
+											<footer>
+												<ul class="actions">
+													<li><a href="https://witcoskitech.com" class="button">Visit witcoskitech.com</a></li>
+												</ul>
+											</footer>
+										</section>
+									</section>
+
+							</div>
+							<div class="col-8 col-12-medium imp-medium">
+
+								<!-- Content -->
+									<section id="content">
+										<a href="#" class="image fit"><img src="images/about_header.jpg" alt="Mountain View" /></a>
+										<h3>Project Inspiration</h3>
+										<p>The inspiration for Global Ski Atlas came from the table of ski resorts in the U.S. by Stuart Winchester at Storm Skiing, the collection of ski resort maps at skimap.org, and the winter sport data display of OpenStreetMap at openskimap.org. To learn more about me, please visit <a href="https://witcoskitech.com">witcoskitech.com</a> or connect with me on LinkedIn at <a href="https://www.linkedin.com/in/jonathan-witcoski/">@Jonathan Witcoski</a>.</p>
+										
+										<h3>The Problem</h3>
+										<p>I started this project due to the lack of standardized information available for ski resorts. Each resort typically has a custom-made map, often beautiful hand-drawn pieces of art. However, this variability makes it difficult to compare resorts, especially with the advent of multi-resort passes that grant access to numerous resorts within driving distance of my home. To address this need, I decided to create a comprehensive skiing atlas that independently compiles essential statistics such as acreage and the length of ski runs using OpenStreetMap data and QGIS open-source software. This atlas aims to provide clear, standardized information to help skiers make informed decisions about their next destination.</p>
+										
+										<h3>Technical Implementation</h3>
+										<p>In addition to learning QGIS, I also gained experience with Amazon Web Services (AWS) by creating this website. I first built my personal webpage, <a href="https://witcoskitech.com">witcoskitech.com</a>, as part of the Cloud Resume Challenge. I then created this serverless website using various AWS technologies. The ski resort data is hosted in a DynamoDB database and accessed through an API created with AWS API Gateway and Lambda functions.</p>
+										
+										<p>While the challenge typically involves using JavaScript to directly interact with DynamoDB for a visitor counter, I took a different approach. I use a Google Sheets document to manage the ski resort data, which I then export to a CSV file. This file is uploaded to an S3 bucket, where a Lambda function processes the CSV and updates the DynamoDB table. The website itself is a static site deployed on Amazon S3, with CloudFront providing HTTPS security and a custom domain name. The website uses JavaScript to call the Lambda function, which generates a unique webpage for each ski resort requested. This request is passed through the API Gateway.</p>
+										
+										<h3>Technologies Used</h3>
+										<ul>
+											<li><strong>QGIS:</strong> Open-source Geographic Information System for creating standardized resort maps</li>
+											<li><strong>OpenStreetMap:</strong> Source of geographic data for ski resorts</li>
+											<li><strong>AWS S3:</strong> Hosting the static website and data files</li>
+											<li><strong>AWS CloudFront:</strong> Content delivery network for HTTPS security</li>
+											<li><strong>AWS Lambda:</strong> Serverless functions for data processing and API requests</li>
+											<li><strong>AWS API Gateway:</strong> Managing API endpoints</li>
+											<li><strong>AWS DynamoDB:</strong> NoSQL database for storing resort information</li>
+											<li><strong>Google Sheets:</strong> Data management and organization</li>
+										</ul>
+									</section>
+
+							</div>
+						</div>
+					</div>
+				</div>
+
+			<!-- Footer -->
+			<footer id="footer">
+				<ul class="icons">
+					<li><a href="#" class="icon brands alt fa-facebook-f"><span class="label">Facebook</span></a></li>
+					<li><a href="#" class="icon brands alt fa-linkedin-in"><span class="label">LinkedIn</span></a></li>
+					<li><a href="#" class="icon brands alt fa-instagram"><span class="label">Instagram</span></a></li>
+					<li><a href="#" class="icon brands alt fa-youtube"><span class="label">YouTube</span></a></li>
+				</ul>
+				<ul class="copyright">
+					<li>&copy; Global Ski Atlas. All rights reserved.</li>
+					<li>Design: <a href="http://html5up.net">HTML5 UP</a></li>
+				</ul>
+			</footer>
+
+		</div>
+
+		<!-- Scripts -->
+			<script src="assets/js/jquery.min.js"></script>
+			<script src="assets/js/jquery.scrolly.min.js"></script>
+			<script src="assets/js/jquery.dropotron.min.js"></script>
+			<script src="assets/js/jquery.scrollex.min.js"></script>
+			<script src="assets/js/browser.min.js"></script>
+			<script src="assets/js/breakpoints.min.js"></script>
+			<script src="assets/js/util.js"></script>
+			<script src="assets/js/main.js"></script>
+
+	</body>
+</html> 

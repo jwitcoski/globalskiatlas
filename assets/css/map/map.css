@@ -1,0 +1,433 @@
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    background-color: #f5f5f5;
+}
+#map-container {
+    width: 100%;
+    height: 100vh;
+}
+#debug-info {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    background: rgba(255,255,255,0.9);
+    padding: 10px;
+    border-radius: 5px;
+    font-size: 12px;
+    z-index: 1500;
+}
+
+/* North arrow styling */
+.north-arrow {
+    position: fixed;
+    bottom: 30px;
+    right: 10px;
+    background: rgba(255,255,255,0.7);
+    border-radius: 4px;
+    padding: 4px;
+    width: 30px;
+    height: 30px;
+    text-align: center;
+    line-height: 30px;
+    font-size: 20px;
+    font-weight: bold;
+    z-index: 1000;
+}
+
+/* Styles derived from QML files */
+.winter-sports-area {
+    fill: rgba(0, 100, 255, 0.3);
+    stroke: #0066cc;
+    stroke-width: 3;
+}
+
+/* Lines.qml styles */
+.ski-route {
+    stroke-width: 2px;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.easy-route {
+    stroke: rgb(47, 154, 47);
+    stroke-width: 3px;
+}
+
+.intermediate-route {
+    stroke: rgb(0, 0, 255);
+    stroke-width: 3px;
+}
+
+.advanced-route {
+    stroke: rgb(0, 0, 0);
+    stroke-width: 3px;
+}
+
+.expert-route {
+    stroke: rgb(255, 0, 0);
+    stroke-width: 3px;
+}
+
+/* Outline.qml styles */
+.resort-boundary {
+    fill: rgba(230, 230, 230, 0.3);
+    stroke: rgb(232, 113, 141); /* From Outline.qml line_color */
+    stroke-width: 3;
+}
+
+/* Points.qml styles */
+.map-point {
+    fill: rgba(231, 113, 72, 0.7); /* From Points.qml line_color */
+    stroke: rgb(165, 81, 51);
+    stroke-width: 1px;
+}
+
+/* Polygons.qml styles */
+.resort-polygon {
+    fill: rgba(229, 182, 54, 0.3); /* From Polygons.qml fill color */
+    stroke: rgb(164, 130, 39);
+    stroke-width: 1.5px;
+}
+
+.forest-area {
+    stroke: rgba(1, 50, 32, 0.8);
+    stroke-width: 0.5px;
+    /* Fill will be handled by the pattern */
+}
+
+.water-area {
+    fill: rgba(0, 120, 190, 0.5);
+    stroke: rgb(0, 120, 190);
+    stroke-width: 0.5px;
+}
+
+/* Piste label styles based on difficulty */
+.piste-label {
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+    text-align: center;
+    text-shadow: 
+        1px 1px 0 #000,
+        -1px 1px 0 #000,
+        1px -1px 0 #000,
+        -1px -1px 0 #000;
+    pointer-events: none;
+    white-space: nowrap;
+}
+
+.piste-easy, .piste-novice {
+    color: white;
+    text-shadow: 
+        1px 1px 0 #000,
+        -1px 1px 0 #000,
+        1px -1px 0 #000,
+        -1px -1px 0 #000;
+}
+
+.piste-intermediate {
+    color: white;
+    text-shadow: 
+        1px 1px 0 #000,
+        -1px 1px 0 #000,
+        1px -1px 0 #000,
+        -1px -1px 0 #000;
+}
+
+.piste-advanced {
+    color: white;
+    text-shadow: 
+        1px 1px 0 #000,
+        -1px 1px 0 #000,
+        1px -1px 0 #000,
+        -1px -1px 0 #000;
+}
+
+.piste-expert {
+    color: white;
+    text-shadow: 
+        1px 1px 0 #000,
+        -1px 1px 0 #000,
+        1px -1px 0 #000,
+        -1px -1px 0 #000;
+}
+
+.piste-freeride {
+    color: white;
+    text-shadow: 
+        1px 1px 0 #000,
+        -1px 1px 0 #000,
+        1px -1px 0 #000,
+        -1px -1px 0 #000;
+}
+
+/* Layer control styling */
+.leaflet-control-layers {
+    background: rgba(255,255,255,0.9);
+    padding: 5px;
+    border-radius: 5px;
+    font-size: 12px;
+    margin-bottom: 10px !important;
+    position: relative;
+    max-height: 400px;
+    overflow-y: auto;
+    transition: all 0.3s ease;
+    width: auto;
+}
+
+/* Layer control title */
+.layer-control-title {
+    font-weight: bold;
+    margin-bottom: 8px;
+    text-align: center;
+    display: block;
+}
+
+/* Layer icon for collapsed state */
+.layer-icon {
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>');
+    width: 18px;
+    height: 18px;
+    display: none;
+    margin: 0 auto;
+}
+
+/* Make control collapsible */
+.layer-control-collapse {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 20px;
+    height: 20px;
+    text-align: center;
+    line-height: 20px;
+    cursor: pointer;
+    font-weight: bold;
+    border-radius: 3px;
+    background: rgba(255,255,255,0.8);
+    z-index: 1001;
+}
+
+.layer-control-collapse:hover {
+    background: #ddd;
+}
+
+.layer-control-collapsed {
+    width: auto !important;
+    height: auto !important;
+    padding: 8px !important;
+}
+
+.layer-control-collapsed .leaflet-control-layers-list {
+    display: none;
+}
+
+.layer-control-collapsed .layer-control-title {
+    margin: 0;
+    display: inline-block;
+}
+
+.layer-control-collapsed .layer-icon {
+    display: inline-block;
+    vertical-align: middle;
+    margin-left: 5px;
+}
+
+/* Map legend styling */
+.map-legend {
+    background: rgba(255, 255, 255, 0.9);
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    max-width: 220px;
+    line-height: 1.5;
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    z-index: 800;
+    transition: all 0.3s ease;
+}
+
+/* Collapsed title only shows when collapsed */
+.legend-collapsed-title {
+    display: none;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+/* Legend collapse functionality */
+.legend-collapse-button {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 20px;
+    height: 20px;
+    text-align: center;
+    line-height: 20px;
+    cursor: pointer;
+    font-weight: bold;
+    border-radius: 3px;
+    background: rgba(255,255,255,0.8);
+    z-index: 1001;
+}
+
+.legend-collapse-button:hover {
+    background: #ddd;
+}
+
+.legend-collapsed {
+    width: auto !important;
+    height: auto !important;
+    padding: 8px !important;
+}
+
+.legend-collapsed .legend-title,
+.legend-collapsed .legend-section,
+.legend-collapsed .legend-item,
+.legend-collapsed .legend-content {
+    display: none !important;
+}
+
+.legend-collapsed .legend-collapsed-title {
+    display: block;
+    margin: 0;
+}
+
+/* Ensure form elements in layer control are visible */
+.leaflet-control-layers input[type="checkbox"],
+.leaflet-control-layers input[type="radio"] {
+    display: inline-block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: static !important;
+    margin-right: 5px !important;
+    vertical-align: middle !important;
+    pointer-events: auto !important;
+    width: auto !important;
+    height: auto !important;
+    -webkit-appearance: auto !important;
+    -moz-appearance: auto !important;
+    appearance: auto !important;
+}
+
+/* Fix the label display */
+.leaflet-control-layers label {
+    display: flex !important;
+    align-items: center !important;
+    margin: 5px 0 !important;
+}
+
+/* Make sure overflow doesn't get cut off */
+.leaflet-control-layers-overlays {
+    margin-bottom: 5px;
+}
+
+/* Lift station markers */
+.lift-station {
+    fill: #fc1a1a;
+    stroke: #000;
+    stroke-width: 1px;
+}
+
+/* Legend styling */
+.map-legend {
+    background: rgba(255, 255, 255, 0.9);
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    max-width: 220px;
+    line-height: 1.5;
+}
+
+.legend-title {
+    font-weight: bold;
+    font-size: 14px;
+    margin-bottom: 5px;
+    text-align: center;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.legend-symbol {
+    margin-right: 10px;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.legend-label {
+    flex: 1;
+}
+
+.legend-section {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid #ddd;
+}
+
+/* Update layer icon styling for better SVG display */
+.layer-control-collapse svg {
+    width: 16px;
+    height: 16px;
+    fill: #333;
+    stroke: #333;
+    stroke-width: 1;
+    vertical-align: middle;
+}
+
+/* Style for the info icon */
+.legend-collapse-button {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 20px;
+    height: 20px;
+    text-align: center;
+    line-height: 20px;
+    cursor: pointer;
+    font-weight: bold;
+    border-radius: 3px;
+    background: rgba(255,255,255,0.8);
+    z-index: 1001;
+    font-family: serif;
+}
+
+/* Adjust font size for the info icon */
+.legend-collapsed .legend-collapse-button {
+    font-size: 16px;
+    line-height: 20px;
+}
+
+/* Add to your existing map.css file */
+#map-container.loading {
+    position: relative;
+}
+
+#map-container.loading::after {
+    content: "Loading resort data...";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 18px;
+    z-index: 1000;
+}
