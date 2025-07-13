@@ -71,7 +71,20 @@
             
         } catch (error) {
             console.error('Error fetching country data:', error);
-            countrySelect.innerHTML = '<option value="">Error loading countries</option>';
+            countrySelect.innerHTML = '<option value="">Network error - please check your connection</option>';
+            
+            // Add a helpful message for users
+            const errorMessage = document.createElement('p');
+            errorMessage.style.color = '#e74c3c';
+            errorMessage.style.fontSize = '0.9em';
+            errorMessage.style.marginTop = '10px';
+            errorMessage.innerHTML = '⚠️ Unable to load resort data. Please check your internet connection and try refreshing the page.';
+            
+            // Insert the error message after the resort selector
+            const resortSelection = document.getElementById('resort-selection');
+            if (resortSelection) {
+                resortSelection.appendChild(errorMessage);
+            }
         }
     }
     
@@ -377,27 +390,27 @@
             return;
         }
         
+        // Limit search term length to prevent excessive API calls
+        if (searchTerm.length < 2) {
+            alert('Please enter at least 2 characters to search.');
+            return;
+        }
+        
         try {
             // Show loading state
             searchButton.disabled = true;
             searchButton.textContent = 'Searching...';
             
-            // Fetch resorts matching the search term
-            const response = await fetch(`${API_BASE_URL}/search?q=${encodeURIComponent(searchTerm)}`);
-            const data = await response.json();
-            
-            if (!response.ok) {
-                throw new Error(`API returned status: ${response.status}`);
-            }
+            // Since the search endpoint is not working, we'll implement a client-side search
+            // using the existing resort data that we've already loaded
+            const results = await performClientSideSearch(searchTerm);
             
             // Reset search UI
             searchButton.disabled = false;
             searchButton.textContent = 'Search';
             
-            const results = data.resorts || [];
-            
             if (results.length === 0) {
-                alert('No resorts found matching your search. Please try a different name.');
+                alert('No resorts found matching your search. Please try a different name or use the dropdown menus below.');
                 return;
             }
             
@@ -411,10 +424,114 @@
             
         } catch (error) {
             console.error('Error searching for resorts:', error);
-            alert('An error occurred while searching. Please try again.');
+            alert('An error occurred while searching. Please try using the dropdown menus below instead.');
             searchButton.disabled = false;
             searchButton.textContent = 'Search';
         }
+    }
+    
+    /**
+     * Perform client-side search using loaded resort data
+     */
+    async function performClientSideSearch(searchTerm) {
+        const results = [];
+        const searchLower = searchTerm.toLowerCase();
+        
+        console.log('Searching for:', searchTerm);
+        
+        // First, search through all loaded resort data
+        for (const countryId in resortData.resorts) {
+            const resorts = resortData.resorts[countryId];
+            console.log(`Searching in ${countryId}:`, resorts.length, 'resorts');
+            for (const resort of resorts) {
+                if (resort.name.toLowerCase().includes(searchLower)) {
+                    console.log('Found match:', resort.name);
+                    results.push(resort);
+                }
+            }
+        }
+        
+        // If no results found in loaded data, search through major countries
+        if (results.length === 0) {
+            console.log('No results in loaded data, searching major countries...');
+            
+            // Make sure we have countries loaded first
+            if (!resortData.countries || resortData.countries.length === 0) {
+                console.log('No countries loaded, loading countries first...');
+                try {
+                    const response = await fetch(`${API_BASE_URL}/countries`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        resortData.countries = data.countries || [];
+                    }
+                } catch (error) {
+                    console.error('Failed to load countries:', error);
+                    return results;
+                }
+            }
+            
+            // Try to load resorts from major states/provinces instead of countries
+            const majorStates = [
+                { country: 'United States', states: ['Pennsylvania', 'Colorado', 'California', 'Vermont', 'New York', 'Utah'] },
+                { country: 'Canada', states: ['British Columbia', 'Alberta', 'Quebec', 'Ontario'] },
+                { country: 'France', states: ['Auvergne-Rhône-Alpes', 'Provence-Alpes-Côte d\'Azur'] },
+                { country: 'Switzerland', states: ['Graubünden', 'Valais', 'Bern'] },
+                { country: 'Austria', states: ['Tirol', 'Salzburg', 'Vorarlberg'] },
+                { country: 'Italy', states: ['Trentino-Alto Adige', 'Valle d\'Aosta', 'Lombardia'] }
+            ];
+            
+            for (const country of resortData.countries) {
+                const majorStateList = majorStates.find(ms => ms.country === country.name);
+                if (majorStateList) {
+                    console.log('Loading states for:', country.name);
+                    try {
+                        // First get states for this country
+                        const stateResponse = await fetch(`${API_BASE_URL}/states?country=${encodeURIComponent(country.id)}`);
+                        if (stateResponse.ok) {
+                            const stateData = await stateResponse.json();
+                            const states = stateData.states || [];
+                            
+                            // Filter to major states only
+                            const majorStatesForCountry = states.filter(state => 
+                                majorStateList.states.includes(state.name)
+                            );
+                            
+                            console.log(`Found ${majorStatesForCountry.length} major states for ${country.name}`);
+                            
+                            // Load resorts for each major state
+                            for (const state of majorStatesForCountry) {
+                                try {
+                                    const resortResponse = await fetch(`${API_BASE_URL}/resorts?province=${encodeURIComponent(state.id)}`);
+                                    if (resortResponse.ok) {
+                                        const resortData = await resortResponse.json();
+                                        const stateResorts = resortData.resorts || [];
+                                        
+                                        console.log(`Loaded ${stateResorts.length} resorts for ${state.name}`);
+                                        
+                                        // Store the loaded resorts for future searches
+                                        resortData.resorts[state.id] = stateResorts;
+                                        
+                                        for (const resort of stateResorts) {
+                                            if (resort.name.toLowerCase().includes(searchLower)) {
+                                                console.log('Found match in', state.name + ':', resort.name);
+                                                results.push(resort);
+                                            }
+                                        }
+                                    }
+                                } catch (error) {
+                                    console.warn(`Failed to load resorts for ${state.name}:`, error);
+                                }
+                            }
+                        }
+                    } catch (error) {
+                        console.warn(`Failed to load states for ${country.name}:`, error);
+                    }
+                }
+            }
+        }
+        
+        console.log('Total search results:', results.length);
+        return results;
     }
     
     /**

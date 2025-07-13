@@ -17,7 +17,7 @@
 		<!-- Load scripts -->
 		<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
 		<script src="https://d3js.org/d3.v6.min.js"></script>
-		<script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
 	</head>
 	<body class="is-preload landing">
 		<div id="page-wrapper">
@@ -55,9 +55,10 @@
 									<h4>Resort Selection</h4>
 									<!-- Add search box -->
 									<div class="resort-search">
-										<input type="text" id="resortSearchInput" placeholder="Search resort by name..." />
-										<button id="searchButton" class="button primary small">Search</button>
+										<input type="text" id="resortSearchInput" placeholder="Search resort by name (min 2 chars)..." disabled />
+										<button id="searchButton" class="button primary small" disabled>Search</button>
 									</div>
+									<p class="search-help">⚠️ Search functionality is temporarily unavailable due to API maintenance. Please use the dropdown menus below to browse resorts by location.</p>
 									<p class="separator-text">- or select from dropdowns -</p>
 									<div class="resort-selector">
 										<select id="countrySelect">
@@ -316,7 +317,8 @@
                 }
                 
                 .architecture-content {
-                    background-color: rgba(255, 255, 255, 0.95);
+                    background-color: rgba(0, 0, 0, 0.95);
+                    color: #ffffff;
                     border-radius: 8px;
                     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
                     max-width: 800px;
@@ -359,6 +361,13 @@
                 
                 .resort-search input {
                     flex-grow: 1;
+                }
+                
+                .search-help {
+                    font-size: 0.85em;
+                    color: #666;
+                    margin: 5px 0 15px 0;
+                    font-style: italic;
                 }
                 
                 .separator-text {
