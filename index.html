@@ -1,0 +1,691 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Global Ski Atlas – Your Guide to Ski Resorts Worldwide</title>
+        <meta name="description" content="Explore the paper atlas, online atlas, ski resort comparison tool, and skiing AI assistant. Your guide to ski resorts worldwide." />
+        <link
+            rel="shortcut icon"
+            href="./assets/logo.png?v=2"
+            type="image/x-icon"
+        />
+
+        <!-- Open Graph / Facebook -->
+        <meta property="og:title" content="Global Ski Atlas" />
+        <meta property="og:description" content="Your guide to ski resorts worldwide. Paper atlas, online atlas, resort comparison, and skiing AI assistant." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="" />
+        <!-- Replace with your live site URL -->
+        <meta property="og:image" content="" />
+
+        <!-- <link rel="stylesheet" href="../../tailwind-css/tailwind-runtime.css"> -->
+        <link rel="stylesheet" href="./css/tailwind-build.css" />
+        <link rel="stylesheet" href="css/index.css" />
+
+        <link
+            rel="stylesheet"
+            href="https://fonts.googleapis.com/icon?family=Material+Icons"
+        />
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css"
+            integrity="sha512-dPXYcDub/aeb08c63jRq/k6GaKccl256JQy/AnOq7CAnEZ9FzSL9wSbcZkMp4R26vBsMLFYH4kQ67/bbV8XaCQ=="
+            crossorigin="anonymous"
+            referrerpolicy="no-referrer"
+        />
+    </head>
+    <body class="tw-flex tw-min-h-[100vh] tw-flex-col tw-bg-[#fff]">
+        <header
+            class="tw-absolute tw-top-0 tw-z-20 tw-flex tw-h-[60px] tw-w-full tw-bg-opacity-0 
+                    tw-px-[5%] max-lg:tw-mr-auto max-lg:tw-px-4 lg:tw-justify-around"
+        >
+            <a class="tw-h-[50px] tw-w-[50px] tw-p-[4px]" href="#" aria-label="Global Ski Atlas home">
+                <img
+                    src="./assets/logo.png?v=2"
+                    alt="Global Ski Atlas"
+                    class="tw-object tw-h-full tw-w-full"
+                />
+            </a>
+            <div
+                class="collapsible-header animated-collapse max-lg:tw-shadow-md"
+                id="collapsed-header-items"
+            >
+                <div
+                    class="tw-flex tw-h-full tw-w-max tw-gap-5 tw-text-base tw-text-black 
+                            max-lg:tw-mt-[30px] max-lg:tw-flex-col max-lg:tw-place-items-end 
+                            max-lg:tw-gap-5 lg:tw-mx-auto lg:tw-place-items-center"
+                >
+                    <a class="header-links" href="#paths"> Coffee Table Book </a>
+                    <a class="header-links" href="mainmap.html"> Online Atlas </a>
+                    <a class="header-links" href="resort-comparison.html"> Compare Resorts </a>
+                    <a class="header-links" href="#about"> About </a>
+                    <a class="header-links" href="#ai-assistant-detail"> AI Assistant </a>
+                </div>
+                <div
+                    class="tw-mx-4 tw-flex tw-place-items-center tw-gap-[20px] tw-text-base 
+                            max-md:tw-w-full max-md:tw-flex-col max-md:tw-place-content-center"
+                >
+                    <a
+                        href=""
+                        aria-label="signup"
+                        class="tw-flex tw-h-[40px] tw-place-items-center tw-gap-2 tw-rounded-full
+                                tw-bg-black tw-p-1 tw-pl-4 tw-text-white"
+                    >
+                        <span>Download App Coming Soon</span>
+                        <div
+                            class="tw-flex tw-h-[30px] tw-w-[30px] tw-place-content-center 
+                                    tw-place-items-center tw-rounded-full tw-bg-primary 
+                                    tw-font-semibold tw-text-black"
+                        >
+                            <i class="bi bi-download"></i>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            <button
+                class="bi bi-list tw-absolute tw-right-3 tw-top-3 tw-z-50 tw-text-3xl 
+                        tw-text-black lg:tw-hidden"
+                onclick="toggleHeader()"
+                aria-label="menu"
+                id="collapse-btn"
+            ></button>
+        </header>
+
+        <section
+            class="tw-relative tw-flex tw-min-h-[100vh] tw-w-full tw-max-w-[100vw] tw-flex-col 
+                    tw-overflow-hidden max-lg:tw-p-4 max-md:tw-mt-[50px]"
+        >
+            <div
+                class="tw-flex tw-h-full tw-min-h-[100vh] tw-w-full tw-place-content-center 
+                        tw-gap-6 tw-p-[5%] max-xl:tw-place-items-center max-lg:tw-flex-col"
+            >
+                <div class="tw-flex tw-flex-col tw-place-content-center">
+                    <div
+                        class="tw-flex tw-flex-wrap tw-text-6xl tw-font-semibold tw-uppercase 
+                                tw-leading-[80px] max-lg:tw-text-4xl max-md:tw-leading-snug"
+                    >
+                        <span class="reveal-hero-text"> Your guide to ski resorts worldwide. </span>
+                    </div>
+                    <div
+                        class="reveal-hero-text tw-mt-2 tw-max-w-[450px] tw-p-2 
+                                tw-text-justify max-lg:tw-max-w-full"
+                    >
+                        Explore the paper atlas and coffee table book, use the interactive online atlas, compare resorts side by side, or ask the AI anything about skiing—all in one place.
+                    </div>
+
+                    <div class="reveal-hero-text tw-mt-4 tw-flex tw-gap-4 tw-p-2">
+                        <div class="tw-flex tw-gap-4">
+                            <div class="tw-relative tw-h-[50px] tw-w-[150px]">
+                                <img
+                                    src="./assets/images/brand-logos/app-store-badge.png"
+                                    alt="App Store"
+                                    class="tw-h-full tw-w-full tw-object-contain"
+                                />
+                                <div class="tw-absolute tw-inset-0 tw-z-10 tw-flex tw-items-center tw-justify-center tw-rounded-lg tw-text-sm tw-font-semibold tw-text-white" style="background-color: rgba(180,0,0,0.85)">
+                                    Coming Soon
+                                </div>
+                            </div>
+                            <div class="tw-relative tw-h-[50px] tw-w-[150px]">
+                                <img
+                                    src="./assets/images/brand-logos/google-play-badge.png"
+                                    alt="Google Play"
+                                    class="tw-h-full tw-w-full tw-object-contain"
+                                />
+                                <div class="tw-absolute tw-inset-0 tw-z-10 tw-flex tw-items-center tw-justify-center tw-rounded-lg tw-text-sm tw-font-semibold tw-text-white" style="background-color: rgba(180,0,0,0.85)">
+                                    Coming Soon
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div
+                    class="tw-flex tw-w-full tw-max-w-[50%] tw-place-content-center tw-place-items-center 
+                            tw-overflow-hidden max-lg:tw-max-w-[unset]"
+                >
+                    <div class="tw-relative tw-max-h-[420px] tw-max-w-[560px] tw-overflow-hidden tw-rounded-lg max-lg:tw-max-h-[280px] max-lg:tw-max-w-[320px]">
+                        <img
+                            src="./assets/ski-resort-dashboard-phone.png"
+                            alt="Phone showing ski resort dashboard"
+                            class="reveal-hero-img tw-z-[1] tw-h-full tw-w-full tw-object-cover"
+                        />
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section
+            id="ai-assistant"
+            class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-place-content-center 
+                    tw-place-items-center tw-overflow-hidden tw-p-6 tw-py-16"
+        >
+            <div class="tw-flex tw-flex-col tw-place-items-center tw-gap-10">
+                <h2 class="reveal-up tw-text-center tw-text-4xl tw-font-semibold max-md:tw-text-2xl">
+                    Take your skiing to the next level
+                </h2>
+                <div class="features-grid">
+                    <div class="reveal-up tw-flex tw-flex-col tw-place-items-center tw-text-center">
+                        <div class="tw-flex tw-h-16 tw-w-16 tw-place-content-center tw-place-items-center tw-rounded-full tw-border tw-border-gray-300 tw-bg-gray-100">
+                            <i class="bi bi-triangle-fill tw-text-2xl tw-text-gray-700"></i>
+                        </div>
+                        <h3 class="tw-mt-4 tw-text-xl tw-font-bold">Comprehensive Resort Data</h3>
+                        <p class="tw-mt-2 tw-text-sm tw-leading-relaxed tw-text-gray-600">Detailed information on over 3,000 ski resorts worldwide, including terrain, lifts, and amenities.</p>
+                    </div>
+                    <div class="reveal-up tw-flex tw-flex-col tw-place-items-center tw-text-center">
+                        <div class="tw-flex tw-h-16 tw-w-16 tw-place-content-center tw-place-items-center tw-rounded-full tw-border tw-border-gray-300 tw-bg-gray-100">
+                            <i class="bi bi-snow2 tw-text-2xl tw-text-gray-700"></i>
+                        </div>
+                        <h3 class="tw-mt-4 tw-text-xl tw-font-bold">Snow Conditions</h3>
+                        <p class="tw-mt-2 tw-text-sm tw-leading-relaxed tw-text-gray-600">Up-to-date snow reports and historical snowfall data to help you plan your trip.</p>
+                    </div>
+                    <div class="reveal-up tw-flex tw-flex-col tw-place-items-center tw-text-center">
+                        <div class="tw-flex tw-h-16 tw-w-16 tw-place-content-center tw-place-items-center tw-rounded-full tw-border tw-border-gray-300 tw-bg-gray-100">
+                            <i class="bi bi-map tw-text-2xl tw-text-gray-700"></i>
+                        </div>
+                        <h3 class="tw-mt-4 tw-text-xl tw-font-bold">Interactive Maps</h3>
+                        <p class="tw-mt-2 tw-text-sm tw-leading-relaxed tw-text-gray-600">Explore resorts with our detailed interactive maps showing trails, lifts, and facilities.</p>
+                    </div>
+                    <div class="reveal-up tw-flex tw-flex-col tw-place-items-center tw-text-center">
+                        <div class="tw-flex tw-h-16 tw-w-16 tw-place-content-center tw-place-items-center tw-rounded-full tw-border tw-border-gray-300 tw-bg-gray-100">
+                            <i class="bi bi-bar-chart tw-text-2xl tw-text-gray-700"></i>
+                        </div>
+                        <h3 class="tw-mt-4 tw-text-xl tw-font-bold">Resort Comparison</h3>
+                        <p class="tw-mt-2 tw-text-sm tw-leading-relaxed tw-text-gray-600">Compare multiple resorts side by side based on your preferred criteria.</p>
+                    </div>
+                    <div class="reveal-up tw-flex tw-flex-col tw-place-items-center tw-text-center">
+                        <div class="tw-flex tw-h-16 tw-w-16 tw-place-content-center tw-place-items-center tw-rounded-full tw-border tw-border-gray-300 tw-bg-gray-100">
+                            <i class="bi bi-book tw-text-2xl tw-text-gray-700"></i>
+                        </div>
+                        <h3 class="tw-mt-4 tw-text-xl tw-font-bold">Coffee Table Book</h3>
+                        <p class="tw-mt-2 tw-text-sm tw-leading-relaxed tw-text-gray-600">A beautiful photographic journey through the world's most stunning ski destinations.</p>
+                    </div>
+                    <div class="reveal-up tw-flex tw-flex-col tw-place-items-center tw-text-center">
+                        <div class="tw-flex tw-h-16 tw-w-16 tw-place-content-center tw-place-items-center tw-rounded-full tw-border tw-border-gray-300 tw-bg-gray-100">
+                            <i class="bi bi-cloud tw-text-2xl tw-text-gray-700"></i>
+                        </div>
+                        <h3 class="tw-mt-4 tw-text-xl tw-font-bold">AWS-Powered Analytics</h3>
+                        <p class="tw-mt-2 tw-text-sm tw-leading-relaxed tw-text-gray-600">Advanced data analytics and AI features to enhance your resort selection experience.</p>
+                    </div>
+                </div>
+                <a
+                    href="#online-atlas"
+                    aria-label="Explore the Atlas"
+                    class="reveal-up tw-mt-6 tw-flex tw-h-12 tw-min-w-[180px] tw-place-content-center tw-place-items-center tw-rounded-lg tw-border tw-border-gray-300 tw-bg-white tw-px-6 tw-py-3 tw-text-black hover:tw-bg-gray-50"
+                >
+                    Explore the Atlas
+                </a>
+            </div>
+        </section>
+
+        <section
+            class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-place-content-center 
+                    tw-place-items-center tw-overflow-hidden tw-p-6"
+        >
+            <div
+                class="reveal-up tw-flex tw-min-h-[300px] tw-w-full tw-max-w-[80%] tw-place-items-center 
+                        tw-justify-around tw-gap-8 tw-rounded-xl tw-bg-[#e7e6e685] tw-p-4 max-lg:tw-max-w-full max-md:tw-flex-col"
+            >
+                <div class="tw-flex tw-max-w-[280px] tw-flex-col tw-place-items-center tw-gap-2 tw-text-center">
+                    <span id="stat-resorts" class="tw-text-4xl tw-font-bold tw-tracking-tight" style="color: #0d9488">—</span>
+                    <span class="tw-text-lg tw-font-medium tw-text-gray-800">resorts</span>
+                    <span id="stat-resorts-desc" class="tw-text-sm tw-text-gray-600">Detailed information on ski resorts worldwide, including terrain, lifts, and amenities.</span>
+                </div>
+                <div class="tw-flex tw-max-w-[260px] tw-flex-col tw-place-items-center tw-gap-2 tw-text-center">
+                    <span id="stat-lifts" class="tw-text-4xl tw-font-bold tw-tracking-tight" style="color: #BDB8FF">—</span>
+                    <span class="tw-text-lg tw-font-medium tw-text-gray-800">lifts</span>
+                    <span class="tw-text-sm tw-text-gray-600">Ski lifts and gondolas mapped across all resorts.</span>
+                </div>
+                <div class="tw-flex tw-max-w-[260px] tw-flex-col tw-place-items-center tw-gap-2 tw-text-center">
+                    <span id="stat-pistes" class="tw-text-4xl tw-font-bold tw-tracking-tight" style="color: #0d9488">—</span>
+                    <span class="tw-text-lg tw-font-medium tw-text-gray-800">trails</span>
+                    <span class="tw-text-sm tw-text-gray-600">Pistes and runs you can explore on the map.</span>
+                </div>
+            </div>
+        </section>
+
+        <section
+            id="paths"
+            class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6"
+        >
+            <div
+                class="reveal-up tw-flex tw-min-h-[60vh] tw-place-content-center tw-place-items-center
+                        tw-gap-[10%] max-lg:tw-flex-col max-lg:tw-gap-10"
+            >
+                <div class="tw-flex">
+                    <div class="tw-h-[450px] tw-w-[300px]">
+                        <img
+                            src="./assets/global-ski-atlas-coffee-table-book.png"
+                            alt="Global Ski Atlas coffee table book"
+                            class="tw-h-full tw-w-full tw-object-contain"
+                        />
+                    </div>
+                </div>
+                <div
+                    class="tw-mt-6 tw-flex tw-max-w-[450px] tw-flex-col tw-gap-4"
+                >
+                    <h3 class="tw-text-4xl tw-font-medium">Coffee Table Book</h3>
+                    <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700">A stunning visual journey through the world's most beautiful ski resorts</p>
+                    <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600">Our limited edition coffee table book features breathtaking maps of ski resorts from around the globe. Each page captures the majesty of mountain landscapes, the thrill of perfect powder, and the unique character of each destination.</p>
+                </div>
+            </div>
+        </section>
+
+        <section
+            id="online-atlas"
+            class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6"
+        >
+            <div
+                class="reveal-up tw-flex tw-min-h-[60vh] tw-place-content-center tw-place-items-center 
+                        tw-gap-[10%] max-lg:tw-flex-col max-lg:tw-gap-10"
+            >
+                <div
+                    class="tw-mt-6 tw-flex tw-max-w-[450px] tw-flex-col tw-gap-4"
+                >
+                    <h3 class="tw-text-4xl tw-font-medium">Online Atlas</h3>
+                    <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700">Explore our comprehensive collection of standardized ski resort maps</p>
+                    <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600">Our interactive atlas provides standardized maps and statistics for ski resorts worldwide, using OpenStreetMap data and AWS services. Compare resorts easily with consistent information on terrain, vertical drop, run lengths, and more.</p>
+                    <a href="mainmap.html" class="tw-mt-6 tw-inline-flex tw-gap-2 tw-rounded-lg tw-px-8 tw-py-4 tw-text-lg tw-font-semibold tw-shadow-md tw-no-underline tw-text-white hover:tw-opacity-90" style="background-color: #2563eb;" aria-label="Open Online Atlas map">Explore the map <i class="bi bi-arrow-right"></i></a>
+                </div>
+
+                <div class="tw-flex">
+                    <div class="tw-h-[450px] tw-w-[300px]">
+                        <img
+                            src="./assets/phone-online-atlas-map.png"
+                            alt="Phone showing online atlas map"
+                            class="tw-h-full tw-w-full tw-object-contain"
+                        />
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section
+            id="compare"
+            class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6"
+        >
+            <div
+                class="reveal-up tw-flex tw-min-h-[60vh] tw-place-content-center tw-place-items-center
+                        tw-gap-[10%] max-lg:tw-flex-col max-lg:tw-gap-10"
+            >
+                <div class="tw-flex">
+                    <div class="tw-h-[450px] tw-w-[300px]">
+                        <img
+                            src="./assets/images/legacy/ski_atlas.jpg"
+                            alt="Ski resort comparison"
+                            class="tw-h-full tw-w-full tw-object-contain"
+                        />
+                    </div>
+                </div>
+                <div
+                    class="tw-mt-6 tw-flex tw-max-w-[450px] tw-flex-col tw-gap-4"
+                >
+                    <h3 class="tw-text-4xl tw-font-medium">Ski Resort Comparison Tool</h3>
+                    <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700">Compare resorts side by side to find your perfect match</p>
+                    <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600">Our interactive comparison tool allows you to evaluate multiple ski resorts based on criteria that matter to you. Compare terrain, vertical drop, annual snowfall, lift capacity, and more to make informed decisions about your next ski destination.</p>
+                    <a href="resort-comparison.html" class="tw-mt-6 tw-inline-flex tw-gap-2 tw-rounded-lg tw-px-8 tw-py-4 tw-text-lg tw-font-semibold tw-shadow-md tw-no-underline tw-text-white" style="background-color: #2563eb;" aria-label="Open Ski Resort Comparison Tool">Try the comparison tool <i class="bi bi-arrow-right"></i></a>
+                </div>
+            </div>
+        </section>
+
+        <section
+            id="ai-assistant-detail"
+            class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6"
+        >
+            <div
+                class="tw-flex tw-min-h-[60vh] tw-place-content-center tw-place-items-center 
+                        tw-gap-[10%] max-lg:tw-flex-col max-lg:tw-gap-10"
+            >
+                <div
+                    class="tw-mt-6 tw-flex tw-max-w-[450px] tw-flex-col tw-gap-4"
+                >
+                    <h3 class="tw-text-4xl tw-font-medium">Skiing AI Assistant</h3>
+                    <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700">Personalized resort recommendations powered by artificial intelligence</p>
+                    <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600">Our cutting-edge AI analyzes your skiing preferences, skill level, budget, and desired amenities to recommend the perfect ski destinations tailored just for you. Whether you're seeking challenging terrain, family-friendly resorts, or the best powder conditions, our AI assistant helps you discover ideal matches that you might never have considered.</p>
+                    <a href="skiing-ai.html" class="ai-try-btn tw-mt-6 tw-inline-flex tw-items-center tw-gap-2 tw-rounded-lg tw-px-8 tw-py-4 tw-text-lg tw-font-semibold tw-shadow-md" style="background-color: #0d9488; color: #fff;" aria-label="Try the Skiing AI Assistant">
+                        Try the AI Assistant <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+
+                <a href="skiing-ai.html" class="tw-flex tw-cursor-pointer">
+                    <div class="tw-h-[450px] tw-w-[300px]">
+                        <img
+                            src="./assets/skiing-ai-phone-mockup.png"
+                            alt="Skiing AI Assistant - Click to chat"
+                            class="tw-h-full tw-w-full tw-object-contain tw-transition-opacity hover:tw-opacity-90"
+                        />
+                    </div>
+                </a>
+            </div>
+        </section>
+
+        <section
+            id="about"
+            class="tw-mt-5 tw-flex tw-min-h-[60vh] tw-w-full tw-flex-col tw-place-content-center 
+                    tw-place-items-center tw-bg-black tw-p-6 tw-py-12 tw-text-white max-lg:tw-min-h-[40vh]"
+        >
+            <h3 class="reveal-up tw-text-5xl tw-font-medium max-md:tw-text-2xl">
+                About
+            </h3>
+            <!-- Testimonials-style carousel (template: Clients love us) -->
+            <div class="reveal-up tw-max-w-[750px] max-md:tw-max-w-[100vw]">
+                <div class="swiper tw-mt-8 tw-flex tw-flex-col tw-gap-10 tw-space-y-8">
+                    <div class="swiper-wrapper">
+                        <!-- 1. Technology -->
+                        <div class="swiper-slide tw-flex tw-place-content-center">
+                            <div class="tw-flex tw-h-fit tw-max-w-[750px] tw-place-content-center tw-place-items-center tw-gap-10 tw-rounded-lg tw-p-4 tw-shadow-lg max-lg:tw-flex-col">
+                                <div class="tw-flex tw-flex-shrink-0 tw-place-items-center">
+                                    <div class="tw-h-[150px] tw-w-[280px] tw-flex-shrink-0 tw-overflow-hidden tw-rounded-lg max-lg:tw-h-[100px] max-lg:tw-w-[200px]">
+                                        <img src="./assets/images/legacy/AWS_Diagram.png" alt="AWS architecture diagram" class="tw-h-full tw-w-full tw-object-contain tw-bg-white" />
+                                    </div>
+                                </div>
+                                <div class="tw-flex tw-max-w-[450px] tw-flex-col tw-gap-4">
+                                    <p class="tw-mt-4 tw-italic tw-text-gray-200">This serverless site is built with AWS: static site on S3 with CloudFront, resort data in DynamoDB, API via Gateway and Lambda. Data is managed in Google Sheets and synced to DynamoDB. QGIS, OpenStreetMap, S3, CloudFront, Lambda, API Gateway, DynamoDB.</p>
+                                    <b>— Technology</b>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- 2. Author -->
+                        <div class="swiper-slide tw-flex tw-place-content-center">
+                            <div class="tw-flex tw-h-fit tw-max-w-[750px] tw-place-content-center tw-place-items-center tw-gap-10 tw-rounded-lg tw-p-4 tw-shadow-lg max-lg:tw-flex-col">
+                                <div class="tw-flex tw-flex-shrink-0 tw-place-items-center">
+                                    <div class="tw-h-[150px] tw-w-[150px] tw-flex-shrink-0 tw-overflow-hidden tw-rounded-full max-lg:tw-h-[80px] max-lg:tw-w-[80px]">
+                                        <img src="./assets/images/legacy/team_photo.jpg" alt="Jonathan Witcoski" class="tw-h-full tw-w-full tw-object-cover" />
+                                    </div>
+                                </div>
+                                <div class="tw-flex tw-max-w-[450px] tw-flex-col tw-gap-4">
+                                    <p class="tw-mt-4 tw-italic tw-text-gray-200">Global Ski Atlas is a solo project by Jonathan Witcoski. To learn more about me and my other projects, visit <a href="https://witcoskitech.com" class="tw-underline hover:tw-opacity-90">witcoskitech.com</a> or <a href="https://www.linkedin.com/in/jonathan-witcoski/" class="tw-underline hover:tw-opacity-90">connect on LinkedIn</a>.</p>
+                                    <b>— Jonathan Witcoski</b>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- 3. Why this was started -->
+                        <div class="swiper-slide tw-flex tw-place-content-center">
+                            <div class="tw-flex tw-h-fit tw-max-w-[750px] tw-place-content-center tw-place-items-center tw-gap-10 tw-rounded-lg tw-p-4 tw-shadow-lg max-lg:tw-flex-col">
+                                <div class="tw-flex tw-flex-shrink-0 tw-place-items-center">
+                                    <div class="tw-h-[150px] tw-w-[150px] tw-flex-shrink-0 tw-overflow-hidden tw-rounded-full max-lg:tw-h-[80px] max-lg:tw-w-[80px]">
+                                        <img src="./assets/images/legacy/about_header.jpg" alt="" class="tw-h-full tw-w-full tw-object-cover" />
+                                    </div>
+                                </div>
+                                <div class="tw-flex tw-max-w-[450px] tw-flex-col tw-gap-4">
+                                    <p class="tw-mt-4 tw-italic tw-text-gray-200">The inspiration came from Storm Skiing, skimap.org, and openskimap.org. I started this due to the lack of standardized resort information—custom maps make it hard to compare. The atlas compiles statistics using OpenStreetMap and QGIS so skiers can compare resorts fairly.</p>
+                                    <b>— Why this was started</b>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pagination-container tw-flex tw-place-content-center"></div>
+                    <div class="tw-flex tw-place-content-center tw-gap-6">
+                        <div class="testmonial-prev tw-flex tw-h-[40px] tw-w-[40px] tw-place-content-center tw-place-items-center tw-rounded-full tw-border-2 tw-border-solid tw-border-gray-300 tw-text-2xl">
+                            <i class="bi bi-arrow-left"></i>
+                        </div>
+                        <div class="testmonial-next tw-flex tw-h-[40px] tw-w-[40px] tw-place-content-center tw-place-items-center tw-rounded-full tw-border-2 tw-border-solid tw-border-gray-300 tw-text-2xl">
+                            <i class="bi bi-arrow-right"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="newsletter-section tw-flex tw-w-full tw-flex-col tw-place-content-center tw-place-items-center tw-gap-4 tw-bg-gray-50 tw-py-12 tw-px-[10%]">
+            <h2 class="newsletter-heading tw-text-2xl tw-font-bold tw-text-black max-md:tw-text-xl">Stay Updated</h2>
+            <p class="newsletter-subtext tw-max-w-lg tw-text-center tw-text-gray-600">Subscribe to receive the latest ski resort news and updates.</p>
+            <form action="https://formspree.io/f/xgolwlnp" method="POST" class="newsletter-form tw-mt-2 tw-flex tw-w-full tw-max-w-md tw-flex-col tw-gap-3 sm:tw-flex-row">
+                <input type="hidden" name="_subject" value="Newsletter signup – Global Ski Atlas" />
+                <label for="newsletter-email" class="tw-sr-only">Your Email Address</label>
+                <input
+                    id="newsletter-email"
+                    type="email"
+                    name="email"
+                    required
+                    placeholder="Your Email Address"
+                    class="newsletter-input tw-min-h-[48px] tw-flex-1 tw-rounded-lg tw-border tw-border-gray-300 tw-px-4 tw-py-3 tw-text-base tw-outline-none focus:tw-border-gray-700"
+                />
+                <button type="submit" class="newsletter-btn tw-min-h-[48px] tw-rounded-lg tw-bg-black tw-px-6 tw-py-3 tw-font-medium tw-text-white hover:tw-bg-gray-800">
+                    Subscribe
+                </button>
+            </form>
+        </section>
+
+        <section
+            class="tw-flex tw-w-full tw-flex-col tw-place-content-center tw-place-items-center tw-gap-[10%] 
+                    tw-bg-white tw-p-[5%] tw-px-[10%]"
+        >
+            <div class="contact-form-wrapper tw-w-full tw-max-w-md">
+                <p class="contact-form-label">CONTACT</p>
+                <h2 class="contact-form-title">Get in touch</h2>
+
+                <form
+                    action="https://formspree.io/f/xgolwlnp"
+                    method="POST"
+                    class="contact-form"
+                >
+                    <label for="contact-name" class="contact-form-field-label">Name</label>
+                    <input
+                        id="contact-name"
+                        type="text"
+                        name="name"
+                        placeholder="Your name"
+                        class="contact-form-input"
+                    />
+                    <label for="contact-email" class="contact-form-field-label">Email</label>
+                    <input
+                        id="contact-email"
+                        type="email"
+                        name="email"
+                        required
+                        placeholder="your@email.com"
+                        class="contact-form-input"
+                    />
+                    <label for="contact-message" class="contact-form-field-label">Message</label>
+                    <textarea
+                        id="contact-message"
+                        name="message"
+                        placeholder="Your message"
+                        rows="5"
+                        class="contact-form-textarea"
+                    ></textarea>
+                    <button type="submit" class="contact-form-btn">
+                        Send message
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <footer
+            class="tw-mt-auto tw-flex tw-w-full tw-place-content-around tw-gap-3 tw-p-[5%] tw-px-[10%] 
+                    tw-text-black max-md:tw-flex-col"
+        >
+            <div
+                class="tw-flex tw-h-full tw-w-[250px] tw-flex-col tw-place-items-center tw-gap-6 
+                        max-md:tw-w-full"
+            >
+                <img
+                    src="./assets/logo.png?v=2"
+                    alt="Global Ski Atlas"
+                    srcset=""
+                    class="tw-max-w-[120px]"
+                />
+                <div>
+                    Global Ski Atlas
+                </div>
+                <div class="tw-mt-3 tw-text-lg tw-font-semibold">Follow us</div>
+                <div class="tw-flex tw-gap-4 tw-text-2xl">
+                    <a href="" aria-label="Facebook">
+                        <i class="bi bi-facebook"></i>
+                    </a>
+                    <a
+                        href="https://twitter.com/@pauls_freeman"
+                        aria-label="Twitter"
+                    >
+                        <i class="bi bi-twitter"></i>
+                    </a>
+                    <a
+                        href="https://instagram.com/"
+                        class="tw-h-[40px] tw-w-[40px]"
+                        aria-label="Instagram"
+                    >
+                        <i class="bi bi-instagram"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div class="tw-flex tw-h-full tw-w-[250px] tw-flex-col tw-gap-4">
+                <h2 class="tw-text-3xl max-md:tw-text-xl">Explore</h2>
+                <div class="tw-flex tw-flex-col tw-gap-3 max-md:tw-text-sm">
+                    <a href="#paths" class="footer-link">Coffee Table Book</a>
+                    <a href="#online-atlas" class="footer-link">Online Atlas</a>
+                    <a href="resort-comparison.html" class="footer-link">Compare Resorts</a>
+                    <a href="#ai-assistant-detail" class="footer-link">AI Assistant</a>
+                </div>
+            </div>
+
+            <div class="tw-flex tw-h-full tw-w-[250px] tw-flex-col tw-gap-4">
+                <h2 class="tw-text-3xl max-md:tw-text-xl">Resources</h2>
+                <div class="tw-flex tw-flex-col tw-gap-3 max-md:tw-text-sm">
+                    <a href="#about" class="footer-link">About</a>
+                    <a href="" class="footer-link">FAQ</a>
+                    <a href="https://witcoskitech.com" class="footer-link" target="_blank" rel="noopener">Contact</a>
+                    <a href="" class="footer-link">Privacy Policy</a>
+                </div>
+            </div>
+        </footer>
+    </body>
+
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"
+    />
+
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+
+    <script
+        src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.0/gsap.min.js"
+        integrity="sha512-B1lby8cGcAUU3GR+Fd809/ZxgHbfwJMp0jLTVfHiArTuUt++VqSlJpaJvhNtRf3NERaxDNmmxkdx2o+aHd4bvw=="
+        crossorigin="anonymous"
+        referrerpolicy="no-referrer"
+    ></script>
+    <script
+        src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.0/ScrollTrigger.min.js"
+        integrity="sha512-AY2+JxnBETJ0wcXnLPCcZJIJx0eimyhz3OJ55k2Jx4RtYC+XdIi2VtJQ+tP3BaTst4otlGG1TtPJ9fKrAUnRdQ=="
+        crossorigin="anonymous"
+        referrerpolicy="no-referrer"
+    ></script>
+
+    <script src="./index.js"></script>
+
+    <style>
+        .swiper-pagination-bullet {
+            width: 10px;
+            height: 10px;
+            text-align: center;
+            /* font-size: 12px; */
+            opacity: 1;
+            background: #f7f7f7fa;
+            left: auto;
+        }
+        .swiper-pagination-bullet:hover {
+            color: #000;
+            opacity: 1;
+            background: #ede0e0bd;
+        }
+
+        .swiper-pagination-bullet-active {
+            background: #f39696 !important;
+        }
+
+        .swiper {
+            padding: 10px !important;
+        }
+        /* About section bullets (single .swiper on page) */
+        #about .pagination-container .swiper-pagination-bullet-active {
+            background: #fff !important;
+        }
+        /* 3x2 features grid */
+        #ai-assistant .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2.5rem;
+            max-width: 64rem;
+        }
+        @media (max-width: 768px) {
+            #ai-assistant .features-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        /* AI Assistant section button - ensure visibility */
+        #ai-assistant-detail .ai-try-btn {
+            background-color: #0d9488 !important;
+            color: #fff !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+            text-decoration: none !important;
+        }
+        #ai-assistant-detail .ai-try-btn:hover {
+            background-color: #0b7a6f !important;
+        }
+        #ai-assistant-detail .ai-try-btn,
+        #ai-assistant-detail .ai-try-btn i {
+            color: #fff !important;
+        }
+    </style>
+
+    <script type="module">
+        (async function () {
+            const GEOPARQUET_URL = 'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/ski_areas_analyzed.parquet';
+            const LIFTS_URL = 'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/lifts.parquet';
+            const PISTES_URL = 'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/pistes.parquet';
+            function formatCount(n) {
+                if (typeof n !== 'number' || isNaN(n)) return '—';
+                return n.toLocaleString();
+            }
+            function setStat(id, value, descId, descFn) {
+                const el = document.getElementById(id);
+                if (el) el.textContent = formatCount(value);
+                if (descId && typeof descFn === 'function' && value != null && !isNaN(value)) {
+                    const descEl = document.getElementById(descId);
+                    if (descEl) descEl.textContent = descFn(value);
+                }
+            }
+            try {
+                const { asyncBufferFromUrl, parquetReadObjects } = await import('https://esm.sh/hyparquet@1');
+                const [areasFile, liftsFile, pistesFile] = await Promise.all([
+                    asyncBufferFromUrl({ url: GEOPARQUET_URL }),
+                    asyncBufferFromUrl({ url: LIFTS_URL }),
+                    asyncBufferFromUrl({ url: PISTES_URL })
+                ]);
+                const [areasData, liftsData, pistesData] = await Promise.all([
+                    parquetReadObjects({ file: areasFile }),
+                    parquetReadObjects({ file: liftsFile }),
+                    parquetReadObjects({ file: pistesFile })
+                ]);
+                const resorts = areasData.length;
+                const lifts = liftsData.length;
+                const pistes = pistesData.length;
+                setStat('stat-resorts', resorts, 'stat-resorts-desc', function (n) { return 'Detailed information on over ' + formatCount(n) + ' ski resorts worldwide, including terrain, lifts, and amenities.'; });
+                setStat('stat-lifts', lifts);
+                setStat('stat-pistes', pistes);
+            } catch (e) {
+                console.warn('Atlas stats: could not load parquet counts', e);
+            }
+        })();
+    </script>
+    <script>
+        const swiper = new Swiper('.swiper', {
+            direction: 'horizontal',
+            loop: true,
+            centeredSlides: true,
+            pagination: {
+                el: '.pagination-container',
+                clickable: true,
+                renderBullet: function (index, className) {
+                    return `<span class="${className}"></span>`
+                },
+            },
+            navigation: {
+                nextEl: '.testmonial-next',
+                prevEl: '.testmonial-prev',
+            },
+        });
+    </script>
+</html>

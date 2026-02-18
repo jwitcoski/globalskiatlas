@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+        <title>Skiing AI Assistant – Global Ski Atlas</title>
+        <meta name="description" content="Chat with our AI to get personalized ski resort recommendations. Powered by Amazon Nova Pro on Amazon Bedrock." />
+        <link rel="shortcut icon" href="./assets/logo.png?v=2" type="image/x-icon" />
+        <link rel="stylesheet" href="./css/tailwind-build.css" />
+        <link rel="stylesheet" href="css/index.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" integrity="sha512-dPXYcDub/aeb08c63jRq/k6GaKccl256JQy/AnOq7CAnEZ9FzSL9wSbcZkMp4R26vBsMLFYH4kQ67/bbV8XaCQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+        <style>
+            .chat-container { max-width: 100%; margin: 0 auto; background: rgba(255,255,255,0.95); border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); overflow: hidden; display: flex; flex-direction: column; height: 560px; min-height: 400px; }
+            .chat-header { background: #0d9488; color: white; padding: 16px 20px; display: flex; align-items: center; }
+            .chat-header .avatar { width: 44px; height: 44px; border-radius: 50%; background: white; margin-right: 14px; display: flex; align-items: center; justify-content: center; }
+            .chat-header .avatar i { color: #0d9488; font-size: 22px; }
+            .chat-body { flex: 1; padding: 20px; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; display: flex; flex-direction: column; }
+            .message { max-width: 85%; padding: 12px 16px; margin-bottom: 12px; border-radius: 18px; line-height: 1.5; animation: chatFadeIn 0.3s ease; }
+            .message.bot { background: #f0f2f5; color: #333; align-self: flex-start; border-bottom-left-radius: 4px; }
+            .message.user { background: #0d9488; color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
+            .typing-indicator { align-self: flex-start; background: #f0f2f5; padding: 12px 16px; border-radius: 18px; margin-bottom: 12px; display: none; }
+            .typing-indicator span { width: 8px; height: 8px; margin: 0 2px; background: #999; display: inline-block; border-radius: 50%; animation: typingPulse 1.2s infinite; }
+            .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+            .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+            .chat-footer { padding: 16px; border-top: 1px solid #eee; display: flex; align-items: center; gap: 10px; }
+            .chat-input { flex: 1; min-width: 0; border: 1px solid #0d9488; border-radius: 24px; padding: 10px 18px; font-size: 16px; color: #333; background: white; outline: none; }
+            .chat-input:focus { box-shadow: 0 0 0 2px rgba(13,148,136,0.2); }
+            .chat-input::placeholder { color: #999; }
+            .send-btn { background: #0d9488; color: white; border: none; width: 44px; height: 44px; min-width: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s; touch-action: manipulation; }
+            .send-btn:hover { background: #0b7a6f; }
+            .ai-sidebar { background: #f9fafb; border-radius: 12px; padding: 24px; border: 1px solid #e5e7eb; height: 100%; }
+            .suggestion-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 1rem; }
+            .suggestion-chip { background: #e8f5f3; border: 1px solid #0d9488; border-radius: 18px; padding: 8px 14px; font-size: 0.875rem; color: #0d9488; cursor: pointer; transition: background 0.2s, color 0.2s; touch-action: manipulation; }
+            .suggestion-chip:hover { background: #0d9488; color: white; }
+            .ai-knowledge-note { margin-top: 1rem; padding: 0.75rem 1rem; font-size: 0.875rem; border-radius: 8px; border: 1px solid #fca5a5; background: #fef2f2; color: #991b1b; }
+            @keyframes chatFadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+            @keyframes typingPulse { 0%, 100% { transform: scale(0.8); opacity: 0.8; } 50% { transform: scale(1.2); opacity: 1; } }
+            .skiing-ai-layout { max-width: 1400px; margin: 0 auto; display: flex; flex-direction: column; gap: 2rem; }
+            .skiing-ai-page-header { text-align: center; margin-bottom: 0.5rem; }
+            .skiing-ai-top-row { display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; align-items: start; }
+            .skiing-ai-chat-col { min-width: 0; }
+            .skiing-ai-about-col { min-width: 0; }
+            .skiing-ai-bottom-row { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: start; padding: 2rem; background: #f9fafb; border-radius: 12px; border: 1px solid #e5e7eb; }
+            .skiing-ai-how-col { min-width: 0; }
+            .skiing-ai-diagram-col { min-width: 0; }
+            @media (max-width: 900px) {
+                .skiing-ai-top-row { grid-template-columns: 1fr; }
+                .skiing-ai-bottom-row { grid-template-columns: 1fr; padding: 1.25rem; }
+            }
+            @media (max-width: 640px) {
+                .chat-container { height: min(560px, calc(100vh - 220px)); min-height: 320px; }
+                .chat-header { padding: 12px 16px; flex-wrap: wrap; }
+                .chat-header h3 { font-size: 0.95rem; line-height: 1.3; }
+                .chat-body { padding: 12px 16px; }
+                .chat-footer { padding: 12px 16px; }
+                .message { max-width: 92%; padding: 10px 14px; font-size: 0.9375rem; }
+                .skiing-ai-main { padding: 1rem 1rem 2rem; }
+                .ai-sidebar { padding: 1.25rem; }
+            }
+        </style>
+    </head>
+    <body class="tw-flex tw-min-h-[100vh] tw-flex-col tw-bg-[#fff] tw-overflow-x-hidden">
+        <header class="tw-relative tw-z-20 tw-flex tw-h-[60px] tw-w-full tw-items-center tw-border-b tw-border-gray-200 tw-bg-white tw-px-[5%] lg:tw-justify-around">
+            <a class="tw-h-[50px] tw-w-[50px] tw-shrink-0 tw-p-[4px]" href="index.html" aria-label="Global Ski Atlas home">
+                <img src="./assets/logo.png?v=2" alt="Global Ski Atlas" class="tw-h-full tw-w-full tw-object-contain" />
+            </a>
+            <div class="collapsible-header animated-collapse max-lg:tw-shadow-md" id="collapsed-header-items">
+                <div class="tw-flex tw-h-full tw-gap-5 tw-text-base tw-text-black max-lg:tw-mt-[30px] max-lg:tw-flex-col max-lg:tw-place-items-end max-lg:tw-gap-5 lg:tw-mx-auto lg:tw-place-items-center">
+                    <a class="header-links" href="index.html#paths">Coffee Table Book</a>
+                    <a class="header-links" href="index.html#online-atlas">Online Atlas</a>
+                    <a class="header-links" href="index.html#about">About</a>
+                    <a class="header-links tw-font-semibold tw-text-[#0d9488]" href="skiing-ai.html">AI Assistant</a>
+                </div>
+            </div>
+            <button class="bi bi-list tw-absolute tw-right-3 tw-top-3 tw-z-50 tw-text-3xl tw-text-black lg:tw-hidden" onclick="toggleHeader()" aria-label="Menu" id="collapse-btn"></button>
+        </header>
+
+        <main class="skiing-ai-main tw-flex-1 tw-p-6 tw-px-[5%] tw-py-10">
+            <div class="skiing-ai-layout">
+                <header class="skiing-ai-page-header">
+                    <h1 class="tw-text-3xl tw-font-bold tw-text-black max-md:tw-text-2xl">Skiing AI Assistant</h1>
+                    <p class="tw-mt-2 tw-text-lg tw-text-gray-600">Chat with our AI to get personalized ski resort recommendations</p>
+                </header>
+
+                <div class="skiing-ai-top-row">
+                    <div class="skiing-ai-chat-col">
+                        <div class="chat-container">
+                            <div class="chat-header">
+                                <div class="avatar"><i class="bi bi-robot"></i></div>
+                                <h3 class="tw-m-0 tw-text-lg tw-font-semibold">Skiing AI Assistant (Powered by Amazon Nova Pro)</h3>
+                            </div>
+                            <div class="chat-body" id="chat-body">
+                                <div class="message bot">Hello! I'm your skiing AI assistant, powered by Amazon Nova Pro on Amazon Bedrock. Ask me about ski resorts, conditions, gear recommendations, or anything ski-related!</div>
+                                <div class="typing-indicator" id="typing-indicator"><span></span><span></span><span></span></div>
+                            </div>
+                            <div class="chat-footer">
+                                <input type="text" class="chat-input" id="chat-input" placeholder="Type your message here..." />
+                                <button type="button" class="send-btn" id="send-btn" aria-label="Send"><i class="bi bi-send-fill"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="skiing-ai-about-col">
+                        <div class="ai-sidebar">
+                            <h3 class="tw-mt-0 tw-mb-4 tw-text-xl tw-font-semibold">About Skiing AI</h3>
+                            <p class="tw-mb-4 tw-text-gray-600">Our Skiing AI Assistant is powered by Amazon Nova Pro on Amazon Bedrock, providing intelligent, context-aware responses to help you find the perfect ski destination.</p>
+                            <h4 class="tw-mb-2 tw-font-semibold">Try asking about:</h4>
+                            <div class="suggestion-chips" id="suggestion-chips">
+                                <button type="button" class="suggestion-chip" data-query="Best resorts for beginners">Best resorts for beginners</button>
+                                <button type="button" class="suggestion-chip" data-query="Where to find the deepest powder">Where to find the deepest powder</button>
+                                <button type="button" class="suggestion-chip" data-query="Family-friendly ski destinations">Family-friendly ski destinations</button>
+                                <button type="button" class="suggestion-chip" data-query="Budget-friendly options">Budget-friendly options</button>
+                                <button type="button" class="suggestion-chip" data-query="Resorts with the best terrain parks">Resorts with the best terrain parks</button>
+                                <button type="button" class="suggestion-chip" data-query="Expert-level challenging terrain">Expert-level challenging terrain</button>
+                                <button type="button" class="suggestion-chip" data-query="Resorts with great nightlife">Resorts with great nightlife</button>
+                            </div>
+                            <p class="tw-text-sm tw-text-gray-500">Amazon Nova Pro draws from a comprehensive database of ski resorts worldwide and can provide detailed recommendations based on your specific preferences.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <section class="skiing-ai-bottom-row">
+                    <div class="skiing-ai-how-col">
+                        <h3 class="tw-mb-4 tw-text-xl tw-font-semibold">How Our AI Works</h3>
+                        <p class="tw-mb-4 tw-text-gray-600">Our skiing AI assistant is powered by AWS services and Amazon Nova Pro. Here's how it works:</p>
+                        <ol class="tw-mb-4 tw-list-decimal tw-space-y-2 tw-pl-5 tw-text-gray-700">
+                            <li><strong>Your query</strong> is sent through the API Gateway</li>
+                            <li>A <strong>Lambda Function</strong> processes your request</li>
+                            <li>The function connects to <strong>Amazon Bedrock</strong>, which provides access to powerful AI models</li>
+                            <li><strong>Amazon Nova Pro</strong> processes your query intelligently</li>
+                            <li>The AI searches through our <strong>Knowledge Library</strong> of skiing information</li>
+                            <li>A tailored response is generated and returned to you</li>
+                        </ol>
+                        <p class="tw-text-gray-600">The entire system is secured by AWS IAM to ensure safe and reliable operation. This architecture allows us to provide detailed, accurate information about ski resorts worldwide.</p>
+                        <p class="ai-knowledge-note"><strong>Note:</strong> We do not currently use the Knowledge Library. We would like to—however it costs approximately $3–5 per day to run—so we may implement it or a similar capability in the future.</p>
+                    </div>
+                    <div class="skiing-ai-diagram-col">
+                        <img src="./assets/images/legacy/AI_AWS_Diagram.png" alt="AI Architecture Diagram" class="tw-w-full tw-rounded-lg tw-shadow-md" />
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <footer class="tw-mt-auto tw-flex tw-w-full tw-place-content-around tw-gap-3 tw-border-t tw-border-gray-200 tw-bg-white tw-p-[5%] tw-px-[10%] tw-text-black max-md:tw-flex-col">
+            <div class="tw-flex tw-w-[250px] tw-flex-col tw-place-items-center tw-gap-4 max-md:tw-w-full">
+                <img src="./assets/logo.png?v=2" alt="Global Ski Atlas" class="tw-max-w-[120px]" />
+                <div>Global Ski Atlas</div>
+            </div>
+            <div class="tw-flex tw-w-[250px] tw-flex-col tw-gap-2">
+                <h3 class="tw-text-lg tw-font-semibold">Explore</h3>
+                <a href="index.html#paths" class="footer-link">Coffee Table Book</a>
+                <a href="index.html#online-atlas" class="footer-link">Online Atlas</a>
+                <a href="index.html#compare" class="footer-link">Compare Resorts</a>
+                <a href="skiing-ai.html" class="footer-link">AI Assistant</a>
+            </div>
+            <div class="tw-flex tw-w-[250px] tw-flex-col tw-gap-2">
+                <h3 class="tw-text-lg tw-font-semibold">Resources</h3>
+                <a href="index.html#about" class="footer-link">About</a>
+                <a href="https://witcoskitech.com" class="footer-link" target="_blank" rel="noopener">Contact</a>
+            </div>
+        </footer>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.0/gsap.min.js" integrity="sha512-B1lby8cGcAUU3GR+Fd809/ZxgHbfwJMp0jLTVfHiArTuUt++VqSlJpaJvhNtRf3NERaxDNmmxkdx2o+aHd4bvw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.0/ScrollTrigger.min.js" integrity="sha512-AY2+JxnBETJ0wcXnLPCcZJIJx0eimyhz3OJ55k2Jx4RtYC+XdIi2VtJQ+tP3BaTst4otlGG1TtPJ9fKrAUnRdQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        <script src="./index.js"></script>
+        <script>
+            (function() {
+                const chatBody = document.getElementById('chat-body');
+                const chatInput = document.getElementById('chat-input');
+                const sendBtn = document.getElementById('send-btn');
+                const typingIndicator = document.getElementById('typing-indicator');
+
+                function sendMessage(optionalMsg) {
+                    const msg = optionalMsg !== undefined ? String(optionalMsg).trim() : chatInput.value.trim();
+                    if (!msg) return;
+                    chatInput.value = '';
+
+                    const userDiv = document.createElement('div');
+                    userDiv.className = 'message user';
+                    userDiv.textContent = msg;
+                    chatBody.appendChild(userDiv);
+                    chatBody.scrollTop = chatBody.scrollHeight;
+
+                    typingIndicator.style.display = 'block';
+                    chatBody.scrollTop = chatBody.scrollHeight;
+
+                    fetch('https://yw1jgiys7f.execute-api.us-east-1.amazonaws.com/prod/chat', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ query: msg })
+                    })
+                    .then(function(r) {
+                        if (!r.ok) throw new Error('Network error: ' + r.status);
+                        return r.json();
+                    })
+                    .then(function(data) {
+                        typingIndicator.style.display = 'none';
+                        let text = '';
+                        if (data.skiingAnswer) text = data.skiingAnswer;
+                        else if (data.body && typeof data.body === 'string') {
+                            try {
+                                const b = JSON.parse(data.body);
+                                text = b.skiingAnswer || 'No answer in response.';
+                            } catch (e) { text = data.body; }
+                        } else if (typeof data === 'string') text = data;
+                        else text = 'Unexpected response format. Please try again.';
+                        text = text.replace(/\\n/g, '<br>');
+                        const botDiv = document.createElement('div');
+                        botDiv.className = 'message bot';
+                        botDiv.innerHTML = text;
+                        chatBody.appendChild(botDiv);
+                        chatBody.scrollTop = chatBody.scrollHeight;
+                    })
+                    .catch(function(err) {
+                        typingIndicator.style.display = 'none';
+                        const errDiv = document.createElement('div');
+                        errDiv.className = 'message bot';
+                        errDiv.textContent = 'Sorry, I encountered an error: ' + err.message + '. Please try again later.';
+                        chatBody.appendChild(errDiv);
+                        chatBody.scrollTop = chatBody.scrollHeight;
+                    });
+                }
+
+                sendBtn.addEventListener('click', function() { sendMessage(); });
+                chatInput.addEventListener('keypress', function(e) { if (e.key === 'Enter') sendMessage(); });
+                document.getElementById('suggestion-chips').addEventListener('click', function(e) {
+                    const chip = e.target.closest('.suggestion-chip');
+                    if (chip && chip.dataset.query) sendMessage(chip.dataset.query);
+                });
+            })();
+        </script>
+    </body>
+</html>

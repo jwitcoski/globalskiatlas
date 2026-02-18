@@ -1,0 +1,20 @@
+# Dependencies
+node_modules/
+
+# Tailwind build outputs (built in CI)
+css/tailwind-runtime.css
+css/tailwind-build.css
+
+# OS and editor
+.DS_Store
+Thumbs.db
+*.log
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Env and secrets
+.env
+.env.local
+.env.*.local
