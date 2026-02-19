@@ -3,6 +3,15 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <!-- Google Analytics -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-KJGNL3KJL0"></script>
+        <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){ dataLayer.push(arguments); }
+            gtag('js', new Date());
+            gtag('config', 'G-KJGNL3KJL0');
+        </script>
+        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4372859798489282" crossorigin="anonymous"></script>
         <title>Global Ski Atlas – Your Guide to Ski Resorts Worldwide</title>
         <meta name="description" content="Explore the paper atlas, online atlas, ski resort comparison tool, and skiing AI assistant. Your guide to ski resorts worldwide." />
         <link
@@ -40,7 +49,7 @@
             class="tw-absolute tw-top-0 tw-z-20 tw-flex tw-h-[60px] tw-w-full tw-bg-opacity-0 
                     tw-px-[5%] max-lg:tw-mr-auto max-lg:tw-px-4 lg:tw-justify-around"
         >
-            <a class="tw-h-[50px] tw-w-[50px] tw-p-[4px]" href="#" aria-label="Global Ski Atlas home">
+            <a class="tw-h-[50px] tw-w-[50px] tw-p-[4px]" href="index.html" aria-label="Global Ski Atlas home">
                 <img
                     src="./assets/logo.png?v=2"
                     alt="Global Ski Atlas"
@@ -309,10 +318,10 @@
                         tw-gap-[10%] max-lg:tw-flex-col max-lg:tw-gap-10"
             >
                 <div class="tw-flex">
-                    <div class="tw-h-[450px] tw-w-[300px]">
+                    <div class="tw-h-[280px] tw-w-[420px] max-md:tw-h-[220px] max-md:tw-w-full">
                         <img
-                            src="./assets/images/legacy/ski_atlas.jpg"
-                            alt="Ski resort comparison"
+                            src="./assets/images/legacy/comparison-tool-laptop.jpg"
+                            alt="Laptop showing the Ski Resort Size Comparison tool with two resort trail maps side by side"
                             class="tw-h-full tw-w-full tw-object-contain"
                         />
                     </div>
@@ -493,8 +502,8 @@
         </section>
 
         <footer
-            class="tw-mt-auto tw-flex tw-w-full tw-place-content-around tw-gap-3 tw-p-[5%] tw-px-[10%] 
-                    tw-text-black max-md:tw-flex-col"
+            class="tw-mt-auto tw-flex tw-w-full tw-place-content-around tw-gap-3 tw-border-t tw-border-gray-200
+                    tw-bg-gray-50 tw-py-6 tw-px-[10%] tw-text-black max-md:tw-flex-col"
         >
             <div
                 class="tw-flex tw-h-full tw-w-[250px] tw-flex-col tw-place-items-center tw-gap-6 
@@ -539,14 +548,22 @@
                     <a href="#ai-assistant-detail" class="footer-link">AI Assistant</a>
                 </div>
             </div>
-
+            <div class="tw-flex tw-h-full tw-w-[250px] tw-flex-col tw-gap-4">
+                <h2 class="tw-text-3xl max-md:tw-text-xl">Download Parquet Data</h2>
+                <div class="tw-flex tw-flex-col tw-gap-3 max-md:tw-text-sm">
+                    <a href="https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/ski_areas_analyzed.parquet" class="footer-link tw-inline-flex tw-items-center tw-gap-1" download>ski_areas_analyzed.parquet <i class="bi bi-download tw-text-sm"></i></a>
+                    <a href="https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/ski_areas.parquet" class="footer-link tw-inline-flex tw-items-center tw-gap-1" download>ski_areas.parquet <i class="bi bi-download tw-text-sm"></i></a>
+                    <a href="https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/lifts.parquet" class="footer-link tw-inline-flex tw-items-center tw-gap-1" download>lifts.parquet <i class="bi bi-download tw-text-sm"></i></a>
+                    <a href="https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/pistes.parquet" class="footer-link tw-inline-flex tw-items-center tw-gap-1" download>pistes.parquet <i class="bi bi-download tw-text-sm"></i></a>
+                </div>
+            </div>
             <div class="tw-flex tw-h-full tw-w-[250px] tw-flex-col tw-gap-4">
                 <h2 class="tw-text-3xl max-md:tw-text-xl">Resources</h2>
                 <div class="tw-flex tw-flex-col tw-gap-3 max-md:tw-text-sm">
                     <a href="#about" class="footer-link">About</a>
                     <a href="" class="footer-link">FAQ</a>
                     <a href="https://witcoskitech.com" class="footer-link" target="_blank" rel="noopener">Contact</a>
-                    <a href="" class="footer-link">Privacy Policy</a>
+                    <a href="privacy-policy.html" class="footer-link">Privacy Policy</a>
                 </div>
             </div>
         </footer>
