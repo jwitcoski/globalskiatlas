@@ -130,6 +130,22 @@
       margin-right: 8px;
       flex-shrink: 0;
     }
+    .resort-size-icon {
+      display: inline-flex;
+      align-items: center;
+      margin-right: 8px;
+      flex-shrink: 0;
+      line-height: 0;
+    }
+    .resort-size-icon svg {
+      display: block;
+      width: 20px;
+      height: 14px;
+    }
+    .size-legend { font-size: 11px; color: #6b7280; }
+    .size-legend .legend-row { display: flex; align-items: center; gap: 6px; margin: 3px 0; }
+    .size-legend .legend-mountain-icon { display: inline-flex; align-items: center; line-height: 0; }
+    .size-legend .legend-mountain-icon svg { display: block; width: 18px; height: 12px; }
     .resort-item label { cursor: pointer; font-size: 14px; }
     .accordion-section { margin-bottom: 2px; }
     .accordion-section:first-child .resort-country-header { margin-top: 0; }
@@ -288,6 +304,10 @@
             <input type="text" id="resort-search" placeholder="Search resorts…" autocomplete="off">
           </div>
         </div>
+        <div class="controls-section" id="size-legend-section">
+          <div class="controls-section-title">Resort size (by trails)</div>
+          <div class="size-legend" id="size-legend"></div>
+        </div>
         <div class="controls-section">
           <div class="controls-section-title">Compare Resorts</div>
           <div class="resort-list" id="resort-list"></div>
@@ -405,6 +425,9 @@
     const COUNTRY_KEYS = ['country', 'Country', 'country_name', 'country_name_en', 'addr:country'];
     const PISTE_DIFFICULTY_KEYS = ['piste:difficulty', 'piste_difficulty', 'difficulty'];
     const RESORT_MATCH_KEYS = ['name', 'area_name', 'resort_name', 'ref', 'name_2'];
+    const RESORT_TYPE_KEYS = ['resort_type', 'Resort Type'];
+    const NOT_DOWNHILL = 'not a downhill ski resort';
+    const COLOR_BY_KEYS = ['downhill_trails', 'number_of_downhill_trails', 'Downhill Trails', 'trails'];
 
     const width = 1000;
     const height = 700;
@@ -416,6 +439,52 @@
         if (Object.prototype.hasOwnProperty.call(obj, k)) return obj[k];
       }
       return undefined;
+    }
+
+    function isNotDownhill(props) {
+      const v = getProp(props, RESORT_TYPE_KEYS);
+      return v != null && String(v).toLowerCase().trim() === NOT_DOWNHILL.toLowerCase();
+    }
+    const TRAILS_RED = 10;
+    const TRAILS_MEDIUM = 30;
+    function getTrailCount(props) {
+      const v = getProp(props, COLOR_BY_KEYS);
+      if (v == null || v === '') return 0;
+      const n = typeof v === 'number' ? v : Number(v);
+      return Number.isNaN(n) ? 0 : n;
+    }
+    function getSizeTier(props) {
+      if (isNotDownhill(props)) return 'small';
+      const n = getTrailCount(props);
+      if (n < TRAILS_RED) return 'small';
+      if (n < TRAILS_MEDIUM) return 'medium';
+      return 'large';
+    }
+    function getColorForSize(props) {
+      if (isNotDownhill(props)) return '#999999';
+      const v = getProp(props, COLOR_BY_KEYS);
+      if (v == null || v === '' || (typeof v === 'number' && Number.isNaN(v))) return '#c44d34';
+      const n = typeof v === 'number' ? v : Number(v);
+      if (Number.isNaN(n)) return '#c44d34';
+      if (n < TRAILS_RED) return '#c44d34';
+      if (n < TRAILS_MEDIUM) return '#e6c229';
+      return '#2d8a3e';
+    }
+    const hillSvg = (color, w, h) => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 16" width="' + w + '" height="' + h + '" style="display:block"><path d="M0 16 L0 11 Q6 6 12 11 Q18 6 24 11 L24 16 Z" fill="' + color + '" stroke="#1a1a1a" stroke-width="0.8"/></svg>';
+    const mountainSvg = (color, w, h) => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 16" width="' + w + '" height="' + h + '" style="display:block"><path d="M0 16 L8 5 L16 10 L24 16 Z" fill="' + color + '" stroke="#1a1a1a" stroke-width="0.8"/></svg>';
+    const mountainsSvg = (color, w, h) => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 16" width="' + w + '" height="' + h + '" style="display:block"><path d="M0 16 L4 10 L8 14 L10 9 L14 5 L18 10 L20 7 L24 16 Z" fill="' + color + '" stroke="#1a1a1a" stroke-width="0.8"/></svg>';
+    function getSizeIconHtml(resort) {
+      const props = resort.analyzedRow || (resort.outlineFeature && resort.outlineFeature.properties) || {};
+      const tier = getSizeTier(props);
+      const color = getColorForSize(props);
+      let w = 20, h = 14;
+      if (tier === 'medium') { w = 26; h = 18; }
+      else if (tier === 'large') { w = 32; h = 20; }
+      let svg;
+      if (tier === 'small') svg = hillSvg(color, w, h);
+      else if (tier === 'medium') svg = mountainSvg(color, w, h);
+      else svg = mountainsSvg(color, w, h);
+      return '<span class="resort-size-icon" title="' + (tier === 'small' && isNotDownhill(props) ? 'Not a downhill ski resort' : tier === 'small' ? 'Small hill (< 10 trails)' : tier === 'medium' ? 'Ski mountain (10–30 trails)' : 'Multiple mountains (30+ trails)') + '">' + svg + '</span>';
     }
 
     function getPisteDifficulty(props) {
@@ -603,7 +672,8 @@
             key,
             country: country || 'Other',
             outlineFeature: f,
-            pisteFeatures: pistesByResort.get(key) || []
+            pisteFeatures: pistesByResort.get(key) || [],
+            analyzedRow: analyzedRow || null
           };
         })
         .filter(Boolean);
@@ -702,6 +772,15 @@
           .text(r.name);
       });
 
+      const sizeLegendEl = document.getElementById('size-legend');
+      if (sizeLegendEl) {
+        sizeLegendEl.innerHTML =
+          '<div class="legend-row"><span class="legend-mountain-icon">' + hillSvg('#c44d34', 18, 12) + '</span> Small hill (&lt; 10 trails)</div>' +
+          '<div class="legend-row"><span class="legend-mountain-icon">' + mountainSvg('#e6c229', 18, 12) + '</span> Ski mountain (10–30)</div>' +
+          '<div class="legend-row"><span class="legend-mountain-icon">' + mountainsSvg('#2d8a3e', 18, 12) + '</span> Multiple mountains (30+)</div>' +
+          '<div class="legend-row"><span class="legend-mountain-icon">' + hillSvg('#999', 16, 11) + '</span> Grey = not downhill</div>';
+      }
+
       const byCountry = {};
       resortData.forEach((r, i) => {
         if (!byCountry[r.country]) byCountry[r.country] = [];
@@ -734,6 +813,9 @@
               else { clearTimeout(window._zoomTimeout); window._zoomTimeout = setTimeout(autoZoomToSelection, 300); }
             });
           item.append('span').attr('class', 'color-indicator').style('background-color', color);
+          item.append('span').attr('class', 'resort-size-icon-wrapper').each(function () {
+            this.innerHTML = getSizeIconHtml(r);
+          });
           item.append('label').attr('for', `checkbox-${index}`).text(r.name);
         });
       });
