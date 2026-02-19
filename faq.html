@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <!-- Google Analytics -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-KJGNL3KJL0"></script>
+        <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){ dataLayer.push(arguments); }
+            gtag('js', new Date());
+            gtag('config', 'G-KJGNL3KJL0');
+        </script>
+        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4372859798489282" crossorigin="anonymous"></script>
+        <title>FAQ – Global Ski Atlas</title>
+        <meta name="description" content="Frequently asked questions about Global Ski Atlas: online atlas, resort comparison, AI assistant, coffee table book, and data." />
+        <link rel="shortcut icon" href="./assets/logo.png?v=2" type="image/x-icon" />
+        <link rel="stylesheet" href="./css/tailwind-build.css" />
+        <link rel="stylesheet" href="css/index.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" integrity="sha512-dPXYcDub/aeb08c63jRq/k6GaKccl256JQy/AnOq7CAnEZ9FzSL9wSbcZkMp4R26vBsMLFYH4kQ67/bbV8XaCQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+        <style>
+            .faq-item {
+                border-bottom: 1px solid #e5e7eb;
+            }
+            .faq-item:last-child { border-bottom: none; }
+            .faq-item summary {
+                list-style: none;
+                cursor: pointer;
+                padding: 1rem 0;
+                font-weight: 600;
+                color: #111;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 0.75rem;
+            }
+            .faq-item summary::-webkit-details-marker { display: none; }
+            .faq-item summary::after {
+                content: '+';
+                font-size: 1.25rem;
+                font-weight: 400;
+                color: #6b7280;
+                flex-shrink: 0;
+            }
+            .faq-item[open] summary::after { content: '−'; }
+            .faq-item .faq-answer {
+                padding-bottom: 1rem;
+                color: #4b5563;
+                line-height: 1.6;
+            }
+        </style>
+    </head>
+    <body class="tw-flex tw-min-h-[100vh] tw-flex-col tw-bg-[#fff] tw-overflow-x-hidden">
+        <header
+            class="tw-absolute tw-top-0 tw-z-[1001] tw-flex tw-h-[60px] tw-w-full tw-bg-white tw-shadow-sm
+                   tw-border-b tw-border-gray-200 tw-px-[5%] max-lg:tw-mr-auto max-lg:tw-px-4 lg:tw-justify-around"
+        >
+            <a class="tw-h-[50px] tw-w-[50px] tw-p-[4px]" href="index.html" aria-label="Global Ski Atlas home">
+                <img src="./assets/logo.png?v=2" alt="Global Ski Atlas" class="tw-object tw-h-full tw-w-full" />
+            </a>
+            <div class="collapsible-header animated-collapse max-lg:tw-shadow-md" id="collapsed-header-items">
+                <div
+                    class="tw-flex tw-h-full tw-w-max tw-gap-5 tw-text-base tw-text-black
+                           max-lg:tw-mt-[30px] max-lg:tw-flex-col max-lg:tw-place-items-end
+                           max-lg:tw-gap-5 lg:tw-mx-auto lg:tw-place-items-center"
+                >
+                    <a class="header-links" href="coffee-table-book.html">Coffee Table Book</a>
+                    <a class="header-links" href="mainmap.html">Online Atlas</a>
+                    <a class="header-links" href="index.html#about">About</a>
+                    <a class="header-links" href="index.html#ai-assistant-detail">AI Assistant</a>
+                    <a class="header-links" href="resort-comparison.html">Compare Resorts</a>
+                </div>
+                <div
+                    class="tw-mx-4 tw-flex tw-place-items-center tw-gap-[20px] tw-text-base
+                           max-md:tw-w-full max-md:tw-flex-col max-md:tw-place-content-center"
+                >
+                    <a
+                        href=""
+                        aria-label="signup"
+                        class="tw-flex tw-h-[40px] tw-place-items-center tw-gap-2 tw-rounded-full
+                                tw-bg-black tw-p-1 tw-pl-4 tw-text-white"
+                    >
+                        <span>Download App Coming Soon</span>
+                        <div
+                            class="tw-flex tw-h-[30px] tw-w-[30px] tw-place-content-center
+                                   tw-place-items-center tw-rounded-full tw-bg-primary
+                                   tw-font-semibold tw-text-black"
+                        >
+                            <i class="bi bi-download"></i>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            <button
+                class="bi bi-list tw-absolute tw-right-3 tw-top-3 tw-z-50 tw-text-3xl
+                       tw-text-black lg:tw-hidden"
+                onclick="toggleHeader()"
+                aria-label="menu"
+                id="collapse-btn"
+            ></button>
+        </header>
+
+        <main class="tw-mt-[80px] tw-flex-1 tw-px-[5%] tw-py-12 max-lg:tw-px-4">
+            <div class="tw-mx-auto tw-max-w-3xl">
+                <h1 class="tw-mb-2 tw-text-3xl tw-font-bold tw-text-black max-md:tw-text-2xl">Frequently Asked Questions</h1>
+                <p class="tw-mb-8 tw-text-gray-500">Answers to common questions about Global Ski Atlas.</p>
+
+                <div class="tw-space-y-0">
+                    <details class="faq-item">
+                        <summary>What is Global Ski Atlas?</summary>
+                        <div class="faq-answer">
+                            Global Ski Atlas is your guide to ski resorts worldwide. It includes a coffee table book (paper atlas), an interactive online atlas map, a resort comparison tool, and an AI assistant you can ask anything about skiing. We cover thousands of ski areas with terrain, lifts, pistes, and key details.
+                        </div>
+                    </details>
+
+                    <details class="faq-item">
+                        <summary>How do I use the Online Atlas?</summary>
+                        <div class="faq-answer">
+                            Go to <a href="mainmap.html" class="tw-text-blue-600 hover:tw-underline">Online Atlas</a>, pan and zoom the map to explore. Click a resort marker to see a popup with details (terrain, lifts, elevation, etc.). Use the search box to find a specific resort by name. The legend explains map colors and symbols.
+                        </div>
+                    </details>
+
+                    <details class="faq-item">
+                        <summary>How does the Resort Comparison work?</summary>
+                        <div class="faq-answer">
+                            On the <a href="resort-comparison.html" class="tw-text-blue-600 hover:tw-underline">Compare Resorts</a> page you can select two or more ski areas and see them side by side—terrain size, lift count, vertical drop, pass info, and more—to help you decide where to ski.
+                        </div>
+                    </details>
+
+                    <details class="faq-item">
+                        <summary>What is the AI Assistant?</summary>
+                        <div class="faq-answer">
+                            The AI Assistant is a skiing-focused chatbot. You can ask about resorts, conditions, gear, technique, or trip planning. Try it from the home page or via <a href="skiing-ai.html" class="tw-text-blue-600 hover:tw-underline">AI Assistant</a>. It uses our atlas data and general skiing knowledge to answer your questions.
+                        </div>
+                    </details>
+
+                    <details class="faq-item">
+                        <summary>Where does the resort data come from?</summary>
+                        <div class="faq-answer">
+                            We use authoritative open and licensed geographic and ski-area data (e.g., OpenStreetMap and other sources), processed and analyzed to provide consistent resort statistics. You can download the underlying parquet datasets from the footer links (ski areas, lifts, pistes) for your own use.
+                        </div>
+                    </details>
+
+                    <details class="faq-item">
+                        <summary>Is there a mobile app?</summary>
+                        <div class="faq-answer">
+                            A mobile app is planned (“Download App Coming Soon”). For now, the website is responsive and works on phones and tablets—you can use the Online Atlas and Compare Resorts on the go.
+                        </div>
+                    </details>
+
+                    <details class="faq-item">
+                        <summary>What’s the plan for the coffee table book?</summary>
+                        <div class="faq-answer">
+                            <p class="tw-mb-3">The physical coffee table book is <strong>TBD</strong>—we’re building the pipeline first. Here’s how it’s designed to work:</p>
+                            <ol class="tw-list-decimal tw-list-inside tw-space-y-2 tw-pl-1 tw-mb-3">
+                                <li><strong>Data</strong> — We start from the same ski-area datasets that power the Online Atlas (resorts, lifts, pistes, terrain, elevation, pass info, etc.).</li>
+                                <li><strong>Export a map + fun data</strong> — For each resort we export a print-ready map (e.g. extent, styling, labels) and a structured “fun data” set: key stats, highlights, and any extra metadata we want on the spread.</li>
+                                <li><strong>AI-generated copy</strong> — An AI step takes that map and data and generates a short, readable paragraph about the resort (atmosphere, terrain character, why it’s notable). The text is keyed to the actual details we export, so it’s accurate and consistent.</li>
+                                <li><strong>Layout output</strong> — The map, stats, and AI paragraph are then flowed into a layout template and output to <strong>Adobe InDesign</strong> or <strong>Scribus</strong>, so we can do final design, typography, and print prep in a proper DTP workflow.</li>
+                            </ol>
+                            <p>Once this pipeline is solid, we’ll set a release timeline and share availability and ordering on the <a href="index.html#paths" class="tw-text-blue-600 hover:tw-underline">home page</a> Coffee Table Book section.</p>
+                        </div>
+                    </details>
+
+                    <details class="faq-item">
+                        <summary>How can I get the coffee table book?</summary>
+                        <div class="faq-answer">
+                            Availability and ordering are still to be determined. We’re focused on finishing the production pipeline (data → map export + stats → AI resort copy → InDesign/Scribus). Updates will be posted on the <a href="index.html#paths" class="tw-text-blue-600 hover:tw-underline">home page</a> Coffee Table Book section when we have a release date.
+                        </div>
+                    </details>
+
+                    <details class="faq-item" id="contact">
+                        <summary>How do I contact you or report an error?</summary>
+                        <div class="faq-answer">
+                            <p class="tw-mb-4">Use the form below for general inquiries, feedback, or to report data errors. We appreciate corrections and suggestions to improve the atlas.</p>
+                            <div class="contact-form-wrapper tw-w-full tw-max-w-md tw-mt-4">
+                                <p class="contact-form-label">CONTACT</p>
+                                <h2 class="contact-form-title">Get in touch</h2>
+                                <form
+                                    action="https://formspree.io/f/xgolwlnp"
+                                    method="POST"
+                                    class="contact-form"
+                                >
+                                    <label for="faq-contact-name" class="contact-form-field-label">Name</label>
+                                    <input
+                                        id="faq-contact-name"
+                                        type="text"
+                                        name="name"
+                                        placeholder="Your name"
+                                        class="contact-form-input"
+                                    />
+                                    <label for="faq-contact-email" class="contact-form-field-label">Email</label>
+                                    <input
+                                        id="faq-contact-email"
+                                        type="email"
+                                        name="email"
+                                        required
+                                        placeholder="your@email.com"
+                                        class="contact-form-input"
+                                    />
+                                    <label for="faq-contact-message" class="contact-form-field-label">Message</label>
+                                    <textarea
+                                        id="faq-contact-message"
+                                        name="message"
+                                        placeholder="Your message"
+                                        rows="5"
+                                        class="contact-form-textarea"
+                                    ></textarea>
+                                    <button type="submit" class="contact-form-btn">
+                                        Send message
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </details>
+                </div>
+            </div>
+        </main>
+
+        <footer
+            class="tw-mt-auto tw-flex tw-w-full tw-place-content-around tw-gap-3 tw-border-t tw-border-gray-200
+                   tw-bg-gray-50 tw-py-6 tw-px-[10%] tw-text-black max-md:tw-flex-col"
+        >
+            <div
+                class="tw-flex tw-h-full tw-w-[250px] tw-flex-col tw-place-items-center tw-gap-6
+                       max-md:tw-w-full"
+            >
+                <img src="./assets/logo.png?v=2" alt="Global Ski Atlas" class="tw-max-w-[120px]" />
+                <div>Global Ski Atlas</div>
+                <div class="tw-mt-3 tw-text-lg tw-font-semibold">Follow us</div>
+                <div class="tw-flex tw-gap-4 tw-text-2xl">
+                    <a href="" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
+                    <a href="https://twitter.com/@pauls_freeman" aria-label="Twitter"><i class="bi bi-twitter"></i></a>
+                    <a href="https://instagram.com/" class="tw-h-[40px] tw-w-[40px]" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
+                </div>
+            </div>
+            <div class="tw-flex tw-h-full tw-w-[250px] tw-flex-col tw-gap-4">
+                <h2 class="tw-text-3xl max-md:tw-text-xl">Explore</h2>
+                <div class="tw-flex tw-flex-col tw-gap-3 max-md:tw-text-sm">
+                    <a href="index.html#paths" class="footer-link">Coffee Table Book</a>
+                    <a href="mainmap.html" class="footer-link">Online Atlas</a>
+                    <a href="resort-comparison.html" class="footer-link">Compare Resorts</a>
+                    <a href="index.html#ai-assistant-detail" class="footer-link">AI Assistant</a>
+                </div>
+            </div>
+            <div class="tw-flex tw-h-full tw-w-[250px] tw-flex-col tw-gap-4">
+                <h2 class="tw-text-3xl max-md:tw-text-xl">Download Parquet Data</h2>
+                <div class="tw-flex tw-flex-col tw-gap-3 max-md:tw-text-sm">
+                    <a href="https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/ski_areas_analyzed.parquet" class="footer-link tw-inline-flex tw-items-center tw-gap-1" download>ski_areas_analyzed.parquet <i class="bi bi-download tw-text-sm"></i></a>
+                    <a href="https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/ski_areas.parquet" class="footer-link tw-inline-flex tw-items-center tw-gap-1" download>ski_areas.parquet <i class="bi bi-download tw-text-sm"></i></a>
+                    <a href="https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/lifts.parquet" class="footer-link tw-inline-flex tw-items-center tw-gap-1" download>lifts.parquet <i class="bi bi-download tw-text-sm"></i></a>
+                    <a href="https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/pistes.parquet" class="footer-link tw-inline-flex tw-items-center tw-gap-1" download>pistes.parquet <i class="bi bi-download tw-text-sm"></i></a>
+                </div>
+            </div>
+            <div class="tw-flex tw-h-full tw-w-[250px] tw-flex-col tw-gap-4">
+                <h2 class="tw-text-3xl max-md:tw-text-xl">Resources</h2>
+                <div class="tw-flex tw-flex-col tw-gap-3 max-md:tw-text-sm">
+                    <a href="index.html#about" class="footer-link">About</a>
+                    <a href="faq.html" class="footer-link">FAQ</a>
+                    <a href="https://witcoskitech.com" class="footer-link" target="_blank" rel="noopener">Contact</a>
+                    <a href="privacy-policy.html" class="footer-link">Privacy Policy</a>
+                </div>
+            </div>
+        </footer>
+
+        <script>
+            if (window.location.hash === '#contact') {
+                var contactDetails = document.getElementById('contact');
+                if (contactDetails && contactDetails.tagName === 'DETAILS') contactDetails.open = true;
+            }
+        </script>
+        <script src="./index.js"></script>
+    </body>
+</html>
