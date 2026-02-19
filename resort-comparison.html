@@ -22,6 +22,10 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { height: 100%; font-family: system-ui, -apple-system, sans-serif; background: #fff; }
+    .main-content-section {
+      min-height: calc(100vh - 60px);
+      min-height: calc(100dvh - 60px);
+    }
     .page { max-width: 1600px; margin: 0 auto; padding: 24px; }
     h1 { font-size: 2rem; font-weight: 600; margin-bottom: 12px; color: #1a1a1a; }
     .subtitle { color: #555; margin-bottom: 24px; font-size: 1rem; line-height: 1.5; }
@@ -186,6 +190,14 @@
     @media (max-width: 768px) {
       .content-wrapper { flex-direction: column; }
       .controls { width: 100%; }
+      .page { padding: 16px; }
+      .resort-list { max-height: 280px; }
+      .controls-section { padding: 16px 0; }
+      .controls-section-title { font-size: 12px; margin-bottom: 8px; }
+      .control-buttons button { padding: 8px 12px; font-size: 13px; }
+      .search-container input { padding: 8px 12px 8px 34px; font-size: 13px; }
+      .resort-item label { font-size: 13px; }
+      .map-container { min-height: 280px; }
     }
   </style>
 </head>
@@ -239,7 +251,7 @@
     ></button>
   </header>
 
-  <section class="tw-relative tw-flex tw-min-h-0 tw-flex-1 tw-w-full tw-flex-col tw-px-[5%] tw-pt-[100px] max-lg:tw-px-4 max-lg:tw-pt-[120px]">
+  <section class="tw-relative tw-flex tw-min-h-0 tw-flex-1 tw-w-full tw-flex-col tw-px-[5%] tw-pt-[100px] main-content-section max-lg:tw-px-4 max-lg:tw-pt-[80px]">
   <div class="page">
     <h1>Ski Resort Size Comparison</h1>
     <p class="subtitle">Compare ski resort outlines and trail layouts from the Global Ski Atlas parquet data. Select resorts to view side by side.</p>
@@ -345,10 +357,44 @@
   </footer>
 
   <script>
-    function toggleHeader() {
-      var el = document.getElementById('collapsed-header-items');
-      if (el) el.classList.toggle('animated-collapse');
-    }
+    (function () {
+      var RESPONSIVE_WIDTH = 1024;
+      var isHeaderCollapsed = window.innerWidth < RESPONSIVE_WIDTH;
+      var collapseBtn = document.getElementById('collapse-btn');
+      var collapseHeaderItems = document.getElementById('collapsed-header-items');
+      function onHeaderClickOutside(e) {
+        if (collapseHeaderItems && !collapseHeaderItems.contains(e.target) && !collapseBtn.contains(e.target)) {
+          toggleHeader();
+        }
+      }
+      function toggleHeader() {
+        if (!collapseHeaderItems || !collapseBtn) return;
+        if (isHeaderCollapsed) {
+          collapseHeaderItems.classList.add('opacity-100');
+          collapseHeaderItems.style.width = '60vw';
+          collapseBtn.classList.remove('bi-list');
+          collapseBtn.classList.add('bi-x', 'max-lg:tw-fixed');
+          isHeaderCollapsed = false;
+          setTimeout(function () { window.addEventListener('click', onHeaderClickOutside); }, 1);
+        } else {
+          collapseHeaderItems.classList.remove('opacity-100');
+          collapseHeaderItems.style.width = '0vw';
+          collapseBtn.classList.remove('bi-x', 'max-lg:tw-fixed');
+          collapseBtn.classList.add('bi-list');
+          isHeaderCollapsed = true;
+          window.removeEventListener('click', onHeaderClickOutside);
+        }
+      }
+      function responsive() {
+        if (window.innerWidth >= RESPONSIVE_WIDTH && collapseHeaderItems) {
+          collapseHeaderItems.style.width = '';
+        } else {
+          isHeaderCollapsed = true;
+        }
+      }
+      window.toggleHeader = toggleHeader;
+      window.addEventListener('resize', responsive);
+    })();
   </script>
   <script type="module">
     const GEOPARQUET_URL = 'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/ski_areas_analyzed.parquet';

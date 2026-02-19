@@ -22,7 +22,14 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { height: 100%; font-family: system-ui, -apple-system, sans-serif; }
     #map { position: absolute; inset: 0; width: 100%; height: 100%; }
-    .map-wrapper { flex: 1; min-height: 0; position: relative; margin-top: 60px; }
+    .map-wrapper {
+      flex: 1;
+      min-height: 0;
+      position: relative;
+      margin-top: 60px;
+      min-height: calc(100vh - 60px);
+      min-height: calc(100dvh - 60px);
+    }
     .map-legend {
       position: absolute;
       bottom: 24px;
@@ -86,6 +93,29 @@
     .search-box .search-item.active { background: #f0f4ff; }
     .search-box .search-item:last-child { border-bottom: none; }
     .lift-marker-icon { background: none !important; border: none !important; }
+    .olympic-rings-marker { background: none !important; border: none !important; }
+    .mountain-marker { background: none !important; border: none !important; }
+    .legend-mountain-icon { display: inline-flex; align-items: center; vertical-align: middle; margin-right: 6px; }
+    @media (max-width: 768px) {
+      .map-wrapper {
+        margin-top: 60px;
+        min-height: calc(100vh - 60px);
+        min-height: calc(100dvh - 60px);
+      }
+      .map-legend {
+        bottom: 12px;
+        left: 12px;
+        padding: 8px 10px;
+        font-size: 11px;
+        max-height: 140px;
+      }
+      .map-legend h3 { font-size: 11px; margin: 0 0 4px 0; }
+      .map-legend .legend-row { margin: 2px 0; gap: 6px; }
+      .map-legend .legend-swatch { width: 10px; height: 10px; }
+      .map-legend .legend-line { width: 14px; height: 3px; }
+      .search-box { top: 8px; width: calc(100% - 24px); max-width: none; }
+      .search-box input { padding: 8px 12px; font-size: 14px; }
+    }
   </style>
 </head>
 <body class="tw-flex tw-min-h-[100vh] tw-flex-col tw-bg-[#fff]">
@@ -194,10 +224,44 @@
   </footer>
 
   <script>
-    function toggleHeader() {
-      var el = document.getElementById('collapsed-header-items');
-      if (el) el.classList.toggle('animated-collapse');
-    }
+    (function () {
+      var RESPONSIVE_WIDTH = 1024;
+      var isHeaderCollapsed = window.innerWidth < RESPONSIVE_WIDTH;
+      var collapseBtn = document.getElementById('collapse-btn');
+      var collapseHeaderItems = document.getElementById('collapsed-header-items');
+      function onHeaderClickOutside(e) {
+        if (collapseHeaderItems && !collapseHeaderItems.contains(e.target) && !collapseBtn.contains(e.target)) {
+          toggleHeader();
+        }
+      }
+      function toggleHeader() {
+        if (!collapseHeaderItems || !collapseBtn) return;
+        if (isHeaderCollapsed) {
+          collapseHeaderItems.classList.add('opacity-100');
+          collapseHeaderItems.style.width = '60vw';
+          collapseBtn.classList.remove('bi-list');
+          collapseBtn.classList.add('bi-x', 'max-lg:tw-fixed');
+          isHeaderCollapsed = false;
+          setTimeout(function () { window.addEventListener('click', onHeaderClickOutside); }, 1);
+        } else {
+          collapseHeaderItems.classList.remove('opacity-100');
+          collapseHeaderItems.style.width = '0vw';
+          collapseBtn.classList.remove('bi-x', 'max-lg:tw-fixed');
+          collapseBtn.classList.add('bi-list');
+          isHeaderCollapsed = true;
+          window.removeEventListener('click', onHeaderClickOutside);
+        }
+      }
+      function responsive() {
+        if (window.innerWidth >= RESPONSIVE_WIDTH && collapseHeaderItems) {
+          collapseHeaderItems.style.width = '';
+        } else {
+          isHeaderCollapsed = true;
+        }
+      }
+      window.toggleHeader = toggleHeader;
+      window.addEventListener('resize', responsive);
+    })();
   </script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="https://unpkg.com/leaflet-textpath@1.2.0/leaflet.textpath.js" crossorigin=""></script>
@@ -234,6 +298,23 @@
         crossOrigin: true
       }
     ).addTo(map);
+
+    const OLYMPIC_HOSTS = [
+      { name: 'Milan', lat: 45.4642, lon: 9.19 },
+      { name: 'Cortina d\'Ampezzo', lat: 46.5369, lon: 12.1356 }
+    ];
+    const olympicRingsSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 30" width="36" height="18" style="display:block"><circle cx="12" cy="15" r="6" fill="none" stroke="#0081C8" stroke-width="2"/><circle cx="30" cy="15" r="6" fill="none" stroke="#000" stroke-width="2"/><circle cx="48" cy="15" r="6" fill="none" stroke="#EE334E" stroke-width="2"/><circle cx="21" cy="21" r="6" fill="none" stroke="#FCB131" stroke-width="2"/><circle cx="39" cy="21" r="6" fill="none" stroke="#00A651" stroke-width="2"/></svg>';
+    const olympicIcon = L.divIcon({
+      className: 'olympic-rings-marker',
+      html: '<div title="Milan–Cortina 2026" style="background:#fff;border-radius:50%;padding:2px;box-shadow:0 1px 4px rgba(0,0,0,0.3);line-height:0">' + olympicRingsSvg + '</div>',
+      iconSize: [40, 22],
+      iconAnchor: [20, 11]
+    });
+    OLYMPIC_HOSTS.forEach((host) => {
+      L.marker([host.lat, host.lon], { icon: olympicIcon })
+        .bindTooltip(host.name + ' – Milan–Cortina 2026', { permanent: false, direction: 'top', offset: [0, -10] })
+        .addTo(map);
+    });
 
     try {
       const { asyncBufferFromUrl, parquetReadObjects } = await import('https://esm.sh/hyparquet@1');
@@ -286,7 +367,20 @@
       if (sizeExtent[0] === Infinity) sizeExtent[0] = 0;
       if (sizeExtent[1] === -Infinity) sizeExtent[1] = 1;
 
-      const radiusRange = [4, 18];
+      const TRAILS_MEDIUM = 30; // < 10 = small hill, 10–30 = ski mountain, 30+ = multiple mountains
+      function getTrailCount(feature) {
+        const v = getProp(feature.properties, COLOR_BY_KEYS);
+        if (v == null || v === '') return 0;
+        const n = typeof v === 'number' ? v : Number(v);
+        return Number.isNaN(n) ? 0 : n;
+      }
+      function getSizeTier(feature) {
+        if (isNotDownhill(feature.properties)) return 'small';
+        const n = getTrailCount(feature);
+        if (n < TRAILS_RED) return 'small';   // < 10 trails → small hill
+        if (n < TRAILS_MEDIUM) return 'medium'; // 10–30 → ski mountain
+        return 'large';                         // 30+ → multiple mountains
+      }
       function getColorFor(feature) {
         if (isNotDownhill(feature.properties)) return '#999999';
         const v = getProp(feature.properties, COLOR_BY_KEYS);
@@ -294,41 +388,39 @@
         const n = typeof v === 'number' ? v : Number(v);
         if (Number.isNaN(n)) return '#c44d34';
         if (n < TRAILS_RED) return '#c44d34';   // red: < 10 trails
-        if (n < TRAILS_YELLOW) return '#e6c229'; // yellow: 10–30
+        if (n < TRAILS_MEDIUM) return '#e6c229'; // yellow: 10–30
         return '#2d8a3e';                        // green: 30+
       }
-      function getRadiusFor(feature) {
-        if (isNotDownhill(feature.properties)) return 2;
-        const v = getProp(feature.properties, SIZE_BY_KEYS);
-        const n = typeof v === 'number' ? v : Number(v);
-        if (n == null || Number.isNaN(n) || n <= 0) return radiusRange[0];
-        const range = sizeExtent[1] - sizeExtent[0] || 1;
-        const t = (n - sizeExtent[0]) / range;
-        const r = radiusRange[0] + t * (radiusRange[1] - radiusRange[0]);
-        return Math.round(Math.max(radiusRange[0], Math.min(radiusRange[1], r)));
-      }
-      function getMarkerStyle(feature) {
-        const notDownhill = isNotDownhill(feature.properties);
-        return {
-          radius: getRadiusFor(feature),
-          fillColor: getColorFor(feature),
-          color: notDownhill ? '#bbb' : '#1a1a1a',
-          weight: notDownhill ? 0.5 : 1,
-          fillOpacity: notDownhill ? 0.2 : 0.85
-        };
+
+      const hillSvg = (color, w, h) => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 16" width="' + w + '" height="' + h + '" style="display:block"><path d="M0 16 L0 11 Q6 6 12 11 Q18 6 24 11 L24 16 Z" fill="' + color + '" stroke="#1a1a1a" stroke-width="0.8"/></svg>';
+      const mountainSvg = (color, w, h) => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 16" width="' + w + '" height="' + h + '" style="display:block"><path d="M0 16 L8 5 L16 10 L24 16 Z" fill="' + color + '" stroke="#1a1a1a" stroke-width="0.8"/></svg>';
+      const mountainsSvg = (color, w, h) => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 16" width="' + w + '" height="' + h + '" style="display:block"><path d="M0 16 L4 10 L8 14 L10 9 L14 5 L18 10 L20 7 L24 16 Z" fill="' + color + '" stroke="#1a1a1a" stroke-width="0.8"/></svg>';
+      function getMountainIcon(feature) {
+        const tier = getSizeTier(feature);
+        const color = getColorFor(feature);
+        let w = 20, h = 14;
+        if (tier === 'medium') { w = 26; h = 18; }
+        else if (tier === 'large') { w = 32; h = 20; }
+        let svg;
+        if (tier === 'small') svg = hillSvg(color, w, h);
+        else if (tier === 'medium') svg = mountainSvg(color, w, h);
+        else svg = mountainsSvg(color, w, h);
+        return L.divIcon({
+          className: 'mountain-marker',
+          html: '<div style="line-height:0;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.3))">' + svg + '</div>',
+          iconSize: [w, h],
+          iconAnchor: [w / 2, h]
+        });
       }
 
       const legendEl = document.getElementById('legend');
       legendEl.style.display = 'block';
       legendEl.innerHTML =
-        '<h3>Color: # downhill trails</h3>' +
-        '<div class="legend-row"><span class="legend-swatch" style="background:#c44d34"></span> &lt; 10 trails</div>' +
-        '<div class="legend-row"><span class="legend-swatch" style="background:#e6c229"></span> 10–30 trails</div>' +
-        '<div class="legend-row"><span class="legend-swatch" style="background:#2d8a3e"></span> 30+ trails</div>' +
-        '<h3 style="margin-top:10px">Size: total area (acres)</h3>' +
-        '<div class="legend-row">Small dot: ' + (sizeExtent[0] === sizeExtent[1] ? sizeExtent[0] : sizeExtent[0].toLocaleString() + ' ac') + '</div>' +
-        '<div class="legend-row">Large dot: ' + (sizeExtent[1].toLocaleString() + ' ac') + '</div>' +
-        '<div class="legend-row" style="margin-top:6px"><span class="legend-swatch" style="background:#999;opacity:0.3"></span> Grey = not a downhill ski resort</div>' +
+        '<h3>Resort size (by trails)</h3>' +
+        '<div class="legend-row"><span class="legend-mountain-icon">' + hillSvg('#c44d34', 20, 14) + '</span> Small hill (&lt; 10 trails)</div>' +
+        '<div class="legend-row"><span class="legend-mountain-icon">' + mountainSvg('#e6c229', 22, 15) + '</span> Ski mountain (10–30)</div>' +
+        '<div class="legend-row"><span class="legend-mountain-icon">' + mountainsSvg('#2d8a3e', 24, 16) + '</span> Multiple mountains (30+)</div>' +
+        '<div class="legend-row" style="margin-top:6px"><span class="legend-mountain-icon">' + hillSvg('#999', 18, 12) + '</span> Grey = not a downhill ski resort</div>' +
         '<h3 style="margin-top:10px">Pistes (zoom 10+) – US colors</h3>' +
         '<div class="legend-row"><span class="legend-line" style="background:#22c55e"></span> Green = easy</div>' +
         '<div class="legend-row"><span class="legend-line" style="background:#2563eb"></span> Blue = intermediate</div>' +
@@ -350,23 +442,36 @@
       function labelForKey(key) {
         return key.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
       }
-      function buildPopupHtml(properties) {
+      const ID_KEYS = ['id', 'ref', 'area_id', 'resort_id', 'skiresort_id'];
+      function buildPopupHtml(properties, latlng) {
         if (!properties || !Object.keys(properties).length) return '<em>No data</em>';
-        const rows = Object.entries(properties)
-          .filter(([k]) => k !== 'geometry')
-          .sort(([a], [b]) => a.localeCompare(b))
-          .map(([k, v]) => '<tr><th>' + escapeHtml(labelForKey(k)) + '</th><td>' + escapeHtml(formatPopupValue(v)) + '</td></tr>');
-        return '<table class="popup-table">' + rows.join('') + '</table>';
+        const name = getProp(properties, NAME_KEYS);
+        const displayName = name ? escapeHtml(String(name)) : 'Resort';
+        const id = getProp(properties, ID_KEYS);
+        const lat = latlng && latlng.lat != null ? latlng.lat : null;
+        const lon = latlng && latlng.lng != null ? latlng.lng : null;
+        const params = new URLSearchParams();
+        if (id != null && id !== '') params.set('id', String(id));
+        if (name != null && name !== '') params.set('name', String(name));
+        if (lat != null && !Number.isNaN(lat)) params.set('lat', String(lat));
+        if (lon != null && !Number.isNaN(lon)) params.set('lon', String(lon));
+        const qs = params.toString();
+        const popupUrl = new URL('popup.html', location.href).href + (qs ? '?' + qs : '');
+        const stored = JSON.stringify({ name: name || null, id: id != null ? String(id) : null, lat, lon });
+        const storedAttr = stored.replace(/"/g, '&quot;');
+        return '<p style="margin:0 0 8px 0;font-weight:600">' + displayName + '</p>' +
+          '<a href="#" data-resort-url="' + escapeHtml(popupUrl) + '" data-resort-stored="' + storedAttr + '" class="resort-details-link tw-inline-flex tw-items-center tw-gap-1 tw-rounded-lg tw-bg-[#2563eb] tw-px-3 tw-py-2 tw-text-sm tw-font-medium tw-text-white tw-no-underline hover:tw-bg-[#1d4ed8]" style="display:inline-flex;align-items:center;gap:4px;border-radius:8px;background:#2563eb;color:#fff;padding:8px 12px;text-decoration:none;cursor:pointer;">View details <i class="bi bi-arrow-up-right"></i></a>';
       }
 
       const searchResorts = [];
       const resortsLayer = L.geoJSON(geojson, {
         pointToLayer: function (feature, latlng) {
-          const style = getMarkerStyle(feature);
-          return L.circleMarker(latlng, style);
+          const icon = getMountainIcon(feature);
+          return L.marker(latlng, { icon });
         },
         onEachFeature: function (feature, layer) {
-          layer.bindPopup(buildPopupHtml(feature.properties), { maxWidth: 320 });
+          const latlng = layer.getLatLng ? layer.getLatLng() : null;
+          layer.bindPopup(buildPopupHtml(feature.properties, latlng), { maxWidth: 320 });
           const name = getProp(feature.properties, NAME_KEYS);
           if (name != null && String(name).trim() !== '') {
             searchResorts.push({
@@ -378,6 +483,18 @@
         }
       });
       resortsLayer.addTo(map);
+
+      map.on('popupopen', (ev) => {
+        const link = ev.popup.getElement && ev.popup.getElement().querySelector('.resort-details-link');
+        if (link) {
+          console.log('[mainmap popupopen] link in DOM:', {
+            dataResortUrl: link.getAttribute('data-resort-url'),
+            dataResortStored: link.getAttribute('data-resort-stored')
+          });
+        } else {
+          console.log('[mainmap popupopen] no .resort-details-link found in popup');
+        }
+      });
 
       const searchBox = document.getElementById('searchBox');
       const searchInput = document.getElementById('searchInput');
@@ -447,6 +564,24 @@
       });
       document.addEventListener('click', (e) => {
         if (!searchBox.contains(e.target)) searchDropdown.classList.remove('visible');
+      });
+
+      document.addEventListener('click', (e) => {
+        const link = e.target.closest('.resort-details-link');
+        if (link) {
+          e.preventDefault();
+          const url = link.getAttribute('data-resort-url');
+          const stored = link.getAttribute('data-resort-stored');
+          console.log('[mainmap click] View details clicked', { url: url ? url.slice(-80) : null, stored, hasStoredAttr: !!stored });
+          if (stored) {
+            try {
+              localStorage.setItem('resortDetails', stored);
+              console.log('[mainmap click] localStorage.setItem done, verify:', localStorage.getItem('resortDetails'));
+            } catch (err) { console.error('[mainmap click] localStorage error', err); }
+          }
+          if (url) window.open(url, '_blank', 'noopener');
+          console.log('[mainmap click] window.open called');
+        }
       });
 
       // Ski area polygon outlines (visible at zoom 10+)

@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-KJGNL3KJL0"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){ dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'G-KJGNL3KJL0');
+  </script>
+  <title>Resort Details – Global Ski Atlas</title>
+  <link rel="shortcut icon" href="./assets/logo.png?v=2" type="image/x-icon" />
+  <link rel="stylesheet" href="./css/tailwind-build.css" />
+  <link rel="stylesheet" href="css/index.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" integrity="sha512-dPXYcDub/aeb08c63jRq/k6GaKccl256JQy/AnOq7CAnEZ9FzSL9wSbcZkMp4R26vBsMLFYH4kQ67/bbV8XaCQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; font-family: system-ui, -apple-system, sans-serif; }
+    .popup-layout {
+      display: flex;
+      flex-direction: row;
+      min-height: calc(100vh - 60px);
+      margin-top: 60px;
+    }
+    .popup-map-col {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      background: #f5f5f5;
+    }
+    #map { flex: 1; min-height: 400px; }
+    .resort-info-text {
+      padding: 16px 24px;
+      background: #fff;
+      border-top: 1px solid #e5e7eb;
+      font-size: 14px;
+      line-height: 1.6;
+      color: #374151;
+    }
+    .popup-stats-col {
+      width: 360px;
+      min-width: 320px;
+      background: #1a1a1a;
+      color: #fff;
+      padding: 24px;
+      overflow-y: auto;
+    }
+    .popup-stats-col h2 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: #fff;
+    }
+    .pie-chart-wrapper {
+      background: #fff;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+    .pie-chart-wrapper svg { display: block; }
+    .stat-cards {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+    .stat-card {
+      background: #2d2d2d;
+      border-radius: 8px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .stat-card .icon { font-size: 1.5rem; color: #0d9488; }
+    .stat-card .label { font-size: 12px; color: #9ca3af; }
+    .stat-card .value { font-size: 1.1rem; font-weight: 600; color: #fff; word-wrap: break-word; }
+    .stats-reveal { opacity: 0; transform: translateY(24px); }
+    .map-legend {
+      position: absolute;
+      bottom: 80px;
+      left: 12px;
+      z-index: 1000;
+      background: #fff;
+      padding: 10px 14px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      font-size: 11px;
+      max-height: 180px;
+      overflow-y: auto;
+    }
+    .map-legend h3 { margin: 0 0 6px 0; font-size: 12px; }
+    .map-legend .legend-row { display: flex; align-items: center; gap: 6px; margin: 2px 0; }
+    .map-legend .legend-swatch { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+    .map-legend .legend-line { width: 14px; height: 3px; border-radius: 2px; flex-shrink: 0; display: inline-block; }
+    .back-link {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      z-index: 1001;
+      padding: 8px 14px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      font-size: 14px;
+      font-weight: 500;
+      color: #1a1a1a;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .back-link:hover { background: #f9fafb; }
+    .olympic-rings-marker { background: none !important; border: none !important; }
+    .zoom-fact-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      pointer-events: none;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.35) 0%, transparent 30%, transparent 70%, rgba(0,0,0,0.2) 100%);
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+    .zoom-fact-overlay.visible { opacity: 1; }
+    .zoom-fact-overlay .fact-inner {
+      max-width: 420px;
+      padding: 16px 24px;
+      background: rgba(255,255,255,0.96);
+      border-radius: 12px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.2);
+      font-size: 15px;
+      line-height: 1.5;
+      color: #1a1a1a;
+      text-align: center;
+    }
+    .zoom-fact-overlay .fact-inner .fact-icon { color: #0d9488; font-size: 1.25rem; margin-bottom: 6px; }
+    @media (max-width: 900px) {
+      .popup-layout { flex-direction: column; }
+      .popup-stats-col { width: 100%; }
+    }
+  </style>
+</head>
+<body class="tw-bg-[#1a1a1a]">
+  <header
+    class="tw-absolute tw-top-0 tw-z-[1001] tw-flex tw-h-[60px] tw-w-full tw-bg-white tw-shadow-sm
+           tw-border-b tw-border-gray-200 tw-px-[5%] max-lg:tw-px-4 lg:tw-justify-around"
+  >
+    <a class="tw-h-[50px] tw-w-[50px] tw-p-[4px]" href="index.html" aria-label="Global Ski Atlas home">
+      <img src="./assets/logo.png?v=2" alt="Global Ski Atlas" class="tw-h-full tw-w-full" />
+    </a>
+    <div class="collapsible-header animated-collapse" id="collapsed-header-items">
+      <div class="tw-flex tw-h-full tw-gap-5 tw-text-base tw-text-black lg:tw-place-items-center">
+        <a class="header-links" href="mainmap.html">Online Atlas</a>
+        <a class="header-links" href="resort-comparison.html">Compare Resorts</a>
+        <a class="header-links" href="index.html">Home</a>
+      </div>
+    </div>
+    <button class="bi bi-list tw-absolute tw-right-3 tw-top-3 tw-z-50 tw-text-3xl tw-text-black lg:tw-hidden" onclick="toggleHeader()" aria-label="menu" id="collapse-btn"></button>
+  </header>
+
+  <a href="mainmap.html" class="back-link"><i class="bi bi-arrow-left"></i> Back to map</a>
+
+  <div class="popup-layout">
+    <div class="popup-map-col" style="position:relative">
+      <div id="map" style="position:relative"></div>
+      <div id="zoomFactOverlay" class="zoom-fact-overlay" aria-live="polite">
+        <div class="fact-inner"><span class="fact-icon"><i class="bi bi-snow2"></i></span><span id="zoomFactText"></span></div>
+      </div>
+      <div id="mapLegend" class="map-legend" style="display:none"></div>
+      <div class="resort-info-text">
+        <strong>Resort Information</strong>
+        <p id="resortInfoPara" style="margin-top:8px">This interactive map shows the ski resort boundaries, lifts, and trails. Use the controls to zoom in/out and explore different areas of the resort.</p>
+      </div>
+    </div>
+    <div class="popup-stats-col">
+      <h2 class="stats-reveal">Resort Statistics</h2>
+      <div id="pieChartWrapper" class="pie-chart-wrapper stats-reveal" style="display:none">
+        <svg id="pieChart" width="200" height="200" viewBox="-1 -1 2 2"></svg>
+        <div id="pieLegend" style="font-size:12px;color:#374151;margin-top:8px"></div>
+      </div>
+      <div id="statCards" class="stat-cards"></div>
+    </div>
+  </div>
+
+  <script>
+    function toggleHeader() {
+      var el = document.getElementById('collapsed-header-items');
+      if (el) el.classList.toggle('animated-collapse');
+    }
+  </script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="https://unpkg.com/leaflet-rotate@0.2.8/dist/leaflet-rotate.js" crossorigin=""></script>
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.0/gsap.min.js" integrity="sha512-0z3qBQn+oF6Z0o0kIeamF0kF0k1R0L+OyX5e0UjDZ5PwZ2gHp0n4n+Y1CzR8hrPzD0c+eY4uQ0L0JBMQJv4cPA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script type="module">
+    const MAPTILER_KEY = '0P06ORgY8WvmMOnPr0p2';
+    const GEOPARQUET_URL = 'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/ski_areas_analyzed.parquet';
+    const SKI_AREAS_OUTLINES_URL = 'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/ski_areas.parquet';
+    const OSM_NEAR_WINTER_SPORTS_URL = 'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/osm_near_winter_sports.parquet';
+
+    const NAME_KEYS = ['name', 'resort_name', 'title', 'area_name', 'Name'];
+    const ID_KEYS = ['id', 'ref', 'area_id', 'resort_id', 'skiresort_id'];
+    const RESORT_LINK_KEYS = ['ref', 'area_ref', 'resort', 'area_id', 'resort_id', 'piste:area'];
+    const SIZE_BY_KEYS = ['total_area_acres', 'Total Area Acres', 'area_acres'];
+    const SKIABLE_KEYS = ['skiable_terrain_acres', 'skiable_area_acres', 'piste_acreage'];
+    const LIFTS_KEYS = ['total_lifts', 'lifts', 'number_of_lifts'];
+    const TRAILS_KEYS = ['downhill_trails', 'number_of_downhill_trails', 'trails'];
+    const LONGEST_LIFT_KEYS = ['longest_lift_mi', 'longest_lift_km'];
+    const LONGEST_TRAIL_KEYS = ['longest_trail_mi', 'longest_trail_km'];
+    const AVG_TRAIL_KEYS = ['avg_trail_mi', 'avg_trail_km'];
+    const COUNTRY_KEYS = ['country', 'Country', 'addr:country'];
+    const STATE_KEYS = ['state', 'State', 'addr:state'];
+    const TRAILS_NOVICE_KEYS = ['trails_novice'];
+    const TRAILS_EASY_KEYS = ['trails_easy'];
+    const TRAILS_INTERMEDIATE_KEYS = ['trails_intermediate'];
+    const TRAILS_ADVANCED_KEYS = ['trails_advanced'];
+    const TRAILS_EXPERT_KEYS = ['trails_expert'];
+    const TRAILS_FREERIDE_KEYS = ['trails_freeride'];
+    const TRAILS_EXTREME_KEYS = ['trails_extreme'];
+    const GLADED_KEYS = ['gladed_terrain'];
+    const SNOW_PARK_KEYS = ['snow_park'];
+    const SLEDDING_KEYS = ['sledding_tubing'];
+    const LIFT_TYPES_KEYS = ['lift_types'];
+    const RESORT_TYPE_KEYS = ['resort_type'];
+    const PISTE_DIFFICULTY_KEYS = ['piste:difficulty', 'piste_difficulty', 'difficulty'];
+
+    function getProp(obj, keyList) {
+      if (!obj) return undefined;
+      for (const k of keyList) {
+        if (Object.prototype.hasOwnProperty.call(obj, k)) return obj[k];
+      }
+      return undefined;
+    }
+
+    function getPisteDifficulty(props) {
+      let v = getProp(props, PISTE_DIFFICULTY_KEYS);
+      if (v == null && props && typeof props.other_tags === 'string') {
+        const m = props.other_tags.match(/"piste:difficulty"=>"([^"]+)"/);
+        if (m) v = m[1];
+      }
+      return v != null ? String(v).toLowerCase().trim() : '';
+    }
+
+    function isLift(props) {
+      const aerialway = getProp(props, ['aerialway', 'Aerialway']);
+      return aerialway != null && String(aerialway).trim() !== '';
+    }
+
+    function boundsFromGeoJSONFeature(feature) {
+      const coords = [];
+      const geom = feature.geometry;
+      if (!geom || !geom.coordinates) return null;
+      function flatten(c, depth) {
+        if (depth > 4) return;
+        if (typeof c[0] === 'number' && c.length >= 2) coords.push([c[1], c[0]]);
+        else if (Array.isArray(c)) c.forEach((cc) => flatten(cc, depth + 1));
+      }
+      flatten(geom.coordinates, 0);
+      return coords.length ? L.latLngBounds(coords) : null;
+    }
+
+    function getRings(geom) {
+      if (!geom || !geom.coordinates) return [];
+      if (geom.type === 'Polygon') return geom.coordinates[0] ? [geom.coordinates[0]] : [];
+      if (geom.type === 'MultiPolygon') return (geom.coordinates || []).map((p) => p[0]).filter(Boolean);
+      return [];
+    }
+    function pointInRing(lon, lat, ring) {
+      const n = ring.length;
+      let inside = false;
+      for (let i = 0, j = n - 1; i < n; j = i++) {
+        const xi = ring[i][0], yi = ring[i][1];
+        const xj = ring[j][0], yj = ring[j][1];
+        if (yi > lat !== yj > lat && lon < (xj - xi) * (lat - yi) / (yj - yi) + xi) inside = !inside;
+      }
+      return inside;
+    }
+    function pointInPolygon(lon, lat, geom) {
+      return getRings(geom).some((ring) => pointInRing(lon, lat, ring));
+    }
+
+    /** Bearing in degrees (0–360) from point [lon1, lat1] to [lon2, lat2]. North = 0. */
+    function bearingDeg(lon1, lat1, lon2, lat2) {
+      const toRad = (d) => d * Math.PI / 180;
+      const φ1 = toRad(lat1), φ2 = toRad(lat2), dλ = toRad(lon2 - lon1);
+      const y = Math.sin(dλ) * Math.cos(φ2);
+      const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(dλ);
+      let θ = Math.atan2(y, x) * 180 / Math.PI;
+      return (θ + 360) % 360;
+    }
+
+    /** South (min lat) to north (max lat) bearing of a polygon, so bottom of hill = south, top = north. */
+    function southToNorthBearing(geom) {
+      const rings = getRings(geom);
+      let minLat = Infinity, maxLat = -Infinity, lonAtMin = 0, lonAtMax = 0;
+      rings.forEach((ring) => {
+        ring.forEach((c) => {
+          const lon = c[0], lat = c[1];
+          if (lat < minLat) { minLat = lat; lonAtMin = lon; }
+          if (lat > maxLat) { maxLat = lat; lonAtMax = lon; }
+        });
+      });
+      if (minLat >= maxLat) return 0;
+      return bearingDeg(lonAtMin, minLat, lonAtMax, maxLat);
+    }
+
+    const params = new URLSearchParams(location.search);
+    let urlId = params.get('id');
+    let urlName = params.get('name') ? decodeURIComponent(params.get('name')) : null;
+    let urlLat = params.has('lat') ? parseFloat(params.get('lat')) : null;
+    let urlLon = params.has('lon') ? parseFloat(params.get('lon')) : null;
+
+    console.log('[popup] Step 1 – from URL:', { search: location.search, urlId, urlName, urlLat, urlLon });
+
+    if (!urlName && !urlId && (urlLat == null || isNaN(urlLat)) && (urlLon == null || isNaN(urlLon))) {
+      console.log('[popup] Step 2 – URL empty, reading localStorage');
+      try {
+        const stored = localStorage.getItem('resortDetails');
+        console.log('[popup] localStorage.resortDetails:', stored ? stored.slice(0, 120) + '...' : stored);
+        if (stored) {
+          const d = JSON.parse(stored);
+          console.log('[popup] parsed:', d);
+          if (d) {
+            urlId = d.id || null;
+            urlName = d.name || null;
+            urlLat = typeof d.lat === 'number' ? d.lat : (d.lat != null ? parseFloat(d.lat) : null);
+            urlLon = typeof d.lon === 'number' ? d.lon : (d.lon != null ? parseFloat(d.lon) : null);
+            console.log('[popup] Step 3 – using localStorage:', { urlId, urlName, urlLat, urlLon });
+          }
+        }
+      } catch (err) { console.error('[popup] localStorage parse error', err); }
+    }
+
+    const map = L.map('map', { center: [45, 0], zoom: 4, rotate: true, bearing: 0 });
+    L.tileLayer(`https://api.maptiler.com/maps/winter-v4/256/{z}/{x}/{y}.png?key=${MAPTILER_KEY}`, {
+      attribution: '© MapTiler © OpenStreetMap',
+      tileSize: 256,
+      minZoom: 3,
+      maxZoom: 18,
+      crossOrigin: true
+    }).addTo(map);
+
+    const OLYMPIC_HOSTS = [
+      { name: 'Milan', lat: 45.4642, lon: 9.19 },
+      { name: 'Cortina d\'Ampezzo', lat: 46.5369, lon: 12.1356 }
+    ];
+    const olympicRingsSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 30" width="36" height="18" style="display:block"><circle cx="12" cy="15" r="6" fill="none" stroke="#0081C8" stroke-width="2"/><circle cx="30" cy="15" r="6" fill="none" stroke="#000" stroke-width="2"/><circle cx="48" cy="15" r="6" fill="none" stroke="#EE334E" stroke-width="2"/><circle cx="21" cy="21" r="6" fill="none" stroke="#FCB131" stroke-width="2"/><circle cx="39" cy="21" r="6" fill="none" stroke="#00A651" stroke-width="2"/></svg>';
+    const olympicIcon = L.divIcon({
+      className: 'olympic-rings-marker',
+      html: '<div title="Milan–Cortina 2026" style="background:#fff;border-radius:50%;padding:2px;box-shadow:0 1px 4px rgba(0,0,0,0.3);line-height:0">' + olympicRingsSvg + '</div>',
+      iconSize: [40, 22],
+      iconAnchor: [20, 11]
+    });
+    OLYMPIC_HOSTS.forEach((host) => {
+      L.marker([host.lat, host.lon], { icon: olympicIcon })
+        .bindTooltip(host.name + ' – Milan–Cortina 2026', { permanent: false, direction: 'top', offset: [0, -10] })
+        .addTo(map);
+    });
+
+    const SKI_OLYMPIC_FACTS = [
+      'Alpine skiing became an Olympic sport at the 1936 Garmisch-Partenkirchen Games.',
+      'The first Winter Olympics were held in Chamonix, France, in 1924.',
+      'Mikaela Shiffrin holds the World Cup record for most career wins in alpine skiing.',
+      'Olympic downhill racers can exceed 90 mph on the course.',
+      'Six countries have hosted the Winter Olympics twice: France, USA, Switzerland, Austria, Japan, and Italy.'
+    ];
+
+    const FLYBY_STARTS = [
+      { name: 'Milan', lat: 45.4642, lon: 9.19 },
+      { name: 'Cortina d\'Ampezzo', lat: 46.5369, lon: 12.1356 }
+    ];
+    const flybyStart = FLYBY_STARTS[Math.floor(Math.random() * FLYBY_STARTS.length)];
+    map.setView([flybyStart.lat, flybyStart.lon], 10);
+
+    let resort = null;
+    let resortMapFeatures = [];
+
+    try {
+      const { asyncBufferFromUrl, parquetReadObjects } = await import('https://esm.sh/hyparquet@1');
+      const [fileAnalyzed, fileOutlines, fileOsm] = await Promise.all([
+        asyncBufferFromUrl({ url: GEOPARQUET_URL }),
+        asyncBufferFromUrl({ url: SKI_AREAS_OUTLINES_URL }),
+        asyncBufferFromUrl({ url: OSM_NEAR_WINTER_SPORTS_URL })
+      ]);
+
+      const [dataAnalyzed, dataOutlines, dataOsm] = await Promise.all([
+        parquetReadObjects({ file: fileAnalyzed }),
+        parquetReadObjects({ file: fileOutlines }),
+        parquetReadObjects({ file: fileOsm })
+      ]);
+
+      const r0 = dataAnalyzed[0] || {};
+      const latCol = r0.latitude != null ? 'latitude' : r0.centroid_lat != null ? 'centroid_lat' : r0.lat != null ? 'lat' : null;
+      const lonCol = r0.longitude != null ? 'longitude' : r0.centroid_lon != null ? 'centroid_lon' : r0.lon != null ? 'lon' : null;
+      function getResortLatLon(row) {
+        if (latCol && lonCol && row[latCol] != null && row[lonCol] != null) return [Number(row[latCol]), Number(row[lonCol])];
+        const g = row.geometry;
+        if (g && g.type === 'Point' && g.coordinates && g.coordinates.length >= 2) return [g.coordinates[1], g.coordinates[0]];
+        return [null, null];
+      }
+
+      resort = dataAnalyzed.find((row) => {
+        if (urlId != null && urlId !== '') {
+          const id = getProp(row, ID_KEYS);
+          if (id != null && String(id) === String(urlId)) return true;
+        }
+        if (urlName && (urlLat != null && !isNaN(urlLat)) && (urlLon != null && !isNaN(urlLon))) {
+          const name = getProp(row, NAME_KEYS);
+          const [lat, lon] = getResortLatLon(row);
+          if (name && String(name).trim().toLowerCase() === urlName.trim().toLowerCase() && lat != null && lon != null) {
+            const dist = Math.hypot(lat - urlLat, lon - urlLon);
+            if (dist < 0.1) return true;
+          }
+        }
+        return false;
+      });
+
+      if (!resort) {
+        document.getElementById('statCards').innerHTML = '<p style="color:#9ca3af">Resort not found. <a href="mainmap.html" class="tw-text-[#0d9488] hover:tw-underline">Return to map</a></p>';
+      } else {
+        const [latA, lonA] = getResortLatLon(resort);
+        const resortLat = latA != null ? latA : 0;
+        const resortLon = lonA != null ? lonA : 0;
+        const resortName = getProp(resort, NAME_KEYS) || 'Resort';
+        const resortRef = getProp(resort, ID_KEYS);
+
+        const outlineFeatures = (dataOutlines || [])
+          .filter((row) => row.geometry && (row.geometry.type === 'Polygon' || row.geometry.type === 'MultiPolygon'))
+          .map((row) => ({ type: 'Feature', geometry: row.geometry, properties: Object.fromEntries(Object.entries(row).filter(([k]) => k !== 'geometry')) }));
+
+        let outlineFeature = outlineFeatures.find((f) => {
+          const name = getProp(f.properties, NAME_KEYS);
+          const ref = getProp(f.properties, ['ref', 'id']);
+          if (resortRef != null && ref != null && String(ref) === String(resortRef)) return true;
+          if (name && resortName && String(name).trim().toLowerCase() === String(resortName).trim().toLowerCase()) return true;
+          return pointInPolygon(resortLon, resortLat, f.geometry);
+        });
+
+        if (outlineFeature) {
+          L.geoJSON(outlineFeature, { style: { color: '#000', weight: 2, fill: false, dashArray: '3, 6' } }).addTo(map);
+        }
+
+        const osmFeatures = (dataOsm || []).filter((row) => row.geometry && row.geometry.type).map((row) => {
+          const { geometry, ...props } = row;
+          return { type: 'Feature', geometry, properties: props };
+        });
+
+        resortMapFeatures = osmFeatures.filter((f) => {
+          const linkVal = getProp(f.properties, RESORT_LINK_KEYS);
+          if (resortRef != null && linkVal != null && String(linkVal) === String(resortRef)) return true;
+          const name = getProp(f.properties, NAME_KEYS);
+          if (name && resortName && String(name).trim().toLowerCase() === String(resortName).trim().toLowerCase()) return true;
+          return false;
+        });
+
+        let extentBounds = null;
+        if (outlineFeature) {
+          const b = boundsFromGeoJSONFeature(outlineFeature);
+          if (b && b.isValid()) extentBounds = b;
+        }
+        resortMapFeatures.forEach((f) => {
+          const b = boundsFromGeoJSONFeature(f);
+          if (b && b.isValid()) extentBounds = extentBounds ? extentBounds.extend(b) : b;
+        });
+        console.log('[popup] map extent:', {
+          hasOutline: !!outlineFeature,
+          resortMapFeaturesCount: resortMapFeatures.length,
+          hasBounds: !!(extentBounds && extentBounds.isValid()),
+          bounds: extentBounds && extentBounds.isValid() ? extentBounds.toBBoxString() : null,
+          zoom: extentBounds && extentBounds.isValid() ? null : 11
+        });
+        const applyBearing = () => {
+          if (outlineFeature && map.setBearing) {
+            const b = southToNorthBearing(outlineFeature.geometry);
+            map.setBearing(-b);
+            console.log('[popup] map bearing: south-to-north', b, '→ setBearing', -b);
+          }
+        };
+
+        const flyDuration = 5;
+        const factOverlay = document.getElementById('zoomFactOverlay');
+        const factText = document.getElementById('zoomFactText');
+        const showZoomFact = () => {
+          if (factOverlay && factText) {
+            factText.textContent = SKI_OLYMPIC_FACTS[Math.floor(Math.random() * SKI_OLYMPIC_FACTS.length)];
+            factOverlay.classList.add('visible');
+          }
+        };
+        const hideZoomFact = () => {
+          if (factOverlay) {
+            factOverlay.classList.remove('visible');
+          }
+        };
+
+        showZoomFact();
+        if (extentBounds && extentBounds.isValid()) {
+          const targetCenter = extentBounds.getCenter();
+          map.flyTo(targetCenter, 11, { duration: flyDuration, easeLinearity: 0.25 });
+          map.once('moveend', () => {
+            hideZoomFact();
+            map.fitBounds(extentBounds, { padding: [24, 24], maxZoom: 18 });
+            map.once('moveend', applyBearing);
+          });
+          console.log('[popup] map extent: flyTo resort then fitBounds', { bounds: extentBounds.toBBoxString() });
+        } else {
+          map.flyTo([resortLat, resortLon], 11, { duration: flyDuration, easeLinearity: 0.25 });
+          map.once('moveend', () => {
+            hideZoomFact();
+            applyBearing();
+          });
+          console.log('[popup] map extent: flyTo center', { center: [resortLat, resortLon], zoom: 11 });
+        }
+
+        resortMapFeatures.forEach((f) => {
+          if (isLift(f.properties)) {
+            L.geoJSON(f, { style: { color: '#f87171', weight: 2, opacity: 0.9 } }).addTo(map);
+          } else {
+            const d = getPisteDifficulty(f.properties);
+            let color = '#64748b';
+            if (d === 'easy' || d === 'novice') color = '#22c55e';
+            else if (d === 'intermediate' || d === 'medium') color = '#2563eb';
+            else if (d === 'advanced' || d === 'hard') color = '#1a1a1a';
+            else if (d === 'expert' || d === 'freeride' || d === 'extreme') color = '#991b1b';
+            L.geoJSON(f, { style: { color, weight: 3, opacity: 0.95 } }).addTo(map);
+          }
+        });
+
+        document.getElementById('mapLegend').style.display = 'block';
+        document.getElementById('mapLegend').innerHTML =
+          '<h3>Map Key</h3>' +
+          '<div class="legend-row"><span class="legend-line" style="background:#22c55e"></span> Easy</div>' +
+          '<div class="legend-row"><span class="legend-line" style="background:#2563eb"></span> Intermediate</div>' +
+          '<div class="legend-row"><span class="legend-line" style="background:#1a1a1a"></span> Advanced</div>' +
+          '<div class="legend-row"><span class="legend-line" style="background:#991b1b"></span> Expert</div>' +
+          '<div class="legend-row" style="margin-top:6px"><span class="legend-swatch" style="background:#dc2626"></span> Lift</div>';
+
+        const difficultyCounts = { easy: 0, intermediate: 0, advanced: 0, expert: 0 };
+        resortMapFeatures.filter((f) => !isLift(f.properties)).forEach((f) => {
+          const d = getPisteDifficulty(f.properties);
+          if (d === 'easy' || d === 'novice') difficultyCounts.easy++;
+          else if (d === 'intermediate' || d === 'medium') difficultyCounts.intermediate++;
+          else if (d === 'advanced' || d === 'hard') difficultyCounts.advanced++;
+          else if (d === 'expert' || d === 'freeride' || d === 'extreme') difficultyCounts.expert++;
+        });
+
+        const total = Object.values(difficultyCounts).reduce((a, b) => a + b, 0);
+        if (total > 0) {
+          document.getElementById('pieChartWrapper').style.display = 'block';
+          const data = [
+            { label: 'Easy', value: difficultyCounts.easy, color: '#22c55e' },
+            { label: 'Intermediate', value: difficultyCounts.intermediate, color: '#2563eb' },
+            { label: 'Advanced', value: difficultyCounts.advanced, color: '#1a1a1a' },
+            { label: 'Expert', value: difficultyCounts.expert, color: '#991b1b' }
+          ].filter((d) => d.value > 0);
+
+          const pie = d3.pie().value((d) => d.value)(data);
+          const arc = d3.arc().innerRadius(0).outerRadius(90);
+          const svg = d3.select('#pieChart').attr('viewBox', '0 0 200 200');
+          svg.selectAll('path').data(pie).join('path')
+            .attr('d', arc)
+            .attr('fill', (d) => d.data.color)
+            .attr('transform', 'translate(100, 100)');
+
+          document.getElementById('pieLegend').innerHTML = data.map((d) => d.label + ' (' + d.value + ')').join(' &bull; ');
+        }
+
+        const totalArea = getProp(resort, SIZE_BY_KEYS);
+        const skiableArea = getProp(resort, SKIABLE_KEYS);
+        const liftsCount = getProp(resort, LIFTS_KEYS);
+        const trailsCount = getProp(resort, TRAILS_KEYS);
+        const longestLiftMi = getProp(resort, LONGEST_LIFT_KEYS);
+        const longestTrailMi = getProp(resort, LONGEST_TRAIL_KEYS);
+        const avgTrailMi = getProp(resort, AVG_TRAIL_KEYS);
+        const country = getProp(resort, COUNTRY_KEYS);
+        const state = getProp(resort, STATE_KEYS);
+        const trailsNovice = getProp(resort, TRAILS_NOVICE_KEYS);
+        const trailsEasy = getProp(resort, TRAILS_EASY_KEYS);
+        const trailsIntermediate = getProp(resort, TRAILS_INTERMEDIATE_KEYS);
+        const trailsAdvanced = getProp(resort, TRAILS_ADVANCED_KEYS);
+        const trailsExpert = getProp(resort, TRAILS_EXPERT_KEYS);
+        const trailsFreeride = getProp(resort, TRAILS_FREERIDE_KEYS);
+        const trailsExtreme = getProp(resort, TRAILS_EXTREME_KEYS);
+        const gladed = getProp(resort, GLADED_KEYS);
+        const snowPark = getProp(resort, SNOW_PARK_KEYS);
+        const sledding = getProp(resort, SLEDDING_KEYS);
+        const liftTypes = getProp(resort, LIFT_TYPES_KEYS);
+        const resortType = getProp(resort, RESORT_TYPE_KEYS);
+        const mapPistes = resortMapFeatures.filter((f) => !isLift(f.properties));
+        const mapLifts = resortMapFeatures.filter((f) => isLift(f.properties));
+        const formatNum = (v) => {
+          if (v == null) return '—';
+          if (typeof v === 'bigint') return v.toString();
+          const n = Number(v);
+          return !isNaN(n) ? n.toLocaleString() : '—';
+        };
+        const formatMi = (v) => {
+          if (v == null || v === '') return '—';
+          const n = Number(v);
+          return !isNaN(n) ? Number(n).toFixed(2) + ' mi' : '—';
+        };
+        const formatYesNo = (v) => {
+          if (v == null || v === '') return '—';
+          const s = String(v).trim();
+          if (/^(yes|true|1)$/i.test(s)) return 'Yes';
+          if (/^(no|false|0)$/i.test(s)) return 'No';
+          return s;
+        };
+        const trailBreakdown = [];
+        if (trailsNovice != null && Number(trailsNovice) > 0) trailBreakdown.push('Novice ' + formatNum(trailsNovice));
+        if (trailsEasy != null && Number(trailsEasy) > 0) trailBreakdown.push('Easy ' + formatNum(trailsEasy));
+        if (trailsIntermediate != null && Number(trailsIntermediate) > 0) trailBreakdown.push('Intermediate ' + formatNum(trailsIntermediate));
+        if (trailsAdvanced != null && Number(trailsAdvanced) > 0) trailBreakdown.push('Advanced ' + formatNum(trailsAdvanced));
+        if (trailsExpert != null && Number(trailsExpert) > 0) trailBreakdown.push('Expert ' + formatNum(trailsExpert));
+        if (trailsFreeride != null && Number(trailsFreeride) > 0) trailBreakdown.push('Freeride ' + formatNum(trailsFreeride));
+        if (trailsExtreme != null && Number(trailsExtreme) > 0) trailBreakdown.push('Extreme ' + formatNum(trailsExtreme));
+        const trailBreakdownStr = trailBreakdown.length ? trailBreakdown.join(' · ') : '—';
+
+        const cards = [
+          { icon: 'bi-geo-alt', label: 'Total Area', value: (totalArea != null ? formatNum(totalArea) + ' acres' : '—') },
+          { icon: 'bi-snow2', label: 'Skiable Terrain', value: (skiableArea != null ? formatNum(skiableArea) + ' acres' : '—') },
+          { icon: 'bi-geo', label: 'Country', value: (country != null && country !== '' ? String(country) : '—') },
+          { icon: 'bi-signpost-split', label: 'State / Region', value: (state != null && state !== '' ? String(state) : '—') },
+          { icon: 'bi-arrow-up', label: 'Lifts', value: liftsCount != null ? formatNum(liftsCount) : formatNum(mapLifts.length) },
+          { icon: 'bi-arrow-up-circle', label: 'Longest Lift', value: formatMi(longestLiftMi) },
+          { icon: 'bi-signpost-2', label: 'Trails', value: trailsCount != null ? formatNum(trailsCount) : formatNum(mapPistes.length) },
+          { icon: 'bi-signpost', label: 'Longest Trail', value: formatMi(longestTrailMi) },
+          { icon: 'bi-graph-up', label: 'Avg Trail Length', value: formatMi(avgTrailMi) },
+          { icon: 'bi-bar-chart', label: 'Trail Breakdown', value: trailBreakdownStr },
+          { icon: 'bi-tree', label: 'Gladed Terrain', value: formatYesNo(gladed) },
+          { icon: 'bi-bounding-box', label: 'Snow Park', value: formatYesNo(snowPark) },
+          { icon: 'bi-snow', label: 'Sledding / Tubing', value: formatYesNo(sledding) },
+          { icon: 'bi-tag', label: 'Resort Type', value: (resortType != null && resortType !== '' ? String(resortType) : '—') },
+          { icon: 'bi-list-ul', label: 'Lift Types', value: (liftTypes != null && liftTypes !== '' ? String(liftTypes) : '—') }
+        ];
+
+        const cardMarkup = cards.map((c) =>
+          '<div class="stat-card stats-reveal" style="opacity:0;transform:translateY(24px)"><span class="icon"><i class="bi ' + c.icon + '"></i></span><div><div class="label">' + c.label + '</div><div class="value">' + c.value + '</div></div></div>'
+        ).join('');
+        document.getElementById('statCards').innerHTML = cardMarkup;
+
+        document.title = resortName + ' – Global Ski Atlas';
+        document.getElementById('resortInfoPara').textContent =
+          'This interactive map shows ' + resortName + ' boundaries, lifts, and trails. Use the controls to zoom in/out and explore different areas of the resort.';
+
+        if (typeof gsap !== 'undefined') {
+          gsap.to('.popup-stats-col > h2, .popup-stats-col #pieChartWrapper', { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' });
+          const statCardEls = document.querySelectorAll('#statCards .stat-card');
+          gsap.to(statCardEls, {
+            opacity: 1,
+            y: 0,
+            duration: 2,
+            stagger: 3,
+            ease: 'power2.out',
+            overwrite: true
+          });
+        } else {
+          document.querySelectorAll('.popup-stats-col .stats-reveal').forEach((el) => { el.style.opacity = '1'; el.style.transform = 'none'; });
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      document.getElementById('statCards').innerHTML = '<p style="color:#9ca3af">Failed to load resort data. <a href="mainmap.html" class="tw-text-[#0d9488] hover:tw-underline">Return to map</a></p>';
+    }
+  </script>
+</body>
+</html>
