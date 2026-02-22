@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-KJGNL3KJL0"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){ dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'G-KJGNL3KJL0');
+  </script>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4372859798489282" crossorigin="anonymous"></script>
+  <title>Download Parquet Data – Global Ski Atlas</title>
+  <meta name="description" content="Download ski resort data in Parquet format. Learn how Global Ski Atlas creates data from OpenStreetMap: ski areas, lifts, pistes, and analyzed datasets." />
+  <link rel="shortcut icon" href="./assets/logo.png?v=2" type="image/x-icon" />
+  <link rel="stylesheet" href="./css/tailwind-build.css" />
+  <link rel="stylesheet" href="css/index.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" integrity="sha512-dPXYcDub/aeb08c63jRq/k6GaKccl256JQy/AnOq7CAnEZ9FzSL9wSbcZkMp4R26vBsMLFYH4kQ67/bbV8XaCQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <style>
+    .data-section { border-left: 4px solid #2563eb; padding-left: 1rem; margin: 1.5rem 0; }
+    .data-section h3 { margin-top: 0; }
+    .download-card { border: 1px solid #e5e7eb; border-radius: 12px; padding: 1rem 1.25rem; margin: 0.5rem 0; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+    .download-card:hover { background: #f9fafb; border-color: #2563eb; }
+    .download-card a { display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none; color: #2563eb; font-weight: 500; }
+    .download-card a:hover { text-decoration: underline; }
+    .download-card span { color: #6b7280; font-size: 0.875rem; }
+  </style>
+</head>
+<body class="tw-flex tw-min-h-[100vh] tw-flex-col tw-bg-[#fff]">
+  <header
+    class="tw-absolute tw-top-0 tw-z-[1001] tw-flex tw-h-[60px] tw-w-full tw-bg-white tw-shadow-sm
+           tw-border-b tw-border-gray-200 tw-px-[5%] max-lg:tw-mr-auto max-lg:tw-px-4 lg:tw-justify-around"
+  >
+    <a class="tw-h-[50px] tw-w-[50px] tw-p-[4px]" href="index.html" aria-label="Global Ski Atlas home">
+      <img src="./assets/logo.png?v=2" alt="Global Ski Atlas" class="tw-object tw-h-full tw-w-full" />
+    </a>
+    <div class="collapsible-header animated-collapse max-lg:tw-shadow-md" id="collapsed-header-items">
+      <div
+        class="tw-flex tw-h-full tw-w-max tw-gap-5 tw-text-base tw-text-black
+               max-lg:tw-mt-[30px] max-lg:tw-flex-col max-lg:tw-place-items-end
+               max-lg:tw-gap-5 lg:tw-mx-auto lg:tw-place-items-center"
+      >
+        <a class="header-links" href="coffee-table-book.html">Coffee Table Book</a>
+        <a class="header-links" href="mainmap.html">Online Atlas</a>
+        <a class="header-links" href="resort-comparison.html">Compare Resorts</a>
+        <a class="header-links" href="About.html">About</a>
+        <a class="header-links" href="skiing-ai.html">AI Assistant</a>
+      </div>
+      <div
+        class="tw-mx-4 tw-flex tw-place-items-center tw-gap-[20px] tw-text-base
+               max-md:tw-w-full max-md:tw-flex-col max-md:tw-place-content-center"
+      >
+        <a
+          href=""
+          aria-label="signup"
+          class="tw-flex tw-h-[40px] tw-place-items-center tw-gap-2 tw-rounded-full
+                 tw-bg-black tw-p-1 tw-pl-4 tw-text-white"
+        >
+          <span>Download App Coming Soon</span>
+          <div
+            class="tw-flex tw-h-[30px] tw-w-[30px] tw-place-content-center
+                   tw-place-items-center tw-rounded-full tw-bg-primary
+                   tw-font-semibold tw-text-black"
+          >
+            <i class="bi bi-download"></i>
+          </div>
+        </a>
+      </div>
+    </div>
+    <button
+      class="bi bi-list tw-absolute tw-right-3 tw-top-3 tw-z-50 tw-text-3xl
+             tw-text-black lg:tw-hidden"
+      onclick="toggleHeader()"
+      aria-label="menu"
+      id="collapse-btn"
+    ></button>
+  </header>
+
+  <div class="tw-flex-1 tw-min-h-0 tw-overflow-y-auto" style="margin-top: 60px;">
+  <main class="tw-flex-1 tw-flex tw-flex-col">
+    <div class="tw-flex tw-w-full tw-flex-col tw-place-items-center tw-py-12 tw-px-6">
+      <h1 class="tw-text-3xl tw-font-bold tw-text-black max-md:tw-text-2xl">Download Parquet Data</h1>
+      <p class="tw-mt-2 tw-text-gray-500">Download ski resort datasets in Parquet format and learn how we create them.</p>
+    </div>
+
+    <!-- Section 1: Text LEFT, Image RIGHT -->
+    <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6">
+      <div class="tw-flex tw-min-h-[60vh] tw-place-content-center tw-place-items-center tw-gap-[10%] max-lg:tw-flex-col max-lg:tw-gap-10">
+        <div class="tw-mt-6 tw-flex tw-max-w-[450px] tw-flex-col tw-gap-4">
+          <h2 class="tw-text-4xl tw-font-medium">How We Create the Data</h2>
+          <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700">Built from OpenStreetMap using a multi-step pipeline</p>
+          <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600">Our datasets are built from <strong>OpenStreetMap</strong> (OSM) using a multi-step pipeline. We use regional PBF extracts from <a href="https://download.geofabrik.de/" class="tw-text-blue-600 hover:tw-underline" target="_blank" rel="noopener">Geofabrik</a>—continental or country-level OSM data—then process each region through an 8-step pipeline.</p>
+        </div>
+        <div class="tw-flex tw-flex-shrink-0">
+          <img src="./assets/images/datadownload/1-how-we-create-data.png" alt="Aerial view of ski resort with map data overlay" class="tw-h-[450px] tw-w-[300px] tw-object-cover tw-rounded-lg" />
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 2: Image LEFT, Text RIGHT -->
+    <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6">
+      <div class="tw-flex tw-min-h-[60vh] tw-place-content-center tw-place-items-center tw-gap-[10%] max-lg:tw-flex-col max-lg:tw-gap-10">
+        <div class="tw-flex tw-flex-shrink-0 max-lg:tw-order-2">
+          <img src="./assets/images/datadownload/2-eight-step-pipeline.png" alt="Ski lift ascending mountain with pistes" class="tw-h-[450px] tw-w-[300px] tw-object-cover tw-rounded-lg" />
+        </div>
+        <div class="tw-mt-6 tw-flex tw-max-w-[450px] tw-flex-col tw-gap-4 max-lg:tw-order-1">
+          <h2 class="tw-text-4xl tw-font-medium">The 8-Step Pipeline</h2>
+          <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700">From OSM extract to GeoParquet output</p>
+          <ol class="tw-mt-4 tw-list-decimal tw-list-inside tw-space-y-2 tw-text-xl tw-leading-relaxed tw-text-gray-600">
+            <li><strong>Extract winter_sports</strong> – Pull ski areas and winter sport facilities from OSM</li>
+            <li><strong>osm_nearby</strong> – Extract OSM features within ~2 km of each ski area</li>
+            <li><strong>lifts and pistes</strong> – Extract lift lines and piste (trail) geometries</li>
+            <li><strong>enrich</strong> – Add boundaries, administrative data, and enrich attributes</li>
+            <li><strong>analyze</strong> – Compute statistics (trail counts, elevation, area, etc.)</li>
+            <li><strong>parquet</strong> – Export to GeoParquet format for compact storage and fast reads</li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 3: Text LEFT, Image RIGHT -->
+    <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6">
+      <div class="tw-flex tw-min-h-[60vh] tw-place-content-center tw-place-items-center tw-gap-[10%] max-lg:tw-flex-col max-lg:tw-gap-10">
+        <div class="tw-mt-6 tw-flex tw-max-w-[450px] tw-flex-col tw-gap-4">
+          <h2 class="tw-text-4xl tw-font-medium">Regions & Deployment</h2>
+          <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700">Scale by region, merge globally</p>
+          <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600">Regions are defined in <code class="tw-bg-gray-100 tw-px-1 tw-rounded">config/regions.yaml</code>. Large areas (Europe, North America, Asia) are split into countries, states, or sub-regions so each run stays manageable. After processing, we combine regional outputs into a single global dataset using our <code class="tw-bg-gray-100 tw-px-1 tw-rounded">combine_regions</code> script.</p>
+          <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600">The pipeline runs either <strong>locally with Docker</strong> or on <strong>AWS ECS Fargate</strong> for continent-wide batch jobs. Full Europe or North America runs take roughly 5–8 hours each.</p>
+          <a href="https://github.com/jwitcoski/globalskiatlas_data" class="tw-mt-6 tw-inline-flex tw-gap-2 tw-rounded-lg tw-px-8 tw-py-4 tw-text-lg tw-font-semibold tw-shadow-md tw-no-underline tw-text-white hover:tw-opacity-90" style="background-color: #2563eb;" target="_blank" rel="noopener">View globalskiatlas_data on GitHub <i class="bi bi-box-arrow-up-right"></i></a>
+        </div>
+        <div class="tw-flex tw-flex-shrink-0">
+          <img src="./assets/images/datadownload/3-regions-deployment.png" alt="World map with ski regions across continents" class="tw-h-[450px] tw-w-[300px] tw-object-cover tw-rounded-lg" />
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 4: Image LEFT, Text/Downloads RIGHT -->
+    <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6">
+      <div class="tw-flex tw-min-h-[60vh] tw-place-content-center tw-place-items-center tw-gap-[10%] max-lg:tw-flex-col max-lg:tw-gap-10">
+        <div class="tw-flex tw-flex-shrink-0 max-lg:tw-order-2">
+          <img src="./assets/images/datadownload/4-datasets.png" alt="Ski trail map with lifts and pistes" class="tw-h-[450px] tw-w-[300px] tw-object-cover tw-rounded-lg" />
+        </div>
+        <div class="tw-mt-6 tw-flex tw-max-w-[500px] tw-flex-col tw-gap-4 max-lg:tw-order-1">
+          <h2 class="tw-text-4xl tw-font-medium">Datasets</h2>
+          <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700">GeoParquet format — use with Pandas, DuckDB, GeoPandas</p>
+          <p class="tw-mt-4 tw-text-lg tw-leading-relaxed tw-text-gray-600">Each file has embedded geometry. Download below:</p>
+          <div class="tw-mt-4 tw-flex tw-flex-col tw-gap-3">
+            <div class="download-card" data-download-url="https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/ski_areas_analyzed.parquet">
+              <div>
+                <strong class="tw-text-gray-900">ski_areas_analyzed.parquet</strong>
+                <span class="tw-block tw-mt-0.5 tw-text-gray-600">Ski areas with stats. Used by the Online Atlas.</span>
+                <span class="download-meta tw-block tw-mt-1 tw-text-sm tw-text-gray-500"></span>
+              </div>
+              <a href="https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/ski_areas_analyzed.parquet" download><i class="bi bi-download"></i> Download</a>
+            </div>
+            <div class="download-card" data-download-url="https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/ski_areas.parquet">
+              <div>
+                <strong class="tw-text-gray-900">ski_areas.parquet</strong>
+                <span class="tw-block tw-mt-0.5 tw-text-gray-600">Ski area polygons and core attributes.</span>
+                <span class="download-meta tw-block tw-mt-1 tw-text-sm tw-text-gray-500"></span>
+              </div>
+              <a href="https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/ski_areas.parquet" download><i class="bi bi-download"></i> Download</a>
+            </div>
+            <div class="download-card" data-download-url="https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/lifts.parquet">
+              <div>
+                <strong class="tw-text-gray-900">lifts.parquet</strong>
+                <span class="tw-block tw-mt-0.5 tw-text-gray-600">Lift lines as LineStrings with OSM attributes.</span>
+                <span class="download-meta tw-block tw-mt-1 tw-text-sm tw-text-gray-500"></span>
+              </div>
+              <a href="https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/lifts.parquet" download><i class="bi bi-download"></i> Download</a>
+            </div>
+            <div class="download-card" data-download-url="https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/pistes.parquet">
+              <div>
+                <strong class="tw-text-gray-900">pistes.parquet</strong>
+                <span class="tw-block tw-mt-0.5 tw-text-gray-600">Piste lines with difficulty as LineStrings.</span>
+                <span class="download-meta tw-block tw-mt-1 tw-text-sm tw-text-gray-500"></span>
+              </div>
+              <a href="https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/pistes.parquet" download><i class="bi bi-download"></i> Download</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 5: Text LEFT, Image RIGHT -->
+    <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6 tw-pb-16">
+      <div class="tw-flex tw-min-h-[60vh] tw-place-content-center tw-place-items-center tw-gap-[10%] max-lg:tw-flex-col max-lg:tw-gap-10">
+        <div class="tw-mt-6 tw-flex tw-max-w-[450px] tw-flex-col tw-gap-4">
+          <h2 class="tw-text-4xl tw-font-medium">Further Reading</h2>
+          <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700">Pipeline docs in the globalskiatlas_data repo</p>
+          <ul class="tw-mt-4 tw-list-disc tw-list-inside tw-space-y-2 tw-text-xl tw-leading-relaxed tw-text-gray-600">
+            <li><strong>LOCAL_WORKFLOW.md</strong> – Run the pipeline locally with Docker</li>
+            <li><strong>RUN_BY_REGION.md</strong> – Region layout, PBF sizes, OOM avoidance</li>
+            <li><strong>WORLD_SCALE.md</strong> – Roadmap for world-scale data and serving</li>
+            <li><strong>AWS_ECS_DEPLOYMENT.md</strong> – Deploy to AWS ECS Fargate and S3</li>
+          </ul>
+          <a href="https://github.com/jwitcoski/globalskiatlas_data" class="tw-mt-6 tw-inline-flex tw-items-center tw-gap-1 tw-text-blue-600 hover:tw-underline" target="_blank" rel="noopener">View globalskiatlas_data on GitHub <i class="bi bi-box-arrow-up-right tw-text-sm"></i></a>
+        </div>
+        <div class="tw-flex tw-flex-shrink-0">
+          <img src="./assets/images/datadownload/5-further-reading.png" alt="Cozy ski lodge with documentation" class="tw-h-[450px] tw-w-[300px] tw-object-cover tw-rounded-lg" />
+        </div>
+      </div>
+    </section>
+  </main>
+  </div>
+
+  <footer
+    class="tw-flex tw-w-full tw-place-content-around tw-gap-3 tw-border-t tw-border-gray-200
+           tw-bg-gray-50 tw-py-6 tw-px-[10%] tw-text-black max-md:tw-flex-col"
+  >
+    <div
+      class="tw-flex tw-h-full tw-w-[250px] tw-flex-col tw-place-items-center tw-gap-6
+             max-md:tw-w-full"
+    >
+      <img src="./assets/logo.png?v=2" alt="Global Ski Atlas" class="tw-max-w-[120px]" />
+      <div>Global Ski Atlas</div>
+      <div class="tw-mt-3 tw-text-lg tw-font-semibold">Follow us</div>
+      <div class="tw-flex tw-gap-4 tw-text-2xl">
+        <a href="" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
+        <a href="https://twitter.com/@pauls_freeman" aria-label="Twitter"><i class="bi bi-twitter"></i></a>
+        <a href="https://instagram.com/" class="tw-h-[40px] tw-w-[40px]" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
+      </div>
+    </div>
+    <div class="tw-flex tw-h-full tw-w-[250px] tw-flex-col tw-gap-4">
+      <h2 class="tw-text-3xl max-md:tw-text-xl">Explore</h2>
+      <div class="tw-flex tw-flex-col tw-gap-3 max-md:tw-text-sm">
+        <a href="coffee-table-book.html" class="footer-link">Coffee Table Book</a>
+        <a href="mainmap.html" class="footer-link">Online Atlas</a>
+        <a href="resort-comparison.html" class="footer-link">Compare Resorts</a>
+        <a href="skiing-ai.html" class="footer-link">AI Assistant</a>
+      </div>
+    </div>
+    <div class="tw-flex tw-h-full tw-w-[250px] tw-flex-col tw-gap-4">
+      <h2 class="tw-text-3xl max-md:tw-text-xl">Download Parquet Data</h2>
+      <div class="tw-flex tw-flex-col tw-gap-3 max-md:tw-text-sm">
+        <a href="DownloadData.html" class="footer-link tw-inline-flex tw-items-center tw-gap-1">Data downloads & how we create it <i class="bi bi-arrow-right tw-text-sm"></i></a>
+      </div>
+    </div>
+    <div class="tw-flex tw-h-full tw-w-[250px] tw-flex-col tw-gap-4">
+      <h2 class="tw-text-3xl max-md:tw-text-xl">Resources</h2>
+      <div class="tw-flex tw-flex-col tw-gap-3 max-md:tw-text-sm">
+        <a href="About.html" class="footer-link">About</a>
+        <a href="faq.html" class="footer-link">FAQ</a>
+        <a href="https://witcoskitech.com" class="footer-link" target="_blank" rel="noopener">Contact</a>
+        <a href="privacy-policy.html" class="footer-link">Privacy Policy</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      var RESPONSIVE_WIDTH = 1024;
+      var isHeaderCollapsed = window.innerWidth < RESPONSIVE_WIDTH;
+      var collapseBtn = document.getElementById('collapse-btn');
+      var collapseHeaderItems = document.getElementById('collapsed-header-items');
+      function onHeaderClickOutside(e) {
+        if (collapseHeaderItems && !collapseHeaderItems.contains(e.target) && !collapseBtn.contains(e.target)) {
+          toggleHeader();
+        }
+      }
+      function toggleHeader() {
+        if (!collapseHeaderItems || !collapseBtn) return;
+        if (isHeaderCollapsed) {
+          collapseHeaderItems.classList.add('opacity-100');
+          collapseHeaderItems.style.width = '60vw';
+          collapseBtn.classList.remove('bi-list');
+          collapseBtn.classList.add('bi-x', 'max-lg:tw-fixed');
+          isHeaderCollapsed = false;
+          setTimeout(function () { window.addEventListener('click', onHeaderClickOutside); }, 1);
+        } else {
+          collapseHeaderItems.classList.remove('opacity-100');
+          collapseHeaderItems.style.width = '0vw';
+          collapseBtn.classList.remove('bi-x', 'max-lg:tw-fixed');
+          collapseBtn.classList.add('bi-list');
+          isHeaderCollapsed = true;
+          window.removeEventListener('click', onHeaderClickOutside);
+        }
+      }
+      function responsive() {
+        if (window.innerWidth >= RESPONSIVE_WIDTH && collapseHeaderItems) {
+          collapseHeaderItems.style.width = '';
+        } else {
+          isHeaderCollapsed = true;
+        }
+      }
+      window.toggleHeader = toggleHeader;
+      window.addEventListener('resize', responsive);
+    })();
+
+    (function () {
+      function formatBytes(bytes) {
+        if (bytes == null || bytes === 0) return null;
+        var k = 1024;
+        var sizes = ['B', 'KB', 'MB', 'GB'];
+        var i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+      }
+      function formatDate(dateStr) {
+        if (!dateStr) return null;
+        var d = new Date(dateStr);
+        if (isNaN(d.getTime())) return null;
+        var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        return months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+      }
+      document.querySelectorAll('.download-card[data-download-url]').forEach(function (card) {
+        var url = card.getAttribute('data-download-url');
+        var metaEl = card.querySelector('.download-meta');
+        if (!url || !metaEl) return;
+        fetch(url, { method: 'HEAD' })
+          .then(function (r) {
+            var size = r.headers.get('Content-Length');
+            var date = r.headers.get('Last-Modified');
+            var parts = [];
+            var formatted = formatBytes(size ? parseInt(size, 10) : null);
+            if (formatted) parts.push(formatted);
+            var formattedDate = formatDate(date);
+            if (formattedDate) parts.push(formattedDate);
+            if (parts.length) metaEl.textContent = parts.join(' \u00b7 ');
+          })
+          .catch(function () {});
+      });
+    })();
+  </script>
+</body>
+</html>

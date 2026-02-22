@@ -23,10 +23,14 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { height: 100%; font-family: system-ui, -apple-system, sans-serif; background: #fff; }
-    .main-content-section {
+    .map-wrapper {
+      flex: 1;
+      min-height: 0;
+      position: relative;
       margin-top: 60px;
       min-height: calc(100vh - 60px);
       min-height: calc(100dvh - 60px);
+      overflow-y: auto;
     }
     .page { max-width: 1600px; margin: 0 auto; padding: 24px; }
     .content-wrapper { display: flex; gap: 32px; margin-top: 24px; flex-wrap: wrap; }
@@ -204,6 +208,11 @@
     .citation-section a { color: #2563eb; text-decoration: none; }
     .citation-section a:hover { text-decoration: underline; }
     @media (max-width: 768px) {
+      .map-wrapper {
+        margin-top: 60px;
+        min-height: calc(100vh - 60px);
+        min-height: calc(100dvh - 60px);
+      }
       .content-wrapper { flex-direction: column; }
       .controls { width: 100%; }
       .page { padding: 16px; }
@@ -219,8 +228,8 @@
 </head>
 <body class="tw-flex tw-min-h-[100vh] tw-flex-col tw-bg-[#fff]">
   <header
-    class="tw-absolute tw-top-0 tw-z-20 tw-flex tw-h-[60px] tw-w-full tw-bg-opacity-0 
-            tw-px-[5%] max-lg:tw-mr-auto max-lg:tw-px-4 lg:tw-justify-around"
+    class="tw-absolute tw-top-0 tw-z-[1001] tw-flex tw-h-[60px] tw-w-full tw-bg-white tw-shadow-sm
+           tw-border-b tw-border-gray-200 tw-px-[5%] max-lg:tw-mr-auto max-lg:tw-px-4 lg:tw-justify-around"
   >
     <a class="tw-h-[50px] tw-w-[50px] tw-p-[4px]" href="index.html" aria-label="Global Ski Atlas home">
       <img
@@ -238,11 +247,11 @@
                 max-lg:tw-mt-[30px] max-lg:tw-flex-col max-lg:tw-place-items-end 
                 max-lg:tw-gap-5 lg:tw-mx-auto lg:tw-place-items-center"
       >
-        <a class="header-links" href="coffee-table-book.html"> Coffee Table Book </a>
-        <a class="header-links" href="mainmap.html"> Online Atlas </a>
-        <a class="header-links" href="resort-comparison.html"> Compare Resorts </a>
-        <a class="header-links" href="index.html#about"> About </a>
-        <a class="header-links" href="index.html#ai-assistant-detail"> AI Assistant </a>
+        <a class="header-links" href="coffee-table-book.html">Coffee Table Book</a>
+        <a class="header-links" href="mainmap.html">Online Atlas</a>
+        <a class="header-links tw-font-semibold" href="resort-comparison.html">Compare Resorts</a>
+        <a class="header-links" href="About.html">About</a>
+        <a class="header-links" href="skiing-ai.html">AI Assistant</a>
       </div>
       <div
         class="tw-mx-4 tw-flex tw-place-items-center tw-gap-[20px] tw-text-base 
@@ -274,8 +283,8 @@
     ></button>
   </header>
 
-  <section class="tw-relative tw-flex tw-min-h-0 tw-flex-1 tw-w-full tw-flex-col tw-px-[5%] tw-pt-6 main-content-section max-lg:tw-px-4">
-  <div class="page">
+  <div class="map-wrapper tw-flex-1 tw-min-h-0 tw-px-[5%] tw-pt-6 tw-pb-6 max-lg:tw-px-4">
+    <div class="page">
     <h1 class="tw-text-4xl tw-font-medium tw-text-gray-900 tw-mb-2">Ski Resort Size Comparison</h1>
     <p class="tw-text-xl tw-font-medium tw-text-gray-700 tw-mb-6 tw-max-w-2xl">Compare ski resort outlines and trail layouts from the Global Ski Atlas parquet data. Select resorts to view side by side.</p>
 
@@ -335,68 +344,44 @@
       <p>Resort and piste data from OpenStreetMap. © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors. <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">ODbL</a>.</p>
     </div>
   </div>
-  </section>
+  </div>
 
   <footer
-    class="tw-mt-auto tw-flex tw-w-full tw-place-content-around tw-gap-3 tw-border-t tw-border-gray-200
-            tw-bg-gray-50 tw-py-6 tw-px-[10%] tw-text-black max-md:tw-flex-col"
+    class="tw-flex tw-w-full tw-place-content-around tw-gap-3 tw-border-t tw-border-gray-200
+           tw-bg-gray-50 tw-py-6 tw-px-[10%] tw-text-black max-md:tw-flex-col"
   >
     <div
-      class="tw-flex tw-h-full tw-w-[250px] tw-flex-col tw-place-items-center tw-gap-6 
-              max-md:tw-w-full"
+      class="tw-flex tw-h-full tw-w-[250px] tw-flex-col tw-place-items-center tw-gap-6
+             max-md:tw-w-full"
     >
-      <img
-        src="./assets/logo.png?v=2"
-        alt="Global Ski Atlas"
-        srcset=""
-        class="tw-max-w-[120px]"
-      />
-      <div>
-        Global Ski Atlas
-      </div>
+      <img src="./assets/logo.png?v=2" alt="Global Ski Atlas" class="tw-max-w-[120px]" />
+      <div>Global Ski Atlas</div>
       <div class="tw-mt-3 tw-text-lg tw-font-semibold">Follow us</div>
       <div class="tw-flex tw-gap-4 tw-text-2xl">
-        <a href="" aria-label="Facebook">
-          <i class="bi bi-facebook"></i>
-        </a>
-        <a
-          href="https://twitter.com/@pauls_freeman"
-          aria-label="Twitter"
-        >
-          <i class="bi bi-twitter"></i>
-        </a>
-        <a
-          href="https://instagram.com/"
-          class="tw-h-[40px] tw-w-[40px]"
-          aria-label="Instagram"
-        >
-          <i class="bi bi-instagram"></i>
-        </a>
+        <a href="" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
+        <a href="https://twitter.com/@pauls_freeman" aria-label="Twitter"><i class="bi bi-twitter"></i></a>
+        <a href="https://instagram.com/" class="tw-h-[40px] tw-w-[40px]" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
       </div>
     </div>
-
     <div class="tw-flex tw-h-full tw-w-[250px] tw-flex-col tw-gap-4">
       <h2 class="tw-text-3xl max-md:tw-text-xl">Explore</h2>
       <div class="tw-flex tw-flex-col tw-gap-3 max-md:tw-text-sm">
         <a href="coffee-table-book.html" class="footer-link">Coffee Table Book</a>
-        <a href="index.html#online-atlas" class="footer-link">Online Atlas</a>
+        <a href="mainmap.html" class="footer-link">Online Atlas</a>
         <a href="resort-comparison.html" class="footer-link">Compare Resorts</a>
-        <a href="index.html#ai-assistant-detail" class="footer-link">AI Assistant</a>
+        <a href="skiing-ai.html" class="footer-link">AI Assistant</a>
       </div>
     </div>
     <div class="tw-flex tw-h-full tw-w-[250px] tw-flex-col tw-gap-4">
       <h2 class="tw-text-3xl max-md:tw-text-xl">Download Parquet Data</h2>
       <div class="tw-flex tw-flex-col tw-gap-3 max-md:tw-text-sm">
-        <a href="https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/ski_areas_analyzed.parquet" class="footer-link tw-inline-flex tw-items-center tw-gap-1" download>ski_areas_analyzed.parquet <i class="bi bi-download tw-text-sm"></i></a>
-        <a href="https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/ski_areas.parquet" class="footer-link tw-inline-flex tw-items-center tw-gap-1" download>ski_areas.parquet <i class="bi bi-download tw-text-sm"></i></a>
-        <a href="https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/lifts.parquet" class="footer-link tw-inline-flex tw-items-center tw-gap-1" download>lifts.parquet <i class="bi bi-download tw-text-sm"></i></a>
-        <a href="https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/pistes.parquet" class="footer-link tw-inline-flex tw-items-center tw-gap-1" download>pistes.parquet <i class="bi bi-download tw-text-sm"></i></a>
+        <a href="DownloadData.html" class="footer-link tw-inline-flex tw-items-center tw-gap-1">Data downloads & how we create it <i class="bi bi-arrow-right tw-text-sm"></i></a>
       </div>
     </div>
     <div class="tw-flex tw-h-full tw-w-[250px] tw-flex-col tw-gap-4">
       <h2 class="tw-text-3xl max-md:tw-text-xl">Resources</h2>
       <div class="tw-flex tw-flex-col tw-gap-3 max-md:tw-text-sm">
-        <a href="index.html#about" class="footer-link">About</a>
+        <a href="About.html" class="footer-link">About</a>
         <a href="faq.html" class="footer-link">FAQ</a>
         <a href="https://witcoskitech.com" class="footer-link" target="_blank" rel="noopener">Contact</a>
         <a href="privacy-policy.html" class="footer-link">Privacy Policy</a>
