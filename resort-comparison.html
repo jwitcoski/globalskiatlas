@@ -185,6 +185,34 @@
       margin-top: 2px;
     }
     .accordion-section.open .resort-country-body { display: block; }
+    .resort-state-section { margin-top: 6px; }
+    .resort-state-header {
+      font-size: 12px;
+      font-weight: 600;
+      color: #555;
+      padding: 6px 10px;
+      background: #f8f8f8;
+      border-radius: 5px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      user-select: none;
+    }
+    .resort-state-header:hover { background: #eee; }
+    .resort-state-header .accordion-chevron { font-size: 9px; color: #777; transition: transform 0.2s ease; }
+    .resort-state-section.open .resort-state-header .accordion-chevron { transform: rotate(90deg); }
+    .resort-state-body {
+      overflow: hidden;
+      display: none;
+      padding-left: 6px;
+      padding-top: 2px;
+      padding-bottom: 4px;
+      border-left: 1px solid #e5e5e5;
+      margin-left: 12px;
+      margin-top: 2px;
+    }
+    .resort-state-section.open .resort-state-body { display: block; }
     .resort-group.hidden { display: none; }
     .no-results { padding: 10px; color: #666; font-style: italic; text-align: center; }
     .loading { padding: 20px; text-align: center; color: #666; }
@@ -290,7 +318,7 @@
 
     <div class="content-wrapper">
       <div class="map-container" id="map-container">
-        <div class="loading" id="loading">Loading parquet data…</div>
+        <div class="loading" id="loading">Loading resort outlines and metadata…</div>
       </div>
       <div class="controls">
         <div class="controls-section">
@@ -311,6 +339,7 @@
               <input type="checkbox" id="offset-toggle">
               <label for="offset-toggle">Offset overlapping resorts</label>
             </div>
+            <div id="trail-loading" class="tw-text-sm tw-text-gray-500" style="display: none;">Loading trail layouts…</div>
           </div>
         </div>
         <div class="controls-section">
@@ -436,6 +465,8 @@
 
     const NAME_KEYS = ['name', 'resort_name', 'title', 'area_name', 'Name'];
     const COUNTRY_KEYS = ['country', 'Country', 'country_name', 'country_name_en', 'addr:country'];
+    const STATE_KEYS = ['state', 'State', 'addr:state', 'province', 'addr:province'];
+    const STATE_DRILLDOWN_THRESHOLD = 50; // use state/province grouping when country has this many resorts
     const PISTE_DIFFICULTY_KEYS = ['piste:difficulty', 'piste_difficulty', 'difficulty'];
     const RESORT_MATCH_KEYS = ['name', 'area_name', 'resort_name', 'ref', 'name_2'];
     const RESORT_TYPE_KEYS = ['resort_type', 'Resort Type'];
@@ -548,6 +579,9 @@
     const colorScale = d3.scaleOrdinal(d3.schemeCategory10);
     let resortBounds = [];
     let resortData = []; // { name, outlineFeature, pisteFeatures }
+    let resortTransforms = []; // { resortMinX, resortMinY, globalScaleFactor } per index
+    let globalScaleFactorCache = 0;
+    let pisteFeaturesCache = null; // raw piste features when loaded
 
     function rowToFeature(row) {
       const g = row.geometry;
@@ -603,18 +637,17 @@
       return (s == null ? '' : String(s)).trim().toLowerCase();
     }
 
+    /** Load outlines + analyzed only (fast). Pistes load lazily when user selects resorts. */
     async function loadData() {
       const { asyncBufferFromUrl, parquetReadObjects } = await import('https://esm.sh/hyparquet@1');
 
-      const [fileOutlines, filePistes, fileAnalyzed] = await Promise.all([
+      const [fileOutlines, fileAnalyzed] = await Promise.all([
         asyncBufferFromUrl({ url: SKI_AREAS_OUTLINES_URL }),
-        asyncBufferFromUrl({ url: PISTES_URL }),
         asyncBufferFromUrl({ url: GEOPARQUET_URL })
       ]);
 
-      const [dataOutlines, dataPistes, dataAnalyzed] = await Promise.all([
+      const [dataOutlines, dataAnalyzed] = await Promise.all([
         parquetReadObjects({ file: fileOutlines }),
-        parquetReadObjects({ file: filePistes }),
         parquetReadObjects({ file: fileAnalyzed })
       ]);
 
@@ -635,42 +668,6 @@
         .map(rowToFeature)
         .filter(Boolean);
 
-      const pisteFeatures = dataPistes
-        .filter((row) => {
-          const g = row.geometry;
-          if (!g || !g.type) return false;
-          return g.type === 'LineString' || g.type === 'MultiLineString';
-        })
-        .map(rowToFeature)
-        .filter(Boolean);
-
-      const nameSet = new Set();
-      outlineFeatures.forEach((f) => {
-        const n = getProp(f.properties, NAME_KEYS);
-        if (n != null && String(n).trim() !== '') nameSet.add(normalizeResortName(n));
-      });
-
-      const pistesByResort = new Map();
-      outlineFeatures.forEach((f) => {
-        const key = normalizeResortName(getProp(f.properties, NAME_KEYS));
-        if (key) pistesByResort.set(key, []);
-      });
-
-      pisteFeatures.forEach((f) => {
-        const centroid = lineCentroid(f.geometry);
-        if (!centroid) return;
-        const [lon, lat] = centroid;
-        for (let i = 0; i < outlineFeatures.length; i++) {
-          if (pointInPolygon(lon, lat, outlineFeatures[i].geometry)) {
-            const key = normalizeResortName(getProp(outlineFeatures[i].properties, NAME_KEYS));
-            if (key && pistesByResort.has(key)) {
-              pistesByResort.get(key).push(f);
-            }
-            break;
-          }
-        }
-      });
-
       resortData = outlineFeatures
         .map((f) => {
           const name = getProp(f.properties, NAME_KEYS);
@@ -680,27 +677,101 @@
           const country = (analyzedRow && getProp(analyzedRow, COUNTRY_KEYS)) != null
             ? String(getProp(analyzedRow, COUNTRY_KEYS)).trim()
             : '';
+          const state = (analyzedRow && getProp(analyzedRow, STATE_KEYS)) != null
+            ? String(getProp(analyzedRow, STATE_KEYS)).trim()
+            : '';
           return {
             name: String(name).trim(),
             key,
             country: country || 'Other',
+            state: state || '',
             outlineFeature: f,
-            pisteFeatures: pistesByResort.get(key) || [],
+            pisteFeatures: [], // loaded lazily when user selects resorts
             analyzedRow: analyzedRow || null
           };
         })
         .filter(Boolean);
 
       resortData.sort((a, b) => {
+        const trailsA = getTrailCount(a.analyzedRow || {});
+        const trailsB = getTrailCount(b.analyzedRow || {});
+        if (trailsB !== trailsA) return trailsB - trailsA; // more trails first
         const c = a.country.localeCompare(b.country);
-        return c !== 0 ? c : a.name.localeCompare(b.name);
+        if (c !== 0) return c;
+        const s = (a.state || '').localeCompare(b.state || '');
+        return s !== 0 ? s : a.name.localeCompare(b.name);
       });
       return resortData;
+    }
+
+    /** Load pistes and match only to selected outline indices. Avoids O(pistes × all_outlines). */
+    async function loadPistesForSelected(selectedIndices) {
+      if (selectedIndices.length === 0) return;
+      const { asyncBufferFromUrl, parquetReadObjects } = await import('https://esm.sh/hyparquet@1');
+      if (!pisteFeaturesCache) {
+        const filePistes = await asyncBufferFromUrl({ url: PISTES_URL });
+        const dataPistes = await parquetReadObjects({ file: filePistes });
+        pisteFeaturesCache = (dataPistes || [])
+          .filter((row) => {
+            const g = row.geometry;
+            return g && g.type && (g.type === 'LineString' || g.type === 'MultiLineString');
+          })
+          .map(rowToFeature)
+          .filter(Boolean);
+      }
+      const selectedOutlines = selectedIndices.map((i) => resortData[i].outlineFeature);
+      const pistesByResort = new Map();
+      selectedIndices.forEach((i) => pistesByResort.set(resortData[i].key, []));
+      pisteFeaturesCache.forEach((f) => {
+        const centroid = lineCentroid(f.geometry);
+        if (!centroid) return;
+        const [lon, lat] = centroid;
+        for (let i = 0; i < selectedIndices.length; i++) {
+          if (pointInPolygon(lon, lat, selectedOutlines[i].geometry)) {
+            const key = resortData[selectedIndices[i]].key;
+            pistesByResort.get(key).push(f);
+            break;
+          }
+        }
+      });
+      selectedIndices.forEach((i) => {
+        resortData[i].pisteFeatures = pistesByResort.get(resortData[i].key) || [];
+      });
+      addTrailPathsToResorts(selectedIndices);
+    }
+
+    function addTrailPathsToResorts(indices) {
+      indices.forEach((index) => {
+        const r = resortData[index];
+        const t = resortTransforms[index];
+        if (!t || !r.pisteFeatures) return;
+        const resortGroup = d3.select(`#resort-${index}`);
+        if (!resortGroup.selectAll('.trail-line').empty()) return; // already has trails
+        r.pisteFeatures.forEach((trail) => {
+          const coords = trail.geometry.type === 'LineString'
+            ? trail.geometry.coordinates
+            : trail.geometry.coordinates.flat();
+          const trailCoords = coords.map((c) => [
+            (c[0] - t.resortMinX) * t.globalScaleFactor,
+            (c[1] - t.resortMinY) * t.globalScaleFactor
+          ]);
+          const color = getPisteColor(trail.properties);
+          resortGroup.insert('path', '.polygon')
+            .attr('class', 'trail-line')
+            .attr('fill', 'none')
+            .attr('stroke', color)
+            .attr('stroke-width', 2)
+            .attr('stroke-opacity', 0.9)
+            .attr('vector-effect', 'non-scaling-stroke')
+            .attr('d', d3.line().x((d) => d[0]).y((d) => -d[1])(trailCoords));
+        });
+      });
     }
 
     function displayResorts() {
       if (resortData.length === 0) return;
 
+      resortTransforms = [];
       let globalMaxDimension = 0;
       resortData.forEach((r) => {
         const ring = extractRing(r.outlineFeature.geometry);
@@ -716,6 +787,7 @@
       });
 
       const globalScaleFactor = (width - 2 * padding) * 0.75 / Math.max(globalMaxDimension, 1);
+      globalScaleFactorCache = globalScaleFactor;
 
       resortData.forEach((r, index) => {
         const ring = extractRing(r.outlineFeature.geometry);
@@ -723,6 +795,7 @@
 
         const resortMinX = Math.min(...ring.map((c) => c[0]));
         const resortMinY = Math.min(...ring.map((c) => c[1]));
+        resortTransforms[index] = { resortMinX, resortMinY, globalScaleFactor };
 
         const normalizedCoords = ring.map((c) => [
           (c[0] - resortMinX) * globalScaleFactor,
@@ -794,43 +867,88 @@
           '<div class="legend-row"><span class="legend-mountain-icon">' + hillSvg('#999', 16, 11) + '</span> Grey = not downhill</div>';
       }
 
-      const byCountry = {};
+      const byCountryState = {};
       resortData.forEach((r, i) => {
-        if (!byCountry[r.country]) byCountry[r.country] = [];
-        byCountry[r.country].push(i);
+        if (!byCountryState[r.country]) byCountryState[r.country] = {};
+        const stateKey = r.state ? String(r.state).trim() : '';
+        const key = stateKey || '\u200b'; // zero-width for "no state"
+        if (!byCountryState[r.country][key]) byCountryState[r.country][key] = [];
+        byCountryState[r.country][key].push(i);
       });
+
+      function appendResortItem(container, index, country) {
+        const r = resortData[index];
+        const color = colorScale(index);
+        const item = container.append('div').attr('class', 'resort-item').attr('data-country', country);
+        item.append('input')
+          .attr('type', 'checkbox')
+          .attr('id', `checkbox-${index}`)
+          .attr('class', 'resort-checkbox')
+          .property('checked', false)
+          .on('change', () => {
+            const checked = d3.select(`#checkbox-${index}`).property('checked');
+            d3.select(`#resort-${index}`).classed('hidden', !checked);
+            updateMapTitle();
+            const selectedIndices = [];
+            d3.selectAll('.resort-checkbox').each(function () {
+              if (d3.select(this).property('checked')) {
+                const idx = parseInt(this.id.replace('checkbox-', ''), 10);
+                if (!Number.isNaN(idx)) selectedIndices.push(idx);
+              }
+            });
+            if (selectedIndices.length > 0 && selectedIndices.length <= 20) {
+              const loadingEl = document.getElementById('trail-loading');
+              if (loadingEl) loadingEl.style.display = 'block';
+              loadPistesForSelected(selectedIndices).then(() => {
+                if (loadingEl) loadingEl.style.display = 'none';
+              }).catch((e) => {
+                if (loadingEl) { loadingEl.style.display = 'none'; loadingEl.textContent = 'Trail load failed'; }
+                console.warn('Trail load failed:', e);
+              });
+            }
+            if (d3.select('#offset-toggle').property('checked')) applyOffsetToResorts();
+            else { clearTimeout(window._zoomTimeout); window._zoomTimeout = setTimeout(autoZoomToSelection, 300); }
+          });
+        item.append('span').attr('class', 'color-indicator').style('background-color', color);
+        item.append('span').attr('class', 'resort-size-icon-wrapper').each(function () {
+          this.innerHTML = getSizeIconHtml(r);
+        });
+        item.append('label').attr('for', `checkbox-${index}`).text(r.name);
+      }
+
       const resortList = d3.select('#resort-list');
       resortList.selectAll('*').remove();
-      Object.keys(byCountry).sort().forEach((country) => {
-        const indices = byCountry[country];
+      Object.keys(byCountryState).sort().forEach((country) => {
+        const stateMap = byCountryState[country];
+        const allIndices = Object.values(stateMap).flat();
+        const totalCount = allIndices.length;
+        const stateKeys = Object.keys(stateMap).filter((k) => k !== '\u200b').sort();
+        const hasNoState = stateMap['\u200b'];
+        const useStateDrilldown = totalCount >= STATE_DRILLDOWN_THRESHOLD && (stateKeys.length > 0 || (hasNoState && Object.keys(stateMap).length > 1));
+
         const section = resortList.append('div').attr('class', 'accordion-section');
         const header = section.append('div').attr('class', 'resort-country-header');
         header.append('span').attr('class', 'accordion-chevron').text('▶');
-        header.append('span').attr('class', 'accordion-country-name').text(country + ' (' + indices.length + ')');
+        header.append('span').attr('class', 'accordion-country-name').text(country + ' (' + totalCount + ')');
         header.on('click', () => section.classed('open', !section.classed('open')));
         const body = section.append('div').attr('class', 'resort-country-body');
-        indices.forEach((index) => {
-          const r = resortData[index];
-          const color = colorScale(index);
-          const item = body.append('div').attr('class', 'resort-item').attr('data-country', country);
-          item.append('input')
-            .attr('type', 'checkbox')
-            .attr('id', `checkbox-${index}`)
-            .attr('class', 'resort-checkbox')
-            .property('checked', false)
-            .on('change', () => {
-              const checked = d3.select(`#checkbox-${index}`).property('checked');
-              d3.select(`#resort-${index}`).classed('hidden', !checked);
-              updateMapTitle();
-              if (d3.select('#offset-toggle').property('checked')) applyOffsetToResorts();
-              else { clearTimeout(window._zoomTimeout); window._zoomTimeout = setTimeout(autoZoomToSelection, 300); }
-            });
-          item.append('span').attr('class', 'color-indicator').style('background-color', color);
-          item.append('span').attr('class', 'resort-size-icon-wrapper').each(function () {
-            this.innerHTML = getSizeIconHtml(r);
+
+        if (useStateDrilldown) {
+          const ordered = [...stateKeys];
+          if (hasNoState) ordered.push('\u200b');
+          ordered.forEach((sk) => {
+            const stateIndices = stateMap[sk];
+            const stateSection = body.append('div').attr('class', 'resort-state-section');
+            const stateHeader = stateSection.append('div').attr('class', 'resort-state-header');
+            stateHeader.append('span').attr('class', 'accordion-chevron').text('▶');
+            stateHeader.append('span').text((sk === '\u200b' ? 'Other' : sk) + ' (' + stateIndices.length + ')');
+            stateHeader.on('click', function (e) { e.stopPropagation(); stateSection.classed('open', !stateSection.classed('open')); });
+            const stateBody = stateSection.append('div').attr('class', 'resort-state-body');
+            stateIndices.forEach((idx) => appendResortItem(stateBody, idx, country));
           });
-          item.append('label').attr('for', `checkbox-${index}`).text(r.name);
-        });
+        } else {
+          allIndices.forEach((idx) => appendResortItem(body, idx, country));
+        }
       });
 
       document.getElementById('map-container').innerHTML = '';
@@ -860,8 +978,11 @@
     function autoZoomToSelection() {
       if (!d3.select('#auto-zoom-toggle').property('checked')) return;
       const visible = [];
-      d3.selectAll('.resort-checkbox').each(function (d, i) {
-        if (d3.select(this).property('checked')) visible.push(i);
+      d3.selectAll('.resort-checkbox').each(function () {
+        if (d3.select(this).property('checked')) {
+          const idx = parseInt(this.id.replace('checkbox-', ''), 10);
+          if (!Number.isNaN(idx)) visible.push(idx);
+        }
       });
       if (visible.length === 0) return;
 
@@ -908,8 +1029,11 @@
     function applyOffsetToResorts() {
       const useOffset = d3.select('#offset-toggle').property('checked');
       const visible = [];
-      d3.selectAll('.resort-checkbox').each(function (d, i) {
-        if (d3.select(this).property('checked')) visible.push(i);
+      d3.selectAll('.resort-checkbox').each(function () {
+        if (d3.select(this).property('checked')) {
+          const idx = parseInt(this.id.replace('checkbox-', ''), 10);
+          if (!Number.isNaN(idx)) visible.push(idx);
+        }
       });
       if (visible.length <= 1) return;
       const offsetX = useOffset ? 50 : 0, offsetY = useOffset ? 50 : 0;
@@ -950,8 +1074,18 @@
           const body = section.select('.resort-country-body');
           const hasVisible = body.selectAll('.resort-item').filter(function () { return d3.select(this).style('display') === 'flex'; }).size() > 0;
           section.style('display', hasVisible ? 'block' : 'none');
-          if (q && hasVisible) section.classed('open', true);
-          if (!q) section.classed('open', false);
+          if (q && hasVisible) {
+            section.classed('open', true);
+            section.selectAll('.resort-state-section').each(function () {
+              const stateSec = d3.select(this);
+              const stateHasVisible = stateSec.selectAll('.resort-item').filter(function () { return d3.select(this).style('display') === 'flex'; }).size() > 0;
+              stateSec.classed('open', stateHasVisible);
+            });
+          }
+          if (!q) {
+            section.classed('open', false);
+            section.selectAll('.resort-state-section').classed('open', false);
+          }
         });
         d3.select('#resort-list').selectAll('.no-results').remove();
         if (q && visibleCount === 0) d3.select('#resort-list').append('div').attr('class', 'no-results').text('No resorts found');
@@ -967,6 +1101,16 @@
         d3.select(`#resort-${i}`).classed('hidden', false);
       });
       updateMapTitle();
+      if (indices.length > 0) {
+        const loadingEl = document.getElementById('trail-loading');
+        if (loadingEl) loadingEl.style.display = 'block';
+        loadPistesForSelected(indices).then(() => {
+          if (loadingEl) loadingEl.style.display = 'none';
+        }).catch((e) => {
+          if (loadingEl) loadingEl.style.display = 'none';
+          console.warn('Trail load failed:', e);
+        });
+      }
       if (d3.select('#offset-toggle').property('checked')) applyOffsetToResorts();
       else setTimeout(autoZoomToSelection, 300);
     }

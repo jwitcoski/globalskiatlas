@@ -175,6 +175,9 @@
       <div class="search-dropdown" id="searchDropdown"></div>
     </div>
     <div id="legend" class="map-legend" style="display: none;"></div>
+    <div id="heavyLoadIndicator" class="map-legend" style="display:none;bottom:12px;top:auto;background:rgba(255,255,255,0.95);padding:10px 14px;font-size:13px;">
+      Loading trail & lift data…
+    </div>
   </div>
 
   <footer
@@ -440,11 +443,24 @@
         return key.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
       }
       const ID_KEYS = ['id', 'ref', 'area_id', 'resort_id', 'skiresort_id'];
+      const COUNTRY_KEYS = ['country', 'Country', 'country_name', 'addr:country'];
+      const LIFTS_KEYS = ['total_lifts', 'lifts', 'number_of_lifts'];
       function buildPopupHtml(properties, latlng) {
         if (!properties || !Object.keys(properties).length) return '<em>No data</em>';
         const name = getProp(properties, NAME_KEYS);
         const displayName = name ? escapeHtml(String(name)) : 'Resort';
         const id = getProp(properties, ID_KEYS);
+        const trails = getProp(properties, COLOR_BY_KEYS);
+        const lifts = getProp(properties, LIFTS_KEYS);
+        const country = getProp(properties, COUNTRY_KEYS);
+        const trailsNum = trails != null && trails !== '' ? (typeof trails === 'number' ? trails : Number(trails)) : null;
+        const liftsNum = lifts != null && lifts !== '' ? (typeof lifts === 'number' ? lifts : Number(lifts)) : null;
+        const trailsStr = trailsNum != null && !Number.isNaN(trailsNum) ? trailsNum.toLocaleString() + ' slopes' : null;
+        const liftsStr = liftsNum != null && !Number.isNaN(liftsNum) ? liftsNum.toLocaleString() + ' lifts' : null;
+        let countryStr = country != null && String(country).trim() !== '' ? String(country).trim() : null;
+        if (countryStr && /^united states/i.test(countryStr)) countryStr = 'USA';
+        const facts = [trailsStr, liftsStr, countryStr].filter(Boolean);
+        const factsHtml = facts.length > 0 ? '<p style="margin:4px 0 8px 0;font-size:13px;color:#6b7280">' + facts.map(escapeHtml).join(' \u2022 ') + '</p>' : '';
         const lat = latlng && latlng.lat != null ? latlng.lat : null;
         const lon = latlng && latlng.lng != null ? latlng.lng : null;
         const params = new URLSearchParams();
@@ -456,7 +472,7 @@
         const popupUrl = new URL('popup.html', location.href).href + (qs ? '?' + qs : '');
         const stored = JSON.stringify({ name: name || null, id: id != null ? String(id) : null, lat, lon });
         const storedAttr = stored.replace(/"/g, '&quot;');
-        return '<p style="margin:0 0 8px 0;font-weight:600">' + displayName + '</p>' +
+        return '<p style="margin:0 0 4px 0;font-weight:600">' + displayName + '</p>' + factsHtml +
           '<a href="#" data-resort-url="' + escapeHtml(popupUrl) + '" data-resort-stored="' + storedAttr + '" class="resort-details-link tw-inline-flex tw-items-center tw-gap-1 tw-rounded-lg tw-bg-[#2563eb] tw-px-3 tw-py-2 tw-text-sm tw-font-medium tw-text-white tw-no-underline hover:tw-bg-[#1d4ed8]" style="display:inline-flex;align-items:center;gap:4px;border-radius:8px;background:#2563eb;color:#fff;padding:8px 12px;text-decoration:none;cursor:pointer;">View details <i class="bi bi-arrow-up-right"></i></a>';
       }
 
@@ -522,7 +538,7 @@
         searchDropdown.classList.remove('visible');
         searchInput.value = r.name;
         searchInput.blur();
-        map.flyTo(r.latlng, 10, { duration: 0.6 });
+        map.flyTo(r.latlng, 16, { duration: 0.6 });
         setTimeout(() => r.layer.openPopup(), 400);
       }
       function getMatches(query) {
@@ -581,10 +597,21 @@
         }
       });
 
-      // Ski area polygon outlines (visible at zoom 10+)
-      // Viewport filtering: only render features intersecting map bounds to avoid overload in dense regions (e.g. Japan)
-      function getFeatureBounds(feature) {
-        const g = feature.geometry;
+      // Ski area polygon outlines, lifts, pistes (visible at zoom 10+) – loaded lazily when user zooms in
+      let outlinesLayer = null;
+      let outlinesGeojson = null;
+      let outlinesIndex = null;
+      let liftsLayer = null;
+      let liftsGeojson = null;
+      let liftsIndex = null;
+      let pistesLayer = null;
+      let pistesGeojson = null;
+      let pistesIndex = null;
+      let liftIcon = null;
+      let heavyLayersPromise = null;
+
+      const GRID_CELL = 2; // degrees – spatial index cell size
+      function computeBbox(g) {
         if (!g || !g.coordinates) return null;
         let minLat = 90, maxLat = -90, minLon = 180, maxLon = -180;
         function process(c) {
@@ -595,47 +622,60 @@
         }
         if (g.type === 'Point') process(g.coordinates);
         else if (g.type === 'LineString') g.coordinates.forEach(process);
-        else if (g.type === 'Polygon') g.coordinates.forEach(r => r.forEach(process));
-        else if (g.type === 'MultiLineString') g.coordinates.forEach(r => r.forEach(process));
-        else if (g.type === 'MultiPolygon') g.coordinates.forEach(m => m.forEach(r => r.forEach(process)));
-        return L.latLngBounds([minLat, minLon], [maxLat, maxLon]);
+        else if (g.type === 'Polygon') g.coordinates.forEach((r) => r.forEach(process));
+        else if (g.type === 'MultiLineString') g.coordinates.forEach((r) => r.forEach(process));
+        else if (g.type === 'MultiPolygon') g.coordinates.forEach((m) => m.forEach((r) => r.forEach(process)));
+        return [minLon, minLat, maxLon, maxLat];
       }
-      function featuresInViewport(features, bounds) {
-        if (!bounds || !features || !features.length) return [];
-        const pad = bounds.pad ? bounds.pad(0.15) : bounds;
-        return features.filter((f) => {
-          const fb = getFeatureBounds(f);
-          return fb && pad.intersects(fb);
+      function buildSpatialIndex(features) {
+        const index = new Map();
+        features.forEach((f, i) => {
+          const bbox = f._bbox || computeBbox(f.geometry);
+          if (!bbox) return;
+          f._bbox = bbox;
+          const minLat = bbox[1], maxLat = bbox[3], minLon = bbox[0], maxLon = bbox[2];
+          const cellMinLat = Math.floor(minLat / GRID_CELL) * GRID_CELL;
+          const cellMaxLat = Math.floor(maxLat / GRID_CELL) * GRID_CELL;
+          const cellMinLon = Math.floor(minLon / GRID_CELL) * GRID_CELL;
+          const cellMaxLon = Math.floor(maxLon / GRID_CELL) * GRID_CELL;
+          for (let lat = cellMinLat; lat <= cellMaxLat; lat += GRID_CELL) {
+            for (let lon = cellMinLon; lon <= cellMaxLon; lon += GRID_CELL) {
+              const key = lat + ',' + lon;
+              if (!index.has(key)) index.set(key, []);
+              index.get(key).push(i);
+            }
+          }
         });
+        return index;
+      }
+      function featuresInViewportIndexed(features, index, bounds) {
+        if (!bounds || !features || !features.length || !index) return [];
+        const pad = bounds.pad ? bounds.pad(0.15) : bounds;
+        const seen = new Set();
+        const sw = pad.getSouthWest(), ne = pad.getNorthEast();
+        const cellMinLat = Math.floor(sw.lat / GRID_CELL) * GRID_CELL;
+        const cellMaxLat = Math.floor(ne.lat / GRID_CELL) * GRID_CELL;
+        const cellMinLon = Math.floor(sw.lng / GRID_CELL) * GRID_CELL;
+        const cellMaxLon = Math.floor(ne.lng / GRID_CELL) * GRID_CELL;
+        for (let lat = cellMinLat; lat <= cellMaxLat; lat += GRID_CELL) {
+          for (let lon = cellMinLon; lon <= cellMaxLon; lon += GRID_CELL) {
+            const key = lat + ',' + lon;
+            const indices = index.get(key);
+            if (indices) {
+              indices.forEach((i) => {
+                if (seen.has(i)) return;
+                const f = features[i];
+                const b = f._bbox;
+                if (!b) return;
+                const fb = L.latLngBounds([b[1], b[0]], [b[3], b[2]]);
+                if (pad.intersects(fb)) seen.add(i);
+              });
+            }
+          }
+        }
+        return Array.from(seen).map((i) => features[i]);
       }
 
-      let outlinesLayer = null;
-      let outlinesGeojson = null;
-      try {
-        const fileOutlines = await asyncBufferFromUrl({ url: SKI_AREAS_OUTLINES_URL });
-        const dataOutlines = await parquetReadObjects({ file: fileOutlines });
-        outlinesGeojson = {
-          type: 'FeatureCollection',
-          features: dataOutlines
-            .filter((row) => {
-              const g = row.geometry;
-              if (!g || !g.type) return false;
-              const t = g.type;
-              return t === 'Polygon' || t === 'MultiPolygon';
-            })
-            .map((row) => {
-              const { geometry, ...properties } = row;
-              return { type: 'Feature', geometry, properties };
-            })
-        };
-        outlinesLayer = L.layerGroup();
-      } catch (outlineErr) {
-        console.warn('Ski area outlines failed to load:', outlineErr);
-      }
-
-      let liftsLayer = null;
-      let liftsGeojson = null;
-      let liftIcon = null;
       function getLineMidpoint(latlngs) {
         const flat = Array.isArray(latlngs[0]) && (typeof latlngs[0][0] === 'number' || (latlngs[0][0] && latlngs[0][0].lat == null))
           ? latlngs[0]
@@ -644,36 +684,6 @@
         const i = Math.floor(flat.length / 2);
         return L.latLng(flat[i]);
       }
-      try {
-        const fileLifts = await asyncBufferFromUrl({ url: LIFTS_URL });
-        const dataLifts = await parquetReadObjects({ file: fileLifts });
-        liftsGeojson = {
-          type: 'FeatureCollection',
-          features: dataLifts
-            .filter((row) => {
-              const g = row.geometry;
-              if (!g || !g.type) return false;
-              const t = g.type;
-              return t === 'LineString' || t === 'MultiLineString';
-            })
-            .map((row) => {
-              const { geometry, ...properties } = row;
-              return { type: 'Feature', geometry, properties };
-            })
-        };
-        liftIcon = L.divIcon({
-          className: 'lift-marker-icon',
-          html: '<span style="font-size:14px;line-height:1;color:#dc2626;filter:drop-shadow(0 0 1px #fff);" title="Lift">🚡</span>',
-          iconSize: [18, 18],
-          iconAnchor: [9, 9]
-        });
-        liftsLayer = L.layerGroup();
-      } catch (liftErr) {
-        console.warn('Lifts GeoParquet failed to load:', liftErr);
-      }
-
-      let pistesLayer = null;
-      let pistesGeojson = null;
       const PISTE_DIFFICULTY_KEYS = ['piste:difficulty', 'piste_difficulty', 'difficulty'];
       function getPisteDifficulty(props) {
         let v = getProp(props, PISTE_DIFFICULTY_KEYS);
@@ -691,26 +701,53 @@
         if (d === 'expert' || d === 'freeride' || d === 'extreme') return { color: '#991b1b', weight: 4, opacity: 0.95 };
         return { color: '#64748b', weight: 2, opacity: 0.8 };
       }
-      try {
-        const filePistes = await asyncBufferFromUrl({ url: PISTES_URL });
-        const dataPistes = await parquetReadObjects({ file: filePistes });
-        pistesGeojson = {
-          type: 'FeatureCollection',
-          features: dataPistes
-            .filter((row) => {
-              const g = row.geometry;
-              if (!g || !g.type) return false;
-              const t = g.type;
-              return t === 'LineString' || t === 'MultiLineString';
-            })
-            .map((row) => {
-              const { geometry, ...properties } = row;
-              return { type: 'Feature', geometry, properties };
-            })
-        };
-        pistesLayer = L.layerGroup();
-      } catch (pisteErr) {
-        console.warn('Pistes GeoParquet failed to load:', pisteErr);
+
+      async function loadHeavyLayers() {
+        if (heavyLayersPromise) return heavyLayersPromise;
+        heavyLayersPromise = (async () => {
+          const ind = document.getElementById('heavyLoadIndicator');
+          if (ind) ind.style.display = 'block';
+          try {
+            const [fileOutlines, fileLifts, filePistes] = await Promise.all([
+              asyncBufferFromUrl({ url: SKI_AREAS_OUTLINES_URL }),
+              asyncBufferFromUrl({ url: LIFTS_URL }),
+              asyncBufferFromUrl({ url: PISTES_URL })
+            ]);
+            const [dataOutlines, dataLifts, dataPistes] = await Promise.all([
+              parquetReadObjects({ file: fileOutlines }),
+              parquetReadObjects({ file: fileLifts }),
+              parquetReadObjects({ file: filePistes })
+            ]);
+            const outlineFeats = (dataOutlines || []).filter((r) => r.geometry && (r.geometry.type === 'Polygon' || r.geometry.type === 'MultiPolygon'))
+              .map((r) => ({ type: 'Feature', geometry: r.geometry, properties: Object.fromEntries(Object.entries(r).filter(([k]) => k !== 'geometry')) }));
+            outlinesGeojson = { type: 'FeatureCollection', features: outlineFeats };
+            outlinesIndex = buildSpatialIndex(outlineFeats);
+            outlinesLayer = L.layerGroup();
+            const liftFeats = (dataLifts || []).filter((r) => r.geometry && (r.geometry.type === 'LineString' || r.geometry.type === 'MultiLineString'))
+              .map((r) => ({ type: 'Feature', geometry: r.geometry, properties: Object.fromEntries(Object.entries(r).filter(([k]) => k !== 'geometry')) }));
+            liftsGeojson = { type: 'FeatureCollection', features: liftFeats };
+            liftsIndex = buildSpatialIndex(liftFeats);
+            liftIcon = L.divIcon({
+              className: 'lift-marker-icon',
+              html: '<span style="font-size:14px;line-height:1;color:#dc2626;filter:drop-shadow(0 0 1px #fff);" title="Lift">🚡</span>',
+              iconSize: [18, 18],
+              iconAnchor: [9, 9]
+            });
+            liftsLayer = L.layerGroup();
+            const pisteFeats = (dataPistes || []).filter((r) => r.geometry && (r.geometry.type === 'LineString' || r.geometry.type === 'MultiLineString'))
+              .map((r) => ({ type: 'Feature', geometry: r.geometry, properties: Object.fromEntries(Object.entries(r).filter(([k]) => k !== 'geometry')) }));
+            pistesGeojson = { type: 'FeatureCollection', features: pisteFeats };
+            pistesIndex = buildSpatialIndex(pisteFeats);
+            pistesLayer = L.layerGroup();
+            populateVisibleLayers();
+            updateZoomLayersVisibility();
+          } catch (e) {
+            console.warn('Trail/lift data failed to load:', e);
+          } finally {
+            if (ind) ind.style.display = 'none';
+          }
+        })();
+        return heavyLayersPromise;
       }
 
       const outlineStyle = { color: '#000', weight: 2, fill: false, dashArray: '3, 6' };
@@ -719,12 +756,18 @@
       function populateVisibleLayers() {
         const zoom = map.getZoom();
         const showHeavy = zoom >= OUTLINES_MIN_ZOOM;
-        const bounds = showHeavy ? map.getBounds() : null;
+        if (!showHeavy) {
+          if (outlinesLayer) outlinesLayer.clearLayers();
+          if (liftsLayer) liftsLayer.clearLayers();
+          if (pistesLayer) pistesLayer.clearLayers();
+          return;
+        }
+        const bounds = map.getBounds();
 
         if (outlinesLayer) {
           outlinesLayer.clearLayers();
           if (showHeavy && outlinesGeojson && bounds) {
-            const visible = featuresInViewport(outlinesGeojson.features, bounds);
+            const visible = featuresInViewportIndexed(outlinesGeojson.features, outlinesIndex, bounds);
             visible.forEach((feature) => {
               const polygonLayer = L.geoJSON(feature, { style: outlineStyle });
               polygonLayer.eachLayer((l) => outlinesLayer.addLayer(l));
@@ -754,7 +797,7 @@
         if (liftsLayer && liftIcon) {
           liftsLayer.clearLayers();
           if (showHeavy && liftsGeojson && bounds) {
-            const visible = featuresInViewport(liftsGeojson.features, bounds);
+            const visible = featuresInViewportIndexed(liftsGeojson.features, liftsIndex, bounds);
             visible.forEach((feature) => {
               const lineLayer = L.geoJSON(feature, { style: liftLineStyle });
               lineLayer.eachLayer((ll) => {
@@ -770,7 +813,7 @@
         if (pistesLayer) {
           pistesLayer.clearLayers();
           if (showHeavy && pistesGeojson && bounds) {
-            const visible = featuresInViewport(pistesGeojson.features, bounds);
+            const visible = featuresInViewportIndexed(pistesGeojson.features, pistesIndex, bounds);
             const filtered = { type: 'FeatureCollection', features: visible };
             const temp = L.geoJSON(filtered, { style: getPisteStyle });
             temp.eachLayer((l) => pistesLayer.addLayer(l));
@@ -809,11 +852,25 @@
         if (viewportUpdateTimer) clearTimeout(viewportUpdateTimer);
         viewportUpdateTimer = setTimeout(() => {
           viewportUpdateTimer = null;
-          if (map.getZoom() >= OUTLINES_MIN_ZOOM) populateVisibleLayers();
-        }, 150);
+          const zoom = map.getZoom();
+          if (zoom >= OUTLINES_MIN_ZOOM) {
+            loadHeavyLayers().then(() => populateVisibleLayers());
+          } else {
+            populateVisibleLayers();
+          }
+        }, 350);
       }
 
-      map.on('zoomend', updateZoomLayersVisibility);
+      function updateZoomLayersVisibilityWithLoad() {
+        const zoom = map.getZoom();
+        if (zoom >= OUTLINES_MIN_ZOOM && !outlinesLayer) {
+          loadHeavyLayers().then(updateZoomLayersVisibility);
+          return;
+        }
+        updateZoomLayersVisibility();
+      }
+
+      map.on('zoomend', updateZoomLayersVisibilityWithLoad);
       map.on('moveend', scheduleViewportUpdate);
       updateZoomLayersVisibility();
     } catch (err) {
