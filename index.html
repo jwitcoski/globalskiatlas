@@ -238,7 +238,8 @@
                 <div class="tw-flex tw-max-w-[280px] tw-flex-col tw-place-items-center tw-gap-2 tw-text-center">
                     <span id="stat-resorts" class="tw-text-4xl tw-font-bold tw-tracking-tight" style="color: #0d9488">—</span>
                     <span class="tw-text-lg tw-font-medium tw-text-gray-800">resorts</span>
-                    <span id="stat-resorts-desc" class="tw-text-sm tw-text-gray-600">Detailed information on ski resorts worldwide, including terrain, lifts, and amenities.</span>
+                    <span id="stat-resorts-desc" class="tw-text-sm tw-text-gray-600">Detailed information on downhill ski resorts worldwide, including terrain, lifts, and amenities.</span>
+                    <span id="stat-resorts-note" class="tw-text-xs tw-text-gray-500 tw-mt-1" style="display: none;"></span>
                 </div>
                 <div class="tw-flex tw-max-w-[260px] tw-flex-col tw-place-items-center tw-gap-2 tw-text-center">
                     <span id="stat-lifts" class="tw-text-4xl tw-font-bold tw-tracking-tight" style="color: #BDB8FF">—</span>
@@ -664,6 +665,19 @@
             }
             try {
                 const { asyncBufferFromUrl, parquetReadObjects } = await import('https://esm.sh/hyparquet@1');
+                const RESORT_TYPE_KEYS = ['resort_type', 'Resort Type'];
+                const NOT_DOWNHILL = 'not a downhill ski resort';
+                function getProp(obj, keys) {
+                    if (!obj) return undefined;
+                    for (const k of keys) {
+                        if (Object.prototype.hasOwnProperty.call(obj, k)) return obj[k];
+                    }
+                    return undefined;
+                }
+                function isNotDownhill(row) {
+                    const v = getProp(row, RESORT_TYPE_KEYS);
+                    return v != null && String(v).toLowerCase().trim() === NOT_DOWNHILL.toLowerCase();
+                }
                 const [areasFile, liftsFile, pistesFile] = await Promise.all([
                     asyncBufferFromUrl({ url: GEOPARQUET_URL }),
                     asyncBufferFromUrl({ url: LIFTS_URL }),
@@ -674,12 +688,21 @@
                     parquetReadObjects({ file: liftsFile }),
                     parquetReadObjects({ file: pistesFile })
                 ]);
-                const resorts = areasData.length;
+                const downhillResorts = areasData.filter((r) => !isNotDownhill(r));
+                const resorts = downhillResorts.length;
+                const excludedCount = areasData.length - resorts;
                 const lifts = liftsData.length;
                 const pistes = pistesData.length;
-                setStat('stat-resorts', resorts, 'stat-resorts-desc', function (n) { return 'Detailed information on over ' + formatCount(n) + ' ski resorts worldwide, including terrain, lifts, and amenities.'; });
+                setStat('stat-resorts', resorts, 'stat-resorts-desc', function (n) { return 'Detailed information on over ' + formatCount(n) + ' downhill ski resorts worldwide, including terrain, lifts, and amenities.'; });
                 setStat('stat-lifts', lifts);
                 setStat('stat-pistes', pistes);
+                if (excludedCount > 0) {
+                    const noteEl = document.getElementById('stat-resorts-note');
+                    if (noteEl) {
+                        noteEl.textContent = formatCount(excludedCount) + ' areas in our dataset have no lift or downhill slope tagged in OpenStreetMap, so we exclude them from the count.';
+                        noteEl.style.display = 'block';
+                    }
+                }
             } catch (e) {
                 console.warn('Atlas stats: could not load parquet counts', e);
             }
