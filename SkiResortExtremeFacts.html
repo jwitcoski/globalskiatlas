@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-KJGNL3KJL0"></script>
+        <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){ dataLayer.push(arguments); }
+            gtag('js', new Date());
+            gtag('config', 'G-KJGNL3KJL0');
+        </script>
+        <title>Ski Resort Extreme Facts – Global Ski Atlas</title>
+        <meta name="description" content="Discover extreme ski resort facts: largest, smallest, most northern, most southern, and more from our worldwide dataset." />
+        <link rel="shortcut icon" href="./assets/logo.png?v=2" type="image/x-icon" />
+        <link rel="stylesheet" href="./css/tailwind-build.css" />
+        <link rel="stylesheet" href="css/index.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" integrity="sha512-dPXYcDub/aeb08c63jRq/k6GaKccl256JQy/AnOq7CAnEZ9FzSL9wSbcZkMp4R26vBsMLFYH4kQ67/bbV8XaCQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    </head>
+    <body class="tw-flex tw-min-h-[100vh] tw-flex-col tw-bg-[#fff]">
+        <header class="tw-absolute tw-top-0 tw-z-20 tw-flex tw-h-[60px] tw-w-full tw-bg-opacity-0 tw-px-[5%] max-lg:tw-px-4 lg:tw-justify-around">
+            <a class="tw-h-[50px] tw-w-[50px] tw-p-[4px]" href="index.html" aria-label="Global Ski Atlas home">
+                <img src="./assets/logo.png?v=2" alt="Global Ski Atlas" class="tw-object tw-h-full tw-w-full" />
+            </a>
+            <div class="collapsible-header animated-collapse max-lg:tw-shadow-md" id="collapsed-header-items">
+                <div class="tw-flex tw-h-full tw-w-max tw-gap-5 tw-text-base tw-text-black max-lg:tw-mt-[30px] max-lg:tw-flex-col max-lg:tw-place-items-end max-lg:tw-gap-5 lg:tw-mx-auto lg:tw-place-items-center">
+                    <a class="header-links" href="coffee-table-book.html">Coffee Table Book</a>
+                    <a class="header-links" href="mainmap.html">Online Atlas</a>
+                    <a class="header-links" href="resort-comparison.html">Compare Resorts</a>
+                    <a class="header-links tw-font-semibold" href="SkiResortExtremeFacts.html">Extreme Facts</a>
+                    <a class="header-links" href="About.html">About</a>
+                    <a class="header-links" href="skiing-ai.html">AI Assistant</a>
+                </div>
+            </div>
+            <button class="bi bi-list tw-absolute tw-right-3 tw-top-3 tw-z-50 tw-text-3xl tw-text-black lg:tw-hidden" onclick="toggleHeader()" aria-label="menu" id="collapse-btn"></button>
+        </header>
+
+        <section class="tw-relative tw-flex tw-min-h-[40vh] tw-w-full tw-flex-col tw-place-content-center tw-place-items-center tw-overflow-hidden tw-pt-24 tw-pb-12 tw-px-6 max-md:tw-pt-20">
+            <h1 class="tw-text-4xl tw-font-bold tw-text-gray-900 max-md:tw-text-2xl tw-text-center">Ski Resort Extreme Facts</h1>
+            <p class="tw-mt-4 tw-max-w-2xl tw-text-center tw-text-xl tw-text-gray-600">Records and superlatives from our worldwide ski resort dataset</p>
+        </section>
+
+        <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-place-content-center tw-place-items-center tw-overflow-hidden tw-p-6">
+            <div class="reveal-up tw-flex tw-min-h-[140px] tw-w-full tw-max-w-[80%] tw-place-items-center tw-justify-around tw-gap-8 tw-rounded-xl tw-bg-[#e7e6e685] tw-p-4 max-lg:tw-max-w-full max-md:tw-flex-col" id="facts-summary">
+                <div class="tw-text-center tw-text-gray-600">Loading extreme facts…</div>
+            </div>
+        </section>
+
+        <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6" id="fact-largest">
+            <div class="reveal-up tw-flex tw-min-h-[60vh] tw-place-content-center tw-place-items-center tw-gap-[10%] max-lg:tw-flex-col max-lg:tw-gap-10">
+                <div class="tw-flex">
+                    <div class="tw-flex tw-h-[280px] tw-w-[280px] tw-place-content-center tw-place-items-center tw-rounded-xl tw-bg-[#0d9488]/10">
+                        <i class="bi bi-mountains tw-text-[120px] tw-text-[#0d9488]"></i>
+                    </div>
+                </div>
+                <div class="tw-mt-6 tw-flex tw-max-w-[450px] tw-flex-col tw-gap-4">
+                    <h3 class="tw-text-4xl tw-font-medium">Largest Resort by Area</h3>
+                    <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700" id="fact-largest-name">—</p>
+                    <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600" id="fact-largest-desc">—</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6" id="fact-smallest">
+            <div class="reveal-up tw-flex tw-min-h-[60vh] tw-place-content-center tw-place-items-center tw-gap-[10%] max-lg:tw-flex-col max-lg:tw-gap-10">
+                <div class="tw-mt-6 tw-flex tw-max-w-[450px] tw-flex-col tw-gap-4">
+                    <h3 class="tw-text-4xl tw-font-medium">Smallest Downhill Resort</h3>
+                    <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700" id="fact-smallest-name">—</p>
+                    <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600" id="fact-smallest-desc">—</p>
+                </div>
+                <div class="tw-flex">
+                    <div class="tw-flex tw-h-[280px] tw-w-[280px] tw-place-content-center tw-place-items-center tw-rounded-xl tw-bg-[#BDB8FF]/20">
+                        <i class="bi bi-snow2 tw-text-[120px] tw-text-[#BDB8FF]"></i>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6" id="fact-northern">
+            <div class="reveal-up tw-flex tw-min-h-[60vh] tw-place-content-center tw-place-items-center tw-gap-[10%] max-lg:tw-flex-col max-lg:tw-gap-10">
+                <div class="tw-flex">
+                    <div class="tw-flex tw-h-[280px] tw-w-[280px] tw-place-content-center tw-place-items-center tw-rounded-xl tw-bg-[#2563eb]/10">
+                        <i class="bi bi-compass-north tw-text-[120px] tw-text-[#2563eb]"></i>
+                    </div>
+                </div>
+                <div class="tw-mt-6 tw-flex tw-max-w-[450px] tw-flex-col tw-gap-4">
+                    <h3 class="tw-text-4xl tw-font-medium">Most Northern Resort</h3>
+                    <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700" id="fact-northern-name">—</p>
+                    <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600" id="fact-northern-desc">—</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6" id="fact-southern">
+            <div class="reveal-up tw-flex tw-min-h-[60vh] tw-place-content-center tw-place-items-center tw-gap-[10%] max-lg:tw-flex-col max-lg:tw-gap-10">
+                <div class="tw-mt-6 tw-flex tw-max-w-[450px] tw-flex-col tw-gap-4">
+                    <h3 class="tw-text-4xl tw-font-medium">Most Southern Resort</h3>
+                    <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700" id="fact-southern-name">—</p>
+                    <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600" id="fact-southern-desc">—</p>
+                </div>
+                <div class="tw-flex">
+                    <div class="tw-flex tw-h-[280px] tw-w-[280px] tw-place-content-center tw-place-items-center tw-rounded-xl tw-bg-[#22c55e]/10">
+                        <i class="bi bi-globe-americas tw-text-[120px] tw-text-[#22c55e]"></i>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6" id="fact-equator">
+            <div class="reveal-up tw-flex tw-min-h-[60vh] tw-place-content-center tw-place-items-center tw-gap-[10%] max-lg:tw-flex-col max-lg:tw-gap-10">
+                <div class="tw-flex">
+                    <div class="tw-flex tw-h-[280px] tw-w-[280px] tw-place-content-center tw-place-items-center tw-rounded-xl tw-bg-[#eab308]/10">
+                        <i class="bi bi-globe2 tw-text-[120px] tw-text-[#eab308]"></i>
+                    </div>
+                </div>
+                <div class="tw-mt-6 tw-flex tw-max-w-[450px] tw-flex-col tw-gap-4">
+                    <h3 class="tw-text-4xl tw-font-medium">Closest to the Equator</h3>
+                    <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700" id="fact-equator-name">—</p>
+                    <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600" id="fact-equator-desc">—</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6" id="fact-most-trails">
+            <div class="reveal-up tw-flex tw-min-h-[60vh] tw-place-content-center tw-place-items-center tw-gap-[10%] max-lg:tw-flex-col max-lg:tw-gap-10">
+                <div class="tw-mt-6 tw-flex tw-max-w-[450px] tw-flex-col tw-gap-4">
+                    <h3 class="tw-text-4xl tw-font-medium">Resort with the Most Trails</h3>
+                    <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700" id="fact-most-trails-name">—</p>
+                    <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600" id="fact-most-trails-desc">—</p>
+                </div>
+                <div class="tw-flex">
+                    <div class="tw-flex tw-h-[280px] tw-w-[280px] tw-place-content-center tw-place-items-center tw-rounded-xl tw-bg-[#dc2626]/10">
+                        <i class="bi bi-signpost-split tw-text-[120px] tw-text-[#dc2626]"></i>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6" id="fact-country">
+            <div class="reveal-up tw-flex tw-min-h-[60vh] tw-place-content-center tw-place-items-center tw-gap-[10%] max-lg:tw-flex-col max-lg:tw-gap-10">
+                <div class="tw-flex">
+                    <div class="tw-flex tw-h-[280px] tw-w-[280px] tw-place-content-center tw-place-items-center tw-rounded-xl tw-bg-[#0d9488]/10">
+                        <i class="bi bi-flag tw-text-[120px] tw-text-[#0d9488]"></i>
+                    </div>
+                </div>
+                <div class="tw-mt-6 tw-flex tw-max-w-[450px] tw-flex-col tw-gap-4">
+                    <h3 class="tw-text-4xl tw-font-medium">Country with the Most Resorts</h3>
+                    <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700" id="fact-country-name">—</p>
+                    <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600" id="fact-country-desc">—</p>
+                </div>
+            </div>
+        </section>
+
+        <footer class="tw-mt-auto tw-flex tw-w-full tw-place-content-around tw-gap-3 tw-border-t tw-border-gray-200 tw-bg-gray-50 tw-py-6 tw-px-[10%] tw-text-black max-md:tw-flex-col">
+            <div class="tw-flex tw-h-full tw-w-[250px] tw-flex-col tw-place-items-center tw-gap-6 max-md:tw-w-full">
+                <img src="./assets/logo.png?v=2" alt="Global Ski Atlas" class="tw-max-w-[120px]" />
+                <div>Global Ski Atlas</div>
+            </div>
+            <div class="tw-flex tw-h-full tw-w-[250px] tw-flex-col tw-gap-4">
+                <h2 class="tw-text-3xl max-md:tw-text-xl">Explore</h2>
+                <div class="tw-flex tw-flex-col tw-gap-3 max-md:tw-text-sm">
+                    <a href="coffee-table-book.html" class="footer-link">Coffee Table Book</a>
+                    <a href="mainmap.html" class="footer-link">Online Atlas</a>
+                    <a href="resort-comparison.html" class="footer-link">Compare Resorts</a>
+                    <a href="SkiResortExtremeFacts.html" class="footer-link">Extreme Facts</a>
+                    <a href="skiing-ai.html" class="footer-link">AI Assistant</a>
+                </div>
+            </div>
+            <div class="tw-flex tw-h-full tw-w-[250px] tw-flex-col tw-gap-4">
+                <h2 class="tw-text-3xl max-md:tw-text-xl">Resources</h2>
+                <div class="tw-flex tw-flex-col tw-gap-3 max-md:tw-text-sm">
+                    <a href="About.html" class="footer-link">About</a>
+                    <a href="DownloadData.html" class="footer-link">Data Downloads</a>
+                </div>
+            </div>
+        </footer>
+
+        <script>
+            function toggleHeader() {
+                var el = document.getElementById('collapsed-header-items');
+                if (el) el.classList.toggle('animated-collapse');
+            }
+        </script>
+        <script type="module">
+            (async function () {
+                const GEOPARQUET_URL = 'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/ski_areas_analyzed.parquet';
+                const NAME_KEYS = ['name', 'resort_name', 'title', 'area_name', 'Name'];
+                const COUNTRY_KEYS = ['country', 'Country', 'country_name', 'addr:country'];
+                const AREA_KEYS = ['total_area_acres', 'Total Area Acres', 'area_acres', 'skiable_terrain_acres', 'skiable_area_acres'];
+                const TRAILS_KEYS = ['downhill_trails', 'number_of_downhill_trails', 'Downhill Trails', 'trails'];
+                const RESORT_TYPE_KEYS = ['resort_type', 'Resort Type'];
+                const NOT_DOWNHILL = 'not a downhill ski resort';
+
+                function getProp(obj, keys) {
+                    if (!obj) return undefined;
+                    for (const k of keys) {
+                        if (Object.prototype.hasOwnProperty.call(obj, k)) return obj[k];
+                    }
+                    return undefined;
+                }
+                function getLat(row) {
+                    const g = row.geometry;
+                    if (g && g.type === 'Point' && g.coordinates && g.coordinates.length >= 2) return g.coordinates[1];
+                    const lat = row.latitude ?? row.centroid_lat ?? row.lat;
+                    return lat != null ? Number(lat) : null;
+                }
+                function getLon(row) {
+                    const g = row.geometry;
+                    if (g && g.type === 'Point' && g.coordinates && g.coordinates.length >= 2) return g.coordinates[0];
+                    const lon = row.longitude ?? row.centroid_lon ?? row.lon;
+                    return lon != null ? Number(lon) : null;
+                }
+                function isNotDownhill(row) {
+                    const v = getProp(row, RESORT_TYPE_KEYS);
+                    return v != null && String(v).toLowerCase().trim() === NOT_DOWNHILL.toLowerCase();
+                }
+                function numVal(row, keys) {
+                    const v = getProp(row, keys);
+                    if (v == null || v === '') return null;
+                    const n = typeof v === 'number' ? v : Number(v);
+                    return Number.isNaN(n) ? null : n;
+                }
+                function setFact(idName, idDesc, name, desc) {
+                    const nEl = document.getElementById(idName);
+                    const dEl = document.getElementById(idDesc);
+                    if (nEl) nEl.textContent = name;
+                    if (dEl) dEl.textContent = desc;
+                }
+
+                try {
+                    const { asyncBufferFromUrl, parquetReadObjects } = await import('https://esm.sh/hyparquet@1');
+                    const file = await asyncBufferFromUrl({ url: GEOPARQUET_URL });
+                    const data = await parquetReadObjects({ file });
+                    const downhill = data.filter((r) => !isNotDownhill(r));
+
+                    const getName = (r) => getProp(r, NAME_KEYS) || 'Unknown';
+                    const getCountry = (r) => getProp(r, COUNTRY_KEYS) || 'Unknown';
+
+                    let largest = downhill[0];
+                    let maxArea = numVal(largest, AREA_KEYS) ?? 0;
+                    downhill.forEach((r) => {
+                        const a = numVal(r, AREA_KEYS);
+                        if (a != null && a > maxArea) { maxArea = a; largest = r; }
+                    });
+
+                    let smallest = null;
+                    let minTrails = Infinity;
+                    downhill.forEach((r) => {
+                        const t = numVal(r, TRAILS_KEYS);
+                        if (t != null && t >= 1 && t < minTrails) { minTrails = t; smallest = r; }
+                    });
+                    if (!smallest) {
+                        let minArea = Infinity;
+                        downhill.forEach((r) => {
+                            const a = numVal(r, AREA_KEYS);
+                            if (a != null && a > 0 && a < minArea) { minArea = a; smallest = r; }
+                        });
+                    }
+                    smallest = smallest || downhill[0];
+
+                    let northern = downhill[0];
+                    let maxLat = getLat(northern) ?? -90;
+                    downhill.forEach((r) => {
+                        const lat = getLat(r);
+                        if (lat != null && lat > maxLat) { maxLat = lat; northern = r; }
+                    });
+
+                    let southern = downhill[0];
+                    let minLat = getLat(southern) ?? 90;
+                    downhill.forEach((r) => {
+                        const lat = getLat(r);
+                        if (lat != null && lat < minLat) { minLat = lat; southern = r; }
+                    });
+
+                    let equator = downhill[0];
+                    let minDist = 90;
+                    downhill.forEach((r) => {
+                        const lat = getLat(r);
+                        if (lat != null) {
+                            const d = Math.abs(lat);
+                            if (d < minDist) { minDist = d; equator = r; }
+                        }
+                    });
+
+                    let mostTrails = downhill[0];
+                    let maxTrails = numVal(mostTrails, TRAILS_KEYS) ?? 0;
+                    downhill.forEach((r) => {
+                        const t = numVal(r, TRAILS_KEYS);
+                        if (t != null && t > maxTrails) { maxTrails = t; mostTrails = r; }
+                    });
+
+                    const byCountry = {};
+                    downhill.forEach((r) => {
+                        const c = getCountry(r);
+                        byCountry[c] = (byCountry[c] || 0) + 1;
+                    });
+                    let topCountry = '';
+                    let topCount = 0;
+                    Object.entries(byCountry).forEach(([c, n]) => {
+                        if (n > topCount) { topCount = n; topCountry = c; }
+                    });
+
+                    setFact('fact-largest-name', 'fact-largest-desc', getName(largest),
+                        (maxArea >= 1000 ? (maxArea / 1000).toFixed(1) + ',000' : maxArea.toLocaleString()) + ' acres of skiable terrain. ' + getCountry(largest) + '.');
+
+                    setFact('fact-smallest-name', 'fact-smallest-desc', getName(smallest),
+                        (minTrails < Infinity ? minTrails + ' trail(s)' : (numVal(smallest, AREA_KEYS) || 0).toLocaleString() + ' acres') + '. ' + getCountry(smallest) + '.');
+
+                    setFact('fact-northern-name', 'fact-northern-desc', getName(northern),
+                        maxLat.toFixed(1) + '\u00B0 latitude. ' + getCountry(northern) + '.');
+
+                    setFact('fact-southern-name', 'fact-southern-desc', getName(southern),
+                        minLat.toFixed(1) + '\u00B0 latitude. ' + getCountry(southern) + '.');
+
+                    setFact('fact-equator-name', 'fact-equator-desc', getName(equator),
+                        Math.abs(getLat(equator)).toFixed(1) + '\u00B0 from the equator. ' + getCountry(equator) + '.');
+
+                    setFact('fact-most-trails-name', 'fact-most-trails-desc', getName(mostTrails),
+                        maxTrails.toLocaleString() + ' trails. ' + getCountry(mostTrails) + '.');
+
+                    setFact('fact-country-name', 'fact-country-desc', topCountry,
+                        topCount.toLocaleString() + ' downhill ski resorts.');
+
+                    const summaryEl = document.getElementById('facts-summary');
+                    if (summaryEl) {
+                        summaryEl.innerHTML = '<div class="tw-flex tw-max-w-[260px] tw-flex-col tw-place-items-center tw-gap-2 tw-text-center"><span class="tw-text-3xl tw-font-bold" style="color:#0d9488">' + downhill.length.toLocaleString() + '</span><span class="tw-text-gray-700">downhill resorts</span></div><div class="tw-flex tw-max-w-[260px] tw-flex-col tw-place-items-center tw-gap-2 tw-text-center"><span class="tw-text-3xl tw-font-bold" style="color:#BDB8FF">' + Object.keys(byCountry).length + '</span><span class="tw-text-gray-700">countries</span></div><div class="tw-flex tw-max-w-[260px] tw-flex-col tw-place-items-center tw-gap-2 tw-text-center"><span class="tw-text-3xl tw-font-bold" style="color:#0d9488">' + topCountry + '</span><span class="tw-text-gray-700">most resorts (' + topCount.toLocaleString() + ')</span></div>';
+                    }
+                } catch (e) {
+                    console.warn('Extreme facts: could not load data', e);
+                    document.getElementById('facts-summary').innerHTML = '<div class="tw-text-center tw-text-red-600">Could not load resort data. Check network.</div>';
+                }
+            })();
+        </script>
+    </body>
+</html>

@@ -68,9 +68,12 @@ gsap.to(".reveal-hero-img", {
     y: "100%",
 })
 
-gsap.to("#hero-img-bg", {
-    scale: 0
-})
+const heroImgBg = document.querySelector("#hero-img-bg")
+if (heroImgBg) {
+    gsap.to(heroImgBg, {
+        scale: 0
+    })
+}
 
 gsap.to(".reveal-up", {
     opacity: 0,
@@ -94,12 +97,13 @@ window.addEventListener("load", () => {
         y: "0%",
     })
 
-    gsap.to("#hero-img-bg", {
-        scale: 1,
-        duration: 0.8,
-        delay: 0.4
-    })
-    
+    if (heroImgBg) {
+        gsap.to(heroImgBg, {
+            scale: 1,
+            duration: 0.8,
+            delay: 0.4
+        })
+    }
 })
 
 
@@ -108,24 +112,24 @@ window.addEventListener("load", () => {
 const sections = gsap.utils.toArray("section")
 
 sections.forEach((sec) => {
+    const revealUpEls = sec.querySelectorAll(".reveal-up")
+    if (!revealUpEls.length) return
 
-    const revealUptimeline = gsap.timeline({paused: true, 
-                                            scrollTrigger: {
-                                                            trigger: sec,
-                                                            start: "10% 80%", // top of trigger hits the top of viewport
-                                                            end: "20% 90%",
-                                                            // markers: true,
-                                                            // scrub: 1,
-                                                        }})
+    const revealUptimeline = gsap.timeline({
+        paused: true,
+        scrollTrigger: {
+            trigger: sec,
+            start: "10% 80%",
+            end: "20% 90%",
+        }
+    })
 
-    revealUptimeline.to(sec.querySelectorAll(".reveal-up"), {
+    revealUptimeline.to(revealUpEls, {
         opacity: 1,
         duration: 0.8,
         y: "0%",
         stagger: 0.2,
     })
-
-
 })
 
 

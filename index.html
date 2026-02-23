@@ -238,20 +238,21 @@
                 <div class="tw-flex tw-max-w-[280px] tw-flex-col tw-place-items-center tw-gap-2 tw-text-center">
                     <span id="stat-resorts" class="tw-text-4xl tw-font-bold tw-tracking-tight" style="color: #0d9488">—</span>
                     <span class="tw-text-lg tw-font-medium tw-text-gray-800">resorts</span>
-                    <span id="stat-resorts-desc" class="tw-text-sm tw-text-gray-600">Detailed information on downhill ski resorts worldwide, including terrain, lifts, and amenities.</span>
+                    <span id="stat-resorts-desc" class="tw-text-sm tw-text-gray-600">Over 3,000+ downhill ski resorts worldwide—terrain, lifts, and amenities.</span>
                     <span id="stat-resorts-note" class="tw-text-xs tw-text-gray-500 tw-mt-1" style="display: none;"></span>
                 </div>
                 <div class="tw-flex tw-max-w-[260px] tw-flex-col tw-place-items-center tw-gap-2 tw-text-center">
                     <span id="stat-lifts" class="tw-text-4xl tw-font-bold tw-tracking-tight" style="color: #BDB8FF">—</span>
                     <span class="tw-text-lg tw-font-medium tw-text-gray-800">lifts</span>
-                    <span class="tw-text-sm tw-text-gray-600">Ski lifts and gondolas mapped across all resorts.</span>
+                    <div id="stat-lifts-desc" class="stat-lifts-legend tw-mt-1 tw-text-sm tw-text-gray-600">—</div>
                 </div>
                 <div class="tw-flex tw-max-w-[260px] tw-flex-col tw-place-items-center tw-gap-2 tw-text-center">
                     <span id="stat-pistes" class="tw-text-4xl tw-font-bold tw-tracking-tight" style="color: #0d9488">—</span>
                     <span class="tw-text-lg tw-font-medium tw-text-gray-800">trails</span>
-                    <span class="tw-text-sm tw-text-gray-600">Pistes and runs you can explore on the map.</span>
+                    <div id="stat-pistes-desc" class="stat-pistes-legend tw-mt-1 tw-text-sm tw-text-gray-600">—</div>
                 </div>
             </div>
+            <a href="SkiResortExtremeFacts.html" class="tw-mt-4 tw-text-sm tw-font-medium tw-text-[#0d9488] hover:tw-underline">See ski statistics →</a>
         </section>
 
         <section
@@ -644,10 +645,28 @@
         #ai-assistant-detail .ai-try-btn i {
             color: #fff !important;
         }
+        /* Trail difficulty symbols (ski run ratings) */
+        .stat-pistes-legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem 0.75rem; align-items: center; }
+        .stat-pistes-legend .trail-row { display: inline-flex; align-items: center; gap: 0.35rem; }
+        .trail-symbol { display: inline-block; vertical-align: middle; }
+        .trail-symbol.trail-green-circle { width: 10px; height: 10px; border-radius: 50%; background: #22c55e; }
+        .trail-symbol.trail-blue-square { width: 10px; height: 10px; background: #2563eb; transform: rotate(0deg); }
+        .trail-symbol.trail-black-diamond { width: 10px; height: 10px; background: #1a1a1a; transform: rotate(45deg); }
+        .trail-symbol.trail-double-black { display: inline-flex; gap: 2px; align-items: center; }
+        .trail-symbol.trail-double-black span { width: 8px; height: 8px; background: #1a1a1a; transform: rotate(45deg); flex-shrink: 0; }
+        .trail-symbol.trail-halo-double-black { display: inline-flex; gap: 2px; align-items: center; padding: 1px; border: 1px solid rgba(0,0,0,0.35); border-radius: 1px; }
+        .trail-symbol.trail-halo-double-black span { width: 8px; height: 8px; background: #1a1a1a; transform: rotate(45deg); flex-shrink: 0; }
+        /* Lift type symbols (top 5) - SVG icons */
+        .stat-lifts-legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem 0.75rem; align-items: center; }
+        .stat-lifts-legend .lift-row { display: inline-flex; align-items: center; gap: 0.35rem; }
+        .stat-lifts-legend .lift-symbol { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; vertical-align: middle; }
+        .stat-lifts-legend .lift-symbol-img { width: 100%; height: 100%; object-fit: contain; display: block; }
     </style>
 
     <script type="module">
         (async function () {
+            const CACHE_KEY = 'atlas-stats';
+            const CACHE_HOURS = 24;
             const GEOPARQUET_URL = 'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/ski_areas_analyzed.parquet';
             const LIFTS_URL = 'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/lifts.parquet';
             const PISTES_URL = 'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/pistes.parquet';
@@ -663,7 +682,95 @@
                     if (descEl) descEl.textContent = descFn(value);
                 }
             }
+            function setDesc(id, text) {
+                const el = document.getElementById(id);
+                if (el && text != null) el.textContent = text;
+            }
+            var LIFT_SVG_FILE = {
+                chair_lift: 'chair.svg',
+                platter: 'tow.svg',
+                drag_lift: 'tow.svg',
+                magic_carpet: 'Magic_Carpet.svg',
+                't-bar': 'tow.svg',
+                gondola: 'gondela.svg',
+                rope_tow: 'tow.svg',
+                cable_car: 'tram.svg',
+                zip_line: 'tram.svg',
+                other: 'chair.svg'
+            };
+            var LIFT_DISPLAY_GROUP = {
+                chair_lift: 'chair', other: 'chair',
+                gondola: 'gondola',
+                platter: 'tow', drag_lift: 'tow', 't-bar': 'tow', rope_tow: 'tow',
+                cable_car: 'cable_car',
+                zip_line: 'zip_line',
+                magic_carpet: 'magic_carpet'
+            };
+            var GROUP_FILE = { chair: 'chair.svg', gondola: 'gondela.svg', tow: 'tow.svg', cable_car: 'tram.svg', zip_line: 'tram.svg', magic_carpet: 'Magic_Carpet.svg' };
+            var GROUP_ORDER = ['chair', 'gondola', 'tow', 'cable_car', 'magic_carpet'];
+            function setLiftDescHtml(top5) {
+                const el = document.getElementById('stat-lifts-desc');
+                if (!el || !top5 || !top5.length) return;
+                const byGroup = {};
+                top5.forEach(function (item) {
+                    const g = LIFT_DISPLAY_GROUP[item.key] || 'chair';
+                    byGroup[g] = (byGroup[g] || 0) + (item.count || 0);
+                });
+                const combined = GROUP_ORDER.filter(function (g) { return (byGroup[g] || 0) > 0; }).map(function (g) { return { file: GROUP_FILE[g], count: byGroup[g] }; });
+                const base = './assets/svg/';
+                const fmt = (n) => (n == null || n === 0) ? '' : n.toLocaleString();
+                const row = (filename, n) => n ? '<span class="lift-row">' + '<span class="lift-symbol"><img src="' + base + filename + '" alt="" class="lift-symbol-img"></span>' + ' <span>(' + fmt(n) + ')</span></span>' : '';
+                const html = combined.map(function (item) { return row(item.file, item.count); }).join('');
+                el.innerHTML = html || '—';
+            }
+            function setPisteDescHtml(counts) {
+                const el = document.getElementById('stat-pistes-desc');
+                if (!el || !counts) return;
+                const fmt = (n) => (n == null || n === 0) ? '' : n.toLocaleString();
+                const symbol = (cls, inner) => cls ? '<span class="trail-symbol ' + cls + '">' + (inner || '') + '</span>' : '';
+                const row = (sym, n) => n ? '<span class="trail-row">' + sym + ' <span>(' + fmt(n) + ')</span></span>' : '';
+                const green = (counts.easy || 0) + (counts.novice || 0);
+                const extreme = (counts.extreme || 0) + (counts.freeride || 0);
+                const doubleBlackSym = '<span class="trail-symbol trail-double-black"><span></span><span></span></span>';
+                const haloBlackSym = '<span class="trail-symbol trail-halo-double-black"><span></span><span></span></span>';
+                const html = [
+                    row(symbol('trail-green-circle'), green),
+                    row(symbol('trail-blue-square'), counts.intermediate),
+                    row(symbol('trail-black-diamond'), counts.advanced),
+                    row(doubleBlackSym, counts.expert),
+                    row(haloBlackSym, extreme)
+                ].filter(Boolean).join('');
+                el.innerHTML = html || '—';
+            }
+            function applyStats(data) {
+                setStat('stat-resorts', data.resorts, 'stat-resorts-desc', function (n) { return 'Over ' + formatCount(n) + ' downhill ski resorts worldwide—terrain, lifts, and amenities.'; });
+                setStat('stat-lifts', data.lifts);
+                setStat('stat-pistes', data.pistes);
+                if (data.liftAll) setLiftDescHtml(data.liftAll); else if (data.liftTop5) setLiftDescHtml(data.liftTop5);
+                if (data.pisteDifficultyCounts) setPisteDescHtml(data.pisteDifficultyCounts);
+                if (data.excludedCount > 0) {
+                    const noteEl = document.getElementById('stat-resorts-note');
+                    if (noteEl) {
+                        noteEl.textContent = formatCount(data.excludedCount) + ' areas excluded: no lift or slope in OpenStreetMap.';
+                        noteEl.style.display = 'block';
+                    }
+                }
+            }
             try {
+                const cached = (function () {
+                    try {
+                        const raw = localStorage.getItem(CACHE_KEY);
+                        if (!raw) return null;
+                        const o = JSON.parse(raw);
+                        if (!o || !o.ts) return null;
+                        const age = (Date.now() - o.ts) / (1000 * 60 * 60);
+                        if (age > CACHE_HOURS) return null;
+                        return o;
+                    } catch (_) { return null; }
+                })();
+                if (cached && cached.resorts != null && cached.lifts != null && cached.pistes != null) {
+                    applyStats(cached);
+                }
                 const { asyncBufferFromUrl, parquetReadObjects } = await import('https://esm.sh/hyparquet@1');
                 const RESORT_TYPE_KEYS = ['resort_type', 'Resort Type'];
                 const NOT_DOWNHILL = 'not a downhill ski resort';
@@ -678,31 +785,86 @@
                     const v = getProp(row, RESORT_TYPE_KEYS);
                     return v != null && String(v).toLowerCase().trim() === NOT_DOWNHILL.toLowerCase();
                 }
-                const [areasFile, liftsFile, pistesFile] = await Promise.all([
-                    asyncBufferFromUrl({ url: GEOPARQUET_URL }),
-                    asyncBufferFromUrl({ url: LIFTS_URL }),
-                    asyncBufferFromUrl({ url: PISTES_URL })
-                ]);
-                const [areasData, liftsData, pistesData] = await Promise.all([
-                    parquetReadObjects({ file: areasFile }),
-                    parquetReadObjects({ file: liftsFile }),
-                    parquetReadObjects({ file: pistesFile })
-                ]);
+                const areasFile = await asyncBufferFromUrl({ url: GEOPARQUET_URL });
+                const areasData = await parquetReadObjects({ file: areasFile });
                 const downhillResorts = areasData.filter((r) => !isNotDownhill(r));
                 const resorts = downhillResorts.length;
                 const excludedCount = areasData.length - resorts;
-                const lifts = liftsData.length;
-                const pistes = pistesData.length;
-                setStat('stat-resorts', resorts, 'stat-resorts-desc', function (n) { return 'Detailed information on over ' + formatCount(n) + ' downhill ski resorts worldwide, including terrain, lifts, and amenities.'; });
-                setStat('stat-lifts', lifts);
-                setStat('stat-pistes', pistes);
+                setStat('stat-resorts', resorts, 'stat-resorts-desc', function (n) { return 'Over ' + formatCount(n) + ' downhill ski resorts worldwide—terrain, lifts, and amenities.'; });
                 if (excludedCount > 0) {
                     const noteEl = document.getElementById('stat-resorts-note');
                     if (noteEl) {
-                        noteEl.textContent = formatCount(excludedCount) + ' areas in our dataset have no lift or downhill slope tagged in OpenStreetMap, so we exclude them from the count.';
+                        noteEl.textContent = formatCount(excludedCount) + ' areas excluded: no lift or slope in OpenStreetMap.';
                         noteEl.style.display = 'block';
                     }
                 }
+                const [liftsFile, pistesFile] = await Promise.all([
+                    asyncBufferFromUrl({ url: LIFTS_URL }),
+                    asyncBufferFromUrl({ url: PISTES_URL })
+                ]);
+                const [liftsData, pistesData] = await Promise.all([
+                    parquetReadObjects({ file: liftsFile }),
+                    parquetReadObjects({ file: pistesFile })
+                ]);
+                const LIFT_TYPE_KEYS = ['aerialway', 'Aerialway', 'aerialway_type', 'type'];
+                const PISTE_DIFF_KEYS = ['piste:difficulty', 'piste_difficulty', 'difficulty'];
+                const LIFT_EXCLUDE = ['pylon', 'station'];
+                function getLiftType(row) {
+                    let v = getProp(row, LIFT_TYPE_KEYS) || getProp(row && row.properties, LIFT_TYPE_KEYS);
+                    if (v == null && row && typeof row.other_tags === 'string') {
+                        const m = row.other_tags.match(/"aerialway"=>"([^"]+)"/);
+                        if (m) v = m[1];
+                    }
+                    return v != null && String(v).trim() !== '' ? String(v).trim().toLowerCase().replace(/\s+/g, '_') : null;
+                }
+                function getPisteDifficulty(row) {
+                    let v = getProp(row, PISTE_DIFF_KEYS) || getProp(row && row.properties, PISTE_DIFF_KEYS);
+                    if (v == null && row && typeof row.other_tags === 'string') {
+                        const m = row.other_tags.match(/"piste:difficulty"=>"([^"]+)"/);
+                        if (m) v = m[1];
+                    }
+                    return v != null && String(v).trim() !== '' ? String(v).trim().toLowerCase() : null;
+                }
+                const LIFT_DISPLAY = [
+                    { key: 'chair_lift', label: 'Chair lift' }, { key: 'platter', label: 'Platter' }, { key: 'drag_lift', label: 'Drag lift' },
+                    { key: 'magic_carpet', label: 'Magic carpet' }, { key: 't-bar', label: 'T-bar' }, { key: 'zip_line', label: 'Zip Line' },
+                    { key: 'other', label: 'Other' }, { key: 'gondola', label: 'Gondola' }, { key: 'rope_tow', label: 'Rope tow' }, { key: 'cable_car', label: 'Cable car' }
+                ];
+                const TRAIL_DISPLAY = [
+                    { key: 'easy', label: 'Easy' }, { key: 'intermediate', label: 'Intermediate' }, { key: 'advanced', label: 'Advanced' },
+                    { key: 'novice', label: 'Novice' }, { key: 'freeride', label: 'Freeride' }, { key: 'expert', label: 'Expert' }, { key: 'extreme', label: 'Extreme' }
+                ];
+                const trailAliases = { medium: 'intermediate', hard: 'advanced' };
+                const liftCountByType = {};
+                let lifts = 0;
+                liftsData.forEach((row) => {
+                    const t = getLiftType(row);
+                    if (LIFT_EXCLUDE.includes(t || '')) return;
+                    lifts++;
+                    const key = (t && LIFT_DISPLAY.some((x) => x.key === t)) ? t : 'other';
+                    liftCountByType[key] = (liftCountByType[key] || 0) + 1;
+                });
+                const liftAll = LIFT_DISPLAY.map(function (x) { return { key: x.key, count: liftCountByType[x.key] || 0 }; });
+                const pisteCountByDiff = {};
+                pistesData.forEach((row) => {
+                    let d = getPisteDifficulty(row);
+                    if (d && trailAliases[d]) d = trailAliases[d];
+                    const key = d || 'other';
+                    pisteCountByDiff[key] = (pisteCountByDiff[key] || 0) + 1;
+                });
+                const pisteDifficultyCounts = {
+                    easy: pisteCountByDiff.easy || 0,
+                    novice: pisteCountByDiff.novice || 0,
+                    intermediate: pisteCountByDiff.intermediate || 0,
+                    advanced: pisteCountByDiff.advanced || 0,
+                    expert: pisteCountByDiff.expert || 0,
+                    extreme: pisteCountByDiff.extreme || 0,
+                    freeride: pisteCountByDiff.freeride || 0
+                };
+                const pistes = pistesData.length;
+                const data = { resorts, lifts, pistes, excludedCount, liftAll, pisteDifficultyCounts, ts: Date.now() };
+                applyStats(data);
+                try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch (_) {}
             } catch (e) {
                 console.warn('Atlas stats: could not load parquet counts', e);
             }
