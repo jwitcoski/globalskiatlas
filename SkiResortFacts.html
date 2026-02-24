@@ -1,0 +1,771 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-KJGNL3KJL0"></script>
+        <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){ dataLayer.push(arguments); }
+            gtag('js', new Date());
+            gtag('config', 'G-KJGNL3KJL0');
+        </script>
+        <title>Ski Resort Facts – Global Ski Atlas</title>
+        <meta name="description" content="Discover ski resort facts: largest, smallest, most northern, most southern, and more from our worldwide dataset." />
+        <link rel="shortcut icon" href="./assets/logo.png?v=2" type="image/x-icon" />
+        <link rel="stylesheet" href="./css/tailwind-build.css" />
+        <link rel="stylesheet" href="css/index.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" integrity="sha512-dPXYcDub/aeb08c63jRq/k6GaKccl256JQy/AnOq7CAnEZ9FzSL9wSbcZkMp4R26vBsMLFYH4kQ67/bbV8XaCQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+        <style>
+            .fact-map { width: 280px; height: 280px; border-radius: 12px; overflow: hidden; }
+            .fact-map.placeholder { background: #e5e7eb; display: flex; align-items: center; justify-content: center; color: #6b7280; font-size: 14px; }
+            #map-world { width: 100%; max-width: 900px; height: 420px; border-radius: 12px; overflow: hidden; }
+            #map-world.placeholder { background: #e5e7eb; display: flex; align-items: center; justify-content: center; color: #6b7280; }
+            .world-country-label { position: absolute; font-weight: 700; color: #0a0a0a; font-size: 13px; pointer-events: none; text-shadow: 0 0 2px #fff, 0 0 4px #fff; z-index: 500; }
+            .map-tooltip { position: fixed; z-index: 9999; padding: 8px 12px; background: #1e293b; color: #fff; border-radius: 8px; font-size: 13px; pointer-events: none; box-shadow: 0 4px 12px rgba(0,0,0,0.2); line-height: 1.5; }
+            .scatter-chart { width: 100%; max-width: 700px; height: 420px; position: relative; }
+            .scatter-tooltip { position: fixed; z-index: 9999; padding: 8px 12px; background: #1e293b; color: #fff; border-radius: 8px; font-size: 13px; pointer-events: none; box-shadow: 0 4px 12px rgba(0,0,0,0.2); line-height: 1.5; }
+            .loading-spinner { width: 28px; height: 28px; border: 3px solid #e5e7eb; border-top-color: #0d9488; border-radius: 50%; animation: spin 0.8s linear infinite; }
+            @keyframes spin { to { transform: rotate(360deg); } }
+            .fact-map.placeholder.loading, #map-world.placeholder.loading { flex-direction: column; gap: 8px; }
+        </style>
+    </head>
+    <body class="tw-flex tw-min-h-[100vh] tw-flex-col tw-bg-[#fff]">
+        <header class="tw-absolute tw-top-0 tw-z-[1001] tw-flex tw-h-[60px] tw-w-full tw-bg-white tw-shadow-sm tw-border-b tw-border-gray-200 tw-px-[5%] max-lg:tw-px-4 lg:tw-justify-around">
+            <a class="tw-h-[50px] tw-w-[50px] tw-p-[4px]" href="index.html" aria-label="Global Ski Atlas home">
+                <img src="./assets/logo.png?v=2" alt="Global Ski Atlas" class="tw-object tw-h-full tw-w-full" />
+            </a>
+            <div class="collapsible-header animated-collapse max-lg:tw-shadow-md" id="collapsed-header-items">
+                <div class="tw-flex tw-h-full tw-w-max tw-gap-5 tw-text-base tw-text-black max-lg:tw-mt-[30px] max-lg:tw-flex-col max-lg:tw-place-items-end max-lg:tw-gap-5 lg:tw-mx-auto lg:tw-place-items-center">
+                    <a class="header-links" href="coffee-table-book.html">Coffee Table Book</a>
+                    <a class="header-links" href="mainmap.html">Online Atlas</a>
+                    <a class="header-links" href="resort-comparison.html">Compare Resorts</a>
+                    <a class="header-links tw-font-semibold" href="SkiResortFacts.html">Ski Facts</a>
+                    <a class="header-links" href="About.html">About</a>
+                    <a class="header-links" href="skiing-ai.html">AI Assistant</a>
+                </div>
+                <div class="tw-mx-4 tw-flex tw-place-items-center tw-gap-[20px] tw-text-base max-md:tw-w-full max-md:tw-flex-col max-md:tw-place-content-center">
+                    <a href="" aria-label="signup" class="tw-flex tw-h-[40px] tw-place-items-center tw-gap-2 tw-rounded-full tw-bg-black tw-p-1 tw-pl-4 tw-text-white">
+                        <span>Download App Coming Soon</span>
+                        <div class="tw-flex tw-h-[30px] tw-w-[30px] tw-place-content-center tw-place-items-center tw-rounded-full tw-bg-primary tw-font-semibold tw-text-black">
+                            <i class="bi bi-download"></i>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            <button class="bi bi-list tw-absolute tw-right-3 tw-top-3 tw-z-50 tw-text-3xl tw-text-black lg:tw-hidden" onclick="toggleHeader()" aria-label="menu" id="collapse-btn"></button>
+        </header>
+
+        <div class="tw-flex-1 tw-min-h-0 tw-overflow-y-auto" style="margin-top: 60px;">
+        <main class="tw-flex-1 tw-flex tw-flex-col">
+        <section class="tw-relative tw-flex tw-min-h-[40vh] tw-w-full tw-flex-col tw-place-content-center tw-place-items-center tw-overflow-hidden tw-py-12 tw-px-6">
+            <h1 class="tw-text-4xl tw-font-bold tw-text-gray-900 max-md:tw-text-2xl tw-text-center">Ski Resort Facts</h1>
+            <p class="tw-mt-4 tw-max-w-2xl tw-text-center tw-text-xl tw-text-gray-600">Records and superlatives from our worldwide ski resort dataset</p>
+            <div class="tw-mt-6 tw-flex tw-place-items-center tw-gap-3">
+                <label for="country-filter" class="tw-text-gray-700 tw-font-medium">Filter by country:</label>
+                <select id="country-filter" disabled class="tw-rounded-lg tw-border tw-border-gray-300 tw-bg-gray-100 tw-px-4 tw-py-2 tw-text-base tw-text-gray-500 focus:tw-outline-none focus:tw-ring-2 focus:tw-ring-teal-500 disabled:tw-cursor-not-allowed disabled:tw-opacity-60">
+                    <option value="">All countries</option>
+                </select>
+            </div>
+        </section>
+
+        <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-place-content-center tw-place-items-center tw-overflow-hidden tw-p-6">
+            <div class="reveal-up tw-flex tw-min-h-[140px] tw-w-full tw-max-w-[80%] tw-place-items-center tw-justify-around tw-gap-8 tw-rounded-xl tw-bg-[#e7e6e685] tw-p-4 max-lg:tw-max-w-full max-md:tw-flex-col" id="facts-summary">
+                <div class="tw-flex tw-flex-col tw-place-items-center tw-gap-3 tw-text-gray-600">
+                    <div class="loading-spinner"></div>
+                    <span>Loading ski facts…</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6" id="fact-scatter">
+            <div class="reveal-up tw-flex tw-w-full tw-flex-col tw-place-content-center tw-place-items-center tw-gap-8">
+                <h3 class="tw-text-4xl tw-font-medium tw-text-center">Trails vs Acreage</h3>
+                <p class="tw-text-xl tw-text-gray-600 tw-text-center tw-max-w-2xl">Number of trails and skiable area by resort. Outliers labeled.</p>
+                <div id="scatter-trails-area" class="scatter-chart tw-bg-gray-50 tw-rounded-xl tw-p-4 tw-flex tw-place-items-center tw-justify-center tw-text-gray-500"><div class="tw-flex tw-flex-col tw-place-items-center tw-gap-3"><div class="loading-spinner"></div><span>Loading scatter plot…</span></div></div>
+            </div>
+        </section>
+
+        <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6" id="fact-largest">
+            <div class="reveal-up tw-flex tw-min-h-[60vh] tw-place-content-center tw-place-items-center tw-gap-[10%] max-lg:tw-flex-col max-lg:tw-gap-10">
+                <div class="tw-flex">
+                    <div id="map-largest" class="fact-map placeholder loading tw-flex-shrink-0"><div class="loading-spinner"></div><span>Loading…</span></div>
+                </div>
+                <div class="tw-mt-6 tw-flex tw-max-w-[450px] tw-flex-col tw-gap-4">
+                    <h3 class="tw-text-4xl tw-font-medium">Largest Resort by Area</h3>
+                    <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700" id="fact-largest-name">—</p>
+                    <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600" id="fact-largest-desc">—</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6" id="fact-smallest">
+            <div class="reveal-up tw-flex tw-min-h-[60vh] tw-place-content-center tw-place-items-center tw-gap-[10%] max-lg:tw-flex-col max-lg:tw-gap-10">
+                <div class="tw-mt-6 tw-flex tw-max-w-[450px] tw-flex-col tw-gap-4">
+                    <h3 class="tw-text-4xl tw-font-medium">Smallest Downhill Resort</h3>
+                    <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700" id="fact-smallest-name">—</p>
+                    <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600" id="fact-smallest-desc">—</p>
+                </div>
+                <div class="tw-flex">
+                    <div id="map-smallest" class="fact-map placeholder loading tw-flex-shrink-0"><div class="loading-spinner"></div><span>Loading…</span></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6" id="fact-northern">
+            <div class="reveal-up tw-flex tw-min-h-[60vh] tw-place-content-center tw-place-items-center tw-gap-[10%] max-lg:tw-flex-col max-lg:tw-gap-10">
+                <div class="tw-flex">
+                    <div id="map-northern" class="fact-map placeholder loading tw-flex-shrink-0"><div class="loading-spinner"></div><span>Loading…</span></div>
+                </div>
+                <div class="tw-mt-6 tw-flex tw-max-w-[450px] tw-flex-col tw-gap-4">
+                    <h3 class="tw-text-4xl tw-font-medium">Most Northern Resort</h3>
+                    <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700" id="fact-northern-name">—</p>
+                    <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600" id="fact-northern-desc">—</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6" id="fact-southern">
+            <div class="reveal-up tw-flex tw-min-h-[60vh] tw-place-content-center tw-place-items-center tw-gap-[10%] max-lg:tw-flex-col max-lg:tw-gap-10">
+                <div class="tw-mt-6 tw-flex tw-max-w-[450px] tw-flex-col tw-gap-4">
+                    <h3 class="tw-text-4xl tw-font-medium">Most Southern Resort</h3>
+                    <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700" id="fact-southern-name">—</p>
+                    <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600" id="fact-southern-desc">—</p>
+                </div>
+                <div class="tw-flex">
+                    <div id="map-southern" class="fact-map placeholder loading tw-flex-shrink-0"><div class="loading-spinner"></div><span>Loading…</span></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6" id="fact-equator">
+            <div class="reveal-up tw-flex tw-min-h-[60vh] tw-place-content-center tw-place-items-center tw-gap-[10%] max-lg:tw-flex-col max-lg:tw-gap-10">
+                <div class="tw-flex">
+                    <div id="map-equator" class="fact-map placeholder loading tw-flex-shrink-0"><div class="loading-spinner"></div><span>Loading…</span></div>
+                </div>
+                <div class="tw-mt-6 tw-flex tw-max-w-[450px] tw-flex-col tw-gap-4">
+                    <h3 class="tw-text-4xl tw-font-medium">Closest to the Equator</h3>
+                    <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700" id="fact-equator-name">—</p>
+                    <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600" id="fact-equator-desc">—</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6" id="fact-most-trails">
+            <div class="reveal-up tw-flex tw-min-h-[60vh] tw-place-content-center tw-place-items-center tw-gap-[10%] max-lg:tw-flex-col max-lg:tw-gap-10">
+                <div class="tw-mt-6 tw-flex tw-max-w-[450px] tw-flex-col tw-gap-4">
+                    <h3 class="tw-text-4xl tw-font-medium">Resort with the Most Trails</h3>
+                    <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700" id="fact-most-trails-name">—</p>
+                    <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600" id="fact-most-trails-desc">—</p>
+                </div>
+                <div class="tw-flex">
+                    <div id="map-most-trails" class="fact-map placeholder loading tw-flex-shrink-0"><div class="loading-spinner"></div><span>Loading…</span></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6" id="fact-country">
+            <div class="reveal-up tw-flex tw-min-h-[60vh] tw-w-full tw-flex-col tw-place-content-center tw-place-items-center tw-gap-8">
+                <div class="tw-flex tw-w-full tw-max-w-[900px] tw-flex-col tw-gap-4 tw-text-center">
+                    <h3 class="tw-text-4xl tw-font-medium">Resorts by Country</h3>
+                    <p class="tw-text-xl tw-text-gray-600" id="fact-country-desc">—</p>
+                </div>
+                <div id="map-world" class="placeholder loading tw-w-full"><div class="loading-spinner"></div><span>Loading world map…</span></div>
+            </div>
+        </section>
+
+        </main>
+        </div>
+
+        <footer class="tw-mt-auto tw-flex tw-w-full tw-place-content-around tw-gap-3 tw-border-t tw-border-gray-200 tw-bg-gray-50 tw-py-6 tw-px-[10%] tw-text-black max-md:tw-flex-col">
+            <div class="tw-flex tw-h-full tw-w-[250px] tw-flex-col tw-place-items-center tw-gap-6 max-md:tw-w-full">
+                <img src="./assets/logo.png?v=2" alt="Global Ski Atlas" class="tw-max-w-[120px]" />
+                <div>Global Ski Atlas</div>
+            </div>
+            <div class="tw-flex tw-h-full tw-w-[250px] tw-flex-col tw-gap-4">
+                <h2 class="tw-text-3xl max-md:tw-text-xl">Explore</h2>
+                <div class="tw-flex tw-flex-col tw-gap-3 max-md:tw-text-sm">
+                    <a href="coffee-table-book.html" class="footer-link">Coffee Table Book</a>
+                    <a href="mainmap.html" class="footer-link">Online Atlas</a>
+                    <a href="resort-comparison.html" class="footer-link">Compare Resorts</a>
+                    <a href="SkiResortFacts.html" class="footer-link">Ski Facts</a>
+                    <a href="skiing-ai.html" class="footer-link">AI Assistant</a>
+                </div>
+            </div>
+            <div class="tw-flex tw-h-full tw-w-[250px] tw-flex-col tw-gap-4">
+                <h2 class="tw-text-3xl max-md:tw-text-xl">Resources</h2>
+                <div class="tw-flex tw-flex-col tw-gap-3 max-md:tw-text-sm">
+                    <a href="About.html" class="footer-link">About</a>
+                    <a href="DownloadData.html" class="footer-link">Data Downloads</a>
+                </div>
+            </div>
+        </footer>
+
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+        <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+        <script>
+            function toggleHeader() {
+                var el = document.getElementById('collapsed-header-items');
+                if (el) el.classList.toggle('animated-collapse');
+            }
+        </script>
+        <script type="module">
+            (async function () {
+                const GEOPARQUET_URL = 'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/ski_areas_analyzed.parquet';
+                const SKI_AREAS_OUTLINES_URL = 'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/ski_areas.parquet';
+                const LIFTS_URL = 'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/lifts.parquet';
+                const PISTES_URL = 'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/pistes.parquet';
+                const MAPTILER_KEY = '0P06ORgY8WvmMOnPr0p2';
+                const NAME_KEYS = ['name', 'resort_name', 'title', 'area_name', 'Name'];
+                const ID_KEYS = ['id', 'ref', 'area_id', 'resort_id', 'skiresort_id'];
+                const COUNTRY_KEYS = ['country', 'Country', 'country_name', 'addr:country'];
+                const AREA_KEYS = ['total_area_acres', 'Total Area Acres', 'area_acres', 'skiable_terrain_acres', 'skiable_area_acres'];
+                const TRAILS_KEYS = ['downhill_trails', 'number_of_downhill_trails', 'Downhill Trails', 'trails'];
+                const RESORT_TYPE_KEYS = ['resort_type', 'Resort Type'];
+                const NOT_DOWNHILL = 'not a downhill ski resort';
+                const PISTE_DIFFICULTY_KEYS = ['piste:difficulty', 'piste_difficulty', 'difficulty'];
+
+                function getProp(obj, keys) {
+                    if (!obj) return undefined;
+                    for (const k of keys) {
+                        if (Object.prototype.hasOwnProperty.call(obj, k)) return obj[k];
+                    }
+                    return undefined;
+                }
+                function getLat(row) {
+                    const g = row.geometry;
+                    if (g && g.type === 'Point' && g.coordinates && g.coordinates.length >= 2) return g.coordinates[1];
+                    const lat = row.latitude ?? row.centroid_lat ?? row.lat;
+                    return lat != null ? Number(lat) : null;
+                }
+                function getLon(row) {
+                    const g = row.geometry;
+                    if (g && g.type === 'Point' && g.coordinates && g.coordinates.length >= 2) return g.coordinates[0];
+                    const lon = row.longitude ?? row.centroid_lon ?? row.lon;
+                    return lon != null ? Number(lon) : null;
+                }
+                function isNotDownhill(row) {
+                    const v = getProp(row, RESORT_TYPE_KEYS);
+                    return v != null && String(v).toLowerCase().trim() === NOT_DOWNHILL.toLowerCase();
+                }
+                function numVal(row, keys) {
+                    const v = getProp(row, keys);
+                    if (v == null || v === '') return null;
+                    const n = typeof v === 'number' ? v : Number(v);
+                    return Number.isNaN(n) ? null : n;
+                }
+                function getPisteDifficulty(props) {
+                    let v = getProp(props, PISTE_DIFFICULTY_KEYS);
+                    if (v == null && props && typeof props.other_tags === 'string') {
+                        const m = props.other_tags.match(/"piste:difficulty"=>"([^"]+)"/);
+                        if (m) v = m[1];
+                    }
+                    return v != null ? String(v).toLowerCase().trim() : '';
+                }
+                function isLift(props) {
+                    const aerialway = getProp(props, ['aerialway', 'Aerialway']);
+                    return aerialway != null && String(aerialway).trim() !== '';
+                }
+                function getRings(geom) {
+                    if (!geom || !geom.coordinates) return [];
+                    if (geom.type === 'Polygon') return geom.coordinates[0] ? [geom.coordinates[0]] : [];
+                    if (geom.type === 'MultiPolygon') return (geom.coordinates || []).map((p) => p[0]).filter(Boolean);
+                    return [];
+                }
+                function pointInRing(lon, lat, ring) {
+                    const n = ring.length;
+                    let inside = false;
+                    for (let i = 0, j = n - 1; i < n; j = i++) {
+                        const xi = ring[i][0], yi = ring[i][1];
+                        const xj = ring[j][0], yj = ring[j][1];
+                        if (yi > lat !== yj > lat && lon < (xj - xi) * (lat - yi) / (yj - yi) + xi) inside = !inside;
+                    }
+                    return inside;
+                }
+                function pointInPolygon(lon, lat, geom) {
+                    return getRings(geom).some((ring) => pointInRing(lon, lat, ring));
+                }
+                function lineCentroid(geom) {
+                    if (!geom || !geom.coordinates) return null;
+                    const coords = geom.type === 'LineString' ? geom.coordinates : (geom.coordinates || []).flat();
+                    let xs = 0, ys = 0, n = 0;
+                    coords.forEach((c) => { xs += c[0]; ys += c[1]; n++; });
+                    return n ? [xs / n, ys / n] : null;
+                }
+                function boundsFromGeoJSONFeature(feature) {
+                    const coords = [];
+                    const geom = feature.geometry;
+                    if (!geom || !geom.coordinates) return null;
+                    function flatten(c, depth) {
+                        if (depth > 4) return;
+                        if (typeof c[0] === 'number' && c.length >= 2) coords.push([c[1], c[0]]);
+                        else if (Array.isArray(c)) c.forEach((cc) => flatten(cc, depth + 1));
+                    }
+                    flatten(geom.coordinates, 0);
+                    return coords.length ? L.latLngBounds(coords) : null;
+                }
+                function setFact(idName, idDesc, name, desc) {
+                    const nEl = idName ? document.getElementById(idName) : null;
+                    const dEl = idDesc ? document.getElementById(idDesc) : null;
+                    if (nEl && name != null) nEl.textContent = name;
+                    if (dEl && desc != null) dEl.textContent = desc;
+                }
+                const toFeature = (row) => {
+                    if (!row.geometry || !row.geometry.type) return null;
+                    const { geometry, ...props } = row;
+                    return { type: 'Feature', geometry, properties: props };
+                };
+
+                try {
+                    const { asyncBufferFromUrl, parquetReadObjects } = await import('https://esm.sh/hyparquet@1');
+                    const analyzedPromise = asyncBufferFromUrl({ url: GEOPARQUET_URL }).then((f) => parquetReadObjects({ file: f }));
+                    const outlinesPromise = asyncBufferFromUrl({ url: SKI_AREAS_OUTLINES_URL }).then((f) => parquetReadObjects({ file: f }));
+                    const liftsPromise = asyncBufferFromUrl({ url: LIFTS_URL }).then((f) => parquetReadObjects({ file: f }));
+                    const pistesPromise = asyncBufferFromUrl({ url: PISTES_URL }).then((f) => parquetReadObjects({ file: f }));
+
+                    const dataAnalyzed = await analyzedPromise;
+
+                    const downhillAll = dataAnalyzed.filter((r) => !isNotDownhill(r));
+                    const getName = (r) => getProp(r, NAME_KEYS) || 'Unknown';
+                    const getCountry = (r) => getProp(r, COUNTRY_KEYS) || 'Unknown';
+
+                    const countrySelect = document.getElementById('country-filter');
+                    const byCountryAll = {};
+                    downhillAll.forEach((r) => { const c = getCountry(r); byCountryAll[c] = (byCountryAll[c] || 0) + 1; });
+                    const countryNames = Object.keys(byCountryAll).sort();
+                    countryNames.forEach((c) => {
+                        const opt = document.createElement('option');
+                        opt.value = c;
+                        opt.textContent = c + ' (' + byCountryAll[c].toLocaleString() + ')';
+                        countrySelect.appendChild(opt);
+                    });
+                    countrySelect.disabled = false;
+                    countrySelect.classList.remove('tw-bg-gray-100', 'tw-text-gray-500');
+                    countrySelect.classList.add('tw-bg-white', 'tw-text-gray-900');
+
+                    let downhill = downhillAll;
+                    let byCountry = { ...byCountryAll };
+                    let outlineFeatures, liftFeatures, pisteFeatures;
+
+                    function findResortMapData(row, outlineFeatures, liftFeatures, pisteFeatures) {
+                        const resortLat = getLat(row);
+                        const resortLon = getLon(row);
+                        const resortName = getName(row);
+                        const resortRef = getProp(row, ID_KEYS);
+                        let outlineFeature = outlineFeatures.find((f) => {
+                            const name = getProp(f.properties, NAME_KEYS);
+                            const ref = getProp(f.properties, ['ref', 'id']);
+                            if (resortRef != null && ref != null && String(ref) === String(resortRef)) return true;
+                            if (name && resortName && String(name).trim().toLowerCase() === String(resortName).trim().toLowerCase()) return true;
+                            if (resortLon != null && resortLat != null) return pointInPolygon(resortLon, resortLat, f.geometry);
+                            return false;
+                        });
+                        const features = [];
+                        if (outlineFeature) {
+                            const outlineGeom = outlineFeature.geometry;
+                            liftFeatures.forEach((f) => {
+                                const c = lineCentroid(f.geometry);
+                                if (c && pointInPolygon(c[0], c[1], outlineGeom)) features.push(f);
+                            });
+                            pisteFeatures.forEach((f) => {
+                                const c = lineCentroid(f.geometry);
+                                if (c && pointInPolygon(c[0], c[1], outlineGeom)) features.push(f);
+                            });
+                        }
+                        let extentBounds = null;
+                        if (outlineFeature) {
+                            const b = boundsFromGeoJSONFeature(outlineFeature);
+                            if (b && b.isValid()) extentBounds = b;
+                        }
+                        features.forEach((f) => {
+                            const b = boundsFromGeoJSONFeature(f);
+                            if (b && b.isValid()) extentBounds = extentBounds ? extentBounds.extend(b) : b;
+                        });
+                        return { outlineFeature, resortMapFeatures: features, extentBounds, resortLat, resortLon };
+                    }
+
+                    let largest, smallest, northern, southern, equator, mostTrails;
+                    let maxArea, minTrails, maxLat, minLat, minDist, maxTrails;
+                    let topCountry = '', topCount = 0;
+
+                    function applyFacts(filteredDownhill) {
+                        downhill = filteredDownhill;
+                        byCountry = {};
+                        downhill.forEach((r) => { const c = getCountry(r); byCountry[c] = (byCountry[c] || 0) + 1; });
+                        if (downhill.length === 0) {
+                            setFact('fact-largest-name', 'fact-largest-desc', '—', 'No resorts found for selected country.');
+                            setFact('fact-smallest-name', 'fact-smallest-desc', '—', '');
+                            setFact('fact-northern-name', 'fact-northern-desc', '—', '');
+                            setFact('fact-southern-name', 'fact-southern-desc', '—', '');
+                            setFact('fact-equator-name', 'fact-equator-desc', '—', '');
+                            setFact('fact-most-trails-name', 'fact-most-trails-desc', '—', '');
+                            setFact(null, 'fact-country-desc', null, '');
+                            document.getElementById('facts-summary').innerHTML = '<div class="tw-text-center tw-text-gray-600">No resorts for selected country.</div>';
+                            document.getElementById('scatter-trails-area').innerHTML = '';
+                            if (worldMapInstance) { worldMapInstance.remove(); worldMapInstance = null; }
+                            const mw = document.getElementById('map-world');
+                            mw.innerHTML = ''; mw.classList.add('placeholder'); mw.textContent = '—';
+                            ['map-largest', 'map-smallest', 'map-northern', 'map-southern', 'map-equator', 'map-most-trails'].forEach((id) => {
+                                if (factMapInstances[id]) { factMapInstances[id].remove(); factMapInstances[id] = null; }
+                                const el = document.getElementById(id);
+                                if (el) { el.innerHTML = ''; el.classList.add('placeholder'); el.textContent = '—'; }
+                            });
+                            return;
+                        }
+                        largest = downhill[0];
+                        maxArea = numVal(largest, AREA_KEYS) ?? 0;
+                        downhill.forEach((r) => { const a = numVal(r, AREA_KEYS); if (a != null && a > maxArea) { maxArea = a; largest = r; } });
+                        smallest = null;
+                        minTrails = Infinity;
+                        downhill.forEach((r) => { const t = numVal(r, TRAILS_KEYS); if (t != null && t >= 1 && t < minTrails) { minTrails = t; smallest = r; } });
+                        if (!smallest) { let minArea = Infinity; downhill.forEach((r) => { const a = numVal(r, AREA_KEYS); if (a != null && a > 0 && a < minArea) { minArea = a; smallest = r; } }); }
+                        smallest = smallest || downhill[0];
+                        northern = downhill[0];
+                        maxLat = getLat(northern) ?? -90;
+                        downhill.forEach((r) => { const lat = getLat(r); if (lat != null && lat > maxLat) { maxLat = lat; northern = r; } });
+                        southern = downhill[0];
+                        minLat = getLat(southern) ?? 90;
+                        downhill.forEach((r) => { const lat = getLat(r); if (lat != null && lat < minLat) { minLat = lat; southern = r; } });
+                        equator = downhill[0];
+                        minDist = 90;
+                        downhill.forEach((r) => { const lat = getLat(r); if (lat != null && Math.abs(lat) < minDist) { minDist = Math.abs(lat); equator = r; } });
+                        mostTrails = downhill[0];
+                        maxTrails = numVal(mostTrails, TRAILS_KEYS) ?? 0;
+                        downhill.forEach((r) => { const t = numVal(r, TRAILS_KEYS); if (t != null && t > maxTrails) { maxTrails = t; mostTrails = r; } });
+                        topCountry = '';
+                        topCount = 0;
+                        Object.entries(byCountry).forEach(([c, n]) => { if (n > topCount) { topCount = n; topCountry = c; } });
+                        setFact('fact-largest-name', 'fact-largest-desc', getName(largest), maxArea.toLocaleString() + ' acres of skiable terrain. ' + getCountry(largest) + '.');
+                        setFact('fact-smallest-name', 'fact-smallest-desc', getName(smallest), (minTrails < Infinity ? minTrails + ' trail(s)' : (numVal(smallest, AREA_KEYS) || 0).toLocaleString() + ' acres') + '. ' + getCountry(smallest) + '.');
+                        setFact('fact-northern-name', 'fact-northern-desc', getName(northern), maxLat.toFixed(1) + '\u00B0 latitude. ' + getCountry(northern) + '.');
+                        setFact('fact-southern-name', 'fact-southern-desc', getName(southern), minLat.toFixed(1) + '\u00B0 latitude. ' + getCountry(southern) + '.');
+                        setFact('fact-equator-name', 'fact-equator-desc', getName(equator), Math.abs(getLat(equator)).toFixed(1) + '\u00B0 from the equator. ' + getCountry(equator) + '.');
+                        setFact('fact-most-trails-name', 'fact-most-trails-desc', getName(mostTrails), maxTrails.toLocaleString() + ' trails. ' + getCountry(mostTrails) + '.');
+                        setFact(null, 'fact-country-desc', null, topCountry + ' leads with ' + topCount.toLocaleString() + ' downhill ski resorts.');
+                        scatterData = downhill.map((r) => ({
+                            trails: numVal(r, TRAILS_KEYS),
+                            area: numVal(r, AREA_KEYS),
+                            name: getName(r),
+                            country: getCountry(r)
+                        })).filter((d) => d.trails != null && d.trails > 0 && d.area != null && d.area > 0);
+                        if (typeof d3 !== 'undefined') initScatterPlot();
+                        initWorldMap();
+                        const sumEl = document.getElementById('facts-summary');
+                        if (sumEl) sumEl.innerHTML = '<div class="tw-flex tw-max-w-[260px] tw-flex-col tw-place-items-center tw-gap-2 tw-text-center"><span class="tw-text-3xl tw-font-bold" style="color:#0d9488">' + downhill.length.toLocaleString() + '</span><span class="tw-text-gray-700">downhill resorts</span></div><div class="tw-flex tw-max-w-[260px] tw-flex-col tw-place-items-center tw-gap-2 tw-text-center"><span class="tw-text-3xl tw-font-bold" style="color:#BDB8FF">' + Object.keys(byCountry).length + '</span><span class="tw-text-gray-700">countries</span></div><div class="tw-flex tw-max-w-[260px] tw-flex-col tw-place-items-center tw-gap-2 tw-text-center"><span class="tw-text-3xl tw-font-bold" style="color:#0d9488">' + topCountry + '</span><span class="tw-text-gray-700">most resorts (' + topCount.toLocaleString() + ')</span></div>';
+                        if (outlineFeatures && liftFeatures && pisteFeatures) {
+                            initFactMap('map-largest', largest, outlineFeatures, liftFeatures, pisteFeatures);
+                            initFactMap('map-smallest', smallest, outlineFeatures, liftFeatures, pisteFeatures);
+                            initFactMap('map-northern', northern, outlineFeatures, liftFeatures, pisteFeatures);
+                            initFactMap('map-southern', southern, outlineFeatures, liftFeatures, pisteFeatures);
+                            initFactMap('map-equator', equator, outlineFeatures, liftFeatures, pisteFeatures);
+                            initFactMap('map-most-trails', mostTrails, outlineFeatures, liftFeatures, pisteFeatures);
+                        }
+                    }
+                    let scatterData = downhill.map((r) => ({
+                        trails: numVal(r, TRAILS_KEYS),
+                        area: numVal(r, AREA_KEYS),
+                        name: getName(r),
+                        country: getCountry(r)
+                    })).filter((d) => d.trails != null && d.trails > 0 && d.area != null && d.area > 0);
+
+                    const factMapInstances = {};
+                    function initFactMap(containerId, row, outlineFeatures, liftFeatures, pisteFeatures) {
+                        const mapData = findResortMapData(row, outlineFeatures, liftFeatures, pisteFeatures);
+                        const el = document.getElementById(containerId);
+                        if (!el || typeof L === 'undefined') return;
+                        const lat = mapData.resortLat ?? getLat(row);
+                        const lon = mapData.resortLon ?? getLon(row);
+                        if (lat == null || lon == null) return;
+                        if (factMapInstances[containerId]) {
+                            factMapInstances[containerId].remove();
+                            factMapInstances[containerId] = null;
+                        }
+                        el.classList.remove('placeholder');
+                        el.innerHTML = '';
+                        const m = L.map(containerId, { center: [lat, lon], zoom: 11, zoomControl: false, scrollWheelZoom: false, dragging: false });
+                        factMapInstances[containerId] = m;
+                        L.control.zoom({ position: 'bottomright' }).addTo(m);
+                        L.tileLayer('https://api.maptiler.com/maps/winter-v4/256/{z}/{x}/{y}.png?key=' + MAPTILER_KEY, {
+                            attribution: '\u00A9 MapTiler \u00A9 OSM', minZoom: 3, maxZoom: 18
+                        }).addTo(m);
+                        if (mapData.outlineFeature) {
+                            L.geoJSON(mapData.outlineFeature, { style: { color: '#000', weight: 2, fill: false, dashArray: '3, 6' } }).addTo(m);
+                        }
+                        mapData.resortMapFeatures.forEach((f) => {
+                            if (isLift(f.properties)) {
+                                L.geoJSON(f, { style: { color: '#f87171', weight: 2, opacity: 0.9 } }).addTo(m);
+                            } else {
+                                const d = getPisteDifficulty(f.properties);
+                                let color = '#64748b';
+                                if (d === 'easy' || d === 'novice') color = '#22c55e';
+                                else if (d === 'intermediate' || d === 'medium') color = '#2563eb';
+                                else if (d === 'advanced' || d === 'hard') color = '#1a1a1a';
+                                else if (d === 'expert' || d === 'freeride' || d === 'extreme') color = '#991b1b';
+                                L.geoJSON(f, { style: { color, weight: 3, opacity: 0.95 } }).addTo(m);
+                            }
+                        });
+                        if (mapData.extentBounds && mapData.extentBounds.isValid()) {
+                            m.fitBounds(mapData.extentBounds, { padding: [8, 8], maxZoom: 15 });
+                        }
+                    }
+
+                    const COUNTRY_ALIAS = {
+                        'United States of America': ['USA', 'United States', 'US'],
+                        'United States': ['USA', 'United States of America', 'US'],
+                        'USA': ['United States of America', 'United States', 'US'],
+                        'Russia': ['Russian Federation'],
+                        'Russian Federation': ['Russia'],
+                        'United Kingdom': ['UK', 'Great Britain'],
+                        'UK': ['United Kingdom', 'Great Britain'],
+                        'Korea, Republic of': ['South Korea', 'Republic of Korea'],
+                        'South Korea': ['Korea, Republic of'],
+                        'Czech Republic': ['Czechia'],
+                        'Czechia': ['Czech Republic']
+                    };
+                    function getCountryCount(countryName) {
+                        if (byCountry[countryName]) return byCountry[countryName];
+                        const aliases = COUNTRY_ALIAS[countryName];
+                        if (aliases) {
+                            for (const a of aliases) { if (byCountry[a]) return byCountry[a]; }
+                        }
+                        for (const [k, v] of Object.entries(byCountry)) {
+                            if (k === countryName) return v;
+                            const al = COUNTRY_ALIAS[k];
+                            if (al && al.includes(countryName)) return v;
+                        }
+                        return 0;
+                    }
+                    function getPolygons(feature) {
+                        const geom = feature.geometry;
+                        if (!geom || !geom.coordinates) return [];
+                        if (geom.type === 'Polygon') return [geom.coordinates[0]];
+                        if (geom.type === 'MultiPolygon') return geom.coordinates.map((p) => p[0]);
+                        return [];
+                    }
+                    function ringArea(ring) {
+                        if (!ring || ring.length < 3) return 0;
+                        let minLon = Infinity, maxLon = -Infinity, minLat = Infinity, maxLat = -Infinity;
+                        ring.forEach((p) => {
+                            const lon = p[0], lat = p[1];
+                            if (lon < minLon) minLon = lon;
+                            if (lon > maxLon) maxLon = lon;
+                            if (lat < minLat) minLat = lat;
+                            if (lat > maxLat) maxLat = lat;
+                        });
+                        return (maxLon - minLon) * (maxLat - minLat);
+                    }
+                    function centroidFromRing(ring) {
+                        if (!ring || ring.length === 0) return null;
+                        let xs = 0, ys = 0, n = 0;
+                        ring.forEach((p) => {
+                            if (typeof p[0] === 'number') { xs += p[0]; ys += p[1]; n++; }
+                        });
+                        return n ? [ys / n, xs / n] : null;
+                    }
+                    function largestPolygonCenter(feature) {
+                        const polygons = getPolygons(feature);
+                        if (polygons.length === 0) return null;
+                        let best = polygons[0];
+                        let bestArea = ringArea(best);
+                        for (let i = 1; i < polygons.length; i++) {
+                            const a = ringArea(polygons[i]);
+                            if (a > bestArea) { bestArea = a; best = polygons[i]; }
+                        }
+                        return centroidFromRing(best);
+                    }
+                    function polygonPixelSize(map, ring) {
+                        if (!ring || ring.length < 2) return { w: 0, h: 0 };
+                        let minLon = Infinity, maxLon = -Infinity, minLat = Infinity, maxLat = -Infinity;
+                        ring.forEach((p) => {
+                            const lon = p[0], lat = p[1];
+                            if (lon < minLon) minLon = lon;
+                            if (lon > maxLon) maxLon = lon;
+                            if (lat < minLat) minLat = lat;
+                            if (lat > maxLat) maxLat = lat;
+                        });
+                        const sw = map.latLngToLayerPoint(L.latLng(minLat, minLon));
+                        const ne = map.latLngToLayerPoint(L.latLng(maxLat, maxLon));
+                        return { w: Math.abs(ne.x - sw.x), h: Math.abs(ne.y - sw.y) };
+                    }
+                    let worldMapInstance = null;
+                    async function initWorldMap() {
+                        const el = document.getElementById('map-world');
+                        if (!el || typeof L === 'undefined') return;
+                        try {
+                            if (worldMapInstance) { worldMapInstance.remove(); worldMapInstance = null; }
+                            el.classList.add('placeholder', 'loading');
+                            el.innerHTML = '<div class="tw-flex tw-flex-col tw-place-items-center tw-gap-3 tw-text-gray-600"><div class="loading-spinner"></div><span>Loading world map…</span></div>';
+                            const resp = await fetch('https://cdn.jsdelivr.net/gh/nvkelso/natural-earth-vector@master/geojson/ne_110m_admin_0_countries.geojson');
+                            const worldGeo = await resp.json();
+                            el.classList.remove('placeholder', 'loading');
+                            el.innerHTML = '';
+                            const m = L.map('map-world', { center: [30, 0], zoom: 2, zoomControl: false, scrollWheelZoom: true, dragging: true });
+                            worldMapInstance = m;
+                            L.control.zoom({ position: 'bottomright' }).addTo(m);
+                            L.tileLayer('https://api.maptiler.com/maps/winter-v4/256/{z}/{x}/{y}.png?key=' + MAPTILER_KEY, {
+                                attribution: '\u00A9 MapTiler \u00A9 OSM', minZoom: 2, maxZoom: 18
+                            }).addTo(m);
+                            const mapTooltip = document.createElement('div');
+                            mapTooltip.className = 'map-tooltip';
+                            mapTooltip.style.display = 'none';
+                            document.body.appendChild(mapTooltip);
+                            const showMapTooltip = (admin, count, e) => {
+                                mapTooltip.textContent = admin + ': ' + count.toLocaleString() + ' ski resorts';
+                                mapTooltip.style.display = 'block';
+                                mapTooltip.style.left = (e.originalEvent.clientX + 12) + 'px';
+                                mapTooltip.style.top = (e.originalEvent.clientY + 12) + 'px';
+                            };
+                            const moveMapTooltip = (e) => {
+                                mapTooltip.style.left = (e.originalEvent.clientX + 12) + 'px';
+                                mapTooltip.style.top = (e.originalEvent.clientY + 12) + 'px';
+                            };
+                            const hideMapTooltip = () => { mapTooltip.style.display = 'none'; };
+                            const geoLayer = L.geoJSON(worldGeo, {
+                                style: { color: '#333', weight: 1, fillColor: '#e5e7eb', fillOpacity: 0.6 },
+                                onEachFeature: (feature, layer) => {
+                                    const admin = feature.properties.ADMIN || feature.properties.NAME || feature.properties.NAME_LONG || feature.properties.SOVEREIGNT || '';
+                                    const count = getCountryCount(admin);
+                                    if (count > 0) {
+                                        layer.on('mouseover', (e) => showMapTooltip(admin, count, e));
+                                        layer.on('mousemove', moveMapTooltip);
+                                        layer.on('mouseout', hideMapTooltip);
+                                        const polygons = getPolygons(feature);
+                                        if (polygons.length === 0) return;
+                                        let bestRing = polygons[0];
+                                        let bestArea = ringArea(bestRing);
+                                        for (let i = 1; i < polygons.length; i++) {
+                                            const a = ringArea(polygons[i]);
+                                            if (a > bestArea) { bestArea = a; bestRing = polygons[i]; }
+                                        }
+                                        const c = centroidFromRing(bestRing);
+                                        if (c) {
+                                            const px = polygonPixelSize(m, bestRing);
+                                            const minDim = Math.min(px.w, px.h);
+                                            const fontSize = Math.max(14, Math.min(72, minDim * 0.35));
+                                            const lbl = L.divIcon({
+                                                className: 'world-country-label',
+                                                html: '<span style="font-weight:800;color:#0a0a0a;font-size:' + Math.round(fontSize) + 'px;text-shadow:0 0 2px #fff,0 0 4px #fff;line-height:1;white-space:nowrap">' + count.toLocaleString() + '</span>',
+                                                iconSize: [Math.max(40, px.w), Math.max(24, px.h)],
+                                                iconAnchor: [Math.max(40, px.w) / 2, Math.max(24, px.h) / 2]
+                                            });
+                                            L.marker([c[0], c[1]], { icon: lbl }).addTo(m);
+                                        }
+                                    }
+                                }
+                            }).addTo(m);
+                        } catch (e) {
+                            el.textContent = 'Could not load world map.';
+                        }
+                    }
+                    initWorldMap();
+
+                    function initScatterPlot() {
+                        const el = document.getElementById('scatter-trails-area');
+                        if (!el || !scatterData.length || typeof d3 === 'undefined') return;
+                        const margin = { top: 24, right: 100, bottom: 48, left: 56 };
+                        const w = Math.min(640, el.clientWidth || 640) - margin.left - margin.right;
+                        const h = 360 - margin.top - margin.bottom;
+                        el.innerHTML = '';
+                        const svg = d3.select('#scatter-trails-area').append('svg').attr('width', w + margin.left + margin.right).attr('height', h + margin.top + margin.bottom);
+                        const g = svg.append('g').attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+                        const x = d3.scaleLinear().domain([0, d3.max(scatterData, (d) => d.trails) * 1.02]).range([0, w]);
+                        const y = d3.scaleLinear().domain([0, d3.max(scatterData, (d) => d.area) * 1.02]).range([h, 0]);
+                        const trailsSorted = [...scatterData].sort((a, b) => b.trails - a.trails);
+                        const areaSorted = [...scatterData].sort((a, b) => b.area - a.area);
+                        const topTrails = new Set(trailsSorted.slice(0, 10).map((d) => d.name));
+                        const topArea = new Set(areaSorted.slice(0, 10).map((d) => d.name));
+                        const outliers = [...new Set([...topTrails, ...topArea])];
+                        const isOutlier = (d) => outliers.includes(d.name);
+                        const tooltip = document.createElement('div');
+                        tooltip.className = 'scatter-tooltip';
+                        tooltip.style.display = 'none';
+                        document.body.appendChild(tooltip);
+                        const showTooltip = (d) => {
+                            tooltip.innerHTML = '<strong>' + d.name + '</strong><br/>' + d.country + '<br/>' + d.trails.toLocaleString() + ' trails · ' + d.area.toLocaleString() + ' acres';
+                            tooltip.style.display = 'block';
+                        };
+                        const moveTooltip = (e) => {
+                            tooltip.style.left = (e.clientX + 12) + 'px';
+                            tooltip.style.top = (e.clientY + 12) + 'px';
+                        };
+                        const hideTooltip = () => { tooltip.style.display = 'none'; };
+                        g.selectAll('circle').data(scatterData).enter().append('circle')
+                            .attr('cx', (d) => x(d.trails)).attr('cy', (d) => y(d.area))
+                            .attr('r', (d) => isOutlier(d) ? 5 : 3)
+                            .attr('fill', (d) => isOutlier(d) ? '#0d9488' : '#94a3b8')
+                            .attr('opacity', (d) => isOutlier(d) ? 0.9 : 0.5)
+                            .style('cursor', 'pointer')
+                            .on('mouseover', function(event, d) { if (d) showTooltip(d); moveTooltip(event); })
+                            .on('mousemove', moveTooltip)
+                            .on('mouseout', hideTooltip);
+                        const maxTrails = d3.max(scatterData, (d) => d.trails);
+                        const maxArea = d3.max(scatterData, (d) => d.area);
+                        const outlierList = scatterData.filter(isOutlier).sort((a, b) => {
+                            const score = (d) => (d.trails / maxTrails) + (d.area / maxArea);
+                            return score(b) - score(a);
+                        });
+                        const labelRects = [];
+                        const labelsToShow = outlierList.filter((d) => {
+                            const lx = x(d.trails) + 6;
+                            const ly = y(d.area) + 4;
+                            const estW = Math.min(d.name.length * 6.5, 180);
+                            const estH = 14;
+                            const pad = 6;
+                            const rect = { left: lx - pad, top: ly - estH, right: lx + estW + pad, bottom: ly + pad };
+                            const overlaps = labelRects.some((r) =>
+                                rect.left < r.right && rect.right > r.left && rect.top < r.bottom && rect.bottom > r.top
+                            );
+                            if (!overlaps) {
+                                labelRects.push(rect);
+                                return true;
+                            }
+                            return false;
+                        });
+                        g.selectAll('.outlier-label').data(labelsToShow).enter().append('text')
+                            .attr('class', 'outlier-label')
+                            .style('pointer-events', 'none')
+                            .attr('x', (d) => x(d.trails) + 6).attr('y', (d) => y(d.area) + 4)
+                            .attr('fill', '#1e293b').style('font-size', '11px').style('font-weight', '600')
+                            .text((d) => d.name);
+                        g.append('g').attr('transform', 'translate(0,' + h + ')').call(d3.axisBottom(x).ticks(8));
+                        g.append('g').call(d3.axisLeft(y).ticks(8));
+                        g.append('text').attr('x', w / 2).attr('y', h + 36).attr('text-anchor', 'middle').attr('fill', '#374151').style('font-size', '13px').text('Number of trails');
+                        g.append('text').attr('transform', 'rotate(-90)').attr('x', -h / 2).attr('y', -44).attr('text-anchor', 'middle').attr('fill', '#374151').style('font-size', '13px').text('Acres');
+                    }
+                    applyFacts(downhillAll);
+
+                    const [dataOutlines, dataLifts, dataPistes] = await Promise.all([outlinesPromise, liftsPromise, pistesPromise]);
+                    outlineFeatures = (dataOutlines || [])
+                        .filter((row) => row.geometry && (row.geometry.type === 'Polygon' || row.geometry.type === 'MultiPolygon'))
+                        .map((row) => ({ type: 'Feature', geometry: row.geometry, properties: Object.fromEntries(Object.entries(row).filter(([k]) => k !== 'geometry')) }));
+                    liftFeatures = (dataLifts || []).filter((r) => r.geometry && (r.geometry.type === 'LineString' || r.geometry.type === 'MultiLineString')).map(toFeature).filter(Boolean);
+                    pisteFeatures = (dataPistes || []).filter((r) => r.geometry && (r.geometry.type === 'LineString' || r.geometry.type === 'MultiLineString')).map(toFeature).filter(Boolean);
+
+                    initFactMap('map-largest', largest, outlineFeatures, liftFeatures, pisteFeatures);
+                    initFactMap('map-smallest', smallest, outlineFeatures, liftFeatures, pisteFeatures);
+                    initFactMap('map-northern', northern, outlineFeatures, liftFeatures, pisteFeatures);
+                    initFactMap('map-southern', southern, outlineFeatures, liftFeatures, pisteFeatures);
+                    initFactMap('map-equator', equator, outlineFeatures, liftFeatures, pisteFeatures);
+                    initFactMap('map-most-trails', mostTrails, outlineFeatures, liftFeatures, pisteFeatures);
+
+                    countrySelect.addEventListener('change', () => {
+                        const val = countrySelect.value;
+                        countrySelect.disabled = true;
+                        const summaryEl = document.getElementById('facts-summary');
+                        const prevSummary = summaryEl ? summaryEl.innerHTML : '';
+                        if (summaryEl) summaryEl.innerHTML = '<div class="tw-flex tw-flex-col tw-place-items-center tw-gap-3 tw-text-gray-600"><div class="loading-spinner"></div><span>Updating…</span></div>';
+                        requestAnimationFrame(() => {
+                            const filtered = val ? downhillAll.filter((r) => getCountry(r) === val) : downhillAll;
+                            applyFacts(filtered);
+                            countrySelect.disabled = false;
+                        });
+                    });
+                } catch (e) {
+                    console.warn('Ski facts: could not load data', e);
+                    document.getElementById('facts-summary').innerHTML = '<div class="tw-text-center tw-text-red-600">Could not load resort data. Check network.</div>';
+                }
+            })();
+        </script>
+    </body>
+</html>
