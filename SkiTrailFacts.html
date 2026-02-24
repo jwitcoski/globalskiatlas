@@ -1,0 +1,687 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-KJGNL3KJL0"></script>
+        <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){ dataLayer.push(arguments); }
+            gtag('js', new Date());
+            gtag('config', 'G-KJGNL3KJL0');
+        </script>
+        <title>Ski Trail Facts – Global Ski Atlas</title>
+        <meta name="description" content="Discover ski trail facts: longest, shortest, most northern, most southern, and named trails from our worldwide dataset." />
+        <link rel="shortcut icon" href="./assets/logo.png?v=2" type="image/x-icon" />
+        <link rel="stylesheet" href="./css/tailwind-build.css" />
+        <link rel="stylesheet" href="css/index.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" integrity="sha512-dPXYcDub/aeb08c63jRq/k6GaKccl256JQy/AnOq7CAnEZ9FzSL9wSbcZkMp4R26vBsMLFYH4kQ67/bbV8XaCQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+        <style>
+            .fact-map { width: 280px; height: 280px; border-radius: 12px; overflow: hidden; }
+            .fact-map.placeholder { background: #e5e7eb; display: flex; align-items: center; justify-content: center; color: #6b7280; font-size: 14px; }
+            .loading-spinner { width: 28px; height: 28px; border: 3px solid #e5e7eb; border-top-color: #0d9488; border-radius: 50%; animation: spin 0.8s linear infinite; }
+            @keyframes spin { to { transform: rotate(360deg); } }
+            .fact-map.placeholder.loading { flex-direction: column; gap: 8px; }
+            .diff-badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; color: #fff; text-transform: capitalize; }
+            .diff-easy, .diff-novice, .diff-beginner { background: #22c55e; }
+            .diff-intermediate, .diff-medium { background: #2563eb; }
+            .diff-advanced, .diff-hard { background: #1a1a1a; }
+            .diff-expert, .diff-freeride, .diff-extreme { background: #991b1b; }
+            .diff-other, .diff-unknown { background: #64748b; }
+            .trail-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+            .trail-table thead th { background: #f1f5f9; padding: 10px 12px; text-align: left; font-weight: 700; color: #374151; border-bottom: 2px solid #e5e7eb; cursor: pointer; user-select: none; white-space: nowrap; }
+            .trail-table thead th:hover { background: #e2e8f0; }
+            .trail-table td { padding: 9px 12px; border-bottom: 1px solid #f1f5f9; color: #374151; }
+            .trail-table tr:hover td { background: #f8fafc; }
+            .sort-icon { margin-left: 4px; font-style: normal; opacity: 0.4; }
+            .sort-icon.active { opacity: 1; color: #0d9488; }
+            .table-pagination { display: flex; align-items: center; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+            .page-btn { padding: 5px 12px; border-radius: 8px; border: 1px solid #e5e7eb; background: #fff; cursor: pointer; font-size: 13px; color: #374151; }
+            .page-btn:hover { background: #f1f5f9; }
+            .page-btn.active { background: #0d9488; color: #fff; border-color: #0d9488; }
+            .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        </style>
+    </head>
+    <body class="tw-flex tw-min-h-[100vh] tw-flex-col tw-bg-[#fff]">
+        <header class="tw-absolute tw-top-0 tw-z-[1001] tw-flex tw-h-[60px] tw-w-full tw-bg-white tw-shadow-sm tw-border-b tw-border-gray-200 tw-px-[5%] max-lg:tw-px-4 lg:tw-justify-around">
+            <a class="tw-h-[50px] tw-w-[50px] tw-p-[4px]" href="index.html" aria-label="Global Ski Atlas home">
+                <img src="./assets/logo.png?v=2" alt="Global Ski Atlas" class="tw-object tw-h-full tw-w-full" />
+            </a>
+            <div class="collapsible-header animated-collapse max-lg:tw-shadow-md" id="collapsed-header-items">
+                <div class="tw-flex tw-h-full tw-w-max tw-gap-5 tw-text-base tw-text-black max-lg:tw-mt-[30px] max-lg:tw-flex-col max-lg:tw-place-items-end max-lg:tw-gap-5 lg:tw-mx-auto lg:tw-place-items-center">
+                    <a class="header-links" href="coffee-table-book.html">Coffee Table Book</a>
+                    <a class="header-links" href="mainmap.html">Online Atlas</a>
+                    <a class="header-links" href="resort-comparison.html">Compare Resorts</a>
+                    <a class="header-links" href="SkiResortFacts.html">Resort Facts</a>
+                    <a class="header-links tw-font-semibold" href="SkiTrailFacts.html">Trail Facts</a>
+                    <a class="header-links" href="About.html">About</a>
+                    <a class="header-links" href="skiing-ai.html">AI Assistant</a>
+                </div>
+                <div class="tw-mx-4 tw-flex tw-place-items-center tw-gap-[20px] tw-text-base max-md:tw-w-full max-md:tw-flex-col max-md:tw-place-content-center">
+                    <a href="" aria-label="signup" class="tw-flex tw-h-[40px] tw-place-items-center tw-gap-2 tw-rounded-full tw-bg-black tw-p-1 tw-pl-4 tw-text-white">
+                        <span>Download App Coming Soon</span>
+                        <div class="tw-flex tw-h-[30px] tw-w-[30px] tw-place-content-center tw-place-items-center tw-rounded-full tw-bg-primary tw-font-semibold tw-text-black">
+                            <i class="bi bi-download"></i>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            <button class="bi bi-list tw-absolute tw-right-3 tw-top-3 tw-z-50 tw-text-3xl tw-text-black lg:tw-hidden" onclick="toggleHeader()" aria-label="menu" id="collapse-btn"></button>
+        </header>
+
+        <div class="tw-flex-1 tw-min-h-0 tw-overflow-y-auto" style="margin-top: 60px;">
+        <main class="tw-flex-1 tw-flex tw-flex-col">
+
+        <!-- Hero -->
+        <section class="tw-relative tw-flex tw-min-h-[40vh] tw-w-full tw-flex-col tw-place-content-center tw-place-items-center tw-overflow-hidden tw-py-12 tw-px-6">
+            <h1 class="tw-text-4xl tw-font-bold tw-text-gray-900 max-md:tw-text-2xl tw-text-center">Ski Trail Facts</h1>
+            <p class="tw-mt-4 tw-max-w-2xl tw-text-center tw-text-xl tw-text-gray-600">Records and superlatives from our worldwide ski trail dataset</p>
+            <div class="tw-mt-6 tw-flex tw-flex-wrap tw-place-items-center tw-gap-4">
+                <div class="tw-flex tw-place-items-center tw-gap-3">
+                    <label for="country-filter" class="tw-text-gray-700 tw-font-medium">Filter by country:</label>
+                    <select id="country-filter" disabled class="tw-rounded-lg tw-border tw-border-gray-300 tw-bg-gray-100 tw-px-4 tw-py-2 tw-text-base tw-text-gray-500 focus:tw-outline-none focus:tw-ring-2 focus:tw-ring-teal-500 disabled:tw-cursor-not-allowed disabled:tw-opacity-60">
+                        <option value="">All countries</option>
+                    </select>
+                </div>
+                <div class="tw-flex tw-place-items-center tw-gap-3">
+                    <label for="diff-filter" class="tw-text-gray-700 tw-font-medium">Difficulty:</label>
+                    <select id="diff-filter" disabled class="tw-rounded-lg tw-border tw-border-gray-300 tw-bg-gray-100 tw-px-4 tw-py-2 tw-text-base tw-text-gray-500 focus:tw-outline-none focus:tw-ring-2 focus:tw-ring-teal-500 disabled:tw-cursor-not-allowed disabled:tw-opacity-60">
+                        <option value="">All difficulties</option>
+                    </select>
+                </div>
+            </div>
+        </section>
+
+        <!-- Summary -->
+        <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-place-content-center tw-place-items-center tw-overflow-hidden tw-p-6">
+            <div class="reveal-up tw-flex tw-min-h-[140px] tw-w-full tw-max-w-[80%] tw-place-items-center tw-justify-around tw-gap-8 tw-rounded-xl tw-bg-[#e7e6e685] tw-p-4 max-lg:tw-max-w-full max-md:tw-flex-col" id="facts-summary">
+                <div class="tw-flex tw-flex-col tw-place-items-center tw-gap-3 tw-text-gray-600">
+                    <div class="loading-spinner"></div>
+                    <span>Loading trail facts…</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Longest trail -->
+        <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6" id="fact-longest">
+            <div class="reveal-up tw-flex tw-min-h-[60vh] tw-place-content-center tw-place-items-center tw-gap-[10%] max-lg:tw-flex-col max-lg:tw-gap-10">
+                <div class="tw-flex">
+                    <div id="map-longest" class="fact-map placeholder loading tw-flex-shrink-0"><div class="loading-spinner"></div><span>Loading…</span></div>
+                </div>
+                <div class="tw-mt-6 tw-flex tw-max-w-[450px] tw-flex-col tw-gap-4">
+                    <h3 class="tw-text-4xl tw-font-medium">Longest Trail</h3>
+                    <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700" id="fact-longest-name">—</p>
+                    <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600" id="fact-longest-desc">—</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Shortest trail -->
+        <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6" id="fact-shortest">
+            <div class="reveal-up tw-flex tw-min-h-[60vh] tw-place-content-center tw-place-items-center tw-gap-[10%] max-lg:tw-flex-col max-lg:tw-gap-10">
+                <div class="tw-mt-6 tw-flex tw-max-w-[450px] tw-flex-col tw-gap-4">
+                    <h3 class="tw-text-4xl tw-font-medium">Shortest Trail</h3>
+                    <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700" id="fact-shortest-name">—</p>
+                    <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600" id="fact-shortest-desc">—</p>
+                </div>
+                <div class="tw-flex">
+                    <div id="map-shortest" class="fact-map placeholder loading tw-flex-shrink-0"><div class="loading-spinner"></div><span>Loading…</span></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Most Northern trail -->
+        <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6" id="fact-northern">
+            <div class="reveal-up tw-flex tw-min-h-[60vh] tw-place-content-center tw-place-items-center tw-gap-[10%] max-lg:tw-flex-col max-lg:tw-gap-10">
+                <div class="tw-flex">
+                    <div id="map-northern" class="fact-map placeholder loading tw-flex-shrink-0"><div class="loading-spinner"></div><span>Loading…</span></div>
+                </div>
+                <div class="tw-mt-6 tw-flex tw-max-w-[450px] tw-flex-col tw-gap-4">
+                    <h3 class="tw-text-4xl tw-font-medium">Most Northern Trail</h3>
+                    <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700" id="fact-northern-name">—</p>
+                    <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600" id="fact-northern-desc">—</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Most Southern trail -->
+        <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6" id="fact-southern">
+            <div class="reveal-up tw-flex tw-min-h-[60vh] tw-place-content-center tw-place-items-center tw-gap-[10%] max-lg:tw-flex-col max-lg:tw-gap-10">
+                <div class="tw-mt-6 tw-flex tw-max-w-[450px] tw-flex-col tw-gap-4">
+                    <h3 class="tw-text-4xl tw-font-medium">Most Southern Trail</h3>
+                    <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700" id="fact-southern-name">—</p>
+                    <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600" id="fact-southern-desc">—</p>
+                </div>
+                <div class="tw-flex">
+                    <div id="map-southern" class="fact-map placeholder loading tw-flex-shrink-0"><div class="loading-spinner"></div><span>Loading…</span></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Named trails table -->
+        <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6 tw-pb-16" id="fact-named">
+            <div class="reveal-up tw-flex tw-w-full tw-flex-col tw-place-content-center tw-place-items-center tw-gap-8">
+                <div class="tw-flex tw-w-full tw-max-w-[960px] tw-flex-col tw-gap-2 tw-text-center">
+                    <h3 class="tw-text-4xl tw-font-medium">Named Trails</h3>
+                    <p class="tw-text-xl tw-text-gray-600">Trails with official names — including resort and country. Click a column header to sort.</p>
+                </div>
+                <div class="tw-w-full tw-max-w-[960px] tw-flex tw-gap-3 tw-flex-wrap tw-place-items-center">
+                    <input type="search" id="trail-search" placeholder="Search trail or resort name…" class="tw-flex-1 tw-min-w-[200px] tw-rounded-lg tw-border tw-border-gray-300 tw-px-4 tw-py-2 tw-text-base focus:tw-outline-none focus:tw-ring-2 focus:tw-ring-teal-500" />
+                    <span id="named-count" class="tw-text-gray-500 tw-text-sm"></span>
+                </div>
+                <div id="named-table-wrap" class="tw-w-full tw-max-w-[960px] tw-overflow-x-auto tw-rounded-xl tw-border tw-border-gray-200 tw-bg-white tw-shadow-sm">
+                    <div class="tw-flex tw-flex-col tw-place-items-center tw-gap-3 tw-text-gray-600 tw-p-8">
+                        <div class="loading-spinner"></div>
+                        <span>Loading named trails…</span>
+                    </div>
+                </div>
+                <div id="named-pagination" class="table-pagination tw-w-full tw-max-w-[960px]"></div>
+            </div>
+        </section>
+
+        </main>
+        </div>
+
+        <footer class="tw-mt-auto tw-flex tw-w-full tw-place-content-around tw-gap-3 tw-border-t tw-border-gray-200 tw-bg-gray-50 tw-py-6 tw-px-[10%] tw-text-black max-md:tw-flex-col">
+            <div class="tw-flex tw-h-full tw-w-[250px] tw-flex-col tw-place-items-center tw-gap-6 max-md:tw-w-full">
+                <img src="./assets/logo.png?v=2" alt="Global Ski Atlas" class="tw-max-w-[120px]" />
+                <div>Global Ski Atlas</div>
+            </div>
+            <div class="tw-flex tw-h-full tw-w-[250px] tw-flex-col tw-gap-4">
+                <h2 class="tw-text-3xl max-md:tw-text-xl">Explore</h2>
+                <div class="tw-flex tw-flex-col tw-gap-3 max-md:tw-text-sm">
+                    <a href="coffee-table-book.html" class="footer-link">Coffee Table Book</a>
+                    <a href="mainmap.html" class="footer-link">Online Atlas</a>
+                    <a href="resort-comparison.html" class="footer-link">Compare Resorts</a>
+                    <a href="SkiResortFacts.html" class="footer-link">Resort Facts</a>
+                    <a href="SkiTrailFacts.html" class="footer-link">Trail Facts</a>
+                    <a href="skiing-ai.html" class="footer-link">AI Assistant</a>
+                </div>
+            </div>
+            <div class="tw-flex tw-h-full tw-w-[250px] tw-flex-col tw-gap-4">
+                <h2 class="tw-text-3xl max-md:tw-text-xl">Resources</h2>
+                <div class="tw-flex tw-flex-col tw-gap-3 max-md:tw-text-sm">
+                    <a href="About.html" class="footer-link">About</a>
+                    <a href="DownloadData.html" class="footer-link">Data Downloads</a>
+                </div>
+            </div>
+        </footer>
+
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+        <script>
+            function toggleHeader() {
+                var el = document.getElementById('collapsed-header-items');
+                if (el) el.classList.toggle('animated-collapse');
+            }
+        </script>
+        <script type="module">
+            (async function () {
+                const PISTES_URL = 'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/pistes.parquet';
+                const MAPTILER_KEY = '0P06ORgY8WvmMOnPr0p2';
+
+                const NAME_KEYS = ['name', 'Name', 'trail_name', 'piste_name'];
+                const RESORT_KEYS = ['resort_name', 'area_name', 'resort', 'ski_area_name', 'skiarea_name'];
+                const COUNTRY_KEYS = ['country', 'Country', 'country_name', 'addr:country'];
+                const DIFF_KEYS = ['piste:difficulty', 'piste_difficulty', 'difficulty'];
+
+                function getProp(obj, keys) {
+                    if (!obj) return undefined;
+                    for (const k of keys) {
+                        if (Object.prototype.hasOwnProperty.call(obj, k)) return obj[k];
+                    }
+                    return undefined;
+                }
+
+                function getFromOtherTags(props, tagKey) {
+                    if (!props || typeof props.other_tags !== 'string') return null;
+                    const m = props.other_tags.match(new RegExp('"' + tagKey + '"=>"([^"]+)"'));
+                    return m ? m[1] : null;
+                }
+
+                function getTrailName(row) {
+                    const v = getProp(row, NAME_KEYS);
+                    if (v && String(v).trim()) return String(v).trim();
+                    return null;
+                }
+                function getResortName(row) {
+                    const v = getProp(row, RESORT_KEYS);
+                    if (v && String(v).trim()) return String(v).trim();
+                    const ot = getFromOtherTags(row, 'resort_name') || getFromOtherTags(row, 'area_name');
+                    if (ot) return ot;
+                    return '—';
+                }
+                function getCountry(row) {
+                    const v = getProp(row, COUNTRY_KEYS);
+                    if (v && String(v).trim()) return String(v).trim();
+                    const ot = getFromOtherTags(row, 'country');
+                    if (ot) return ot;
+                    return '—';
+                }
+                function getDifficulty(row) {
+                    let v = getProp(row, DIFF_KEYS);
+                    if (!v) v = getFromOtherTags(row, 'piste:difficulty');
+                    return v ? String(v).toLowerCase().trim() : '';
+                }
+                function diffLabel(d) {
+                    if (!d) return 'Unknown';
+                    return d.charAt(0).toUpperCase() + d.slice(1);
+                }
+                function diffClass(d) {
+                    if (!d) return 'diff-unknown';
+                    if (['easy','novice','beginner'].includes(d)) return 'diff-easy';
+                    if (['intermediate','medium'].includes(d)) return 'diff-intermediate';
+                    if (['advanced','hard'].includes(d)) return 'diff-advanced';
+                    if (['expert','freeride','extreme'].includes(d)) return 'diff-expert';
+                    return 'diff-other';
+                }
+
+                // Haversine distance between two [lon, lat] points in km
+                function haversine(c1, c2) {
+                    const R = 6371;
+                    const dLat = (c2[1] - c1[1]) * Math.PI / 180;
+                    const dLon = (c2[0] - c1[0]) * Math.PI / 180;
+                    const a = Math.sin(dLat / 2) ** 2 +
+                        Math.cos(c1[1] * Math.PI / 180) * Math.cos(c2[1] * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+                    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+                }
+
+                function lineLength(coords) {
+                    let total = 0;
+                    for (let i = 1; i < coords.length; i++) total += haversine(coords[i - 1], coords[i]);
+                    return total;
+                }
+
+                function trailLength(geom) {
+                    if (!geom || !geom.coordinates) return 0;
+                    if (geom.type === 'LineString') return lineLength(geom.coordinates);
+                    if (geom.type === 'MultiLineString') {
+                        return geom.coordinates.reduce((s, seg) => s + lineLength(seg), 0);
+                    }
+                    return 0;
+                }
+
+                function allCoords(geom) {
+                    if (!geom || !geom.coordinates) return [];
+                    if (geom.type === 'LineString') return geom.coordinates;
+                    if (geom.type === 'MultiLineString') return geom.coordinates.flat();
+                    return [];
+                }
+
+                function trailCentroid(geom) {
+                    const coords = allCoords(geom);
+                    if (!coords.length) return null;
+                    let xs = 0, ys = 0;
+                    coords.forEach((c) => { xs += c[0]; ys += c[1]; });
+                    return [xs / coords.length, ys / coords.length];
+                }
+
+                function trailMaxLat(geom) {
+                    return Math.max(...allCoords(geom).map((c) => c[1]));
+                }
+                function trailMinLat(geom) {
+                    return Math.min(...allCoords(geom).map((c) => c[1]));
+                }
+
+                function formatKm(km) {
+                    if (km >= 1) return km.toFixed(2) + ' km (' + (km * 0.621371).toFixed(2) + ' mi)';
+                    return (km * 1000).toFixed(0) + ' m (' + (km * 3280.84).toFixed(0) + ' ft)';
+                }
+
+                function boundsFromGeom(geom) {
+                    const coords = allCoords(geom);
+                    if (!coords.length) return null;
+                    const lls = coords.map((c) => L.latLng(c[1], c[0]));
+                    return L.latLngBounds(lls);
+                }
+
+                const factMapInstances = {};
+                function initTrailMap(containerId, row) {
+                    const el = document.getElementById(containerId);
+                    if (!el || typeof L === 'undefined') return;
+                    const geom = row.geometry;
+                    if (!geom) return;
+                    const centroid = trailCentroid(geom);
+                    if (!centroid) return;
+                    if (factMapInstances[containerId]) {
+                        factMapInstances[containerId].remove();
+                        factMapInstances[containerId] = null;
+                    }
+                    el.classList.remove('placeholder', 'loading');
+                    el.innerHTML = '';
+                    const m = L.map(containerId, { center: [centroid[1], centroid[0]], zoom: 12, zoomControl: false, scrollWheelZoom: false, dragging: false });
+                    factMapInstances[containerId] = m;
+                    L.control.zoom({ position: 'bottomright' }).addTo(m);
+                    L.tileLayer('https://api.maptiler.com/maps/winter-v4/256/{z}/{x}/{y}.png?key=' + MAPTILER_KEY, {
+                        attribution: '\u00A9 MapTiler \u00A9 OSM', minZoom: 3, maxZoom: 18
+                    }).addTo(m);
+                    const diff = getDifficulty(row);
+                    let color = '#64748b';
+                    if (diff === 'easy' || diff === 'novice' || diff === 'beginner') color = '#22c55e';
+                    else if (diff === 'intermediate' || diff === 'medium') color = '#2563eb';
+                    else if (diff === 'advanced' || diff === 'hard') color = '#1a1a1a';
+                    else if (diff === 'expert' || diff === 'freeride' || diff === 'extreme') color = '#991b1b';
+                    const feature = { type: 'Feature', geometry: geom, properties: {} };
+                    L.geoJSON(feature, { style: { color, weight: 4, opacity: 1 } }).addTo(m);
+                    const bounds = boundsFromGeom(geom);
+                    if (bounds && bounds.isValid()) {
+                        m.fitBounds(bounds, { padding: [20, 20], maxZoom: 15 });
+                    }
+                }
+
+                function setFact(nameId, descId, name, desc) {
+                    const nEl = nameId ? document.getElementById(nameId) : null;
+                    const dEl = descId ? document.getElementById(descId) : null;
+                    if (nEl && name != null) nEl.textContent = name;
+                    if (dEl && desc != null) dEl.textContent = desc;
+                }
+
+                // Named trails table state
+                let namedRows = [];
+                let filteredNamed = [];
+                let sortCol = 'length';
+                let sortDir = -1; // -1 = desc, 1 = asc
+                let currentPage = 1;
+                const PAGE_SIZE = 50;
+
+                function renderTable() {
+                    const wrap = document.getElementById('named-table-wrap');
+                    const pagination = document.getElementById('named-pagination');
+                    if (!filteredNamed.length) {
+                        wrap.innerHTML = '<div class="tw-p-8 tw-text-center tw-text-gray-500">No named trails found for selected filters.</div>';
+                        pagination.innerHTML = '';
+                        document.getElementById('named-count').textContent = '0 trails';
+                        return;
+                    }
+                    const totalPages = Math.ceil(filteredNamed.length / PAGE_SIZE);
+                    currentPage = Math.max(1, Math.min(currentPage, totalPages));
+                    const pageRows = filteredNamed.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
+                    document.getElementById('named-count').textContent = filteredNamed.length.toLocaleString() + ' trails';
+
+                    const colDefs = [
+                        { key: 'name', label: 'Trail Name' },
+                        { key: 'resort', label: 'Resort' },
+                        { key: 'country', label: 'Country' },
+                        { key: 'length', label: 'Length' },
+                        { key: 'difficulty', label: 'Difficulty' }
+                    ];
+
+                    let thead = '<thead><tr>';
+                    colDefs.forEach((col) => {
+                        const isActive = sortCol === col.key;
+                        const icon = isActive ? (sortDir === -1 ? '&#9660;' : '&#9650;') : '&#8597;';
+                        thead += `<th data-col="${col.key}">${col.label} <em class="sort-icon ${isActive ? 'active' : ''}">${icon}</em></th>`;
+                    });
+                    thead += '</tr></thead>';
+
+                    let tbody = '<tbody>';
+                    pageRows.forEach((r) => {
+                        const dClass = diffClass(r.rawDiff);
+                        const dLabel = r.difficulty;
+                        tbody += `<tr>
+                            <td class="tw-font-medium">${escHtml(r.name)}</td>
+                            <td>${escHtml(r.resort)}</td>
+                            <td>${escHtml(r.country)}</td>
+                            <td class="tw-font-mono tw-text-sm">${formatKm(r.length)}</td>
+                            <td><span class="diff-badge ${dClass}">${escHtml(dLabel)}</span></td>
+                        </tr>`;
+                    });
+                    tbody += '</tbody>';
+
+                    wrap.innerHTML = `<table class="trail-table">${thead}${tbody}</table>`;
+
+                    wrap.querySelectorAll('th[data-col]').forEach((th) => {
+                        th.addEventListener('click', () => {
+                            const col = th.getAttribute('data-col');
+                            if (sortCol === col) {
+                                sortDir = -sortDir;
+                            } else {
+                                sortCol = col;
+                                sortDir = col === 'name' || col === 'resort' || col === 'country' || col === 'difficulty' ? 1 : -1;
+                            }
+                            sortNamed();
+                            currentPage = 1;
+                            renderTable();
+                        });
+                    });
+
+                    // Pagination
+                    let paginationHtml = '';
+                    paginationHtml += `<button class="page-btn" ${currentPage === 1 ? 'disabled' : ''} id="pg-prev">&#8249; Prev</button>`;
+                    const range = getPaginationRange(currentPage, totalPages);
+                    range.forEach((p) => {
+                        if (p === '...') {
+                            paginationHtml += '<span class="tw-px-2 tw-text-gray-400">…</span>';
+                        } else {
+                            paginationHtml += `<button class="page-btn ${p === currentPage ? 'active' : ''}" data-pg="${p}">${p}</button>`;
+                        }
+                    });
+                    paginationHtml += `<button class="page-btn" ${currentPage === totalPages ? 'disabled' : ''} id="pg-next">Next &#8250;</button>`;
+                    pagination.innerHTML = paginationHtml;
+
+                    pagination.querySelectorAll('[data-pg]').forEach((btn) => {
+                        btn.addEventListener('click', () => { currentPage = Number(btn.getAttribute('data-pg')); renderTable(); });
+                    });
+                    const prevBtn = document.getElementById('pg-prev');
+                    const nextBtn = document.getElementById('pg-next');
+                    if (prevBtn) prevBtn.addEventListener('click', () => { currentPage--; renderTable(); });
+                    if (nextBtn) nextBtn.addEventListener('click', () => { currentPage++; renderTable(); });
+                }
+
+                function getPaginationRange(current, total) {
+                    if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+                    const pages = [];
+                    if (current <= 4) {
+                        pages.push(1, 2, 3, 4, 5, '...', total);
+                    } else if (current >= total - 3) {
+                        pages.push(1, '...', total - 4, total - 3, total - 2, total - 1, total);
+                    } else {
+                        pages.push(1, '...', current - 1, current, current + 1, '...', total);
+                    }
+                    return pages;
+                }
+
+                function sortNamed() {
+                    filteredNamed.sort((a, b) => {
+                        let va = a[sortCol], vb = b[sortCol];
+                        if (typeof va === 'string') va = va.toLowerCase();
+                        if (typeof vb === 'string') vb = vb.toLowerCase();
+                        if (va < vb) return -sortDir;
+                        if (va > vb) return sortDir;
+                        return 0;
+                    });
+                }
+
+                function applyNamedFilter(search, countryVal, diffVal) {
+                    const q = search.toLowerCase().trim();
+                    filteredNamed = namedRows.filter((r) => {
+                        if (countryVal && r.country !== countryVal) return false;
+                        if (diffVal && r.rawDiff !== diffVal) return false;
+                        if (q && !r.name.toLowerCase().includes(q) && !r.resort.toLowerCase().includes(q)) return false;
+                        return true;
+                    });
+                    sortNamed();
+                    currentPage = 1;
+                    renderTable();
+                }
+
+                function escHtml(str) {
+                    return String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+                }
+
+                // Main data load
+                try {
+                    const { asyncBufferFromUrl, parquetReadObjects } = await import('https://esm.sh/hyparquet@1');
+                    const buf = await asyncBufferFromUrl({ url: PISTES_URL });
+                    const data = await parquetReadObjects({ file: buf });
+
+                    const trails = data.filter((r) => r.geometry && (r.geometry.type === 'LineString' || r.geometry.type === 'MultiLineString'));
+
+                    // Compute lengths
+                    const withLength = trails.map((r) => ({ row: r, length: trailLength(r.geometry) })).filter((x) => x.length > 0.01);
+
+                    // Country / difficulty sets
+                    const countrySet = new Set();
+                    const diffSet = new Set();
+                    withLength.forEach(({ row }) => {
+                        const c = getCountry(row);
+                        if (c && c !== '—') countrySet.add(c);
+                        const d = getDifficulty(row);
+                        if (d) diffSet.add(d);
+                    });
+
+                    // Populate filters
+                    const countrySelect = document.getElementById('country-filter');
+                    const diffSelect = document.getElementById('diff-filter');
+                    [...countrySet].sort().forEach((c) => {
+                        const opt = document.createElement('option');
+                        opt.value = c; opt.textContent = c;
+                        countrySelect.appendChild(opt);
+                    });
+                    [...diffSet].sort().forEach((d) => {
+                        const opt = document.createElement('option');
+                        opt.value = d; opt.textContent = diffLabel(d);
+                        diffSelect.appendChild(opt);
+                    });
+                    countrySelect.disabled = false;
+                    diffSelect.disabled = false;
+                    countrySelect.classList.remove('tw-bg-gray-100', 'tw-text-gray-500');
+                    countrySelect.classList.add('tw-bg-white', 'tw-text-gray-900');
+                    diffSelect.classList.remove('tw-bg-gray-100', 'tw-text-gray-500');
+                    diffSelect.classList.add('tw-bg-white', 'tw-text-gray-900');
+
+                    let activeSet = withLength;
+
+                    function applyFacts(set) {
+                        activeSet = set;
+                        if (!set.length) {
+                            document.getElementById('facts-summary').innerHTML = '<div class="tw-text-center tw-text-gray-600">No trails for selected filters.</div>';
+                            setFact('fact-longest-name', 'fact-longest-desc', '—', '');
+                            setFact('fact-shortest-name', 'fact-shortest-desc', '—', '');
+                            setFact('fact-northern-name', 'fact-northern-desc', '—', '');
+                            setFact('fact-southern-name', 'fact-southern-desc', '—', '');
+                            return;
+                        }
+
+                        // Superlatives
+                        let longest = set[0], shortest = set[0];
+                        let maxLen = set[0].length, minLen = set[0].length;
+                        let northern = set[0], southern = set[0];
+                        let maxLat = trailMaxLat(set[0].row.geometry);
+                        let minLat = trailMinLat(set[0].row.geometry);
+
+                        set.forEach(({ row, length }) => {
+                            if (length > maxLen) { maxLen = length; longest = { row, length }; }
+                            if (length < minLen) { minLen = length; shortest = { row, length }; }
+                            const mx = trailMaxLat(row.geometry);
+                            const mn = trailMinLat(row.geometry);
+                            if (mx > maxLat) { maxLat = mx; northern = { row, length }; }
+                            if (mn < minLat) { minLat = mn; southern = { row, length }; }
+                        });
+
+                        const totalCount = set.length;
+                        const namedCount = set.filter(({ row }) => getTrailName(row) !== null).length;
+                        const countriesCount = new Set(set.map(({ row }) => getCountry(row)).filter((c) => c !== '—')).size;
+                        const avgLen = set.reduce((s, x) => s + x.length, 0) / set.length;
+
+                        document.getElementById('facts-summary').innerHTML =
+                            `<div class="tw-flex tw-max-w-[200px] tw-flex-col tw-place-items-center tw-gap-2 tw-text-center"><span class="tw-text-3xl tw-font-bold" style="color:#0d9488">${totalCount.toLocaleString()}</span><span class="tw-text-gray-700">total trails</span></div>` +
+                            `<div class="tw-flex tw-max-w-[200px] tw-flex-col tw-place-items-center tw-gap-2 tw-text-center"><span class="tw-text-3xl tw-font-bold" style="color:#BDB8FF">${namedCount.toLocaleString()}</span><span class="tw-text-gray-700">named trails</span></div>` +
+                            `<div class="tw-flex tw-max-w-[200px] tw-flex-col tw-place-items-center tw-gap-2 tw-text-center"><span class="tw-text-3xl tw-font-bold" style="color:#0d9488">${countriesCount}</span><span class="tw-text-gray-700">countries</span></div>` +
+                            `<div class="tw-flex tw-max-w-[200px] tw-flex-col tw-place-items-center tw-gap-2 tw-text-center"><span class="tw-text-3xl tw-font-bold" style="color:#BDB8FF">${formatKm(avgLen)}</span><span class="tw-text-gray-700">avg trail length</span></div>`;
+
+                        const longestName = getTrailName(longest.row) || '(unnamed)';
+                        const longestResort = getResortName(longest.row);
+                        const longestCountry = getCountry(longest.row);
+                        const longestDiff = getDifficulty(longest.row);
+                        setFact('fact-longest-name', 'fact-longest-desc',
+                            longestName,
+                            formatKm(longest.length) + (longestDiff ? ' · ' + diffLabel(longestDiff) : '') +
+                            (longestResort !== '—' ? ' · ' + longestResort : '') +
+                            (longestCountry !== '—' ? ' · ' + longestCountry : '')
+                        );
+                        initTrailMap('map-longest', longest.row);
+
+                        const shortestName = getTrailName(shortest.row) || '(unnamed)';
+                        const shortestResort = getResortName(shortest.row);
+                        const shortestCountry = getCountry(shortest.row);
+                        const shortestDiff = getDifficulty(shortest.row);
+                        setFact('fact-shortest-name', 'fact-shortest-desc',
+                            shortestName,
+                            formatKm(shortest.length) + (shortestDiff ? ' · ' + diffLabel(shortestDiff) : '') +
+                            (shortestResort !== '—' ? ' · ' + shortestResort : '') +
+                            (shortestCountry !== '—' ? ' · ' + shortestCountry : '')
+                        );
+                        initTrailMap('map-shortest', shortest.row);
+
+                        const northernName = getTrailName(northern.row) || '(unnamed)';
+                        const northernResort = getResortName(northern.row);
+                        const northernCountry = getCountry(northern.row);
+                        setFact('fact-northern-name', 'fact-northern-desc',
+                            northernName,
+                            maxLat.toFixed(4) + '\u00B0 N' +
+                            (northernResort !== '—' ? ' · ' + northernResort : '') +
+                            (northernCountry !== '—' ? ' · ' + northernCountry : '')
+                        );
+                        initTrailMap('map-northern', northern.row);
+
+                        const southernName = getTrailName(southern.row) || '(unnamed)';
+                        const southernResort = getResortName(southern.row);
+                        const southernCountry = getCountry(southern.row);
+                        setFact('fact-southern-name', 'fact-southern-desc',
+                            southernName,
+                            minLat.toFixed(4) + '\u00B0' +
+                            (northernResort !== '—' ? ' · ' + southernResort : '') +
+                            (southernCountry !== '—' ? ' · ' + southernCountry : '')
+                        );
+                        initTrailMap('map-southern', southern.row);
+
+                        // Named trails table
+                        namedRows = set
+                            .filter(({ row }) => getTrailName(row) !== null)
+                            .map(({ row, length }) => ({
+                                name: getTrailName(row),
+                                resort: getResortName(row),
+                                country: getCountry(row),
+                                length,
+                                difficulty: diffLabel(getDifficulty(row)) || 'Unknown',
+                                rawDiff: getDifficulty(row)
+                            }));
+                        filteredNamed = [...namedRows];
+                        sortNamed();
+                        currentPage = 1;
+                        renderTable();
+                    }
+
+                    applyFacts(withLength);
+
+                    // Filter event handlers
+                    function refilter() {
+                        const countryVal = countrySelect.value;
+                        const diffVal = diffSelect.value;
+                        const filtered = withLength.filter(({ row }) => {
+                            if (countryVal && getCountry(row) !== countryVal) return false;
+                            if (diffVal && getDifficulty(row) !== diffVal) return false;
+                            return true;
+                        });
+                        applyFacts(filtered);
+                        const search = document.getElementById('trail-search').value;
+                        applyNamedFilter(search, countryVal, diffVal);
+                    }
+
+                    countrySelect.addEventListener('change', refilter);
+                    diffSelect.addEventListener('change', refilter);
+                    document.getElementById('trail-search').addEventListener('input', (e) => {
+                        applyNamedFilter(e.target.value, countrySelect.value, diffSelect.value);
+                    });
+
+                } catch (err) {
+                    console.warn('Trail facts: could not load data', err);
+                    document.getElementById('facts-summary').innerHTML = '<div class="tw-text-center tw-text-red-600">Could not load trail data. Check network.</div>';
+                    document.getElementById('named-table-wrap').innerHTML = '<div class="tw-p-8 tw-text-center tw-text-red-600">Could not load trail data.</div>';
+                }
+            })();
+        </script>
+    </body>
+</html>
