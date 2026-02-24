@@ -10,22 +10,22 @@
             gtag('js', new Date());
             gtag('config', 'G-KJGNL3KJL0');
         </script>
-        <title>Ski Trail Records &amp; Facts – Global Ski Atlas</title>
-        <meta name="description" content="Discover ski trail records: the world's longest, shortest, most northern, and most southern downhill ski runs. Browse named trails by resort and country." />
+        <title>Ski Lift Records &amp; Facts – Global Ski Atlas</title>
+        <meta name="description" content="Discover ski lift records: the world's longest gondola, most northern chairlift, and more. Browse named lifts by type, resort, and country worldwide." />
         <!-- Open Graph -->
-        <meta property="og:title" content="Ski Trail Records &amp; Facts – Global Ski Atlas" />
-        <meta property="og:description" content="Discover ski trail records: the world's longest, shortest, most northern, and most southern downhill ski runs. Browse named trails by resort and country." />
+        <meta property="og:title" content="Ski Lift Records &amp; Facts – Global Ski Atlas" />
+        <meta property="og:description" content="Discover ski lift records: the world's longest gondola, most northern chairlift, and more. Browse named lifts by type, resort, and country worldwide." />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://globalskiatlas.com/SkiTrailFacts.html" />
+        <meta property="og:url" content="https://globalskiatlas.com/SkiLiftFacts.html" />
         <meta property="og:image" content="https://globalskiatlas.com/assets/og-banner.png" />
         <meta property="og:site_name" content="Global Ski Atlas" />
         <!-- Twitter Card -->
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Ski Trail Records &amp; Facts – Global Ski Atlas" />
-        <meta name="twitter:description" content="The world's longest, shortest, most northern and most southern ski trails. Browse named runs by resort and country." />
+        <meta name="twitter:title" content="Ski Lift Records &amp; Facts – Global Ski Atlas" />
+        <meta name="twitter:description" content="The world's longest, shortest, most northern and most southern ski lifts. Browse gondolas, chairlifts, and more by resort and country." />
         <meta name="twitter:image" content="https://globalskiatlas.com/assets/og-banner.png" />
         <!-- Canonical -->
-        <link rel="canonical" href="https://globalskiatlas.com/SkiTrailFacts.html" />
+        <link rel="canonical" href="https://globalskiatlas.com/SkiLiftFacts.html" />
         <link rel="shortcut icon" href="./assets/logo.png?v=2" type="image/x-icon" />
         <link rel="stylesheet" href="./css/tailwind-build.css" />
         <link rel="stylesheet" href="css/index.css" />
@@ -37,17 +37,22 @@
             .loading-spinner { width: 28px; height: 28px; border: 3px solid #e5e7eb; border-top-color: #0d9488; border-radius: 50%; animation: spin 0.8s linear infinite; }
             @keyframes spin { to { transform: rotate(360deg); } }
             .fact-map.placeholder.loading { flex-direction: column; gap: 8px; }
-            .diff-badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; color: #fff; text-transform: capitalize; }
-            .diff-easy, .diff-novice, .diff-beginner { background: #22c55e; }
-            .diff-intermediate, .diff-medium { background: #2563eb; }
-            .diff-advanced, .diff-hard { background: #1a1a1a; }
-            .diff-expert, .diff-freeride, .diff-extreme { background: #991b1b; }
-            .diff-other, .diff-unknown { background: #64748b; }
-            .trail-table { width: 100%; border-collapse: collapse; font-size: 14px; }
-            .trail-table thead th { background: #f1f5f9; padding: 10px 12px; text-align: left; font-weight: 700; color: #374151; border-bottom: 2px solid #e5e7eb; cursor: pointer; user-select: none; white-space: nowrap; }
-            .trail-table thead th:hover { background: #e2e8f0; }
-            .trail-table td { padding: 9px 12px; border-bottom: 1px solid #f1f5f9; color: #374151; }
-            .trail-table tr:hover td { background: #f8fafc; }
+            .type-badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; color: #fff; text-transform: capitalize; white-space: nowrap; }
+            .type-gondola    { background: #0d9488; }
+            .type-cable_car  { background: #1d4ed8; }
+            .type-detachable { background: #2563eb; }
+            .type-chair_lift { background: #7c3aed; }
+            .type-drag_lift  { background: #b45309; }
+            .type-t-bar      { background: #92400e; }
+            .type-magic_carpet { background: #0891b2; }
+            .type-rope_tow   { background: #475569; }
+            .type-mixed_lift { background: #6d28d9; }
+            .type-other      { background: #64748b; }
+            .lift-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+            .lift-table thead th { background: #f1f5f9; padding: 10px 12px; text-align: left; font-weight: 700; color: #374151; border-bottom: 2px solid #e5e7eb; cursor: pointer; user-select: none; white-space: nowrap; }
+            .lift-table thead th:hover { background: #e2e8f0; }
+            .lift-table td { padding: 9px 12px; border-bottom: 1px solid #f1f5f9; color: #374151; }
+            .lift-table tr:hover td { background: #f8fafc; }
             .sort-icon { margin-left: 4px; font-style: normal; opacity: 0.4; }
             .sort-icon.active { opacity: 1; color: #0d9488; }
             .table-pagination { display: flex; align-items: center; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
@@ -68,8 +73,8 @@
                     <a class="header-links" href="mainmap.html">Online Atlas</a>
                     <a class="header-links" href="resort-comparison.html">Compare Resorts</a>
                     <a class="header-links" href="SkiResortFacts.html">Resort Facts</a>
-                    <a class="header-links tw-font-semibold" href="SkiTrailFacts.html">Trail Facts</a>
-                    <a class="header-links" href="SkiLiftFacts.html">Lift Facts</a>
+                    <a class="header-links" href="SkiTrailFacts.html">Trail Facts</a>
+                    <a class="header-links tw-font-semibold" href="SkiLiftFacts.html">Lift Facts</a>
                     <a class="header-links" href="About.html">About</a>
                     <a class="header-links" href="skiing-ai.html">AI Assistant</a>
                 </div>
@@ -90,8 +95,8 @@
 
         <!-- Hero -->
         <section class="tw-relative tw-flex tw-min-h-[40vh] tw-w-full tw-flex-col tw-place-content-center tw-place-items-center tw-overflow-hidden tw-py-12 tw-px-6">
-            <h1 class="tw-text-4xl tw-font-bold tw-text-gray-900 max-md:tw-text-2xl tw-text-center">Ski Trail Facts</h1>
-            <p class="tw-mt-4 tw-max-w-2xl tw-text-center tw-text-xl tw-text-gray-600">Records and superlatives from our worldwide ski trail dataset</p>
+            <h1 class="tw-text-4xl tw-font-bold tw-text-gray-900 max-md:tw-text-2xl tw-text-center">Ski Lift Facts</h1>
+            <p class="tw-mt-4 tw-max-w-2xl tw-text-center tw-text-xl tw-text-gray-600">Records and superlatives from our worldwide ski lift dataset</p>
             <div class="tw-mt-6 tw-flex tw-flex-wrap tw-place-items-center tw-gap-4">
                 <div class="tw-flex tw-place-items-center tw-gap-3">
                     <label for="country-filter" class="tw-text-gray-700 tw-font-medium">Filter by country:</label>
@@ -100,20 +105,11 @@
                     </select>
                 </div>
                 <div class="tw-flex tw-place-items-center tw-gap-3">
-                    <label for="diff-filter" class="tw-text-gray-700 tw-font-medium">Difficulty:</label>
-                    <select id="diff-filter" disabled class="tw-rounded-lg tw-border tw-border-gray-300 tw-bg-gray-100 tw-px-4 tw-py-2 tw-text-base tw-text-gray-500 focus:tw-outline-none focus:tw-ring-2 focus:tw-ring-teal-500 disabled:tw-cursor-not-allowed disabled:tw-opacity-60">
-                        <option value="">All difficulties</option>
+                    <label for="type-filter" class="tw-text-gray-700 tw-font-medium">Lift type:</label>
+                    <select id="type-filter" disabled class="tw-rounded-lg tw-border tw-border-gray-300 tw-bg-gray-100 tw-px-4 tw-py-2 tw-text-base tw-text-gray-500 focus:tw-outline-none focus:tw-ring-2 focus:tw-ring-teal-500 disabled:tw-cursor-not-allowed disabled:tw-opacity-60">
+                        <option value="">All types</option>
                     </select>
                 </div>
-            </div>
-            <div class="tw-mt-4 tw-flex tw-flex-col tw-place-items-center tw-gap-2">
-                <label class="tw-flex tw-place-items-center tw-gap-2 tw-cursor-pointer tw-select-none">
-                    <input type="checkbox" id="exclude-untyped" class="tw-w-4 tw-h-4 tw-accent-teal-600 tw-cursor-pointer" />
-                    <span class="tw-text-gray-700 tw-font-medium">Only show trails with an explicit <code class="tw-bg-gray-100 tw-rounded tw-px-1 tw-text-sm">piste:type=downhill</code> tag</span>
-                </label>
-                <p class="tw-text-sm tw-text-gray-500 tw-max-w-xl tw-text-center">
-                    Many OSM trails omit the type tag entirely, which can let non-ski features (hiking paths, snowmobile routes) slip through. Enable this to restrict results to confirmed downhill pistes only.
-                </p>
             </div>
         </section>
 
@@ -122,30 +118,30 @@
             <div class="reveal-up tw-flex tw-min-h-[140px] tw-w-full tw-max-w-[80%] tw-place-items-center tw-justify-around tw-gap-8 tw-rounded-xl tw-bg-[#e7e6e685] tw-p-4 max-lg:tw-max-w-full max-md:tw-flex-col" id="facts-summary">
                 <div class="tw-flex tw-flex-col tw-place-items-center tw-gap-3 tw-text-gray-600">
                     <div class="loading-spinner"></div>
-                    <span>Loading trail facts…</span>
+                    <span>Loading lift facts…</span>
                 </div>
             </div>
         </section>
 
-        <!-- Longest trail -->
+        <!-- Longest lift -->
         <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6" id="fact-longest">
             <div class="reveal-up tw-flex tw-min-h-[60vh] tw-place-content-center tw-place-items-center tw-gap-[10%] max-lg:tw-flex-col max-lg:tw-gap-10">
                 <div class="tw-flex">
                     <div id="map-longest" class="fact-map placeholder loading tw-flex-shrink-0"><div class="loading-spinner"></div><span>Loading…</span></div>
                 </div>
                 <div class="tw-mt-6 tw-flex tw-max-w-[450px] tw-flex-col tw-gap-4">
-                    <h3 class="tw-text-4xl tw-font-medium">Longest Trail</h3>
+                    <h3 class="tw-text-4xl tw-font-medium">Longest Lift</h3>
                     <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700" id="fact-longest-name">—</p>
                     <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600" id="fact-longest-desc">—</p>
                 </div>
             </div>
         </section>
 
-        <!-- Shortest trail -->
+        <!-- Shortest lift -->
         <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6" id="fact-shortest">
             <div class="reveal-up tw-flex tw-min-h-[60vh] tw-place-content-center tw-place-items-center tw-gap-[10%] max-lg:tw-flex-col max-lg:tw-gap-10">
                 <div class="tw-mt-6 tw-flex tw-max-w-[450px] tw-flex-col tw-gap-4">
-                    <h3 class="tw-text-4xl tw-font-medium">Shortest Trail</h3>
+                    <h3 class="tw-text-4xl tw-font-medium">Shortest Lift</h3>
                     <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700" id="fact-shortest-name">—</p>
                     <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600" id="fact-shortest-desc">—</p>
                 </div>
@@ -155,25 +151,25 @@
             </div>
         </section>
 
-        <!-- Most Northern trail -->
+        <!-- Most Northern lift -->
         <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6" id="fact-northern">
             <div class="reveal-up tw-flex tw-min-h-[60vh] tw-place-content-center tw-place-items-center tw-gap-[10%] max-lg:tw-flex-col max-lg:tw-gap-10">
                 <div class="tw-flex">
                     <div id="map-northern" class="fact-map placeholder loading tw-flex-shrink-0"><div class="loading-spinner"></div><span>Loading…</span></div>
                 </div>
                 <div class="tw-mt-6 tw-flex tw-max-w-[450px] tw-flex-col tw-gap-4">
-                    <h3 class="tw-text-4xl tw-font-medium">Most Northern Trail</h3>
+                    <h3 class="tw-text-4xl tw-font-medium">Most Northern Lift</h3>
                     <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700" id="fact-northern-name">—</p>
                     <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600" id="fact-northern-desc">—</p>
                 </div>
             </div>
         </section>
 
-        <!-- Most Southern trail -->
+        <!-- Most Southern lift -->
         <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6" id="fact-southern">
             <div class="reveal-up tw-flex tw-min-h-[60vh] tw-place-content-center tw-place-items-center tw-gap-[10%] max-lg:tw-flex-col max-lg:tw-gap-10">
                 <div class="tw-mt-6 tw-flex tw-max-w-[450px] tw-flex-col tw-gap-4">
-                    <h3 class="tw-text-4xl tw-font-medium">Most Southern Trail</h3>
+                    <h3 class="tw-text-4xl tw-font-medium">Most Southern Lift</h3>
                     <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700" id="fact-southern-name">—</p>
                     <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600" id="fact-southern-desc">—</p>
                 </div>
@@ -183,21 +179,21 @@
             </div>
         </section>
 
-        <!-- Named trails table -->
+        <!-- Named lifts table -->
         <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6 tw-pb-16" id="fact-named">
             <div class="reveal-up tw-flex tw-w-full tw-flex-col tw-place-content-center tw-place-items-center tw-gap-8">
                 <div class="tw-flex tw-w-full tw-max-w-[960px] tw-flex-col tw-gap-2 tw-text-center">
-                    <h3 class="tw-text-4xl tw-font-medium">Named Trails</h3>
-                    <p class="tw-text-xl tw-text-gray-600">Trails with official names — including resort and country. Click a column header to sort.</p>
+                    <h3 class="tw-text-4xl tw-font-medium">Named Lifts</h3>
+                    <p class="tw-text-xl tw-text-gray-600">Lifts with official names — including resort, country, and lift type. Click a column header to sort.</p>
                 </div>
                 <div class="tw-w-full tw-max-w-[960px] tw-flex tw-gap-3 tw-flex-wrap tw-place-items-center">
-                    <input type="search" id="trail-search" placeholder="Search trail or resort name…" class="tw-flex-1 tw-min-w-[200px] tw-rounded-lg tw-border tw-border-gray-300 tw-px-4 tw-py-2 tw-text-base focus:tw-outline-none focus:tw-ring-2 focus:tw-ring-teal-500" />
+                    <input type="search" id="lift-search" placeholder="Search lift or resort name…" class="tw-flex-1 tw-min-w-[200px] tw-rounded-lg tw-border tw-border-gray-300 tw-px-4 tw-py-2 tw-text-base focus:tw-outline-none focus:tw-ring-2 focus:tw-ring-teal-500" />
                     <span id="named-count" class="tw-text-gray-500 tw-text-sm"></span>
                 </div>
                 <div id="named-table-wrap" class="tw-w-full tw-max-w-[960px] tw-overflow-x-auto tw-rounded-xl tw-border tw-border-gray-200 tw-bg-white tw-shadow-sm">
                     <div class="tw-flex tw-flex-col tw-place-items-center tw-gap-3 tw-text-gray-600 tw-p-8">
                         <div class="loading-spinner"></div>
-                        <span>Loading named trails…</span>
+                        <span>Loading named lifts…</span>
                     </div>
                 </div>
                 <div id="named-pagination" class="table-pagination tw-w-full tw-max-w-[960px]"></div>
@@ -242,14 +238,29 @@
         </script>
         <script type="module">
             (async function () {
-                const PISTES_URL = 'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/pistes.parquet';
+                const LIFTS_URL = 'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/lifts.parquet';
                 const MAPTILER_KEY = '0P06ORgY8WvmMOnPr0p2';
 
-                const NAME_KEYS = ['name', 'Name', 'trail_name', 'piste_name'];
-                const RESORT_KEYS = ['Ski Area', 'ski_area', 'resort_name', 'area_name', 'resort', 'ski_area_name', 'skiarea_name'];
-                const COUNTRY_KEYS = ['Country', 'country', 'country_name', 'addr:country'];
-                const DIFF_KEYS = ['piste:difficulty', 'piste_difficulty', 'difficulty'];
-                const PISTE_TYPE_KEYS = ['piste:type', 'piste_type'];
+                const NAME_KEYS      = ['name', 'Name', 'lift_name'];
+                const RESORT_KEYS    = ['Ski Area', 'ski_area', 'resort_name', 'area_name', 'resort', 'ski_area_name', 'skiarea_name'];
+                const COUNTRY_KEYS   = ['Country', 'country', 'country_name', 'addr:country'];
+                const AERIALWAY_KEYS = ['aerialway', 'Aerialway', 'lift_type', 'type'];
+
+                // Human-readable labels for OSM aerialway values
+                const TYPE_LABELS = {
+                    gondola:       'Gondola',
+                    cable_car:     'Cable Car',
+                    detachable:    'Detachable Chairlift',
+                    chair_lift:    'Chairlift',
+                    drag_lift:     'Drag Lift',
+                    't-bar':       'T-Bar',
+                    magic_carpet:  'Magic Carpet',
+                    rope_tow:      'Rope Tow',
+                    mixed_lift:    'Mixed Lift',
+                    platter:       'Platter / Button',
+                    'j-bar':       'J-Bar',
+                    funicular:     'Funicular',
+                };
 
                 function getProp(obj, keys) {
                     if (!obj) return undefined;
@@ -261,11 +272,11 @@
 
                 function getFromOtherTags(props, tagKey) {
                     if (!props || typeof props.other_tags !== 'string') return null;
-                    const m = props.other_tags.match(new RegExp('"' + tagKey + '"=>"([^"]+)"'));
+                    const m = props.other_tags.match(new RegExp('"' + tagKey.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '"=>"([^"]+)"'));
                     return m ? m[1] : null;
                 }
 
-                function getTrailName(row) {
+                function getLiftName(row) {
                     const v = getProp(row, NAME_KEYS);
                     if (v && String(v).trim()) return String(v).trim();
                     return null;
@@ -284,32 +295,43 @@
                     if (ot) return ot;
                     return '—';
                 }
-                function getDifficulty(row) {
-                    let v = getProp(row, DIFF_KEYS);
-                    if (!v) v = getFromOtherTags(row, 'piste:difficulty');
+                function getAerialway(row) {
+                    let v = getProp(row, AERIALWAY_KEYS);
+                    if (!v) v = getFromOtherTags(row, 'aerialway');
                     return v ? String(v).toLowerCase().trim() : '';
                 }
-                function getPisteType(row) {
-                    let v = getProp(row, PISTE_TYPE_KEYS);
-                    if (!v) v = getFromOtherTags(row, 'piste:type');
-                    return v ? String(v).toLowerCase().trim() : '';
+                function typeLabel(t) {
+                    if (!t) return 'Unknown';
+                    return TYPE_LABELS[t] || (t.charAt(0).toUpperCase() + t.slice(1).replace(/_/g, ' '));
                 }
-                function isDownhillTrail(row, excludeUntyped) {
-                    const t = getPisteType(row);
-                    if (excludeUntyped) return t === 'downhill' || t === 'freeride';
-                    return t === '' || t === 'downhill' || t === 'freeride';
+                function typeCssClass(t) {
+                    if (!t) return 'type-other';
+                    const map = {
+                        gondola: 'type-gondola',
+                        cable_car: 'type-cable_car',
+                        detachable: 'type-detachable',
+                        chair_lift: 'type-chair_lift',
+                        drag_lift: 'type-drag_lift',
+                        't-bar': 'type-t-bar',
+                        magic_carpet: 'type-magic_carpet',
+                        rope_tow: 'type-rope_tow',
+                        mixed_lift: 'type-mixed_lift',
+                    };
+                    return map[t] || 'type-other';
                 }
-                function diffLabel(d) {
-                    if (!d) return 'Unknown';
-                    return d.charAt(0).toUpperCase() + d.slice(1);
-                }
-                function diffClass(d) {
-                    if (!d) return 'diff-unknown';
-                    if (['easy','novice','beginner'].includes(d)) return 'diff-easy';
-                    if (['intermediate','medium'].includes(d)) return 'diff-intermediate';
-                    if (['advanced','hard'].includes(d)) return 'diff-advanced';
-                    if (['expert','freeride','extreme'].includes(d)) return 'diff-expert';
-                    return 'diff-other';
+                function liftColor(t) {
+                    const colors = {
+                        gondola:      '#0d9488',
+                        cable_car:    '#1d4ed8',
+                        detachable:   '#2563eb',
+                        chair_lift:   '#7c3aed',
+                        drag_lift:    '#b45309',
+                        't-bar':      '#92400e',
+                        magic_carpet: '#0891b2',
+                        rope_tow:     '#475569',
+                        mixed_lift:   '#6d28d9',
+                    };
+                    return colors[t] || '#f87171';
                 }
 
                 // Haversine distance between two [lon, lat] points in km
@@ -328,12 +350,10 @@
                     return total;
                 }
 
-                function trailLength(geom) {
+                function liftLength(geom) {
                     if (!geom || !geom.coordinates) return 0;
                     if (geom.type === 'LineString') return lineLength(geom.coordinates);
-                    if (geom.type === 'MultiLineString') {
-                        return geom.coordinates.reduce((s, seg) => s + lineLength(seg), 0);
-                    }
+                    if (geom.type === 'MultiLineString') return geom.coordinates.reduce((s, seg) => s + lineLength(seg), 0);
                     return 0;
                 }
 
@@ -344,7 +364,7 @@
                     return [];
                 }
 
-                function trailCentroid(geom) {
+                function liftCentroid(geom) {
                     const coords = allCoords(geom);
                     if (!coords.length) return null;
                     let xs = 0, ys = 0;
@@ -352,12 +372,8 @@
                     return [xs / coords.length, ys / coords.length];
                 }
 
-                function trailMaxLat(geom) {
-                    return Math.max(...allCoords(geom).map((c) => c[1]));
-                }
-                function trailMinLat(geom) {
-                    return Math.min(...allCoords(geom).map((c) => c[1]));
-                }
+                function liftMaxLat(geom) { return Math.max(...allCoords(geom).map((c) => c[1])); }
+                function liftMinLat(geom) { return Math.min(...allCoords(geom).map((c) => c[1])); }
 
                 function formatKm(km) {
                     if (km >= 1) return km.toFixed(2) + ' km (' + (km * 0.621371).toFixed(2) + ' mi)';
@@ -367,17 +383,16 @@
                 function boundsFromGeom(geom) {
                     const coords = allCoords(geom);
                     if (!coords.length) return null;
-                    const lls = coords.map((c) => L.latLng(c[1], c[0]));
-                    return L.latLngBounds(lls);
+                    return L.latLngBounds(coords.map((c) => L.latLng(c[1], c[0])));
                 }
 
                 const factMapInstances = {};
-                function initTrailMap(containerId, row) {
+                function initLiftMap(containerId, row) {
                     const el = document.getElementById(containerId);
                     if (!el || typeof L === 'undefined') return;
                     const geom = row.geometry;
                     if (!geom) return;
-                    const centroid = trailCentroid(geom);
+                    const centroid = liftCentroid(geom);
                     if (!centroid) return;
                     if (factMapInstances[containerId]) {
                         factMapInstances[containerId].remove();
@@ -391,18 +406,11 @@
                     L.tileLayer('https://api.maptiler.com/maps/winter-v4/256/{z}/{x}/{y}.png?key=' + MAPTILER_KEY, {
                         attribution: '\u00A9 MapTiler \u00A9 OSM', minZoom: 3, maxZoom: 18
                     }).addTo(m);
-                    const diff = getDifficulty(row);
-                    let color = '#64748b';
-                    if (diff === 'easy' || diff === 'novice' || diff === 'beginner') color = '#22c55e';
-                    else if (diff === 'intermediate' || diff === 'medium') color = '#2563eb';
-                    else if (diff === 'advanced' || diff === 'hard') color = '#1a1a1a';
-                    else if (diff === 'expert' || diff === 'freeride' || diff === 'extreme') color = '#991b1b';
-                    const feature = { type: 'Feature', geometry: geom, properties: {} };
-                    L.geoJSON(feature, { style: { color, weight: 4, opacity: 1 } }).addTo(m);
+                    const t = getAerialway(row);
+                    const color = liftColor(t);
+                    L.geoJSON({ type: 'Feature', geometry: geom, properties: {} }, { style: { color, weight: 4, opacity: 1 } }).addTo(m);
                     const bounds = boundsFromGeom(geom);
-                    if (bounds && bounds.isValid()) {
-                        m.fitBounds(bounds, { padding: [20, 20], maxZoom: 15 });
-                    }
+                    if (bounds && bounds.isValid()) m.fitBounds(bounds, { padding: [20, 20], maxZoom: 15 });
                 }
 
                 function setFact(nameId, descId, name, desc) {
@@ -412,11 +420,15 @@
                     if (dEl && desc != null) dEl.textContent = desc;
                 }
 
-                // Named trails table state
+                function escHtml(str) {
+                    return String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+                }
+
+                // Table state
                 let namedRows = [];
                 let filteredNamed = [];
                 let sortCol = 'length';
-                let sortDir = -1; // -1 = desc, 1 = asc
+                let sortDir = -1;
                 let currentPage = 1;
                 const PAGE_SIZE = 50;
 
@@ -424,23 +436,22 @@
                     const wrap = document.getElementById('named-table-wrap');
                     const pagination = document.getElementById('named-pagination');
                     if (!filteredNamed.length) {
-                        wrap.innerHTML = '<div class="tw-p-8 tw-text-center tw-text-gray-500">No named trails found for selected filters.</div>';
+                        wrap.innerHTML = '<div class="tw-p-8 tw-text-center tw-text-gray-500">No named lifts found for selected filters.</div>';
                         pagination.innerHTML = '';
-                        document.getElementById('named-count').textContent = '0 trails';
+                        document.getElementById('named-count').textContent = '0 lifts';
                         return;
                     }
                     const totalPages = Math.ceil(filteredNamed.length / PAGE_SIZE);
                     currentPage = Math.max(1, Math.min(currentPage, totalPages));
                     const pageRows = filteredNamed.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
-
-                    document.getElementById('named-count').textContent = filteredNamed.length.toLocaleString() + ' trails';
+                    document.getElementById('named-count').textContent = filteredNamed.length.toLocaleString() + ' lifts';
 
                     const colDefs = [
-                        { key: 'name', label: 'Trail Name' },
-                        { key: 'resort', label: 'Resort' },
+                        { key: 'name',    label: 'Lift Name' },
+                        { key: 'type',    label: 'Type' },
+                        { key: 'resort',  label: 'Resort' },
                         { key: 'country', label: 'Country' },
-                        { key: 'length', label: 'Length' },
-                        { key: 'difficulty', label: 'Difficulty' }
+                        { key: 'length',  label: 'Length' },
                     ];
 
                     let thead = '<thead><tr>';
@@ -453,45 +464,31 @@
 
                     let tbody = '<tbody>';
                     pageRows.forEach((r) => {
-                        const dClass = diffClass(r.rawDiff);
-                        const dLabel = r.difficulty;
                         tbody += `<tr>
                             <td class="tw-font-medium">${escHtml(r.name)}</td>
+                            <td><span class="type-badge ${typeCssClass(r.rawType)}">${escHtml(r.type)}</span></td>
                             <td>${escHtml(r.resort)}</td>
                             <td>${escHtml(r.country)}</td>
                             <td class="tw-font-mono tw-text-sm">${formatKm(r.length)}</td>
-                            <td><span class="diff-badge ${dClass}">${escHtml(dLabel)}</span></td>
                         </tr>`;
                     });
                     tbody += '</tbody>';
 
-                    wrap.innerHTML = `<table class="trail-table">${thead}${tbody}</table>`;
+                    wrap.innerHTML = `<table class="lift-table">${thead}${tbody}</table>`;
 
                     wrap.querySelectorAll('th[data-col]').forEach((th) => {
                         th.addEventListener('click', () => {
                             const col = th.getAttribute('data-col');
-                            if (sortCol === col) {
-                                sortDir = -sortDir;
-                            } else {
-                                sortCol = col;
-                                sortDir = col === 'name' || col === 'resort' || col === 'country' || col === 'difficulty' ? 1 : -1;
-                            }
-                            sortNamed();
-                            currentPage = 1;
-                            renderTable();
+                            if (sortCol === col) { sortDir = -sortDir; }
+                            else { sortCol = col; sortDir = ['name','type','resort','country'].includes(col) ? 1 : -1; }
+                            sortNamed(); currentPage = 1; renderTable();
                         });
                     });
 
-                    // Pagination
-                    let paginationHtml = '';
-                    paginationHtml += `<button class="page-btn" ${currentPage === 1 ? 'disabled' : ''} id="pg-prev">&#8249; Prev</button>`;
-                    const range = getPaginationRange(currentPage, totalPages);
-                    range.forEach((p) => {
-                        if (p === '...') {
-                            paginationHtml += '<span class="tw-px-2 tw-text-gray-400">…</span>';
-                        } else {
-                            paginationHtml += `<button class="page-btn ${p === currentPage ? 'active' : ''}" data-pg="${p}">${p}</button>`;
-                        }
+                    let paginationHtml = `<button class="page-btn" ${currentPage === 1 ? 'disabled' : ''} id="pg-prev">&#8249; Prev</button>`;
+                    getPaginationRange(currentPage, totalPages).forEach((p) => {
+                        if (p === '...') paginationHtml += '<span class="tw-px-2 tw-text-gray-400">…</span>';
+                        else paginationHtml += `<button class="page-btn ${p === currentPage ? 'active' : ''}" data-pg="${p}">${p}</button>`;
                     });
                     paginationHtml += `<button class="page-btn" ${currentPage === totalPages ? 'disabled' : ''} id="pg-next">Next &#8250;</button>`;
                     pagination.innerHTML = paginationHtml;
@@ -507,15 +504,9 @@
 
                 function getPaginationRange(current, total) {
                     if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
-                    const pages = [];
-                    if (current <= 4) {
-                        pages.push(1, 2, 3, 4, 5, '...', total);
-                    } else if (current >= total - 3) {
-                        pages.push(1, '...', total - 4, total - 3, total - 2, total - 1, total);
-                    } else {
-                        pages.push(1, '...', current - 1, current, current + 1, '...', total);
-                    }
-                    return pages;
+                    if (current <= 4) return [1, 2, 3, 4, 5, '...', total];
+                    if (current >= total - 3) return [1, '...', total - 4, total - 3, total - 2, total - 1, total];
+                    return [1, '...', current - 1, current, current + 1, '...', total];
                 }
 
                 function sortNamed() {
@@ -529,201 +520,167 @@
                     });
                 }
 
-                function applyNamedFilter(search, countryVal, diffVal) {
+                function applyNamedFilter(search, countryVal, typeVal) {
                     const q = search.toLowerCase().trim();
                     filteredNamed = namedRows.filter((r) => {
                         if (countryVal && r.country !== countryVal) return false;
-                        if (diffVal && r.rawDiff !== diffVal) return false;
+                        if (typeVal && r.rawType !== typeVal) return false;
                         if (q && !r.name.toLowerCase().includes(q) && !r.resort.toLowerCase().includes(q)) return false;
                         return true;
                     });
-                    sortNamed();
-                    currentPage = 1;
-                    renderTable();
+                    sortNamed(); currentPage = 1; renderTable();
                 }
 
-                function escHtml(str) {
-                    return String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-                }
-
-                // Main data load
+                // Main load
                 try {
                     const { asyncBufferFromUrl, parquetReadObjects } = await import('https://esm.sh/hyparquet@1');
-                    const buf = await asyncBufferFromUrl({ url: PISTES_URL });
+                    const buf = await asyncBufferFromUrl({ url: LIFTS_URL });
                     const data = await parquetReadObjects({ file: buf });
 
-                    const excludeUntypedCb = document.getElementById('exclude-untyped');
-                    const allTrails = data.filter((r) =>
-                        r.geometry &&
-                        (r.geometry.type === 'LineString' || r.geometry.type === 'MultiLineString')
-                    );
-                    const trails = allTrails.filter((r) => isDownhillTrail(r, false));
+                    const lifts = data.filter((r) => r.geometry && (r.geometry.type === 'LineString' || r.geometry.type === 'MultiLineString'));
+                    const EXCLUDED_TYPES = new Set(['zip_line', 'goods']);
+                    const withLength = lifts
+                        .filter((r) => !EXCLUDED_TYPES.has(getAerialway(r)))
+                        .map((r) => ({ row: r, length: liftLength(r.geometry) }))
+                        .filter((x) => x.length > 0.005);
 
-                    // Compute lengths
-                    const withLength = trails.map((r) => ({ row: r, length: trailLength(r.geometry) })).filter((x) => x.length > 0.01);
-
-                    // Country / difficulty sets
                     const countrySet = new Set();
-                    const diffSet = new Set();
+                    const typeSet = new Set();
                     withLength.forEach(({ row }) => {
                         const c = getCountry(row);
                         if (c && c !== '—') countrySet.add(c);
-                        const d = getDifficulty(row);
-                        if (d) diffSet.add(d);
+                        const t = getAerialway(row);
+                        if (t) typeSet.add(t);
                     });
 
-                    // Populate filters
                     const countrySelect = document.getElementById('country-filter');
-                    const diffSelect = document.getElementById('diff-filter');
+                    const typeSelect = document.getElementById('type-filter');
                     [...countrySet].sort().forEach((c) => {
                         const opt = document.createElement('option');
                         opt.value = c; opt.textContent = c;
                         countrySelect.appendChild(opt);
                     });
-                    [...diffSet].sort().forEach((d) => {
+                    // Sort types by count descending so most common appear first
+                    const typeCounts = {};
+                    withLength.forEach(({ row }) => { const t = getAerialway(row); if (t) typeCounts[t] = (typeCounts[t] || 0) + 1; });
+                    [...typeSet].sort((a, b) => (typeCounts[b] || 0) - (typeCounts[a] || 0)).forEach((t) => {
                         const opt = document.createElement('option');
-                        opt.value = d; opt.textContent = diffLabel(d);
-                        diffSelect.appendChild(opt);
+                        opt.value = t; opt.textContent = typeLabel(t) + ' (' + (typeCounts[t] || 0).toLocaleString() + ')';
+                        typeSelect.appendChild(opt);
                     });
-                    countrySelect.disabled = false;
-                    diffSelect.disabled = false;
-                    countrySelect.classList.remove('tw-bg-gray-100', 'tw-text-gray-500');
-                    countrySelect.classList.add('tw-bg-white', 'tw-text-gray-900');
-                    diffSelect.classList.remove('tw-bg-gray-100', 'tw-text-gray-500');
-                    diffSelect.classList.add('tw-bg-white', 'tw-text-gray-900');
 
-                    let activeSet = withLength;
+                    [countrySelect, typeSelect].forEach((sel) => {
+                        sel.disabled = false;
+                        sel.classList.remove('tw-bg-gray-100', 'tw-text-gray-500');
+                        sel.classList.add('tw-bg-white', 'tw-text-gray-900');
+                    });
 
                     function applyFacts(set) {
-                        activeSet = set;
                         if (!set.length) {
-                            document.getElementById('facts-summary').innerHTML = '<div class="tw-text-center tw-text-gray-600">No trails for selected filters.</div>';
-                            setFact('fact-longest-name', 'fact-longest-desc', '—', '');
-                            setFact('fact-shortest-name', 'fact-shortest-desc', '—', '');
-                            setFact('fact-northern-name', 'fact-northern-desc', '—', '');
-                            setFact('fact-southern-name', 'fact-southern-desc', '—', '');
+                            document.getElementById('facts-summary').innerHTML = '<div class="tw-text-center tw-text-gray-600">No lifts for selected filters.</div>';
+                            ['fact-longest','fact-shortest','fact-northern','fact-southern'].forEach((id) => {
+                                setFact(id + '-name', id + '-desc', '—', '');
+                            });
+                            namedRows = []; filteredNamed = []; renderTable();
                             return;
                         }
 
-                        // Superlatives
                         let longest = set[0], shortest = set[0];
                         let maxLen = set[0].length, minLen = set[0].length;
                         let northern = set[0], southern = set[0];
-                        let maxLat = trailMaxLat(set[0].row.geometry);
-                        let minLat = trailMinLat(set[0].row.geometry);
+                        let maxLat = liftMaxLat(set[0].row.geometry);
+                        let minLat = liftMinLat(set[0].row.geometry);
 
                         set.forEach(({ row, length }) => {
                             if (length > maxLen) { maxLen = length; longest = { row, length }; }
                             if (length < minLen) { minLen = length; shortest = { row, length }; }
-                            const mx = trailMaxLat(row.geometry);
-                            const mn = trailMinLat(row.geometry);
+                            const mx = liftMaxLat(row.geometry);
+                            const mn = liftMinLat(row.geometry);
                             if (mx > maxLat) { maxLat = mx; northern = { row, length }; }
                             if (mn < minLat) { minLat = mn; southern = { row, length }; }
                         });
 
                         const totalCount = set.length;
-                        const namedCount = set.filter(({ row }) => getTrailName(row) !== null).length;
+                        const namedCount = set.filter(({ row }) => getLiftName(row) !== null).length;
                         const countriesCount = new Set(set.map(({ row }) => getCountry(row)).filter((c) => c !== '—')).size;
                         const avgLen = set.reduce((s, x) => s + x.length, 0) / set.length;
 
+                        // Most common lift type
+                        const tc = {};
+                        set.forEach(({ row }) => { const t = getAerialway(row); if (t) tc[t] = (tc[t] || 0) + 1; });
+                        const topType = Object.entries(tc).sort((a, b) => b[1] - a[1])[0];
+
                         document.getElementById('facts-summary').innerHTML =
-                            `<div class="tw-flex tw-max-w-[200px] tw-flex-col tw-place-items-center tw-gap-2 tw-text-center"><span class="tw-text-3xl tw-font-bold" style="color:#0d9488">${totalCount.toLocaleString()}</span><span class="tw-text-gray-700">total trails</span></div>` +
-                            `<div class="tw-flex tw-max-w-[200px] tw-flex-col tw-place-items-center tw-gap-2 tw-text-center"><span class="tw-text-3xl tw-font-bold" style="color:#BDB8FF">${namedCount.toLocaleString()}</span><span class="tw-text-gray-700">named trails</span></div>` +
+                            `<div class="tw-flex tw-max-w-[200px] tw-flex-col tw-place-items-center tw-gap-2 tw-text-center"><span class="tw-text-3xl tw-font-bold" style="color:#0d9488">${totalCount.toLocaleString()}</span><span class="tw-text-gray-700">total lifts</span></div>` +
+                            `<div class="tw-flex tw-max-w-[200px] tw-flex-col tw-place-items-center tw-gap-2 tw-text-center"><span class="tw-text-3xl tw-font-bold" style="color:#BDB8FF">${namedCount.toLocaleString()}</span><span class="tw-text-gray-700">named lifts</span></div>` +
                             `<div class="tw-flex tw-max-w-[200px] tw-flex-col tw-place-items-center tw-gap-2 tw-text-center"><span class="tw-text-3xl tw-font-bold" style="color:#0d9488">${countriesCount}</span><span class="tw-text-gray-700">countries</span></div>` +
-                            `<div class="tw-flex tw-max-w-[200px] tw-flex-col tw-place-items-center tw-gap-2 tw-text-center"><span class="tw-text-3xl tw-font-bold" style="color:#BDB8FF">${formatKm(avgLen)}</span><span class="tw-text-gray-700">avg trail length</span></div>`;
+                            `<div class="tw-flex tw-max-w-[200px] tw-flex-col tw-place-items-center tw-gap-2 tw-text-center"><span class="tw-text-3xl tw-font-bold" style="color:#BDB8FF">${formatKm(avgLen)}</span><span class="tw-text-gray-700">avg lift length</span></div>` +
+                            (topType ? `<div class="tw-flex tw-max-w-[200px] tw-flex-col tw-place-items-center tw-gap-2 tw-text-center"><span class="tw-text-xl tw-font-bold" style="color:#0d9488">${typeLabel(topType[0])}</span><span class="tw-text-gray-700">most common type (${topType[1].toLocaleString()})</span></div>` : '');
 
-                        const longestName = getTrailName(longest.row) || '(unnamed)';
-                        const longestResort = getResortName(longest.row);
-                        const longestCountry = getCountry(longest.row);
-                        const longestDiff = getDifficulty(longest.row);
-                        setFact('fact-longest-name', 'fact-longest-desc',
-                            longestName,
-                            formatKm(longest.length) + (longestDiff ? ' · ' + diffLabel(longestDiff) : '') +
-                            (longestResort !== '—' ? ' · ' + longestResort : '') +
-                            (longestCountry !== '—' ? ' · ' + longestCountry : '')
-                        );
-                        initTrailMap('map-longest', longest.row);
+                        function descLine(item, lat) {
+                            const n = getLiftName(item.row) || '(unnamed)';
+                            const t = getAerialway(item.row);
+                            const resort = getResortName(item.row);
+                            const country = getCountry(item.row);
+                            return [
+                                formatKm(item.length),
+                                t ? typeLabel(t) : null,
+                                resort !== '—' ? resort : null,
+                                country !== '—' ? country : null,
+                                lat != null ? lat.toFixed(4) + '\u00B0' : null,
+                            ].filter(Boolean).join(' · ');
+                        }
 
-                        const shortestName = getTrailName(shortest.row) || '(unnamed)';
-                        const shortestResort = getResortName(shortest.row);
-                        const shortestCountry = getCountry(shortest.row);
-                        const shortestDiff = getDifficulty(shortest.row);
-                        setFact('fact-shortest-name', 'fact-shortest-desc',
-                            shortestName,
-                            formatKm(shortest.length) + (shortestDiff ? ' · ' + diffLabel(shortestDiff) : '') +
-                            (shortestResort !== '—' ? ' · ' + shortestResort : '') +
-                            (shortestCountry !== '—' ? ' · ' + shortestCountry : '')
-                        );
-                        initTrailMap('map-shortest', shortest.row);
+                        setFact('fact-longest-name', 'fact-longest-desc', getLiftName(longest.row) || '(unnamed)', descLine(longest));
+                        initLiftMap('map-longest', longest.row);
 
-                        const northernName = getTrailName(northern.row) || '(unnamed)';
-                        const northernResort = getResortName(northern.row);
-                        const northernCountry = getCountry(northern.row);
-                        setFact('fact-northern-name', 'fact-northern-desc',
-                            northernName,
-                            maxLat.toFixed(4) + '\u00B0 N' +
-                            (northernResort !== '—' ? ' · ' + northernResort : '') +
-                            (northernCountry !== '—' ? ' · ' + northernCountry : '')
-                        );
-                        initTrailMap('map-northern', northern.row);
+                        setFact('fact-shortest-name', 'fact-shortest-desc', getLiftName(shortest.row) || '(unnamed)', descLine(shortest));
+                        initLiftMap('map-shortest', shortest.row);
 
-                        const southernName = getTrailName(southern.row) || '(unnamed)';
-                        const southernResort = getResortName(southern.row);
-                        const southernCountry = getCountry(southern.row);
-                        setFact('fact-southern-name', 'fact-southern-desc',
-                            southernName,
-                            minLat.toFixed(4) + '\u00B0' +
-                            (northernResort !== '—' ? ' · ' + southernResort : '') +
-                            (southernCountry !== '—' ? ' · ' + southernCountry : '')
-                        );
-                        initTrailMap('map-southern', southern.row);
+                        setFact('fact-northern-name', 'fact-northern-desc', getLiftName(northern.row) || '(unnamed)', descLine(northern, maxLat) + ' N');
+                        initLiftMap('map-northern', northern.row);
 
-                        // Named trails table
+                        setFact('fact-southern-name', 'fact-southern-desc', getLiftName(southern.row) || '(unnamed)', descLine(southern, minLat));
+                        initLiftMap('map-southern', southern.row);
+
                         namedRows = set
-                            .filter(({ row }) => getTrailName(row) !== null)
+                            .filter(({ row }) => getLiftName(row) !== null)
                             .map(({ row, length }) => ({
-                                name: getTrailName(row),
-                                resort: getResortName(row),
+                                name:    getLiftName(row),
+                                type:    typeLabel(getAerialway(row)),
+                                rawType: getAerialway(row),
+                                resort:  getResortName(row),
                                 country: getCountry(row),
                                 length,
-                                difficulty: diffLabel(getDifficulty(row)) || 'Unknown',
-                                rawDiff: getDifficulty(row)
                             }));
                         filteredNamed = [...namedRows];
-                        sortNamed();
-                        currentPage = 1;
-                        renderTable();
+                        sortNamed(); currentPage = 1; renderTable();
                     }
 
                     applyFacts(withLength);
 
-                    // Filter event handlers
                     function refilter() {
                         const countryVal = countrySelect.value;
-                        const diffVal = diffSelect.value;
-                        const excludeUntyped = excludeUntypedCb.checked;
+                        const typeVal = typeSelect.value;
                         const filtered = withLength.filter(({ row }) => {
-                            if (!isDownhillTrail(row, excludeUntyped)) return false;
                             if (countryVal && getCountry(row) !== countryVal) return false;
-                            if (diffVal && getDifficulty(row) !== diffVal) return false;
+                            if (typeVal && getAerialway(row) !== typeVal) return false;
                             return true;
                         });
                         applyFacts(filtered);
-                        const search = document.getElementById('trail-search').value;
-                        applyNamedFilter(search, countryVal, diffVal);
+                        applyNamedFilter(document.getElementById('lift-search').value, countryVal, typeVal);
                     }
 
                     countrySelect.addEventListener('change', refilter);
-                    diffSelect.addEventListener('change', refilter);
-                    excludeUntypedCb.addEventListener('change', refilter);
-                    document.getElementById('trail-search').addEventListener('input', (e) => {
-                        applyNamedFilter(e.target.value, countrySelect.value, diffSelect.value);
+                    typeSelect.addEventListener('change', refilter);
+                    document.getElementById('lift-search').addEventListener('input', (e) => {
+                        applyNamedFilter(e.target.value, countrySelect.value, typeSelect.value);
                     });
 
                 } catch (err) {
-                    console.warn('Trail facts: could not load data', err);
-                    document.getElementById('facts-summary').innerHTML = '<div class="tw-text-center tw-text-red-600">Could not load trail data. Check network.</div>';
-                    document.getElementById('named-table-wrap').innerHTML = '<div class="tw-p-8 tw-text-center tw-text-red-600">Could not load trail data.</div>';
+                    console.warn('Lift facts: could not load data', err);
+                    document.getElementById('facts-summary').innerHTML = '<div class="tw-text-center tw-text-red-600">Could not load lift data. Check network.</div>';
+                    document.getElementById('named-table-wrap').innerHTML = '<div class="tw-p-8 tw-text-center tw-text-red-600">Could not load lift data.</div>';
                 }
             })();
         </script>

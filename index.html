@@ -20,13 +20,35 @@
             type="image/x-icon"
         />
 
-        <!-- Open Graph / Facebook -->
-        <meta property="og:title" content="Global Ski Atlas" />
-        <meta property="og:description" content="Your guide to ski resorts worldwide. Paper atlas, online atlas, resort comparison, and skiing AI assistant." />
+        <!-- Open Graph -->
+        <meta property="og:title" content="Global Ski Atlas – Your Guide to Ski Resorts Worldwide" />
+        <meta property="og:description" content="Explore 3,000+ ski resorts with our interactive map, resort comparison tool, AI ski assistant, and coffee table book. The most comprehensive ski resort database on the web." />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="" />
-        <!-- Replace with your live site URL -->
-        <meta property="og:image" content="" />
+        <meta property="og:url" content="https://globalskiatlas.com/" />
+        <meta property="og:image" content="https://globalskiatlas.com/assets/og-banner.png" />
+        <meta property="og:site_name" content="Global Ski Atlas" />
+        <!-- Twitter Card -->
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Global Ski Atlas – Your Guide to Ski Resorts Worldwide" />
+        <meta name="twitter:description" content="Explore 3,000+ ski resorts with our interactive map, resort comparison tool, AI ski assistant, and coffee table book." />
+        <meta name="twitter:image" content="https://globalskiatlas.com/assets/og-banner.png" />
+        <!-- Canonical -->
+        <link rel="canonical" href="https://globalskiatlas.com/" />
+        <!-- JSON-LD -->
+        <script type="application/ld+json">
+        {
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          "name": "Global Ski Atlas",
+          "url": "https://globalskiatlas.com/",
+          "description": "The most comprehensive ski resort database. Explore 3,000+ ski resorts worldwide with interactive maps, comparison tools, and an AI assistant.",
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://globalskiatlas.com/mainmap.html?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+          }
+        }
+        </script>
 
         <!-- <link rel="stylesheet" href="../../tailwind-css/tailwind-runtime.css"> -->
         <link rel="stylesheet" href="./css/tailwind-build.css" />
@@ -70,6 +92,7 @@
                     <a class="header-links" href="resort-comparison.html">Compare Resorts</a>
                     <a class="header-links" href="SkiResortFacts.html">Resort Facts</a>
                     <a class="header-links" href="SkiTrailFacts.html">Trail Facts</a>
+                    <a class="header-links" href="SkiLiftFacts.html">Lift Facts</a>
                     <a class="header-links" href="About.html">About</a>
                     <a class="header-links" href="skiing-ai.html">AI Assistant</a>
                 </div>
@@ -254,7 +277,11 @@
                     <div id="stat-pistes-desc" class="stat-pistes-legend tw-mt-1 tw-text-sm tw-text-gray-600">—</div>
                 </div>
             </div>
-            <a href="SkiResortFacts.html" class="tw-mt-4 tw-text-sm tw-font-medium tw-text-[#0d9488] hover:tw-underline">See ski statistics →</a>
+            <div class="tw-mt-4 tw-flex tw-flex-wrap tw-gap-4">
+                <a href="SkiResortFacts.html" class="tw-text-sm tw-font-medium tw-text-[#0d9488] hover:tw-underline">Resort Facts →</a>
+                <a href="SkiTrailFacts.html" class="tw-text-sm tw-font-medium tw-text-[#0d9488] hover:tw-underline">Trail Facts →</a>
+                <a href="SkiLiftFacts.html" class="tw-text-sm tw-font-medium tw-text-[#0d9488] hover:tw-underline">Lift Facts →</a>
+            </div>
         </section>
 
         <section
@@ -552,6 +579,7 @@
                     <a href="resort-comparison.html" class="footer-link">Compare Resorts</a>
                     <a href="SkiResortFacts.html" class="footer-link">Resort Facts</a>
                     <a href="SkiTrailFacts.html" class="footer-link">Trail Facts</a>
+                    <a href="SkiLiftFacts.html" class="footer-link">Lift Facts</a>
                     <a href="skiing-ai.html" class="footer-link">AI Assistant</a>
                 </div>
             </div>
