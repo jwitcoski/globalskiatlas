@@ -201,10 +201,19 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.0/gsap.min.js" integrity="sha512-0z3qBQn+oF6Z0o0kIeamF0kF0k1R0L+OyX5e0UjDZ5PwZ2gHp0n4n+Y1CzR8hrPzD0c+eY4uQ0L0JBMQJv4cPA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script type="module">
     const MAPTILER_KEY = '0P06ORgY8WvmMOnPr0p2';
-    const GEOPARQUET_URL = 'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/ski_areas_analyzed.parquet';
-    const SKI_AREAS_OUTLINES_URL = 'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/ski_areas.parquet';
-    const LIFTS_URL = 'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/lifts.parquet';
-    const PISTES_URL = 'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/pistes.parquet';
+    // ── Ski area markers (points) ──────────────────────────────────────────────
+    const SKI_AREAS_MAPTILER_URL = `https://api.maptiler.com/data/019c9294-30cd-7aa0-96a0-e552ef79eee8/features.json?key=${MAPTILER_KEY}`;
+    const SKI_AREAS_PARQUET_URL  = 'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/ski_areas_analyzed.parquet';
+
+    // ── Ski area boundary outlines (polygons) ──────────────────────────────────
+    // Vector tilesets – features.json not available; using parquet until re-published as GeoJSON datasets
+    const SKI_AREAS_OUTLINES_MAPTILER_URL = null; // tileset ID: 019c92a4-515d-7bf8-ac40-52332776c759
+    const SKI_AREAS_OUTLINES_PARQUET_URL  = 'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/ski_areas.parquet';
+
+    const LIFTS_MAPTILER_URL  = null; // tileset ID: 019c92dc-8bb8-73a6-b9ca-46788cc3246a
+    const LIFTS_PARQUET_URL   = 'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/lifts.parquet';
+    const PISTES_MAPTILER_URL = null; // tileset ID: 019c92f2-511a-7f64-9c97-a64bd38ce2ef
+    const PISTES_PARQUET_URL  = 'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/pistes.parquet';
 
     const NAME_KEYS = ['name', 'resort_name', 'title', 'area_name', 'Name'];
     const ID_KEYS = ['id', 'ref', 'area_id', 'resort_id', 'skiresort_id'];
@@ -392,9 +401,17 @@
     let resortMapFeatures = [];
 
     try {
-      const { asyncBufferFromUrl, parquetReadObjects } = await import('https://esm.sh/hyparquet@1');
-      const fileAnalyzed = await asyncBufferFromUrl({ url: GEOPARQUET_URL });
-      const dataAnalyzed = await parquetReadObjects({ file: fileAnalyzed });
+      let dataAnalyzed;
+      if (SKI_AREAS_MAPTILER_URL) {
+        const r = await fetch(SKI_AREAS_MAPTILER_URL);
+        if (!r.ok) throw new Error(`Ski areas fetch failed: ${r.status} ${r.statusText}`);
+        const gj = await r.json();
+        dataAnalyzed = (gj.features || []).map((f) => ({ ...f.properties, geometry: f.geometry }));
+      } else {
+        const { asyncBufferFromUrl, parquetReadObjects } = await import('https://esm.sh/hyparquet@1');
+        const file = await asyncBufferFromUrl({ url: SKI_AREAS_PARQUET_URL });
+        dataAnalyzed = await parquetReadObjects({ file });
+      }
 
       const r0 = dataAnalyzed[0] || {};
       const latCol = r0.latitude != null ? 'latitude' : r0.centroid_lat != null ? 'centroid_lat' : r0.lat != null ? 'lat' : null;
@@ -450,20 +467,32 @@
         map.flyTo([resortLat, resortLon], 14, { duration: flyDuration, easeLinearity: 0.25 });
 
         const loadRestPromise = (async () => {
-          const [fileOutlines, fileLifts, filePistes] = await Promise.all([
-            asyncBufferFromUrl({ url: SKI_AREAS_OUTLINES_URL }),
-            asyncBufferFromUrl({ url: LIFTS_URL }),
-            asyncBufferFromUrl({ url: PISTES_URL })
-          ]);
-          const [dataOutlines, dataLifts, dataPistes] = await Promise.all([
-            parquetReadObjects({ file: fileOutlines }),
-            parquetReadObjects({ file: fileLifts }),
-            parquetReadObjects({ file: filePistes })
-          ]);
+          // Helper: fetch GeoJSON from MapTiler or fall back to parquet for any layer
+          async function loadFeaturesFromSource(maptilerUrl, parquetUrl, geomFilter, hyparquet) {
+            if (maptilerUrl) {
+              const r = await fetch(maptilerUrl);
+              if (!r.ok) throw new Error(`GeoJSON fetch failed (${maptilerUrl}): ${r.status}`);
+              const gj = await r.json();
+              return (gj.features || []).filter((f) => f.geometry && geomFilter(f.geometry.type));
+            }
+            const file = await hyparquet.asyncBufferFromUrl({ url: parquetUrl });
+            const rows = await hyparquet.parquetReadObjects({ file });
+            return (rows || [])
+              .filter((r) => r.geometry && geomFilter(r.geometry.type))
+              .map((r) => ({ type: 'Feature', geometry: r.geometry, properties: Object.fromEntries(Object.entries(r).filter(([k]) => k !== 'geometry')) }));
+          }
 
-          const outlineFeatures = (dataOutlines || [])
-            .filter((row) => row.geometry && (row.geometry.type === 'Polygon' || row.geometry.type === 'MultiPolygon'))
-            .map((row) => ({ type: 'Feature', geometry: row.geometry, properties: Object.fromEntries(Object.entries(row).filter(([k]) => k !== 'geometry')) }));
+          const isPolygon = (t) => t === 'Polygon' || t === 'MultiPolygon';
+          const isLine    = (t) => t === 'LineString' || t === 'MultiLineString';
+
+          const needParquet = !SKI_AREAS_OUTLINES_MAPTILER_URL || !LIFTS_MAPTILER_URL || !PISTES_MAPTILER_URL;
+          const hyparquet = needParquet ? await import('https://esm.sh/hyparquet@1') : null;
+
+          const [outlineFeatures, liftFeatures, pisteFeatures] = await Promise.all([
+            loadFeaturesFromSource(SKI_AREAS_OUTLINES_MAPTILER_URL, SKI_AREAS_OUTLINES_PARQUET_URL, isPolygon, hyparquet),
+            loadFeaturesFromSource(LIFTS_MAPTILER_URL, LIFTS_PARQUET_URL, isLine, hyparquet),
+            loadFeaturesFromSource(PISTES_MAPTILER_URL, PISTES_PARQUET_URL, isLine, hyparquet)
+          ]);
 
           let outlineFeature = outlineFeatures.find((f) => {
             const name = getProp(f.properties, NAME_KEYS);
@@ -472,14 +501,6 @@
             if (name && resortName && String(name).trim().toLowerCase() === String(resortName).trim().toLowerCase()) return true;
             return pointInPolygon(resortLon, resortLat, f.geometry);
           });
-
-          const toFeature = (row) => {
-            if (!row.geometry || !row.geometry.type) return null;
-            const { geometry, ...props } = row;
-            return { type: 'Feature', geometry, properties: props };
-          };
-          const liftFeatures = (dataLifts || []).filter((r) => r.geometry && (r.geometry.type === 'LineString' || r.geometry.type === 'MultiLineString')).map(toFeature).filter(Boolean);
-          const pisteFeatures = (dataPistes || []).filter((r) => r.geometry && (r.geometry.type === 'LineString' || r.geometry.type === 'MultiLineString')).map(toFeature).filter(Boolean);
 
           const features = [];
           if (outlineFeature) {
