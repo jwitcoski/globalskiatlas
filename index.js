@@ -58,51 +58,34 @@ window.addEventListener("resize", responsive)
 
 gsap.registerPlugin(ScrollTrigger)
 
-gsap.to(".reveal-hero-text", {
-    opacity: 0,
-    y: "100%",
-})
+const heroTextEls = document.querySelectorAll(".reveal-hero-text")
+const heroImgEls  = document.querySelectorAll(".reveal-hero-img")
+const heroImgBg   = document.querySelector("#hero-img-bg")
 
-gsap.to(".reveal-hero-img", {
-    opacity: 0,
-    y: "100%",
-})
+if (heroTextEls.length) gsap.to(heroTextEls, { opacity: 0, y: "100%" })
+if (heroImgEls.length)  gsap.to(heroImgEls,  { opacity: 0, y: "100%" })
+if (heroImgBg)          gsap.to(heroImgBg,   { scale: 0 })
 
-const heroImgBg = document.querySelector("#hero-img-bg")
-if (heroImgBg) {
-    gsap.to(heroImgBg, {
-        scale: 0
-    })
+if (document.querySelector(".reveal-up")) {
+    gsap.to(".reveal-up", { opacity: 0, y: "100%" })
 }
 
-gsap.to(".reveal-up", {
-    opacity: 0,
-    y: "100%",
-})
-
-
 window.addEventListener("load", () => {
-    // animate from initial position
-    gsap.to(".reveal-hero-text", {
-        opacity: 1,
-        y: "0%",
-        duration: 0.8,
-        // ease: "power3.out",
-        stagger: 0.5, // Delay between each word's reveal,
-        // delay: 3
-    })
+    if (heroTextEls.length) {
+        gsap.to(heroTextEls, {
+            opacity: 1,
+            y: "0%",
+            duration: 0.8,
+            stagger: 0.5,
+        })
+    }
 
-    gsap.to(".reveal-hero-img", {
-        opacity: 1,
-        y: "0%",
-    })
+    if (heroImgEls.length) {
+        gsap.to(heroImgEls, { opacity: 1, y: "0%" })
+    }
 
     if (heroImgBg) {
-        gsap.to(heroImgBg, {
-            scale: 1,
-            duration: 0.8,
-            delay: 0.4
-        })
+        gsap.to(heroImgBg, { scale: 1, duration: 0.8, delay: 0.4 })
     }
 })
 

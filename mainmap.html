@@ -329,7 +329,7 @@
 
     // ── Ski area boundary outlines (polygons) ──────────────────────────────────
     // ── Heavy layers – vector tilesets via leaflet.vectorgrid ─────────────────
-    const OUTLINES_TILESET_URL = `https://api.maptiler.com/tiles/019c92a4-515d-7bf8-ac40-52332776c759/{z}/{x}/{y}.pbf?key=${MAPTILER_KEY}`;
+    const OUTLINES_TILESET_URL = `https://api.maptiler.com/tiles/019c9343-c29a-7aee-8e30-fefd1b0dbe3f/{z}/{x}/{y}.pbf?key=${MAPTILER_KEY}`;
     const LIFTS_TILESET_URL    = `https://api.maptiler.com/tiles/019c92dc-8bb8-73a6-b9ca-46788cc3246a/{z}/{x}/{y}.pbf?key=${MAPTILER_KEY}`;
     const PISTES_TILESET_URL   = `https://api.maptiler.com/tiles/019c92f2-511a-7f64-9c97-a64bd38ce2ef/{z}/{x}/{y}.pbf?key=${MAPTILER_KEY}`;
     const OUTLINES_MIN_ZOOM = 10;
@@ -796,11 +796,25 @@
         moveVtTip(e);
       }
       function moveVtTip(e) {
-        const x = e.originalEvent.clientX, y = e.originalEvent.clientY;
+        const oe = e.originalEvent || e;
+        const x = oe.clientX, y = oe.clientY;
+        if (x == null) return;
         vtTipEl.style.left = (x + 14) + 'px';
         vtTipEl.style.top  = (y - 36) + 'px';
       }
       function hideVtTip() { vtTipEl.style.display = 'none'; }
+
+      // Track mouse globally so tooltip follows cursor even when VectorGrid
+      // mousemove events don't carry originalEvent
+      let _lastMouseX = 0, _lastMouseY = 0;
+      document.addEventListener('mousemove', (ev) => {
+        _lastMouseX = ev.clientX;
+        _lastMouseY = ev.clientY;
+        if (vtTipEl.style.display !== 'none') {
+          vtTipEl.style.left = (_lastMouseX + 14) + 'px';
+          vtTipEl.style.top  = (_lastMouseY - 36) + 'px';
+        }
+      });
 
       function aerialwayLabel(type) {
         const labels = { gondola: 'Gondola', cable_car: 'Cable car', chair_lift: 'Chairlift',
@@ -824,13 +838,26 @@
         layer.on('mouseout',  hideVtTip);
       }
 
+      let tilesetErrorLogged = {};
+      function onTileError(layerName, url) {
+        return (err) => {
+          if (!tilesetErrorLogged[layerName]) {
+            tilesetErrorLogged[layerName] = true;
+            const status = err && err.status ? ` (HTTP ${err.status})` : '';
+            console.warn(`[mainmap] ${layerName} tileset returning errors${status} – check MapTiler Cloud that the tileset ID exists and is published. URL: ${url}`);
+          }
+        };
+      }
+
       function initHeavyLayers() {
         outlinesLayer = L.vectorGrid.protobuf(OUTLINES_TILESET_URL, {
           vectorTileLayerStyles: {
-            ski_areas: { ...vtBase, color: '#1a1a1a', weight: 2, opacity: 0.9, dashArray: '4, 6' }
+            ski_areas: { ...vtBase, color: '#1a1a1a', weight: 2, opacity: 0.9, dashArray: '4, 6',
+              fill: true, fillOpacity: 0.03, fillColor: '#1a1a1a' }
           },
-          maxNativeZoom: 14, interactive: true
+          maxNativeZoom: 16, interactive: true
         });
+        outlinesLayer.on('tileerror', onTileError('outlines', OUTLINES_TILESET_URL));
         bindVtTooltips(outlinesLayer, (layer) => {
           const p = layer.properties || {};
           const name = p.name || p.Name || 'Ski area';
@@ -843,8 +870,9 @@
           vectorTileLayerStyles: {
             lifts: { ...vtBase, color: '#f87171', weight: 2, opacity: 0.9 }
           },
-          maxNativeZoom: 14, interactive: true
+          maxNativeZoom: 11, interactive: true
         });
+        liftsLayer.on('tileerror', onTileError('lifts', LIFTS_TILESET_URL));
         bindVtTooltips(liftsLayer, (layer) => {
           const p = layer.properties || {};
           const name = p.name || p.Name || '';
@@ -858,8 +886,9 @@
           vectorTileLayerStyles: {
             pistes_tmp: (props) => ({ ...vtBase, ...pisteVTStyle(props) })
           },
-          maxNativeZoom: 14, interactive: true
+          maxNativeZoom: 12, interactive: true
         });
+        pistesLayer.on('tileerror', onTileError('pistes', PISTES_TILESET_URL));
         bindVtTooltips(pistesLayer, (layer) => {
           const p = layer.properties || {};
           const name = p.name || p.Name || '';
