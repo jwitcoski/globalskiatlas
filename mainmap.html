@@ -772,11 +772,14 @@
       }
       function pisteVTStyle(properties) {
         const d = getPisteDifficultyVT(properties);
-        if (d === 'easy' || d === 'novice')                        return { color: '#22c55e', weight: 3, opacity: 0.65, interactive: true };
-        if (d === 'intermediate' || d === 'medium')                return { color: '#2563eb', weight: 3, opacity: 0.65, interactive: true };
-        if (d === 'advanced' || d === 'hard')                      return { color: '#1a1a1a', weight: 3.5, opacity: 0.65, interactive: true };
-        if (d === 'expert' || d === 'freeride' || d === 'extreme') return { color: '#991b1b', weight: 4, opacity: 0.65, interactive: true };
-        return { color: '#64748b', weight: 2, opacity: 0.5, interactive: true };
+        function ps(color, weight) {
+          return { color, weight, opacity: 0.5, fill: true, fillColor: color, fillOpacity: 0.25, interactive: true };
+        }
+        if (d === 'easy' || d === 'novice')                        return ps('#22c55e', 3);
+        if (d === 'intermediate' || d === 'medium')                return ps('#2563eb', 3);
+        if (d === 'advanced' || d === 'hard')                      return ps('#1a1a1a', 3.5);
+        if (d === 'expert' || d === 'freeride' || d === 'extreme') return ps('#991b1b', 4);
+        return ps('#64748b', 2);
       }
 
       let outlinesLayer = null;
