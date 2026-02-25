@@ -368,7 +368,7 @@
           </div>
         </div>
         <div class="controls-section" id="size-legend-section">
-          <div class="controls-section-title">Resort size (by trails)</div>
+          <div class="controls-section-title">Resort size (by trails / acres)</div>
           <div class="size-legend" id="size-legend"></div>
         </div>
         <div class="controls-section">
@@ -493,6 +493,7 @@
     const RESORT_TYPE_KEYS = ['resort_type', 'Resort Type'];
     const NOT_DOWNHILL = 'not a downhill ski resort';
     const COLOR_BY_KEYS = ['downhill_trails', 'number_of_downhill_trails', 'Downhill Trails', 'trails'];
+    const SIZE_BY_KEYS  = ['total_area_acres', 'Total Area Acres', 'area_acres'];
 
     const width = 1000;
     const height = 700;
@@ -510,30 +511,36 @@
       const v = getProp(props, RESORT_TYPE_KEYS);
       return v != null && String(v).toLowerCase().trim() === NOT_DOWNHILL.toLowerCase();
     }
-    const TRAILS_RED = 10;
-    const TRAILS_MEDIUM = 30;
+    const TRAILS_SMALL  = 50;
+    const TRAILS_MEDIUM = 100;
+    const ACRES_SMALL   = 1000;
+    const ACRES_MEDIUM  = 5000;
     function getTrailCount(props) {
       const v = getProp(props, COLOR_BY_KEYS);
       if (v == null || v === '') return 0;
       const n = typeof v === 'number' ? v : Number(v);
       return Number.isNaN(n) ? 0 : n;
     }
+    function getAcres(props) {
+      const v = getProp(props, SIZE_BY_KEYS);
+      if (v == null || v === '') return 0;
+      const n = typeof v === 'number' ? v : Number(v);
+      return Number.isNaN(n) ? 0 : n;
+    }
     function getSizeTier(props) {
       if (isNotDownhill(props)) return 'small';
-      const n = getTrailCount(props);
-      if (n < TRAILS_RED) return 'small';
-      if (n < TRAILS_MEDIUM) return 'medium';
-      return 'large';
+      const trails = getTrailCount(props);
+      const acres  = getAcres(props);
+      if (trails >= TRAILS_MEDIUM || acres >= ACRES_MEDIUM) return 'large';
+      if (trails >= TRAILS_SMALL  || acres >= ACRES_SMALL)  return 'medium';
+      return 'small';
     }
     function getColorForSize(props) {
       if (isNotDownhill(props)) return '#999999';
-      const v = getProp(props, COLOR_BY_KEYS);
-      if (v == null || v === '' || (typeof v === 'number' && Number.isNaN(v))) return '#c44d34';
-      const n = typeof v === 'number' ? v : Number(v);
-      if (Number.isNaN(n)) return '#c44d34';
-      if (n < TRAILS_RED) return '#c44d34';
-      if (n < TRAILS_MEDIUM) return '#e6c229';
-      return '#2d8a3e';
+      const tier = getSizeTier(props);
+      if (tier === 'large')  return '#2d8a3e';
+      if (tier === 'medium') return '#e6c229';
+      return '#c44d34';
     }
     const hillSvg = (color, w, h) => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 16" width="' + w + '" height="' + h + '" style="display:block"><path d="M0 16 L0 11 Q6 6 12 11 Q18 6 24 11 L24 16 Z" fill="' + color + '" stroke="#1a1a1a" stroke-width="0.8"/></svg>';
     const mountainSvg = (color, w, h) => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 16" width="' + w + '" height="' + h + '" style="display:block"><path d="M0 16 L8 5 L16 10 L24 16 Z" fill="' + color + '" stroke="#1a1a1a" stroke-width="0.8"/></svg>';
@@ -549,7 +556,7 @@
       if (tier === 'small') svg = hillSvg(color, w, h);
       else if (tier === 'medium') svg = mountainSvg(color, w, h);
       else svg = mountainsSvg(color, w, h);
-      return '<span class="resort-size-icon" title="' + (tier === 'small' && isNotDownhill(props) ? 'Not a downhill ski resort' : tier === 'small' ? 'Small hill (< 10 trails)' : tier === 'medium' ? 'Ski mountain (10–30 trails)' : 'Multiple mountains (30+ trails)') + '">' + svg + '</span>';
+      return '<span class="resort-size-icon" title="' + (tier === 'small' && isNotDownhill(props) ? 'Not a downhill ski resort' : tier === 'small' ? 'Small hill (< 50 trails / 1,000 ac)' : tier === 'medium' ? 'Ski mountain (50–100 trails / 1,000–5,000 ac)' : 'Multiple mountains (100+ trails / 5,000+ ac)') + '">' + svg + '</span>';
     }
 
     function getPisteDifficulty(props) {
@@ -882,9 +889,9 @@
       const sizeLegendEl = document.getElementById('size-legend');
       if (sizeLegendEl) {
         sizeLegendEl.innerHTML =
-          '<div class="legend-row"><span class="legend-mountain-icon">' + hillSvg('#c44d34', 18, 12) + '</span> Small hill (&lt; 10 trails)</div>' +
-          '<div class="legend-row"><span class="legend-mountain-icon">' + mountainSvg('#e6c229', 18, 12) + '</span> Ski mountain (10–30)</div>' +
-          '<div class="legend-row"><span class="legend-mountain-icon">' + mountainsSvg('#2d8a3e', 18, 12) + '</span> Multiple mountains (30+)</div>' +
+          '<div class="legend-row"><span class="legend-mountain-icon">' + hillSvg('#c44d34', 18, 12) + '</span> Small hill (&lt; 50 trails / 1,000 ac)</div>' +
+          '<div class="legend-row"><span class="legend-mountain-icon">' + mountainSvg('#e6c229', 18, 12) + '</span> Ski mountain (50–100 trails / 1,000–5,000 ac)</div>' +
+          '<div class="legend-row"><span class="legend-mountain-icon">' + mountainsSvg('#2d8a3e', 18, 12) + '</span> Multiple mountains (100+ trails / 5,000+ ac)</div>' +
           '<div class="legend-row"><span class="legend-mountain-icon">' + hillSvg('#999', 16, 11) + '</span> Grey = not downhill</div>';
       }
 

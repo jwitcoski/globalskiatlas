@@ -127,6 +127,22 @@
     .resort-tooltip::before { display: none; }
     .resort-tooltip .tt-name { font-weight: 600; }
     .resort-tooltip .tt-hint { color: #94a3b8; font-size: 11px; margin-top: 2px; }
+    #vt-tooltip {
+      position: fixed;
+      display: none;
+      z-index: 9999;
+      pointer-events: none;
+      background: rgba(15,23,42,0.92);
+      border-radius: 7px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+      color: #f1f5f9;
+      font-size: 13px;
+      padding: 6px 10px;
+      white-space: nowrap;
+    }
+    #vt-tooltip .tt-name { font-weight: 600; }
+    #vt-tooltip .tt-hint { color: #94a3b8; font-size: 11px; margin-top: 2px; }
+    #vt-tooltip .tt-diff { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
     .legend-mountain-icon { display: inline-flex; align-items: center; vertical-align: middle; margin-right: 6px; }
     @media (max-width: 768px) {
       .map-wrapper {
@@ -770,24 +786,87 @@
       // Base style mixin applied to every feature to silence point/polygon rendering artefacts
       const vtBase = { fill: false, fillOpacity: 0, radius: 0 };
 
+      // Shared floating tooltip for vector tile layers
+      const vtTipEl = document.createElement('div');
+      vtTipEl.id = 'vt-tooltip';
+      document.body.appendChild(vtTipEl);
+      function showVtTip(e, html) {
+        vtTipEl.innerHTML = html;
+        vtTipEl.style.display = 'block';
+        moveVtTip(e);
+      }
+      function moveVtTip(e) {
+        const x = e.originalEvent.clientX, y = e.originalEvent.clientY;
+        vtTipEl.style.left = (x + 14) + 'px';
+        vtTipEl.style.top  = (y - 36) + 'px';
+      }
+      function hideVtTip() { vtTipEl.style.display = 'none'; }
+
+      function aerialwayLabel(type) {
+        const labels = { gondola: 'Gondola', cable_car: 'Cable car', chair_lift: 'Chairlift',
+          mixed_lift: 'Mixed lift', drag_lift: 'Drag lift', 't-bar': 'T-bar',
+          j_bar: 'J-bar', platter: 'Platter', rope_tow: 'Rope tow', magic_carpet: 'Magic carpet' };
+        return labels[type] || (type ? type.replace(/_/g, ' ') : 'Lift');
+      }
+      function difficultyBadge(d) {
+        const map = { easy: ['#22c55e','Easy'], novice: ['#22c55e','Novice'],
+          intermediate: ['#2563eb','Intermediate'], medium: ['#2563eb','Medium'],
+          advanced: ['#1a1a1a','Advanced'], hard: ['#1a1a1a','Hard'],
+          expert: ['#991b1b','Expert'], freeride: ['#991b1b','Freeride'],
+          extreme: ['#991b1b','Extreme'] };
+        const [color, label] = map[d] || ['#64748b', 'Unrated'];
+        return `<span class="tt-diff" style="background:${color}"></span>${label}`;
+      }
+
+      function bindVtTooltips(layer, buildHtml) {
+        layer.on('mouseover', (e) => { showVtTip(e, buildHtml(e.propagatedFrom || e.layer)); });
+        layer.on('mousemove', moveVtTip);
+        layer.on('mouseout',  hideVtTip);
+      }
+
       function initHeavyLayers() {
         outlinesLayer = L.vectorGrid.protobuf(OUTLINES_TILESET_URL, {
           vectorTileLayerStyles: {
             ski_areas: { ...vtBase, color: '#1a1a1a', weight: 2, opacity: 0.9, dashArray: '4, 6' }
           },
-          maxNativeZoom: 14, interactive: false
+          maxNativeZoom: 14, interactive: true
         });
+        bindVtTooltips(outlinesLayer, (layer) => {
+          const p = layer.properties || {};
+          const name = p.name || p.Name || 'Ski area';
+          const country = p.Country || p.country || '';
+          return `<div class="tt-name">${escapeHtml(name)}</div>` +
+            (country ? `<div class="tt-hint">${escapeHtml(country)}</div>` : '');
+        });
+
         liftsLayer = L.vectorGrid.protobuf(LIFTS_TILESET_URL, {
           vectorTileLayerStyles: {
             lifts: { ...vtBase, color: '#f87171', weight: 2, opacity: 0.9 }
           },
-          maxNativeZoom: 14, interactive: false
+          maxNativeZoom: 14, interactive: true
         });
+        bindVtTooltips(liftsLayer, (layer) => {
+          const p = layer.properties || {};
+          const name = p.name || p.Name || '';
+          const type = aerialwayLabel(p.aerialway || p.Aerialway || '');
+          const area = p['Ski Area'] || '';
+          return `<div class="tt-name">${escapeHtml(type)}${name ? ' · ' + escapeHtml(name) : ''}</div>` +
+            (area ? `<div class="tt-hint">${escapeHtml(area)}</div>` : '');
+        });
+
         pistesLayer = L.vectorGrid.protobuf(PISTES_TILESET_URL, {
           vectorTileLayerStyles: {
             pistes_tmp: (props) => ({ ...vtBase, ...pisteVTStyle(props) })
           },
-          maxNativeZoom: 14, interactive: false
+          maxNativeZoom: 14, interactive: true
+        });
+        bindVtTooltips(pistesLayer, (layer) => {
+          const p = layer.properties || {};
+          const name = p.name || p.Name || '';
+          const diff = getPisteDifficultyVT(p);
+          const area = p['Ski Area'] || '';
+          return `<div class="tt-name">${name ? escapeHtml(name) + ' · ' : ''}${difficultyBadge(diff)}</div>` +
+            (area ? `<div class="tt-hint">${escapeHtml(area)}</div>` : '');
         });
       }
 
