@@ -12,19 +12,20 @@
     gtag('config', 'G-KJGNL3KJL0');
   </script>
   <!-- Ad script loaded after map is interactive (see mainmap module) -->
-  <title>Interactive Ski Resort Map – Global Ski Atlas</title>
-  <meta name="description" content="Explore an interactive map of 3,000+ ski resorts worldwide. Browse trails, lifts, and resort boundaries for every ski area on the globe." />
+  <title>Ski Road Trip Planner & Interactive Ski Resort Map – Global Ski Atlas</title>
+  <meta name="description" content="Free ski road trip planner: plan multi-resort ski trips with turn-by-turn directions. Interactive map of 3,000+ ski resorts worldwide—trails, lifts, route planner." />
+  <meta name="keywords" content="ski road trip planner, ski trip planner, ski resort map, multi resort ski trip, ski road trip route, ski resort directions, interactive ski map" />
   <!-- Open Graph -->
-  <meta property="og:title" content="Interactive Ski Resort Map – Global Ski Atlas" />
-  <meta property="og:description" content="Explore an interactive map of 3,000+ ski resorts worldwide. Browse trails, lifts, and resort boundaries for every ski area on the globe." />
+  <meta property="og:title" content="Ski Road Trip Planner & Interactive Ski Resort Map – Global Ski Atlas" />
+  <meta property="og:description" content="Plan a ski road trip with turn-by-turn directions. Interactive map of 3,000+ ski resorts—trails, lifts, and free route planner." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://globalskiatlas.com/mainmap.html" />
   <meta property="og:image" content="https://globalskiatlas.com/assets/og-banner.png" />
   <meta property="og:site_name" content="Global Ski Atlas" />
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Interactive Ski Resort Map – Global Ski Atlas" />
-  <meta name="twitter:description" content="Explore an interactive map of 3,000+ ski resorts worldwide. Browse trails, lifts, and resort boundaries." />
+  <meta name="twitter:title" content="Ski Road Trip Planner & Interactive Ski Resort Map – Global Ski Atlas" />
+  <meta name="twitter:description" content="Plan a ski road trip with turn-by-turn directions. Interactive map of 3,000+ ski resorts—trails, lifts, route planner." />
   <meta name="twitter:image" content="https://globalskiatlas.com/assets/og-banner.png" />
   <!-- Canonical -->
   <link rel="canonical" href="https://globalskiatlas.com/mainmap.html" />
@@ -36,6 +37,7 @@
   <link rel="stylesheet" href="css/index.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" integrity="sha512-dPXYcDub/aeb08c63jRq/k6GaKccl256JQy/AnOq7CAnEZ9FzSL9wSbcZkMp4R26vBsMLFYH4kQ67/bbV8XaCQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" crossorigin="">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { height: 100%; font-family: system-ui, -apple-system, sans-serif; }
@@ -164,9 +166,186 @@
       .search-box { top: 8px; width: calc(100% - 24px); max-width: none; }
       .search-box input { padding: 8px 12px; font-size: 14px; }
     }
+    /* ── Road Trip Planner ──────────────────────────────────────────────────── */
+    .leaflet-routing-container { display: none !important; }
+    #roadTripToggle {
+      position: absolute;
+      bottom: 80px;
+      right: 12px;
+      z-index: 1000;
+      background: #1e40af;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.28);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.2s;
+    }
+    #roadTripToggle:hover { background: #1d4ed8; }
+    #roadTripPanel {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 320px;
+      z-index: 1002;
+      background: #fff;
+      box-shadow: -4px 0 20px rgba(0,0,0,0.18);
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    #roadTripPanel.open { transform: translateX(0); }
+    .rtp-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      background: #1e40af;
+      color: #fff;
+      flex-shrink: 0;
+    }
+    .rtp-header h2 { font-size: 15px; font-weight: 700; margin: 0; }
+    .rtp-close-btn { background: none; border: none; color: #fff; font-size: 22px; cursor: pointer; line-height: 1; padding: 0; }
+    .rtp-body { padding: 14px; display: flex; flex-direction: column; gap: 14px; flex: 1; }
+    .rtp-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #6b7280; margin-bottom: 5px; }
+    .rtp-input-row { display: flex; gap: 6px; }
+    .rtp-input-row input, .rtp-search-input {
+      flex: 1;
+      padding: 8px 10px;
+      font-size: 14px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      outline: none;
+      width: 100%;
+    }
+    .rtp-input-row input:focus, .rtp-search-input:focus { border-color: #2563eb; }
+    .rtp-btn {
+      padding: 8px 14px;
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .rtp-btn:hover { background: #1d4ed8; }
+    .rtp-btn:disabled { background: #9ca3af; cursor: not-allowed; }
+    .rtp-btn-full { width: 100%; padding: 10px; font-size: 14px; }
+    .rtp-loc-btn {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-top: 6px;
+      padding: 6px 10px;
+      background: none;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 12px;
+      cursor: pointer;
+      color: #374151;
+    }
+    .rtp-loc-btn:hover { background: #f3f4f6; }
+    .rtp-status { font-size: 12px; margin-top: 5px; color: #6b7280; min-height: 16px; }
+    .rtp-end-options { display: flex; flex-direction: column; gap: 4px; }
+    .rtp-radio { display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; color: #374151; }
+    .rtp-radio input { margin: 0; }
+    .rtp-max-hint { font-weight: 400; color: #9ca3af; font-size: 11px; }
+    .rtp-warning { padding: 10px 12px; border-radius: 8px; background: #fef3c7; border: 1px solid #f59e0b; color: #92400e; font-size: 13px; line-height: 1.4; margin-bottom: 8px; }
+    .rtp-warning::before { content: "⚠ "; }
+    .waypoint-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      background: #f8fafc;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      margin-bottom: 4px;
+      font-size: 13px;
+    }
+    .wp-num { font-size: 12px; font-weight: 700; color: #fff; background: #2563eb; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .wp-name { flex: 1; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .wp-move { display: flex; flex-direction: column; gap: 0; flex-shrink: 0; }
+    .wp-up, .wp-down { background: none; border: none; color: #6b7280; cursor: pointer; font-size: 14px; padding: 0; line-height: 1; display: flex; align-items: center; justify-content: center; }
+    .wp-up:hover, .wp-down:hover { color: #2563eb; }
+    .wp-up:disabled, .wp-down:disabled { color: #d1d5db; cursor: not-allowed; }
+    .wp-remove { background: none; border: none; color: #9ca3af; cursor: pointer; font-size: 18px; padding: 0; line-height: 1; flex-shrink: 0; }
+    .wp-remove:hover { color: #ef4444; }
+    .waypoint-empty { text-align: center; color: #9ca3af; font-size: 13px; padding: 14px 10px; border: 1px dashed #d1d5db; border-radius: 8px; line-height: 1.5; }
+    .rtp-search-wrapper { position: relative; margin-top: 6px; }
+    .rtp-search-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.18);
+      max-height: 200px;
+      overflow-y: auto;
+      z-index: 9999;
+      display: none;
+      margin-top: 2px;
+    }
+    .rtp-search-dropdown.visible { display: block; }
+    .rtp-search-item { padding: 9px 12px; cursor: pointer; font-size: 13px; border-bottom: 1px solid #f3f4f6; }
+    .rtp-search-item:hover { background: #f0f4ff; }
+    .rtp-search-item:last-child { border-bottom: none; }
+    #routeSummary {
+      background: #f0f9ff;
+      border: 1px solid #bae6fd;
+      border-radius: 8px;
+      padding: 12px;
+      display: none;
+    }
+    .rtp-sum-row { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #0369a1; font-weight: 600; margin-bottom: 4px; }
+    .rtp-sum-row:last-child { margin-bottom: 0; }
+    #rtpClearBtn {
+      width: 100%;
+      margin-top: 6px;
+      padding: 7px 14px;
+      background: none;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 12px;
+      cursor: pointer;
+      color: #6b7280;
+    }
+    #rtpClearBtn:hover { background: #fee2e2; border-color: #fca5a5; color: #ef4444; }
+    .rtp-add-btn {
+      margin-left: 6px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      border-radius: 8px;
+      background: #eff6ff;
+      border: 1px solid #93c5fd;
+      color: #1d4ed8;
+      padding: 8px 12px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .rtp-add-btn:hover { background: #dbeafe; }
+    @media (max-width: 768px) {
+      #roadTripPanel { width: 100%; }
+      #roadTripToggle { bottom: 100px; right: 10px; padding: 8px 12px; font-size: 13px; }
+    }
   </style>
 </head>
 <body class="tw-flex tw-min-h-[100vh] tw-flex-col tw-bg-[#fff]">
+  <h1 class="tw-sr-only">Ski Road Trip Planner – Interactive map of 3,000+ ski resorts worldwide with trails, lifts, and turn-by-turn route planning</h1>
   <header
     class="tw-absolute tw-top-0 tw-z-[1001] tw-flex tw-h-[60px] tw-w-full tw-bg-white tw-shadow-sm
            tw-border-b tw-border-gray-200 tw-px-[5%] max-lg:tw-mr-auto max-lg:tw-px-4 lg:tw-justify-around"
@@ -229,6 +408,59 @@
     <div id="heavyLoadIndicator" class="map-legend" style="display:none;bottom:12px;top:auto;background:rgba(255,255,255,0.95);padding:10px 14px;font-size:13px;">
       Loading trail & lift data…
     </div>
+
+    <button id="roadTripToggle">
+      <i class="bi bi-signpost-2-fill"></i> Plan Road Trip
+    </button>
+
+    <div id="roadTripPanel">
+      <div class="rtp-header">
+        <h2><i class="bi bi-signpost-2-fill" style="margin-right:6px"></i>Road Trip Planner</h2>
+        <button class="rtp-close-btn" id="roadTripClose" aria-label="Close">&#x2715;</button>
+      </div>
+      <div class="rtp-body">
+        <div>
+          <div class="rtp-label">Starting Point</div>
+          <div class="rtp-input-row">
+            <input type="text" id="homeAddressInput" placeholder="Enter your address…" autocomplete="off" />
+            <button class="rtp-btn" id="geocodeHomeBtn">Go</button>
+          </div>
+          <button class="rtp-loc-btn" id="useMyLocationBtn">
+            <i class="bi bi-geo-alt-fill"></i> Use my location
+          </button>
+          <div class="rtp-status" id="homePointStatus"></div>
+        </div>
+        <div>
+          <div class="rtp-label">Ending Point</div>
+          <div class="rtp-end-options">
+            <label class="rtp-radio"><input type="radio" name="rtpEnd" value="last" checked /> End at last resort</label>
+            <label class="rtp-radio"><input type="radio" name="rtpEnd" value="start" /> Return to start</label>
+            <label class="rtp-radio"><input type="radio" name="rtpEnd" value="custom" /> Different address</label>
+          </div>
+          <div id="rtpEndAddressRow" class="rtp-input-row" style="display:none; margin-top:6px;">
+            <input type="text" id="endAddressInput" placeholder="Enter ending address…" autocomplete="off" />
+            <button class="rtp-btn" id="geocodeEndBtn">Go</button>
+          </div>
+          <div class="rtp-status" id="endPointStatus"></div>
+        </div>
+        <div>
+          <div class="rtp-label">Ski Resorts <span id="waypointCount"></span> <span class="rtp-max-hint">(max 25 – routing API limit)</span></div>
+          <div id="waypointList">
+            <div class="waypoint-empty">No resorts added yet.<br>Search below or click a resort on the map.</div>
+          </div>
+          <div class="rtp-search-wrapper">
+            <input type="text" class="rtp-search-input" id="resortAddInput" placeholder="Search resort to add…" autocomplete="off" />
+            <div id="resortAddDropdown" class="rtp-search-dropdown"></div>
+          </div>
+        </div>
+        <div id="rtpRegionWarning" class="rtp-warning" style="display:none;"></div>
+        <div>
+          <button class="rtp-btn rtp-btn-full" id="rtpCalcBtn" disabled>Calculate Route</button>
+          <button id="rtpClearBtn">&#x2715; Clear All</button>
+        </div>
+        <div id="routeSummary"></div>
+      </div>
+    </div>
   </div>
 
   <footer
@@ -277,655 +509,11 @@
     </div>
   </footer>
 
-  <script>
-    (function () {
-      var RESPONSIVE_WIDTH = 1024;
-      var isHeaderCollapsed = window.innerWidth < RESPONSIVE_WIDTH;
-      var collapseBtn = document.getElementById('collapse-btn');
-      var collapseHeaderItems = document.getElementById('collapsed-header-items');
-      function onHeaderClickOutside(e) {
-        if (collapseHeaderItems && !collapseHeaderItems.contains(e.target) && !collapseBtn.contains(e.target)) {
-          toggleHeader();
-        }
-      }
-      function toggleHeader() {
-        if (!collapseHeaderItems || !collapseBtn) return;
-        if (isHeaderCollapsed) {
-          collapseHeaderItems.classList.add('opacity-100');
-          collapseHeaderItems.style.width = '60vw';
-          collapseBtn.classList.remove('bi-list');
-          collapseBtn.classList.add('bi-x', 'max-lg:tw-fixed');
-          isHeaderCollapsed = false;
-          setTimeout(function () { window.addEventListener('click', onHeaderClickOutside); }, 1);
-        } else {
-          collapseHeaderItems.classList.remove('opacity-100');
-          collapseHeaderItems.style.width = '0vw';
-          collapseBtn.classList.remove('bi-x', 'max-lg:tw-fixed');
-          collapseBtn.classList.add('bi-list');
-          isHeaderCollapsed = true;
-          window.removeEventListener('click', onHeaderClickOutside);
-        }
-      }
-      function responsive() {
-        if (window.innerWidth >= RESPONSIVE_WIDTH && collapseHeaderItems) {
-          collapseHeaderItems.style.width = '';
-        } else {
-          isHeaderCollapsed = true;
-        }
-      }
-      window.toggleHeader = toggleHeader;
-      window.addEventListener('resize', responsive);
-    })();
-  </script>
+  <script src="scripts/header-toggle.js"></script>
   <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script defer src="https://unpkg.com/leaflet-textpath@1.2.0/leaflet.textpath.js" crossorigin=""></script>
   <script defer src="https://unpkg.com/leaflet.vectorgrid@1.3.0/dist/Leaflet.VectorGrid.bundled.min.js" crossorigin=""></script>
-  <script type="module">
-    const MAPTILER_KEY = '0P06ORgY8WvmMOnPr0p2';
-
-    // ── Ski area markers (points) ──────────────────────────────────────────────
-    const SKI_AREAS_MAPTILER_URL = `https://api.maptiler.com/data/019c9294-30cd-7aa0-96a0-e552ef79eee8/features.json?key=${MAPTILER_KEY}`;
-    const SKI_AREAS_PARQUET_URL  = 'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/ski_areas_analyzed.parquet';
-
-    // ── Ski area boundary outlines (polygons) ──────────────────────────────────
-    // ── Heavy layers – vector tilesets via leaflet.vectorgrid ─────────────────
-    const OUTLINES_TILESET_URL = `https://api.maptiler.com/tiles/019c9343-c29a-7aee-8e30-fefd1b0dbe3f/{z}/{x}/{y}.pbf?key=${MAPTILER_KEY}`;
-    const LIFTS_TILESET_URL    = `https://api.maptiler.com/tiles/019c95ba-6172-7f8d-8037-a3adf0167505/{z}/{x}/{y}.pbf?key=${MAPTILER_KEY}`;
-    const PISTES_TILESET_URL   = `https://api.maptiler.com/tiles/019c95e3-ddb5-739e-bf2c-c11f450af8e2/{z}/{x}/{y}.pbf?key=${MAPTILER_KEY}`;
-    const OUTLINES_MIN_ZOOM = 10;
-    const LIFTS_MIN_ZOOM = 10;
-    const PISTES_MIN_ZOOM = 10;
-    // Property keys (tried in order if first missing)
-    const RESORT_TYPE_KEYS = ['resort_type', 'Resort Type'];
-    const NOT_DOWNHILL = 'not a downhill ski resort';
-    const SIZE_BY_KEYS = ['total_area_acres', 'Total Area Acres', 'area_acres'];
-    const COLOR_BY_KEYS = ['downhill_trails', 'number_of_downhill_trails', 'Downhill Trails', 'trails'];
-    const NAME_KEYS = ['name', 'resort_name', 'title', 'area_name', 'Name'];
-
-    const map = L.map('map', {
-      center: [0, 0],
-      zoom: 3,
-      minZoom: 3,
-      maxZoom: 18
-    });
-
-    L.tileLayer(
-      `https://api.maptiler.com/maps/winter-v4/256/{z}/{x}/{y}.png?key=${MAPTILER_KEY}`,
-      {
-        attribution: '© <a href="https://www.maptiler.com/copyright/">MapTiler</a> © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        tileSize: 256,
-        minZoom: 3,
-        maxZoom: 18,
-        crossOrigin: true
-      }
-    ).addTo(map);
-
-    const OLYMPIC_HOSTS = [
-      { name: 'Milan', lat: 45.4642, lon: 9.19 },
-      { name: 'Cortina d\'Ampezzo', lat: 46.5369, lon: 12.1356 }
-    ];
-    const olympicRingsSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 30" width="36" height="18" style="display:block"><circle cx="12" cy="15" r="6" fill="none" stroke="#0081C8" stroke-width="2"/><circle cx="30" cy="15" r="6" fill="none" stroke="#000" stroke-width="2"/><circle cx="48" cy="15" r="6" fill="none" stroke="#EE334E" stroke-width="2"/><circle cx="21" cy="21" r="6" fill="none" stroke="#FCB131" stroke-width="2"/><circle cx="39" cy="21" r="6" fill="none" stroke="#00A651" stroke-width="2"/></svg>';
-    const olympicIcon = L.divIcon({
-      className: 'olympic-rings-marker',
-      html: '<div title="Milan–Cortina 2026" style="background:#fff;border-radius:50%;padding:2px;box-shadow:0 1px 4px rgba(0,0,0,0.3);line-height:0">' + olympicRingsSvg + '</div>',
-      iconSize: [40, 22],
-      iconAnchor: [20, 11]
-    });
-    OLYMPIC_HOSTS.forEach((host) => {
-      L.marker([host.lat, host.lon], { icon: olympicIcon })
-        .bindTooltip(host.name + ' – Milan–Cortina 2026', { permanent: false, direction: 'top', offset: [0, -10] })
-        .addTo(map);
-    });
-
-    try {
-      let geojson;
-      if (SKI_AREAS_MAPTILER_URL) {
-        const r = await fetch(SKI_AREAS_MAPTILER_URL);
-        if (!r.ok) throw new Error(`Ski areas fetch failed: ${r.status} ${r.statusText}`);
-        geojson = await r.json();
-      } else {
-        const { asyncBufferFromUrl, parquetReadObjects } = await import('https://esm.sh/hyparquet@1');
-        const file = await asyncBufferFromUrl({ url: SKI_AREAS_PARQUET_URL });
-        const data = await parquetReadObjects({ file });
-        const latCol = data.length && (data[0].latitude != null ? 'latitude' : data[0].lat != null ? 'lat' : data[0].centroid_lat != null ? 'centroid_lat' : null);
-        const lonCol = data.length && (data[0].longitude != null ? 'longitude' : data[0].lon != null ? 'lon' : data[0].centroid_lon != null ? 'centroid_lon' : null);
-        geojson = {
-          type: 'FeatureCollection',
-          features: data
-            .filter((row) => row.geometry || (latCol && lonCol && row[latCol] != null && row[lonCol] != null))
-            .map((row) => {
-              if (row.geometry) {
-                const { geometry, ...properties } = row;
-                return { type: 'Feature', geometry, properties };
-              }
-              const lat = Number(row[latCol]), lon = Number(row[lonCol]);
-              const { [latCol]: _lat, [lonCol]: _lon, ...properties } = row;
-              return { type: 'Feature', geometry: { type: 'Point', coordinates: [lon, lat] }, properties };
-            })
-        };
-      }
-
-      function getProp(props, keyList) {
-        if (!props) return undefined;
-        for (const k of keyList) {
-          if (Object.prototype.hasOwnProperty.call(props, k)) return props[k];
-        }
-        return undefined;
-      }
-      function isNotDownhill(props) {
-        const v = getProp(props, RESORT_TYPE_KEYS);
-        return v != null && String(v).toLowerCase().trim() === NOT_DOWNHILL.toLowerCase();
-      }
-
-      // Size thresholds – trails OR acres (whichever is higher tier wins)
-      const TRAILS_SMALL  = 50;   // < 50 trails AND < 1000 acres  → small hill
-      const TRAILS_MEDIUM = 100;  // 50–100 trails OR 1000–5000 acres → ski mountain
-      const ACRES_SMALL   = 1000;
-      const ACRES_MEDIUM  = 5000;
-
-      function getTrailCount(feature) {
-        const v = getProp(feature.properties, COLOR_BY_KEYS);
-        if (v == null || v === '') return 0;
-        const n = typeof v === 'number' ? v : Number(v);
-        return Number.isNaN(n) ? 0 : n;
-      }
-      function getAcres(feature) {
-        const v = getProp(feature.properties, SIZE_BY_KEYS);
-        if (v == null || v === '') return 0;
-        const n = typeof v === 'number' ? v : Number(v);
-        return Number.isNaN(n) ? 0 : n;
-      }
-      function getSizeTier(feature) {
-        if (isNotDownhill(feature.properties)) return 'small';
-        const trails = getTrailCount(feature);
-        const acres  = getAcres(feature);
-        if (trails > TRAILS_MEDIUM || acres > ACRES_MEDIUM) return 'large';  // 100+ trails or 5000+ acres
-        if (trails >= TRAILS_SMALL  || acres >= ACRES_SMALL)  return 'medium'; // 50–100 trails or 1000–5000 acres
-        return 'small';
-      }
-      function getColorFor(feature) {
-        if (isNotDownhill(feature.properties)) return '#999999';
-        const tier = getSizeTier(feature);
-        if (tier === 'large')  return '#2d8a3e';  // green
-        if (tier === 'medium') return '#e6c229';  // yellow
-        return '#c44d34';                          // red
-      }
-
-      const hillSvg = (color, w, h) => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 16" width="' + w + '" height="' + h + '" style="display:block"><path d="M0 16 L0 11 Q6 6 12 11 Q18 6 24 11 L24 16 Z" fill="' + color + '" stroke="#1a1a1a" stroke-width="0.8"/></svg>';
-      const mountainSvg = (color, w, h) => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 16" width="' + w + '" height="' + h + '" style="display:block"><path d="M0 16 L8 5 L16 10 L24 16 Z" fill="' + color + '" stroke="#1a1a1a" stroke-width="0.8"/></svg>';
-      const mountainsSvg = (color, w, h) => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 16" width="' + w + '" height="' + h + '" style="display:block"><path d="M0 16 L4 10 L8 14 L10 9 L14 5 L18 10 L20 7 L24 16 Z" fill="' + color + '" stroke="#1a1a1a" stroke-width="0.8"/></svg>';
-      function getMountainIcon(feature) {
-        const tier = getSizeTier(feature);
-        const color = getColorFor(feature);
-        let w = 20, h = 14;
-        if (tier === 'medium') { w = 26; h = 18; }
-        else if (tier === 'large') { w = 32; h = 20; }
-        let svg;
-        if (tier === 'small') svg = hillSvg(color, w, h);
-        else if (tier === 'medium') svg = mountainSvg(color, w, h);
-        else svg = mountainsSvg(color, w, h);
-        return L.divIcon({
-          className: 'mountain-marker',
-          html: '<div style="line-height:0;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.3))">' + svg + '</div>',
-          iconSize: [w, h],
-          iconAnchor: [w / 2, h]
-        });
-      }
-
-      const legendEl = document.getElementById('legend');
-      legendEl.style.display = 'block';
-      legendEl.innerHTML =
-        '<h3>Resort size</h3>' +
-        '<div class="legend-row"><span class="legend-mountain-icon">' + hillSvg('#c44d34', 20, 14) + '</span> Small hill (&lt; 50 trails / 1,000 ac)</div>' +
-        '<div class="legend-row"><span class="legend-mountain-icon">' + mountainSvg('#e6c229', 22, 15) + '</span> Ski mountain (50–100 trails / 1,000–5,000 ac)</div>' +
-        '<div class="legend-row"><span class="legend-mountain-icon">' + mountainsSvg('#2d8a3e', 24, 16) + '</span> Multiple mountains (100+ trails / 5,000+ ac)</div>' +
-        '<div class="legend-row" style="margin-top:6px"><span class="legend-mountain-icon">' + hillSvg('#999', 18, 12) + '</span> Grey = not a downhill ski resort</div>' +
-        '<h3 style="margin-top:10px">Pistes (zoom 10+) – US colors</h3>' +
-        '<div class="legend-row"><span class="legend-line" style="background:#22c55e"></span> Green = easy</div>' +
-        '<div class="legend-row"><span class="legend-line" style="background:#2563eb"></span> Blue = intermediate</div>' +
-        '<div class="legend-row"><span class="legend-line" style="background:#1a1a1a"></span> Black = advanced</div>' +
-        '<div class="legend-row"><span class="legend-line" style="background:#991b1b"></span> Red = expert</div>';
-
-      function escapeHtml(s) {
-        const div = document.createElement('div');
-        div.textContent = s;
-        return div.innerHTML;
-      }
-      function formatPopupValue(v) {
-        if (v == null) return '—';
-        if (typeof v === 'number') return Number.isInteger(v) ? v.toLocaleString() : Number(v).toLocaleString(undefined, { maximumFractionDigits: 2 });
-        if (typeof v === 'boolean') return v ? 'Yes' : 'No';
-        if (v && typeof v === 'object' && typeof v.toISOString === 'function') return v.toISOString().slice(0, 10);
-        return String(v);
-      }
-      function labelForKey(key) {
-        return key.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
-      }
-      const ID_KEYS = ['id', 'ref', 'area_id', 'resort_id', 'skiresort_id'];
-      const COUNTRY_KEYS = ['country', 'Country', 'country_name', 'addr:country'];
-      const LIFTS_KEYS = ['total_lifts', 'lifts', 'number_of_lifts'];
-      function buildPopupHtml(properties, latlng) {
-        if (!properties || !Object.keys(properties).length) return '<em>No data</em>';
-        const name = getProp(properties, NAME_KEYS);
-        const displayName = name ? escapeHtml(String(name)) : 'Resort';
-        const id = getProp(properties, ID_KEYS);
-        const trails = getProp(properties, COLOR_BY_KEYS);
-        const lifts = getProp(properties, LIFTS_KEYS);
-        const country = getProp(properties, COUNTRY_KEYS);
-        const trailsNum = trails != null && trails !== '' ? (typeof trails === 'number' ? trails : Number(trails)) : null;
-        const liftsNum = lifts != null && lifts !== '' ? (typeof lifts === 'number' ? lifts : Number(lifts)) : null;
-        const trailsStr = trailsNum != null && !Number.isNaN(trailsNum) ? trailsNum.toLocaleString() + ' slopes' : null;
-        const liftsStr = liftsNum != null && !Number.isNaN(liftsNum) ? liftsNum.toLocaleString() + ' lifts' : null;
-        let countryStr = country != null && String(country).trim() !== '' ? String(country).trim() : null;
-        if (countryStr && /^united states/i.test(countryStr)) countryStr = 'USA';
-        const facts = [trailsStr, liftsStr, countryStr].filter(Boolean);
-        const factsHtml = facts.length > 0 ? '<p style="margin:4px 0 8px 0;font-size:13px;color:#6b7280">' + facts.map(escapeHtml).join(' \u2022 ') + '</p>' : '';
-        const lat = latlng && latlng.lat != null ? latlng.lat : null;
-        const lon = latlng && latlng.lng != null ? latlng.lng : null;
-        const params = new URLSearchParams();
-        if (id != null && id !== '') params.set('id', String(id));
-        if (name != null && name !== '') params.set('name', String(name));
-        if (lat != null && !Number.isNaN(lat)) params.set('lat', String(lat));
-        if (lon != null && !Number.isNaN(lon)) params.set('lon', String(lon));
-        const qs = params.toString();
-        const popupUrl = new URL('popup.html', location.href).href + (qs ? '?' + qs : '');
-        const stored = JSON.stringify({ name: name || null, id: id != null ? String(id) : null, lat, lon });
-        const storedAttr = stored.replace(/"/g, '&quot;');
-        return '<p style="margin:0 0 4px 0;font-weight:600">' + displayName + '</p>' + factsHtml +
-          '<a href="#" data-resort-url="' + escapeHtml(popupUrl) + '" data-resort-stored="' + storedAttr + '" class="resort-details-link tw-inline-flex tw-items-center tw-gap-1 tw-rounded-lg tw-bg-[#2563eb] tw-px-3 tw-py-2 tw-text-sm tw-font-medium tw-text-white tw-no-underline hover:tw-bg-[#1d4ed8]" style="display:inline-flex;align-items:center;gap:4px;border-radius:8px;background:#2563eb;color:#fff;padding:8px 12px;text-decoration:none;cursor:pointer;">View details <i class="bi bi-arrow-up-right"></i></a>';
-      }
-
-      const searchResorts = [];
-      const canvasRenderer = L.canvas({ padding: 0.5 });
-
-      // Bucket features by tier
-      const largeBucket = [], mediumBucket = [], smallBucket = [];
-      geojson.features.forEach((feature) => {
-        if (!feature.geometry || feature.geometry.type !== 'Point') return;
-        const [lon, lat] = feature.geometry.coordinates;
-        const latlng = L.latLng(lat, lon);
-        const tier = getSizeTier(feature);
-        (tier === 'large' ? largeBucket : tier === 'medium' ? mediumBucket : smallBucket)
-          .push({ feature, latlng });
-      });
-
-      function buildTooltipHtml(feature, hint) {
-        const name = getProp(feature.properties, NAME_KEYS);
-        const trails = getProp(feature.properties, COLOR_BY_KEYS);
-        const country = getProp(feature.properties, COUNTRY_KEYS);
-        const n = trails != null && trails !== '' ? Number(trails) : null;
-        const facts = [
-          (!Number.isNaN(n) && n > 0) ? n + ' slopes' : null,
-          country ? (String(country).match(/^united states/i) ? 'USA' : String(country)) : null
-        ].filter(Boolean).join(' · ');
-        return '<div class="tt-name">' + escapeHtml(String(name || 'Resort').trim()) + '</div>' +
-          (facts ? '<div class="tt-hint">' + escapeHtml(facts) + '</div>' : '') +
-          '<div class="tt-hint" style="margin-top:3px;color:#7dd3fc">' + hint + '</div>';
-      }
-
-      function makeIconMarker(feature, latlng) {
-        const marker = L.marker(latlng, { icon: getMountainIcon(feature) });
-        marker.bindPopup(buildPopupHtml(feature.properties, latlng), { maxWidth: 320 });
-        marker.bindTooltip(buildTooltipHtml(feature, '🖱 Click for resort details'),
-          { direction: 'top', offset: [0, -14], className: 'resort-tooltip' });
-        const name = getProp(feature.properties, NAME_KEYS);
-        if (name != null && String(name).trim() !== '')
-          searchResorts.push({ name: String(name).trim(), layer: marker, latlng });
-        return marker;
-      }
-      function makeDot(latlng, feature, radius) {
-        const dot = L.circleMarker(latlng, {
-          renderer: canvasRenderer, radius, interactive: true,
-          fillColor: getColorFor(feature), fillOpacity: 0.85,
-          color: 'rgba(255,255,255,0.65)', weight: 1.5
-        });
-        dot.bindTooltip(buildTooltipHtml(feature, '🔍 Click to zoom in'),
-          { direction: 'top', offset: [0, -radius - 2], className: 'resort-tooltip' });
-        dot.on('click', () => map.flyTo(latlng, Math.max(map.getZoom() + 4, 11), { duration: 0.5 }));
-        return dot;
-      }
-
-      // ── Large: always SVG icons ──────────────────────────────────────────
-      const largeLayer = L.layerGroup();
-      largeBucket.forEach(({ feature, latlng }) => largeLayer.addLayer(makeIconMarker(feature, latlng)));
-
-      // ── Medium: canvas dots → SVG icons at zoom 9 ───────────────────────
-      const mediumDotLayer  = L.layerGroup();
-      const mediumIconLayer = L.layerGroup();
-      const mediumIconPool  = [];
-      mediumBucket.forEach(({ feature, latlng }) => {
-        mediumDotLayer.addLayer(makeDot(latlng, feature, 5));
-        const marker = makeIconMarker(feature, latlng);
-        mediumIconPool.push({ marker, latlng });
-      });
-
-      // ── Small: canvas dots → SVG icons at zoom 11 ───────────────────────
-      const smallDotLayer  = L.layerGroup();
-      const smallIconLayer = L.layerGroup();
-      const smallIconPool  = [];
-      smallBucket.forEach(({ feature, latlng }) => {
-        smallDotLayer.addLayer(makeDot(latlng, feature, 3.5));
-        const marker = makeIconMarker(feature, latlng);
-        smallIconPool.push({ marker, latlng });
-      });
-
-      const MEDIUM_DOT_MIN  = 3;   // medium dots appear at world zoom
-      const MEDIUM_ICON_MIN = 9;   // medium dots → icons
-      const SMALL_DOT_MIN   = 3;   // small dots appear at world zoom
-      const SMALL_ICON_MIN  = 11;  // small dots → icons
-
-      function refreshViewportIcons(pool, iconLayer, minZoom) {
-        iconLayer.clearLayers();
-        if (map.getZoom() < minZoom) return;
-        const bounds = map.getBounds().pad(0.15);
-        pool.forEach(({ marker, latlng }) => {
-          if (bounds.contains(latlng)) iconLayer.addLayer(marker);
-        });
-      }
-
-      function updateResortVisibility() {
-        const z = map.getZoom();
-        const toggle = (layer, show) => {
-          if (show) { if (!map.hasLayer(layer)) map.addLayer(layer); }
-          else      { if (map.hasLayer(layer))  map.removeLayer(layer); }
-        };
-        toggle(largeLayer,     true);
-        toggle(mediumDotLayer, z >= MEDIUM_DOT_MIN && z < MEDIUM_ICON_MIN);
-        toggle(mediumIconLayer,z >= MEDIUM_ICON_MIN);
-        toggle(smallDotLayer,  z >= SMALL_DOT_MIN  && z < SMALL_ICON_MIN);
-        toggle(smallIconLayer, z >= SMALL_ICON_MIN);
-        refreshViewportIcons(mediumIconPool, mediumIconLayer, MEDIUM_ICON_MIN);
-        refreshViewportIcons(smallIconPool,  smallIconLayer,  SMALL_ICON_MIN);
-      }
-
-      map.addLayer(largeLayer);
-      map.on('zoomend moveend', updateResortVisibility);
-      updateResortVisibility();
-
-      // Load ad script after map is interactive (keeps initial load fast)
-      function loadAdScriptWhenIdle() {
-        const load = () => {
-          const s = document.createElement('script');
-          s.async = true;
-          s.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4372859798489282';
-          s.crossOrigin = 'anonymous';
-          document.head.appendChild(s);
-        };
-        if (typeof requestIdleCallback !== 'undefined') {
-          requestIdleCallback(load, { timeout: 2000 });
-        } else {
-          setTimeout(load, 1500);
-        }
-      }
-      loadAdScriptWhenIdle();
-
-      map.on('popupopen', (ev) => {
-        const link = ev.popup.getElement && ev.popup.getElement().querySelector('.resort-details-link');
-        if (link) {
-          console.log('[mainmap popupopen] link in DOM:', {
-            dataResortUrl: link.getAttribute('data-resort-url'),
-            dataResortStored: link.getAttribute('data-resort-stored')
-          });
-        } else {
-          console.log('[mainmap popupopen] no .resort-details-link found in popup');
-        }
-      });
-
-      const searchBox = document.getElementById('searchBox');
-      const searchInput = document.getElementById('searchInput');
-      const searchDropdown = document.getElementById('searchDropdown');
-      if (searchResorts.length) searchBox.style.display = 'block';
-
-      const maxSuggestions = 8;
-      let selectedIndex = -1;
-      let currentMatches = [];
-
-      function renderDropdown(matches) {
-        currentMatches = matches.slice(0, maxSuggestions);
-        selectedIndex = -1;
-        if (currentMatches.length === 0) {
-          searchDropdown.classList.remove('visible');
-          searchDropdown.innerHTML = '';
-          return;
-        }
-        searchDropdown.innerHTML = currentMatches.map((r, i) =>
-          '<div class="search-item" data-index="' + i + '">' + escapeHtml(r.name) + '</div>'
-        ).join('');
-        searchDropdown.classList.add('visible');
-        searchDropdown.querySelectorAll('.search-item').forEach((el, i) => {
-          el.addEventListener('click', () => selectMatch(currentMatches[i]));
-        });
-      }
-      function selectMatch(r) {
-        searchDropdown.classList.remove('visible');
-        searchInput.value = r.name;
-        searchInput.blur();
-        map.flyTo(r.latlng, 16, { duration: 0.6 });
-        map.once('moveend', () => { updateResortVisibility(); r.layer.openPopup(); });
-      }
-      function getMatches(query) {
-        const q = query.toLowerCase().trim();
-        if (q.length === 0) return [];
-        return searchResorts.filter((r) => r.name.toLowerCase().includes(q));
-      }
-
-      searchInput.addEventListener('input', () => {
-        renderDropdown(getMatches(searchInput.value));
-      });
-      searchInput.addEventListener('focus', () => {
-        const q = searchInput.value.trim();
-        renderDropdown(q.length ? getMatches(q) : []);
-      });
-      searchInput.addEventListener('keydown', (e) => {
-        if (!searchDropdown.classList.contains('visible') || currentMatches.length === 0) return;
-        if (e.key === 'ArrowDown') {
-          e.preventDefault();
-          selectedIndex = Math.min(selectedIndex + 1, currentMatches.length - 1);
-          searchDropdown.querySelectorAll('.search-item').forEach((el, i) => el.classList.toggle('active', i === selectedIndex));
-          return;
-        }
-        if (e.key === 'ArrowUp') {
-          e.preventDefault();
-          selectedIndex = Math.max(selectedIndex - 1, -1);
-          searchDropdown.querySelectorAll('.search-item').forEach((el, i) => el.classList.toggle('active', i === selectedIndex));
-          return;
-        }
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          if (selectedIndex >= 0 && currentMatches[selectedIndex]) selectMatch(currentMatches[selectedIndex]);
-          else if (currentMatches[0]) selectMatch(currentMatches[0]);
-          return;
-        }
-      });
-      document.addEventListener('click', (e) => {
-        if (!searchBox.contains(e.target)) searchDropdown.classList.remove('visible');
-      });
-
-      document.addEventListener('click', (e) => {
-        const link = e.target.closest('.resort-details-link');
-        if (link) {
-          e.preventDefault();
-          const url = link.getAttribute('data-resort-url');
-          const stored = link.getAttribute('data-resort-stored');
-          console.log('[mainmap click] View details clicked', { url: url ? url.slice(-80) : null, stored, hasStoredAttr: !!stored });
-          if (stored) {
-            try {
-              localStorage.setItem('resortDetails', stored);
-              console.log('[mainmap click] localStorage.setItem done, verify:', localStorage.getItem('resortDetails'));
-            } catch (err) { console.error('[mainmap click] localStorage error', err); }
-          }
-          if (url) window.open(url, '_blank', 'noopener');
-          console.log('[mainmap click] window.open called');
-        }
-      });
-
-      // ── Heavy layers via vector tiles (leaflet.vectorgrid) ───────────────────
-      // Tiles are fetched per-viewport automatically – no parquet download needed
-      const PISTE_DIFFICULTY_KEYS = ['piste:difficulty', 'piste_difficulty', 'difficulty'];
-      function getPisteDifficultyVT(props) {
-        let v = getProp(props, PISTE_DIFFICULTY_KEYS);
-        if (v == null && props && typeof props.other_tags === 'string') {
-          const m = props.other_tags.match(/"piste:difficulty"=>"([^"]+)"/);
-          if (m) v = m[1];
-        }
-        return v != null ? String(v).toLowerCase().trim() : '';
-      }
-      function pisteVTStyle(properties) {
-        const d = getPisteDifficultyVT(properties);
-        function ps(color, weight) {
-          return { color, weight, opacity: 0.5, fill: true, fillColor: color, fillOpacity: 0.25, interactive: true };
-        }
-        if (d === 'easy' || d === 'novice')                        return ps('#22c55e', 3);
-        if (d === 'intermediate' || d === 'medium')                return ps('#2563eb', 3);
-        if (d === 'advanced' || d === 'hard')                      return ps('#1a1a1a', 3.5);
-        if (d === 'expert' || d === 'freeride' || d === 'extreme') return ps('#991b1b', 4);
-        return ps('#64748b', 2);
-      }
-
-      let outlinesLayer = null;
-      let liftsLayer    = null;
-      let pistesLayer   = null;
-
-      // Base style mixin applied to every feature to silence point/polygon rendering artefacts
-      const vtBase = { fill: false, fillOpacity: 0, radius: 0 };
-
-      // Shared floating tooltip for vector tile layers
-      const vtTipEl = document.createElement('div');
-      vtTipEl.id = 'vt-tooltip';
-      document.body.appendChild(vtTipEl);
-      function showVtTip(e, html) {
-        vtTipEl.innerHTML = html;
-        vtTipEl.style.display = 'block';
-        moveVtTip(e);
-      }
-      function moveVtTip(e) {
-        const oe = e.originalEvent || e;
-        const x = oe.clientX, y = oe.clientY;
-        if (x == null) return;
-        vtTipEl.style.left = (x + 14) + 'px';
-        vtTipEl.style.top  = (y - 36) + 'px';
-      }
-      function hideVtTip() { vtTipEl.style.display = 'none'; }
-
-      // Track mouse globally so tooltip follows cursor even when VectorGrid
-      // mousemove events don't carry originalEvent
-      let _lastMouseX = 0, _lastMouseY = 0;
-      document.addEventListener('mousemove', (ev) => {
-        _lastMouseX = ev.clientX;
-        _lastMouseY = ev.clientY;
-        if (vtTipEl.style.display !== 'none') {
-          vtTipEl.style.left = (_lastMouseX + 14) + 'px';
-          vtTipEl.style.top  = (_lastMouseY - 36) + 'px';
-        }
-      });
-
-      function aerialwayLabel(type) {
-        const labels = { gondola: 'Gondola', cable_car: 'Cable car', chair_lift: 'Chairlift',
-          mixed_lift: 'Mixed lift', drag_lift: 'Drag lift', 't-bar': 'T-bar',
-          j_bar: 'J-bar', platter: 'Platter', rope_tow: 'Rope tow', magic_carpet: 'Magic carpet' };
-        return labels[type] || (type ? type.replace(/_/g, ' ') : 'Lift');
-      }
-      function difficultyBadge(d) {
-        const map = { easy: ['#22c55e','Easy'], novice: ['#22c55e','Novice'],
-          intermediate: ['#2563eb','Intermediate'], medium: ['#2563eb','Medium'],
-          advanced: ['#1a1a1a','Advanced'], hard: ['#1a1a1a','Hard'],
-          expert: ['#991b1b','Expert'], freeride: ['#991b1b','Freeride'],
-          extreme: ['#991b1b','Extreme'] };
-        const [color, label] = map[d] || ['#64748b', 'Unrated'];
-        return `<span class="tt-diff" style="background:${color}"></span>${label}`;
-      }
-
-      function bindVtTooltips(layer, buildHtml) {
-        layer.on('mouseover', (e) => { showVtTip(e, buildHtml(e.propagatedFrom || e.layer)); });
-        layer.on('mousemove', moveVtTip);
-        layer.on('mouseout',  hideVtTip);
-      }
-
-      let tilesetErrorLogged = {};
-      function onTileError(layerName, url) {
-        return (err) => {
-          if (!tilesetErrorLogged[layerName]) {
-            tilesetErrorLogged[layerName] = true;
-            const status = err && err.status ? ` (HTTP ${err.status})` : '';
-            console.warn(`[mainmap] ${layerName} tileset returning errors${status} – check MapTiler Cloud that the tileset ID exists and is published. URL: ${url}`);
-          }
-        };
-      }
-
-      function initHeavyLayers() {
-        outlinesLayer = L.vectorGrid.protobuf(OUTLINES_TILESET_URL, {
-          vectorTileLayerStyles: {
-            ski_areas: { ...vtBase, color: '#1a1a1a', weight: 2, opacity: 0.9, dashArray: '4, 6',
-              fill: true, fillOpacity: 0.03, fillColor: '#1a1a1a' }
-          },
-          maxNativeZoom: 16, interactive: true
-        });
-        outlinesLayer.on('tileerror', onTileError('outlines', OUTLINES_TILESET_URL));
-        bindVtTooltips(outlinesLayer, (layer) => {
-          const p = layer.properties || {};
-          const name = p.name || p.Name || 'Ski area';
-          const country = p.Country || p.country || '';
-          return `<div class="tt-name">${escapeHtml(name)}</div>` +
-            (country ? `<div class="tt-hint">${escapeHtml(country)}</div>` : '');
-        });
-
-        const LIFT_LINE_TYPES = new Set(['gondola','cable_car','chair_lift','mixed_lift','drag_lift','t-bar','j_bar','platter','rope_tow','magic_carpet','zip_line','goods','canopy']);
-        liftsLayer = L.vectorGrid.protobuf(LIFTS_TILESET_URL, {
-          vectorTileLayerStyles: {
-            lifts: (props) => {
-              if (!LIFT_LINE_TYPES.has(props.aerialway)) return { stroke: false, fill: false, opacity: 0, fillOpacity: 0, radius: 0, interactive: false };
-              return { ...vtBase, color: '#f87171', weight: 2, opacity: 0.9, interactive: true };
-            }
-          },
-          maxNativeZoom: 14, interactive: true
-        });
-        liftsLayer.on('tileerror', onTileError('lifts', LIFTS_TILESET_URL));
-        bindVtTooltips(liftsLayer, (layer) => {
-          const p = layer.properties || {};
-          const name = p.name || p.Name || '';
-          const type = aerialwayLabel(p.aerialway || p.Aerialway || '');
-          const area = p['Ski Area'] || '';
-          return `<div class="tt-name">${escapeHtml(type)}${name ? ' · ' + escapeHtml(name) : ''}</div>` +
-            (area ? `<div class="tt-hint">${escapeHtml(area)}</div>` : '');
-        });
-
-        pistesLayer = L.vectorGrid.protobuf(PISTES_TILESET_URL, {
-          vectorTileLayerStyles: {
-            pistes_tmp: (props) => {
-              if (!props.osm_way_id) return { stroke: false, fill: false, opacity: 0, fillOpacity: 0, radius: 0, interactive: false };
-              return { ...vtBase, ...pisteVTStyle(props) };
-            }
-          },
-          maxNativeZoom: 14, interactive: true
-        });
-        pistesLayer.on('tileerror', onTileError('pistes', PISTES_TILESET_URL));
-        bindVtTooltips(pistesLayer, (layer) => {
-          const p = layer.properties || {};
-          const name = p.name || p.Name || '';
-          const diff = getPisteDifficultyVT(p);
-          const area = p['Ski Area'] || '';
-          return `<div class="tt-name">${name ? escapeHtml(name) + ' · ' : ''}${difficultyBadge(diff)}</div>` +
-            (area ? `<div class="tt-hint">${escapeHtml(area)}</div>` : '');
-        });
-      }
-
-      function updateZoomLayersVisibility() {
-        if (!outlinesLayer) initHeavyLayers();
-        const zoom = map.getZoom();
-        const show = (layer, minZoom) => {
-          if (zoom >= minZoom) { if (!map.hasLayer(layer)) map.addLayer(layer); }
-          else                 { if (map.hasLayer(layer))  map.removeLayer(layer); }
-        };
-        show(outlinesLayer, OUTLINES_MIN_ZOOM);
-        show(liftsLayer,    LIFTS_MIN_ZOOM);
-        show(pistesLayer,   PISTES_MIN_ZOOM);
-      }
-
-      map.on('zoomend', updateZoomLayersVisibility);
-      updateZoomLayersVisibility();
-    } catch (err) {
-      console.warn('Ski areas failed to load:', err);
-    }
-  </script>
+  <script defer src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.min.js" crossorigin=""></script>
+  <script type="module" src="scripts/roadtripskimap-main.js"></script>
 </body>
 </html>
