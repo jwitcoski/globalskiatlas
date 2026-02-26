@@ -37,8 +37,7 @@ jobs:
             --exclude "*.md" \
             --exclude "package*.json" \
             --exclude "tailwind.config.js" \
-            --exclude "docs/*" \
-            --exclude "scripts/*"
+            --exclude "docs/*"
 
       - name: Invalidate CloudFront cache
         run: |
