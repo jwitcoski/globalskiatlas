@@ -155,11 +155,41 @@
     <a class="tw-h-[50px] tw-w-[50px] tw-p-[4px]" href="index.html" aria-label="Global Ski Atlas home">
       <img src="./assets/logo.png?v=2" alt="Global Ski Atlas" class="tw-h-full tw-w-full" />
     </a>
-    <div class="collapsible-header animated-collapse" id="collapsed-header-items">
-      <div class="tw-flex tw-h-full tw-gap-5 tw-text-base tw-text-black lg:tw-place-items-center">
+    <div class="collapsible-header animated-collapse max-lg:tw-shadow-md" id="collapsed-header-items">
+      <div
+        class="tw-flex tw-h-full tw-w-max tw-gap-5 tw-text-base tw-text-black
+               max-lg:tw-mt-[30px] max-lg:tw-flex-col max-lg:tw-place-items-end
+               max-lg:tw-gap-5 lg:tw-mx-auto lg:tw-place-items-center"
+      >
+        <a class="header-links" href="coffee-table-book.html">Coffee Table Book</a>
         <a class="header-links" href="mainmap.html">Online Atlas</a>
         <a class="header-links" href="resort-comparison.html">Compare Resorts</a>
-        <a class="header-links" href="index.html">Home</a>
+        <a class="header-links" href="SkiResortFacts.html">Resort Facts</a>
+        <a class="header-links" href="SkiTrailFacts.html">Trail Facts</a>
+        <a class="header-links" href="SkiLiftFacts.html">Lift Facts</a>
+        <a class="header-links" href="About.html">About</a>
+        <a class="header-links" href="weather-map.html">Weather</a>
+        <a class="header-links" href="skiing-ai.html">AI Assistant</a>
+      </div>
+      <div
+        class="tw-mx-4 tw-flex tw-place-items-center tw-gap-[20px] tw-text-base
+               max-md:tw-w-full max-md:tw-flex-col max-md:tw-place-content-center"
+      >
+        <a
+          href=""
+          aria-label="signup"
+          class="tw-flex tw-h-[40px] tw-place-items-center tw-gap-2 tw-rounded-full
+                 tw-bg-black tw-p-1 tw-pl-4 tw-text-white"
+        >
+          <span>Download App Coming Soon</span>
+          <div
+            class="tw-flex tw-h-[30px] tw-w-[30px] tw-place-content-center
+                   tw-place-items-center tw-rounded-full tw-bg-primary
+                   tw-font-semibold tw-text-black"
+          >
+            <i class="bi bi-download"></i>
+          </div>
+        </a>
       </div>
     </div>
     <button class="bi bi-list tw-absolute tw-right-3 tw-top-3 tw-z-50 tw-text-3xl tw-text-black lg:tw-hidden" onclick="toggleHeader()" aria-label="menu" id="collapse-btn"></button>
