@@ -48,7 +48,7 @@
       overflow-y: auto;
     }
     .page { max-width: 1600px; margin: 0 auto; padding: 24px; }
-    .content-wrapper { display: flex; gap: 32px; margin-top: 24px; flex-wrap: wrap; }
+    .content-wrapper { display: flex; gap: 32px; margin-top: 12px; flex-wrap: wrap; }
     .map-container {
       flex: 1;
       min-width: 320px;
@@ -250,6 +250,25 @@
     }
     .citation-section a { color: #2563eb; text-decoration: none; }
     .citation-section a:hover { text-decoration: underline; }
+    .map-chart-wrapper { position: relative; flex: 1; min-width: 320px; }
+    .print-chart-btn {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      z-index: 10;
+      display: none;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .print-chart-btn:hover { background: #f9fafb; border-color: #9ca3af; }
+    .print-chart-btn.visible { display: flex; }
     @media (max-width: 768px) {
       .map-wrapper {
         margin-top: 60px;
@@ -266,6 +285,13 @@
       .search-container input { padding: 8px 12px 8px 34px; font-size: 13px; }
       .resort-item label { font-size: 13px; }
       .map-container { min-height: 280px; }
+    }
+    @media print {
+      header, .controls, .citation-section, footer, .print-chart-btn, .page > p { display: none !important; }
+      .map-wrapper { margin-top: 0; }
+      .content-wrapper { flex-wrap: nowrap; }
+      .map-chart-wrapper { flex: 1; min-width: 0; }
+      .map-container { box-shadow: none; border: none; }
     }
   </style>
 </head>
@@ -329,14 +355,19 @@
     ></button>
   </header>
 
-  <div class="map-wrapper tw-flex-1 tw-min-h-0 tw-px-[5%] tw-pt-6 tw-pb-6 max-lg:tw-px-4">
+  <div class="map-wrapper tw-flex-1 tw-min-h-0 tw-px-[5%] tw-pt-2 tw-pb-6 max-lg:tw-px-4">
     <div class="page">
     <h1 class="tw-text-4xl tw-font-medium tw-text-gray-900 tw-mb-2">Ski Resort Size Comparison</h1>
-    <p class="tw-text-xl tw-font-medium tw-text-gray-700 tw-mb-6 tw-max-w-2xl">Compare ski resort outlines and trail layouts from the Global Ski Atlas parquet data. Select resorts to view side by side.</p>
+    <p class="tw-text-xl tw-font-medium tw-text-gray-700 tw-mb-3 tw-max-w-2xl">Compare ski resort outlines and trail layouts from the Global Ski Atlas parquet data. Select resorts to view side by side.</p>
 
     <div class="content-wrapper">
-      <div class="map-container" id="map-container">
-        <div class="loading" id="loading">Loading resort outlines and metadata…</div>
+      <div class="map-chart-wrapper">
+        <div class="map-container" id="map-container">
+          <div class="loading" id="loading">Loading resort outlines and metadata…</div>
+        </div>
+        <button type="button" id="print-chart-btn" class="print-chart-btn" aria-label="Print comparison chart">
+          <i class="bi bi-printer"></i> Print
+        </button>
       </div>
       <div class="controls">
         <div class="controls-section">
@@ -498,6 +529,7 @@
     const width = 1000;
     const height = 700;
     const padding = 50;
+    const topPadding = 20;
 
     function getProp(obj, keyList) {
       if (!obj) return undefined;
@@ -594,7 +626,7 @@
 
     const mapTitle = svg.append('text')
       .attr('x', width / 2)
-      .attr('y', 28)
+      .attr('y', topPadding + 8)
       .attr('text-anchor', 'middle')
       .style('font-size', '18px')
       .style('font-weight', 'bold')
@@ -982,6 +1014,12 @@
       document.getElementById('map-container').innerHTML = '';
       document.getElementById('map-container').appendChild(svg.node());
       document.getElementById('difficulty-legend').style.display = 'block';
+
+      var printBtn = document.getElementById('print-chart-btn');
+      if (printBtn) {
+        printBtn.classList.add('visible');
+        printBtn.onclick = function () { window.print(); };
+      }
 
       setupControlButtons();
       selectRandomResorts(2);
