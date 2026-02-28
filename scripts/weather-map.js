@@ -244,7 +244,7 @@
     return div.innerHTML;
   }
 
-  function findWettestResort() {
+  function findWettestResort(direction) {
     if (!skiResortFeatures.length) {
       if (typeof window.wettestResortPopup !== 'undefined') window.wettestResortPopup.remove();
       return;
@@ -256,36 +256,56 @@
     }
     if (!precLayer) return;
 
+    var isNext = direction === 'next';
+
     function runSearch() {
+      var currentTimeSec = precLayer.getAnimationTime();
+      var start24h = isNext ? currentTimeSec : Math.max(precLayer.getAnimationStart(), currentTimeSec - 86400);
+      var end24h = isNext ? Math.min(precLayer.getAnimationEnd(), currentTimeSec + 86400) : currentTimeSec;
+      var stepSec = 3600;
+      var accumulation = {};
       var bounds = map.getBounds();
       var inView = skiResortFeatures.filter(function (f) {
-        var c = f.geometry.coordinates;
-        return bounds.contains(c);
+        return bounds.contains(f.geometry.coordinates);
       });
       var toSearch = inView.length ? inView : skiResortFeatures;
-      var best = null;
-      var bestVal = -Infinity;
-      for (var i = 0; i < toSearch.length; i++) {
-        var c = toSearch[i].geometry.coordinates;
-        var lng = c[0];
-        var lat = c[1];
-        var v = precLayer.pickAt(lng, lat);
-        if (v == null || typeof v.value !== 'number') continue;
-        var val = v.value;
-        if (val > bestVal) {
-          bestVal = val;
-          best = toSearch[i];
+      for (var i = 0; i < toSearch.length; i++) accumulation[toSearch[i].geometry.coordinates.join(',')] = 0;
+
+      for (var t = start24h; t <= end24h; t += stepSec) {
+        precLayer.setAnimationTime(t);
+        for (var j = 0; j < toSearch.length; j++) {
+          var c = toSearch[j].geometry.coordinates;
+          var key = c.join(',');
+          var v = precLayer.pickAt(c[0], c[1]);
+          if (v != null && typeof v.value === 'number') accumulation[key] += v.value;
         }
       }
+      precLayer.setAnimationTime(currentTimeSec);
+      if (typeof timeSlider !== 'undefined') timeSlider.value = String(currentTimeSec * 1000);
+      refreshTime();
+
+      var best = null;
+      var bestVal = -Infinity;
+      for (var k = 0; k < toSearch.length; k++) {
+        var key = toSearch[k].geometry.coordinates.join(',');
+        var val = accumulation[key];
+        if (val > bestVal) {
+          bestVal = val;
+          best = toSearch[k];
+        }
+      }
+
       if (typeof window.wettestResortPopup === 'undefined') {
         window.wettestResortPopup = new maptilersdk.Popup({ closeButton: true, closeOnClick: false });
       }
-      if (!best) {
+      var periodLabel = isNext ? 'next 24h' : 'last 24h';
+      var helpLabel = isNext ? 'forecast precipitation over the next 24 hours' : 'accumulated precipitation over the last 24 hours';
+      if (!best || bestVal <= 0) {
         window.wettestResortPopup.remove();
         var center = map.getCenter();
         window.wettestResortPopup.setLngLat(center).setHTML(
           '<p style="margin:0;font-size:13px">No precipitation data for resorts in view.</p>' +
-          '<p style="margin:6px 0 0 0;font-size:12px;color:#6b7280">Switch to Precipitation, wait for the layer to load, then try again. Move the time slider to see different times.</p>'
+          '<p style="margin:6px 0 0 0;font-size:12px;color:#6b7280">Switch to Precipitation, wait for the layer to load, then try again. Uses ' + helpLabel + '.</p>'
         ).addTo(map);
         return;
       }
@@ -294,9 +314,9 @@
       var country = (best.properties && best.properties.country != null) ? String(best.properties.country).trim() : '';
       if (country && /^united states/i.test(country)) country = 'USA';
       map.flyTo({ center: coords, zoom: Math.max(map.getZoom(), 10), duration: 1500 });
+      var accumDisplay = useImperial ? (bestVal * 0.03937).toFixed(2) + ' in' : bestVal.toFixed(1) + ' mm';
       var html = '<p style="margin:0 0 4px 0;font-weight:600">' + escapeHtmlAttr(name) + '</p>' +
-        '<p style="margin:0;font-size:13px;color:#6b7280">Heaviest precipitation here: <strong>' +
-        (useImperial ? (bestVal * 0.03937).toFixed(2) + ' in/h</strong></p>' : bestVal.toFixed(1) + ' mm/h</strong></p>') +
+        '<p style="margin:0;font-size:13px;color:#6b7280">Most precipitation (' + periodLabel + '): <strong>' + accumDisplay + '</strong></p>' +
         (country ? '<p style="margin:4px 0 0 0;font-size:12px;color:#9ca3af">' + escapeHtmlAttr(country) + '</p>' : '');
       window.wettestResortPopup.setLngLat(coords).setHTML(html).addTo(map);
     }
@@ -493,7 +513,9 @@
   });
 
   var findWettestBtn = document.getElementById('find-wettest-resort');
-  if (findWettestBtn) findWettestBtn.addEventListener('click', findWettestResort);
+  var findWettestNextBtn = document.getElementById('find-wettest-resort-next');
+  if (findWettestBtn) findWettestBtn.addEventListener('click', function () { findWettestResort('last'); });
+  if (findWettestNextBtn) findWettestNextBtn.addEventListener('click', function () { findWettestResort('next'); });
 
   function changeWeatherLayer(type) {
     if (type === activeLayer) return weatherLayers[type].layer;
