@@ -315,8 +315,12 @@
       if (country && /^united states/i.test(country)) country = 'USA';
       map.flyTo({ center: coords, zoom: Math.max(map.getZoom(), 10), duration: 1500 });
       var accumDisplay = useImperial ? (bestVal * 0.03937).toFixed(2) + ' in' : bestVal.toFixed(1) + ' mm';
+      var snowEst = useImperial
+        ? '~' + (bestVal * 0.03937 * 10).toFixed(1) + ' in'
+        : '~' + (bestVal >= 1 ? (bestVal).toFixed(1) + ' cm' : (bestVal * 10).toFixed(0) + ' mm');
       var html = '<p style="margin:0 0 4px 0;font-weight:600">' + escapeHtmlAttr(name) + '</p>' +
         '<p style="margin:0;font-size:13px;color:#6b7280">Most precipitation (' + periodLabel + '): <strong>' + accumDisplay + '</strong></p>' +
+        '<p style="margin:2px 0 0 0;font-size:12px;color:#6b7280">' + snowEst + ' estimated snowfall (10:1 ratio)</p>' +
         (country ? '<p style="margin:4px 0 0 0;font-size:12px;color:#9ca3af">' + escapeHtmlAttr(country) + '</p>' : '');
       window.wettestResortPopup.setLngLat(coords).setHTML(html).addTo(map);
     }
@@ -493,12 +497,22 @@
     if (weatherLayer && activeLayer) {
       const value = weatherLayer.pickAt(lngLat.lng, lngLat.lat);
       if (!value) {
-        pointerDataDiv.innerText = '';
+        pointerDataDiv.innerHTML = '';
         return;
       }
       const raw = value[weatherLayerValue];
       const formatted = formatValue(activeLayer, raw);
-      pointerDataDiv.innerText = formatted ? (typeof formatted.v === 'number' ? formatted.v.toFixed(1) : formatted.v) + formatted.u : '';
+      if (!formatted) {
+        pointerDataDiv.innerHTML = '';
+        return;
+      }
+      const mainText = (typeof formatted.v === 'number' ? formatted.v.toFixed(1) : formatted.v) + formatted.u;
+      if (activeLayer === 'precipitation' && raw != null && raw > 0) {
+        var snowEst = useImperial ? (raw * 0.03937 * 10).toFixed(1) + ' in/h' : (raw * 10).toFixed(0) + ' mm/h';
+        pointerDataDiv.innerHTML = mainText + '<br><span style="font-size:14px;opacity:0.9">~' + snowEst + ' snow (10:1)</span>';
+      } else {
+        pointerDataDiv.innerText = mainText;
+      }
     }
   }
 
