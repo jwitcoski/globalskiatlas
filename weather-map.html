@@ -108,6 +108,16 @@
     #ski-resort-legend .legend-row { display: flex; align-items: center; gap: 8px; margin: 4px 0; }
     #ski-resort-legend .legend-mountain-icon { display: inline-flex; align-items: center; line-height: 0; }
     #ski-resort-legend .legend-mountain-icon svg { display: block; }
+    /* Mobile: move legend to top-right so it doesn't cover left-side buttons (e.g. Find wettest resort) */
+    @media (max-width: 768px) {
+      #ski-resort-legend {
+        top: 120px;
+        bottom: auto;
+        left: auto;
+        right: 10px;
+        max-width: 200px;
+      }
+    }
   </style>
 </head>
 <body>
