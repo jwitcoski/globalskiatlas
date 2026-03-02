@@ -1,0 +1,8 @@
+# robots.txt for globalskiatlas.com
+# https://www.robotstxt.org/
+
+User-agent: *
+Allow: /
+
+# Sitemap (uncomment when you add sitemap.xml)
+# Sitemap: https://globalskiatlas.com/sitemap.xml

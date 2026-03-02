@@ -1,0 +1,3 @@
+# ads.txt for globalskiatlas.com
+# See https://iabtechlab.com/ads-txt/
+google.com, pub-4372859798489282, DIRECT, f08c47fec0942fa0
