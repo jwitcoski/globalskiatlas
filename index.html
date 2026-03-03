@@ -88,7 +88,8 @@
                             max-lg:tw-gap-5 lg:tw-mx-auto lg:tw-place-items-center"
                 >
                     <a class="header-links" href="coffee-table-book.html">Coffee Table Book</a>
-                    <a class="header-links" href="mainmap.html">Online Atlas</a>
+                    <a class="header-links" href="wiki/browse.html">Online Atlas</a>
+                    <a class="header-links" href="mainmap.html">Trip Planner</a>
                     <a class="header-links" href="resort-comparison.html">Compare Resorts</a>
                     <a class="header-links" href="SkiResortFacts.html">Resort Facts</a>
                     <a class="header-links" href="SkiTrailFacts.html">Trail Facts</a>
@@ -146,7 +147,7 @@
                         class="reveal-hero-text tw-mt-2 tw-max-w-[450px] tw-p-2 
                                 tw-text-justify max-lg:tw-max-w-full"
                     >
-                        Explore the paper atlas and coffee table book, use the interactive online atlas and plan multi-resort road trips, compare resorts side by side, or ask the AI anything about skiing—all in one place.
+                        Explore the paper atlas and coffee table book, browse the online atlas, plan multi-resort ski trips, compare resorts side by side, or ask the AI anything about skiing—all in one place.
                     </div>
 
                     <div class="reveal-hero-text tw-mt-4 tw-flex tw-gap-4 tw-p-2">
@@ -211,15 +212,15 @@
                         <div class="tw-flex tw-h-16 tw-w-16 tw-place-content-center tw-place-items-center tw-rounded-full tw-border tw-border-gray-300 tw-bg-gray-100">
                             <i class="bi bi-map tw-text-2xl tw-text-gray-700"></i>
                         </div>
-                        <h3 class="tw-mt-4 tw-text-xl tw-font-bold">Interactive Maps</h3>
-                        <p class="tw-mt-2 tw-text-sm tw-leading-relaxed tw-text-gray-600">Explore resorts with our detailed interactive maps showing trails, lifts, and facilities.</p>
+                        <h3 class="tw-mt-4 tw-text-xl tw-font-bold">Online Atlas</h3>
+                        <p class="tw-mt-2 tw-text-sm tw-leading-relaxed tw-text-gray-600">Browse our community-powered resort wiki — detailed pages for 3,000+ ski resorts with terrain stats, lift counts, and more.</p>
                     </div>
                     <div class="reveal-up tw-flex tw-flex-col tw-place-items-center tw-text-center">
                         <div class="tw-flex tw-h-16 tw-w-16 tw-place-content-center tw-place-items-center tw-rounded-full tw-border tw-border-gray-300 tw-bg-gray-100">
                             <i class="bi bi-signpost-2-fill tw-text-2xl tw-text-gray-700"></i>
                         </div>
-                        <h3 class="tw-mt-4 tw-text-xl tw-font-bold">Road Trip Planner</h3>
-                        <p class="tw-mt-2 tw-text-sm tw-leading-relaxed tw-text-gray-600">Plan multi-resort road trips with turn-by-turn directions—add up to 25 stops and choose to end at the last resort or return to start.</p>
+                        <h3 class="tw-mt-4 tw-text-xl tw-font-bold">Ski Trip Planner</h3>
+                        <p class="tw-mt-2 tw-text-sm tw-leading-relaxed tw-text-gray-600">Plan multi-resort ski trips with an interactive map and turn-by-turn directions—add up to 25 stops and choose to end at the last resort or return to start.</p>
                     </div>
                     <div class="reveal-up tw-flex tw-flex-col tw-place-items-center tw-text-center">
                         <div class="tw-flex tw-h-16 tw-w-16 tw-place-content-center tw-place-items-center tw-rounded-full tw-border tw-border-gray-300 tw-bg-gray-100">
@@ -243,13 +244,22 @@
                         <p class="tw-mt-2 tw-text-sm tw-leading-relaxed tw-text-gray-600">Advanced data analytics and AI features to enhance your resort selection experience.</p>
                     </div>
                 </div>
-                <a
-                    href="#online-atlas"
-                    aria-label="Explore the Atlas"
-                    class="reveal-up tw-mt-6 tw-flex tw-h-12 tw-min-w-[180px] tw-place-content-center tw-place-items-center tw-rounded-lg tw-border tw-border-gray-300 tw-bg-white tw-px-6 tw-py-3 tw-text-black hover:tw-bg-gray-50"
-                >
-                    Explore the Atlas
-                </a>
+                <div class="tw-flex tw-gap-3 tw-flex-wrap tw-justify-center">
+                    <a
+                        href="#online-atlas"
+                        aria-label="Browse the Online Atlas"
+                        class="reveal-up tw-mt-6 tw-flex tw-h-12 tw-min-w-[180px] tw-place-content-center tw-place-items-center tw-rounded-lg tw-border tw-border-gray-300 tw-bg-white tw-px-6 tw-py-3 tw-text-black hover:tw-bg-gray-50"
+                    >
+                        Online Atlas
+                    </a>
+                    <a
+                        href="#trip-planner"
+                        aria-label="Plan a ski trip"
+                        class="reveal-up tw-mt-6 tw-flex tw-h-12 tw-min-w-[180px] tw-place-content-center tw-place-items-center tw-rounded-lg tw-border tw-border-gray-300 tw-bg-white tw-px-6 tw-py-3 tw-text-black hover:tw-bg-gray-50"
+                    >
+                        Trip Planner
+                    </a>
+                </div>
             </div>
         </section>
 
@@ -325,19 +335,47 @@
                     class="tw-mt-6 tw-flex tw-max-w-[450px] tw-flex-col tw-gap-4"
                 >
                     <h3 class="tw-text-4xl tw-font-medium">Online Atlas</h3>
-                    <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700">Explore our comprehensive collection of standardized ski resort maps</p>
-                    <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600">Our interactive atlas provides standardized maps and statistics for ski resorts worldwide, using OpenStreetMap data and AWS services. Plan multi-resort road trips with turn-by-turn directions, or compare resorts easily with consistent information on terrain, vertical drop, run lengths, and more.</p>
-                    <a href="mainmap.html" class="tw-mt-6 tw-inline-flex tw-gap-2 tw-rounded-lg tw-px-8 tw-py-4 tw-text-lg tw-font-semibold tw-shadow-md tw-no-underline tw-text-white hover:tw-opacity-90" style="background-color: #2563eb;" aria-label="Open Online Atlas map">Explore the map <i class="bi bi-arrow-right"></i></a>
+                    <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700">The world's ski resorts, all in one place</p>
+                    <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600">Browse our community-powered resort wiki with detailed pages for thousands of ski destinations worldwide. Find terrain stats, lift counts, trail breakdowns, and resort descriptions—standardized across every mountain so you can compare fairly and plan with confidence.</p>
+                    <a href="wiki/browse.html" class="tw-mt-6 tw-inline-flex tw-gap-2 tw-rounded-lg tw-px-8 tw-py-4 tw-text-lg tw-font-semibold tw-shadow-md tw-no-underline tw-text-white hover:tw-opacity-90" style="background-color: #2563eb;" aria-label="Browse the Online Atlas">Browse the Atlas <i class="bi bi-arrow-right"></i></a>
                 </div>
 
                 <div class="tw-flex">
                     <div class="tw-h-[450px] tw-w-[300px]">
                         <img
-                            src="./assets/phone-online-atlas-map.png"
-                            alt="Phone showing online atlas map"
+                            src="./assets/ski-resort-dashboard-phone.png"
+                            alt="Phone showing ski resort atlas"
                             class="tw-h-full tw-w-full tw-object-contain"
                         />
                     </div>
+                </div>
+            </div>
+        </section>
+
+        <section
+            id="trip-planner"
+            class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6"
+        >
+            <div
+                class="reveal-up tw-flex tw-min-h-[60vh] tw-place-content-center tw-place-items-center
+                        tw-gap-[10%] max-lg:tw-flex-col max-lg:tw-gap-10"
+            >
+                <div class="tw-flex">
+                    <div class="tw-h-[450px] tw-w-[300px]">
+                        <img
+                            src="./assets/phone-online-atlas-map.png"
+                            alt="Phone showing ski trip planner map"
+                            class="tw-h-full tw-w-full tw-object-contain"
+                        />
+                    </div>
+                </div>
+                <div
+                    class="tw-mt-6 tw-flex tw-max-w-[450px] tw-flex-col tw-gap-4"
+                >
+                    <h3 class="tw-text-4xl tw-font-medium">Ski Trip Planner</h3>
+                    <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700">Plan the perfect multi-resort ski adventure</p>
+                    <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600">Use our interactive map to plan multi-resort ski trips with turn-by-turn directions. Add up to 25 stops, explore 3,000+ resorts on the map, and choose whether to end at your last destination or loop back to the start. The ultimate tool for road-tripping skiers.</p>
+                    <a href="mainmap.html" class="tw-mt-6 tw-inline-flex tw-gap-2 tw-rounded-lg tw-px-8 tw-py-4 tw-text-lg tw-font-semibold tw-shadow-md tw-no-underline tw-text-white hover:tw-opacity-90" style="background-color: #2563eb;" aria-label="Open Ski Trip Planner">Plan your trip <i class="bi bi-arrow-right"></i></a>
                 </div>
             </div>
         </section>
@@ -605,7 +643,8 @@
                 <h2 class="tw-text-3xl max-md:tw-text-xl">Explore</h2>
                 <div class="tw-flex tw-flex-col tw-gap-3 max-md:tw-text-sm">
                     <a href="coffee-table-book.html" class="footer-link">Coffee Table Book</a>
-                    <a href="mainmap.html" class="footer-link">Online Atlas</a>
+                    <a href="wiki/browse.html" class="footer-link">Online Atlas</a>
+                    <a href="mainmap.html" class="footer-link">Trip Planner</a>
                     <a href="resort-comparison.html" class="footer-link">Compare Resorts</a>
                     <a href="SkiResortFacts.html" class="footer-link">Resort Facts</a>
                     <a href="SkiTrailFacts.html" class="footer-link">Trail Facts</a>
