@@ -59,7 +59,7 @@ async function saveEntry() {
   }
 
   try {
-    var resp = await fetch('/wiki', {
+    var resp = await fetch('/api/wiki', {
       method: 'POST',
       headers: headers,
       body: JSON.stringify(body)
@@ -171,7 +171,7 @@ function populatePage(page) {
 
 async function loadEntry() {
   try {
-    var resp = await fetch('/wiki/' + encodeURIComponent(YWIKI_PATH));
+    var resp = await fetch('/api/wiki/' + encodeURIComponent(YWIKI_PATH));
     if (!resp.ok) { populatePage(null); return; }
     var page = await resp.json();
     populatePage(page);
@@ -251,7 +251,7 @@ async function loadRevisions() {
   var el = document.getElementById('revisions-list');
   if (!el) return;
   try {
-    var resp = await fetch('/wiki/' + encodeURIComponent(YWIKI_PATH) + '/revisions?limit=20');
+    var resp = await fetch('/api/wiki/' + encodeURIComponent(YWIKI_PATH) + '/revisions?limit=20');
     if (!resp.ok) return;
     var data = await resp.json();
     var list = (data && data.revisions) ? data.revisions : [];
@@ -307,7 +307,7 @@ async function acceptRevision(revisionId) {
     return;
   }
   try {
-    var resp = await fetch('/wiki/' + encodeURIComponent(YWIKI_PATH) + '/revisions/' + encodeURIComponent(revisionId) + '/accept', {
+    var resp = await fetch('/api/wiki/' + encodeURIComponent(YWIKI_PATH) + '/revisions/' + encodeURIComponent(revisionId) + '/accept', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
       body: JSON.stringify({ comment: comment })
@@ -348,7 +348,7 @@ async function rejectRevision(revisionId) {
     return;
   }
   try {
-    var resp = await fetch('/wiki/' + encodeURIComponent(YWIKI_PATH) + '/revisions/' + encodeURIComponent(revisionId) + '/reject', {
+    var resp = await fetch('/api/wiki/' + encodeURIComponent(YWIKI_PATH) + '/revisions/' + encodeURIComponent(revisionId) + '/reject', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
       body: JSON.stringify({ comment: comment })
@@ -374,7 +374,7 @@ async function loadComments() {
   var el = document.getElementById('comments-list');
   if (!el) return;
   try {
-    var resp = await fetch('/wiki/' + encodeURIComponent(YWIKI_PATH) + '/comments?limit=100');
+    var resp = await fetch('/api/wiki/' + encodeURIComponent(YWIKI_PATH) + '/comments?limit=100');
     if (!resp.ok) return;
     var data = await resp.json();
     var list = (data && data.comments) ? data.comments : [];
@@ -413,7 +413,7 @@ async function postComment() {
 
   btn.disabled = true;
   try {
-    var resp = await fetch('/wiki/' + encodeURIComponent(YWIKI_PATH) + '/comments', {
+    var resp = await fetch('/api/wiki/' + encodeURIComponent(YWIKI_PATH) + '/comments', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
       body: JSON.stringify({ content: content })

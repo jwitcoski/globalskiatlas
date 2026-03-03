@@ -103,40 +103,53 @@ function userDisplayName(principal) {
   return principal.username || principal.email || principal.sub || null;
 }
 
-// --- API routes (before static middleware) -----------------------------------
-app.get('/version', (req, res) => {
-  const pkg = require('./package.json');
-  res.type('text/plain').send(pkg.version || '0.0.0');
-});
-
-app.get('/auth/config', (req, res) => {
-  res.json({
-    configured: isCognitoConfigured,
-    region:     cognito.region,
-    userPoolId: cognito.userPoolId || '',
-    clientId:   cognito.clientId || '',
-    domain:     domainUrl,
-  });
-});
-
-app.post('/wiki/:pageId/comments', requireCognito, async (req, res) => {
-  const pageId = req.params.pageId;
-  const { content, parentCommentId } = req.body || {};
-  if (typeof content !== 'string' || !content.trim()) {
-    return res.status(400).json({ error: 'Bad Request', message: 'content required' });
-  }
-  const userId = req.cognitoPrincipal ? req.cognitoPrincipal.sub : null;
-  const displayName = userDisplayName(req.cognitoPrincipal);
+// --- Wiki API handlers (used for both /wiki and /api/wiki) --------------------
+async function handleWikiIndex(req, res) {
   try {
-    const comment = await wikiStore.addComment(pageId, userId, content.trim(), parentCommentId, displayName);
-    res.status(201).json(comment);
+    const pages = await wikiStore.listPages();
+    res.json({ pages });
   } catch (err) {
-    console.error('POST /wiki/:pageId/comments', err);
+    console.error('GET wiki/index', err);
     res.status(500).json({ error: 'Internal Server Error' });
   }
-});
+}
 
-app.post('/wiki', requireCognito, async (req, res) => {
+async function handleWikiGetPage(req, res) {
+  const pageId = req.params.pageId;
+  try {
+    const entry = await wikiStore.getPage(pageId);
+    res.json(entry || null);
+  } catch (err) {
+    console.error('GET wiki page', err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+}
+
+async function handleWikiRevisions(req, res) {
+  const pageId = req.params.pageId;
+  const limit = Math.min(parseInt(req.query.limit, 10) || 50, 100);
+  try {
+    const items = await wikiStore.listRevisions(pageId, limit);
+    res.json({ revisions: items });
+  } catch (err) {
+    console.error('GET wiki revisions', err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+}
+
+async function handleWikiComments(req, res) {
+  const pageId = req.params.pageId;
+  const limit = Math.min(parseInt(req.query.limit, 10) || 100, 200);
+  try {
+    const items = await wikiStore.listComments(pageId, limit);
+    res.json({ comments: items });
+  } catch (err) {
+    console.error('GET wiki comments', err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+}
+
+async function handleWikiPostPage(req, res) {
   const entry = req.body;
   if (!entry || typeof entry.path !== 'string') {
     return res.status(400).json({ error: 'Bad Request', message: 'path required' });
@@ -164,12 +177,12 @@ app.post('/wiki', requireCognito, async (req, res) => {
     await wikiStore.addComment(pageId, userId, 'Proposed: ' + comment, null, displayName);
     res.status(202).json({ revisionId: rev.revisionId, status: 'pending', message: 'Change proposed; pending accept/reject' });
   } catch (err) {
-    console.error('POST /wiki', err);
+    console.error('POST wiki', err);
     res.status(500).json({ error: 'Internal Server Error' });
   }
-});
+}
 
-app.post('/wiki/:pageId/revisions/:revisionId/accept', requireCognito, async (req, res) => {
+async function handleWikiAcceptRevision(req, res) {
   const { pageId, revisionId } = req.params;
   const comment = typeof req.body === 'object' && typeof req.body.comment === 'string' ? req.body.comment.trim() : '';
   if (!comment) return res.status(400).json({ error: 'Bad Request', message: 'comment required' });
@@ -189,9 +202,9 @@ app.post('/wiki/:pageId/revisions/:revisionId/accept', requireCognito, async (re
     console.error('POST accept revision', err);
     res.status(500).json({ error: 'Internal Server Error' });
   }
-});
+}
 
-app.post('/wiki/:pageId/revisions/:revisionId/reject', requireCognito, async (req, res) => {
+async function handleWikiRejectRevision(req, res) {
   const { pageId, revisionId } = req.params;
   const comment = typeof req.body === 'object' && typeof req.body.comment === 'string' ? req.body.comment.trim() : '';
   if (!comment) return res.status(400).json({ error: 'Bad Request', message: 'comment required' });
@@ -206,41 +219,64 @@ app.post('/wiki/:pageId/revisions/:revisionId/reject', requireCognito, async (re
     console.error('POST reject revision', err);
     res.status(500).json({ error: 'Internal Server Error' });
   }
+}
+
+// --- API routes (before static middleware) -----------------------------------
+app.get('/version', (req, res) => {
+  const pkg = require('./package.json');
+  res.type('text/plain').send(pkg.version || '0.0.0');
 });
 
-app.get('/wiki/index', async (req, res) => {
-  try {
-    const pages = await wikiStore.listPages();
-    res.json({ pages });
-  } catch (err) {
-    console.error('GET /wiki/index', err);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
+app.get('/auth/config', (req, res) => {
+  res.json({
+    configured: isCognitoConfigured,
+    region:     cognito.region,
+    userPoolId: cognito.userPoolId || '',
+    clientId:   cognito.clientId || '',
+    domain:     domainUrl,
+  });
 });
 
-app.get('/wiki/:pageId/revisions', async (req, res) => {
+// Mount /api/wiki so GET /api/wiki/index is always matched before :pageId
+const apiWikiRouter = require('express').Router({ mergeParams: true });
+apiWikiRouter.get('/index', handleWikiIndex);
+apiWikiRouter.get('/:pageId/revisions', handleWikiRevisions);
+apiWikiRouter.get('/:pageId/comments', handleWikiComments);
+apiWikiRouter.get('/:pageId', handleWikiGetPage);
+app.use('/api/wiki', apiWikiRouter);
+
+async function handleWikiPostComment(req, res) {
   const pageId = req.params.pageId;
-  const limit = Math.min(parseInt(req.query.limit, 10) || 50, 100);
+  const { content, parentCommentId } = req.body || {};
+  if (typeof content !== 'string' || !content.trim()) {
+    return res.status(400).json({ error: 'Bad Request', message: 'content required' });
+  }
+  const userId = req.cognitoPrincipal ? req.cognitoPrincipal.sub : null;
+  const displayName = userDisplayName(req.cognitoPrincipal);
   try {
-    const items = await wikiStore.listRevisions(pageId, limit);
-    res.json({ revisions: items });
+    const comment = await wikiStore.addComment(pageId, userId, content.trim(), parentCommentId, displayName);
+    res.status(201).json(comment);
   } catch (err) {
-    console.error('GET /wiki/:pageId/revisions', err);
+    console.error('POST wiki comments', err);
     res.status(500).json({ error: 'Internal Server Error' });
   }
-});
+}
 
-app.get('/wiki/:pageId/comments', async (req, res) => {
-  const pageId = req.params.pageId;
-  const limit = Math.min(parseInt(req.query.limit, 10) || 100, 200);
-  try {
-    const items = await wikiStore.listComments(pageId, limit);
-    res.json({ comments: items });
-  } catch (err) {
-    console.error('GET /wiki/:pageId/comments', err);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-});
+app.post('/wiki/:pageId/comments', requireCognito, handleWikiPostComment);
+app.post('/api/wiki/:pageId/comments', requireCognito, handleWikiPostComment);
+
+app.post('/wiki', requireCognito, handleWikiPostPage);
+app.post('/api/wiki', requireCognito, handleWikiPostPage);
+
+app.post('/wiki/:pageId/revisions/:revisionId/accept', requireCognito, handleWikiAcceptRevision);
+app.post('/api/wiki/:pageId/revisions/:revisionId/accept', requireCognito, handleWikiAcceptRevision);
+
+app.post('/wiki/:pageId/revisions/:revisionId/reject', requireCognito, handleWikiRejectRevision);
+app.post('/api/wiki/:pageId/revisions/:revisionId/reject', requireCognito, handleWikiRejectRevision);
+
+app.get('/wiki/index', handleWikiIndex);
+app.get('/wiki/:pageId/revisions', handleWikiRevisions);
+app.get('/wiki/:pageId/comments', handleWikiComments);
 
 // --- Wiki UI static files (before catch-all GET /wiki*) ---------------------
 // Serves /wiki/resort.html, /wiki/browse.html, /wiki/js/*, /wiki/css/*

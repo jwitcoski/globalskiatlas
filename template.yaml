@@ -1,0 +1,84 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Global Ski Atlas — Wiki API (Lambda + API Gateway)
+
+Parameters:
+  DynamoDBTablePrefix:
+    Type: String
+    Default: atlas
+    Description: Prefix for wiki DynamoDB tables (atlas-WikiPages, atlas-WikiRevisions, atlas-WikiComments)
+  CognitoUserPoolId:
+    Type: String
+    Default: ''
+    Description: Cognito User Pool ID for wiki auth (optional)
+  CognitoClientId:
+    Type: String
+    Default: ''
+    Description: Cognito App client ID (optional)
+
+Globals:
+  Function:
+    Runtime: nodejs20.x
+    Timeout: 30
+    MemorySize: 256
+
+Resources:
+  WikiApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      Name: !Sub '${AWS::StackName}-wiki-api'
+      CorsConfiguration:
+        AllowOrigins:
+          - '*'
+        AllowHeaders:
+          - Content-Type
+          - Authorization
+        AllowMethods:
+          - GET
+          - POST
+          - OPTIONS
+
+  WikiApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.handler
+      CodeUri: lambda/wiki-api/
+      Description: Wiki API — list pages, get page, revisions, comments, accept/reject, post
+      Environment:
+        Variables:
+          DYNAMODB_TABLE_PREFIX: !Ref DynamoDBTablePrefix
+          COGNITO_USER_POOL_ID: !Ref CognitoUserPoolId
+          COGNITO_CLIENT_ID: !Ref CognitoClientId
+          COGNITO_REGION: !Ref AWS::Region
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Sub '${DynamoDBTablePrefix}-WikiPages'
+        - DynamoDBCrudPolicy:
+            TableName: !Sub '${DynamoDBTablePrefix}-WikiRevisions'
+        - DynamoDBCrudPolicy:
+            TableName: !Sub '${DynamoDBTablePrefix}-WikiComments'
+      Events:
+        WikiApiRoot:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref WikiApi
+            Path: /api/wiki
+            Method: ANY
+        WikiApiProxy:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref WikiApi
+            Path: /api/wiki/{proxy+}
+            Method: ANY
+
+Outputs:
+  WikiApiUrl:
+    Description: Wiki API base URL (use in CloudFront origin or frontend)
+    Value: !Sub 'https://${WikiApi}.execute-api.${AWS::Region}.amazonaws.com'
+    Export:
+      Name: !Sub '${AWS::StackName}-WikiApiUrl'
+  WikiApiId:
+    Description: API Gateway HTTP API ID
+    Value: !Ref WikiApi
+    Export:
+      Name: !Sub '${AWS::StackName}-WikiApiId'

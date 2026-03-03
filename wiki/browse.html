@@ -158,8 +158,14 @@
       ywikiAuth.init(function () { ywikiAuth.renderWidget('resort-auth-widget'); });
       document.getElementById('browse-search').focus();
 
-      fetch('/wiki/index')
-        .then(function (r) { return r.json(); })
+      fetch('/api/wiki/index')
+        .then(function (r) {
+          var ct = (r.headers.get('Content-Type') || '');
+          if (!r.ok || !ct.includes('application/json')) {
+            return Promise.reject(new Error(r.ok ? 'Server returned non-JSON (is /api/wiki routed to the API?)' : 'API error ' + r.status));
+          }
+          return r.json();
+        })
         .then(function (data) {
           _allPages = data.pages || [];
           document.getElementById('browse-subtitle').textContent = _allPages.length.toLocaleString() + ' resorts in the index';
