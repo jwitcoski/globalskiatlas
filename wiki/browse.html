@@ -1,0 +1,176 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Browse Resorts – Ski Atlas</title>
+  <link rel="stylesheet" href="/wiki/css/style.css?v=3"/>
+  <style>
+    .browse-hero { margin-bottom: 1.5rem; }
+    .browse-hero h1 { font-size: 2rem; font-weight: 700; color: var(--resort-title-color); margin: 0 0 0.25rem 0; letter-spacing: -0.02em; }
+    .browse-hero p { color: var(--resort-footer-color); margin: 0; font-size: 0.9rem; }
+    .browse-controls { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1.25rem; align-items: flex-end; }
+    .browse-search-wrap { flex: 1 1 18rem; position: relative; }
+    .browse-search-wrap svg { position: absolute; left: 0.6rem; top: 50%; transform: translateY(-50%); color: #999; pointer-events: none; }
+    .browse-search { width: 100%; padding: 0.55rem 0.75rem 0.55rem 2rem; font-size: 1rem; border: 1px solid var(--resort-edit-border); border-radius: 4px; font-family: inherit; }
+    .browse-search:focus { outline: none; border-color: var(--resort-subtitle-color); box-shadow: 0 0 0 2px rgba(91,143,180,0.2); }
+    .browse-filter { padding: 0.55rem 0.75rem; font-size: 0.9rem; border: 1px solid var(--resort-edit-border); border-radius: 4px; font-family: inherit; background: #fff; color: var(--resort-body-color); min-width: 10rem; }
+    .browse-filter:focus { outline: none; border-color: var(--resort-subtitle-color); }
+    .browse-count { font-size: 0.85rem; color: var(--resort-footer-color); margin-bottom: 0.75rem; }
+    .browse-results { display: grid; gap: 0.6rem; }
+    .browse-card { display: flex; justify-content: space-between; align-items: center; padding: 0.7rem 1rem; border: 1px solid var(--resort-edit-border); border-radius: 6px; text-decoration: none; color: inherit; transition: border-color 0.15s, box-shadow 0.15s; gap: 1rem; }
+    .browse-card:hover { border-color: var(--resort-subtitle-color); box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
+    .browse-card-main { min-width: 0; }
+    .browse-card-title { font-weight: 600; color: var(--resort-title-color); font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .browse-card-location { font-size: 0.78rem; color: var(--resort-location-color); font-weight: 500; text-transform: uppercase; letter-spacing: 0.02em; margin-top: 0.1rem; }
+    .browse-card-meta { display: flex; flex-wrap: wrap; gap: 0.5rem; flex-shrink: 0; align-items: center; }
+    .browse-badge { font-size: 0.75rem; padding: 0.15rem 0.5rem; border-radius: 20px; background: var(--resort-stats-bg); color: var(--resort-stats-label); white-space: nowrap; }
+    .browse-empty { color: var(--resort-footer-color); font-style: italic; padding: 2rem 0; text-align: center; }
+    .browse-loading { color: var(--resort-footer-color); text-align: center; padding: 3rem 0; }
+    .browse-nav { display: flex; gap: 1.5rem; align-items: center; font-size: 0.85rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--resort-edit-border); padding-bottom: 0.75rem; }
+    .browse-nav a { color: var(--resort-title-color); text-decoration: none; }
+    .browse-nav a:hover { text-decoration: underline; }
+    .browse-nav-current { font-weight: 600; color: var(--resort-body-color); }
+  </style>
+</head>
+<body>
+
+  <header class="resort-auth-header">
+    <div id="resort-auth-widget" class="resort-auth-widget"></div>
+  </header>
+
+  <nav class="browse-nav">
+    <a href="/">← Atlas</a>
+    <span class="browse-nav-current">Browse Resorts</span>
+  </nav>
+
+  <div class="browse-hero">
+    <h1>Browse Resorts</h1>
+    <p id="browse-subtitle">Loading resort index…</p>
+  </div>
+
+  <div class="browse-controls">
+    <div class="browse-search-wrap">
+      <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/>
+      </svg>
+      <input type="search" id="browse-search" class="browse-search" placeholder="Search resorts…" autocomplete="off"/>
+    </div>
+    <select id="browse-country" class="browse-filter"><option value="">All countries</option></select>
+    <select id="browse-state" class="browse-filter"><option value="">All states / provinces</option></select>
+    <select id="browse-type" class="browse-filter"><option value="">All resort types</option></select>
+  </div>
+
+  <div class="browse-count" id="browse-count"></div>
+  <div class="browse-results" id="browse-results"><div class="browse-loading">Loading…</div></div>
+
+  <script src="/wiki/js/auth.js"></script>
+  <script>
+    var _allPages = [];
+    var _statesByCountry = {};
+
+    function buildDropdowns(pages) {
+      var countries = {}, types = {};
+      pages.forEach(function (p) {
+        if (p.country) {
+          if (!countries[p.country]) countries[p.country] = {};
+          if (p.state) countries[p.country][p.state] = true;
+        }
+        if (p.resortType) types[p.resortType] = true;
+      });
+      _statesByCountry = countries;
+      var cSel = document.getElementById('browse-country');
+      Object.keys(countries).sort().forEach(function (c) {
+        var o = document.createElement('option'); o.value = c; o.textContent = c; cSel.appendChild(o);
+      });
+      var tSel = document.getElementById('browse-type');
+      Object.keys(types).sort().forEach(function (t) {
+        var o = document.createElement('option'); o.value = t; o.textContent = t; tSel.appendChild(o);
+      });
+    }
+
+    function updateStateDropdown(country) {
+      var sSel = document.getElementById('browse-state');
+      sSel.innerHTML = '<option value="">All states / provinces</option>';
+      if (country && _statesByCountry[country]) {
+        Object.keys(_statesByCountry[country]).sort().forEach(function (s) {
+          var o = document.createElement('option'); o.value = s; o.textContent = s; sSel.appendChild(o);
+        });
+      }
+    }
+
+    function esc(s) {
+      return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function renderResults() {
+      var q = (document.getElementById('browse-search').value || '').trim().toLowerCase();
+      var country = document.getElementById('browse-country').value;
+      var state = document.getElementById('browse-state').value;
+      var type = document.getElementById('browse-type').value;
+
+      var filtered = _allPages.filter(function (p) {
+        if (q && !(p.title||'').toLowerCase().includes(q) && !(p.state||'').toLowerCase().includes(q) && !(p.country||'').toLowerCase().includes(q)) return false;
+        if (country && p.country !== country) return false;
+        if (state && p.state !== state) return false;
+        if (type && p.resortType !== type) return false;
+        return true;
+      });
+
+      document.getElementById('browse-count').textContent = filtered.length + ' resort' + (filtered.length !== 1 ? 's' : '');
+
+      var container = document.getElementById('browse-results');
+      if (filtered.length === 0) {
+        container.innerHTML = '<div class="browse-empty">No resorts match your search.</div>';
+        return;
+      }
+
+      var html = filtered.slice(0, 500).map(function (p) {
+        var location = [p.state, p.country].filter(Boolean).join(', ');
+        var badges = [];
+        if (p.resortType) badges.push(p.resortType);
+        if (p.totalLifts) badges.push(p.totalLifts + ' lifts');
+        if (p.downhillTrails) badges.push(p.downhillTrails + ' trails');
+        if (p.skiableTerrainAcres) badges.push(Math.round(p.skiableTerrainAcres) + ' acres');
+        return '<a class="browse-card" href="/wiki/resort.html?page=' + esc(p.pageId) + '">' +
+          '<div class="browse-card-main"><div class="browse-card-title">' + esc(p.title || p.pageId) + '</div>' +
+          (location ? '<div class="browse-card-location">' + esc(location) + '</div>' : '') + '</div>' +
+          (badges.length ? '<div class="browse-card-meta">' + badges.map(function(b){return '<span class="browse-badge">'+esc(b)+'</span>';}).join('') + '</div>' : '') +
+          '</a>';
+      }).join('');
+
+      if (filtered.length > 500) {
+        html += '<div class="browse-empty" style="font-style:normal;padding:1rem 0">Showing first 500 of ' + filtered.length + ' — narrow your search to see more.</div>';
+      }
+      container.innerHTML = html;
+    }
+
+    document.getElementById('browse-search').addEventListener('input', renderResults);
+    document.getElementById('browse-country').addEventListener('change', function () {
+      updateStateDropdown(this.value);
+      document.getElementById('browse-state').value = '';
+      renderResults();
+    });
+    document.getElementById('browse-state').addEventListener('change', renderResults);
+    document.getElementById('browse-type').addEventListener('change', renderResults);
+
+    document.addEventListener('DOMContentLoaded', function () {
+      ywikiAuth.init(function () { ywikiAuth.renderWidget('resort-auth-widget'); });
+      document.getElementById('browse-search').focus();
+
+      fetch('/wiki/index')
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          _allPages = data.pages || [];
+          document.getElementById('browse-subtitle').textContent = _allPages.length.toLocaleString() + ' resorts in the index';
+          buildDropdowns(_allPages);
+          renderResults();
+        })
+        .catch(function (err) {
+          document.getElementById('browse-results').innerHTML = '<div class="browse-empty">Failed to load resort index. Is the server running?</div>';
+          console.error(err);
+        });
+    });
+  </script>
+</body>
+</html>

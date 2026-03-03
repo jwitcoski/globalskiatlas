@@ -1,0 +1,80 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Ski Atlas – Resort Wiki</title>
+  <link rel="stylesheet" href="/wiki/css/style.css?v=3"/>
+</head>
+<body>
+
+  <header class="resort-auth-header">
+    <a href="/wiki/browse.html" class="resort-browse-link">Browse all resorts →</a>
+    <div id="resort-auth-widget" class="resort-auth-widget"></div>
+  </header>
+
+  <article class="resort-entry">
+    <header class="resort-header">
+      <p class="resort-location" id="resort-location"></p>
+      <h1 class="resort-title" id="resort-title">Loading…</h1>
+      <p class="resort-subtitle" id="resort-subtitle"></p>
+    </header>
+
+    <div class="resort-layout">
+      <div class="resort-content">
+        <div class="resort-stats" id="resort-stats"></div>
+        <p class="resort-trail-breakdown" id="resort-trail-breakdown" style="display:none"></p>
+        <p class="resort-meta" id="resort-meta" style="display:none"></p>
+
+        <div class="resort-body js-resort-body"></div>
+      </div>
+    </div>
+
+    <footer class="resort-footer">
+      <span class="resort-page-num">—</span> <span class="resort-collection">Ski Atlas</span><span class="resort-contributors" id="resort-contributors"></span>
+    </footer>
+  </article>
+
+  <section class="resort-edit">
+    <h2 class="resort-edit-title">Edit body (Markdown)</h2>
+    <p class="resort-workflow-hint">Save <strong>proposes</strong> a change: the page does not update until another user accepts it. Add a required comment describing what you changed; it will appear in Comments. You can reject your own proposal if you change your mind.</p>
+    <textarea id="sourceTA" class="resort-edit-source" rows="8" placeholder="Write the resort description in Markdown. Use **bold**, *italic*, and line breaks. First letter will appear as a drop cap."></textarea>
+    <div class="resort-edit-revision-comment">
+      <label for="revision-comment">Revision comment (required)</label>
+      <input type="text" id="revision-comment" class="resort-revision-comment-input" placeholder="Describe what you changed (e.g. Added night skiing section)" maxlength="500"/>
+    </div>
+    <button type="button" class="resort-edit-btn" onclick="run()">Convert</button>
+    <button type="button" class="resort-edit-btn" onclick="saveEntry()">Save</button>
+  </section>
+
+  <section class="resort-revisions" id="resort-revisions-section">
+    <h2 class="resort-section-title">Revision history</h2>
+    <p class="resort-workflow-hint">Pending revisions need <strong>another user</strong> to Accept (you cannot accept your own). You can Reject your own proposal. Accept and Reject require a short comment; they appear below in Comments.</p>
+    <div id="revisions-list" class="resort-list"></div>
+  </section>
+
+  <section class="resort-comments" id="resort-comments-section">
+    <h2 class="resort-section-title">Comments</h2>
+    <p class="resort-workflow-hint">Revision actions (propose, accept, reject) post here automatically. You can also add a free-form comment anytime.</p>
+    <div id="comments-list" class="resort-list"></div>
+    <div class="resort-comment-form" id="comment-form-wrap">
+      <textarea id="comment-input" class="resort-comment-input" rows="2" placeholder="Add a comment (optional — or use revision comment when saving/accepting/rejecting)"></textarea>
+      <button type="button" class="resort-edit-btn" id="comment-submit-btn" onclick="postComment()">Post comment</button>
+    </div>
+  </section>
+
+  <script src="/wiki/js/showdown.min.js"></script>
+  <script src="/wiki/js/auth.js"></script>
+  <script src="/wiki/js/script.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      ywikiAuth.init(function () {
+        ywikiAuth.renderWidget('resort-auth-widget');
+        loadEntry();
+        loadRevisions();
+        loadComments();
+      });
+    });
+  </script>
+</body>
+</html>

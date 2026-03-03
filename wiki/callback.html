@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Signing in… – Ski Atlas</title>
+</head>
+<body>
+  <p id="msg">Signing you in…</p>
+  <script>
+    (function () {
+      function parseParams(str) {
+        var p = {};
+        if (!str) return p;
+        str.replace(/^#?\/?/, '').split('&').forEach(function (s) {
+          var kv = s.split('=');
+          if (kv.length >= 2) p[decodeURIComponent(kv[0])] = decodeURIComponent(kv.slice(1).join('=').replace(/\+/g, ' '));
+        });
+        return p;
+      }
+      var hash = parseParams(window.location.hash);
+      var query = parseParams(window.location.search);
+      var token = hash.id_token || query.id_token || null;
+      var error = hash.error || query.error || null;
+      var errorDesc = hash.error_description || query.error_description || '';
+
+      if (token) {
+        sessionStorage.setItem('ywiki_id_token', token);
+        try {
+          var pl = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+          sessionStorage.setItem('ywiki_user', pl.email || pl['cognito:username'] || pl.sub || '');
+        } catch (e) {}
+        window.location.replace(window.location.origin + '/wiki/resort.html');
+        return;
+      }
+
+      var msg = document.getElementById('msg');
+      if (error) {
+        msg.innerHTML = '<p><strong>Sign-in error:</strong> ' + (errorDesc || error) + '</p>' +
+          '<p>Callback URL must be added to Cognito → App client → Allowed callback URLs:<br><code>' + window.location.origin + '/wiki/callback.html</code></p>' +
+          '<p><a href="/wiki/browse.html">Back to Atlas</a></p>';
+      } else {
+        msg.innerHTML = '<p>No token received.</p>' +
+          '<p>Expected callback URL: <code>' + window.location.origin + '/wiki/callback.html</code></p>' +
+          '<p><a href="/wiki/browse.html">Back to Atlas</a></p>';
+      }
+    })();
+  </script>
+</body>
+</html>
