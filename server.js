@@ -237,6 +237,28 @@ app.get('/auth/config', (req, res) => {
   });
 });
 
+// Explicit route so GET /api/wiki/index always works (avoids router path quirks)
+app.get('/api/wiki/index', handleWikiIndex);
+
+// Drive-time isochrones proxy (Valhalla supports 1h, 2h, 4h; no API key)
+const VALHALLA_ISOCHRONE_URL = 'https://valhalla1.openstreetmap.de/isochrone';
+app.post('/api/isochrone', async (req, res) => {
+  try {
+    const body = req.body && typeof req.body === 'object' ? req.body : {};
+    const response = await fetch(VALHALLA_ISOCHRONE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const text = await response.text();
+    const status = response.status;
+    res.status(status).type('application/json').send(text);
+  } catch (err) {
+    console.error('POST /api/isochrone proxy error:', err.message);
+    res.status(502).json({ error: 'Bad Gateway', message: 'Isochrone service unavailable' });
+  }
+});
+
 // Mount /api/wiki so GET /api/wiki/index is always matched before :pageId
 const apiWikiRouter = require('express').Router({ mergeParams: true });
 apiWikiRouter.get('/index', handleWikiIndex);
@@ -284,6 +306,8 @@ app.use('/wiki', express.static(path.join(__dirname, 'wiki')));
 
 // Redirect /wiki and /wiki/ to the browse page
 app.get('/wiki', (req, res) => res.redirect(302, '/wiki/browse.html'));
+// Common typo: browser.html → browse.html
+app.get('/wiki/browser.html', (req, res) => res.redirect(302, '/wiki/browse.html'));
 
 // Catch-all: GET /wiki/:pageId → return page JSON from DynamoDB/memory
 app.get('/wiki*', async (req, res) => {

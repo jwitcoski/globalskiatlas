@@ -1,0 +1,9 @@
+version = 0.1
+[default.deploy.parameters]
+stack_name = "sam-app"
+resolve_s3 = true
+s3_prefix = "sam-app"
+region = "us-east-1"
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "DynamoDBTablePrefix=\"atlas\" CognitoUserPoolId=\"us-east-1_Ggqkiudld\" CognitoClientId=\"6vsq4lnukoi1cshdufdqsh1va\""
+image_repositories = []

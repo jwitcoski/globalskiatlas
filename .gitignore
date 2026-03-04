@@ -1,6 +1,9 @@
 # Dependencies
 node_modules/
 
+# AWS SAM build
+.aws-sam/
+
 # Tailwind build outputs (built in CI)
 css/tailwind-runtime.css
 css/tailwind-build.css

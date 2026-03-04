@@ -22,6 +22,15 @@ export const config = {
   MAP_STYLE_URL:   `https://api.maptiler.com/maps/winter-v4/style.json?key=${MAPTILER_KEY}`,
   TILE_LAYER_URL:  `https://api.maptiler.com/maps/winter-v4/256/{z}/{x}/{y}.png?key=${MAPTILER_KEY}`,
 
+  // ── Drive-time isochrones (DriveTimeMap.html) ─────────────────────────────
+  // Valhalla (via /api/isochrone when running npm start): 1h, 2h, 4h.
+  // Mapbox fallback when server not running: 1h only (API max 60 min).
+  // Set your token locally; do not commit real keys.
+  MAPBOX_ACCESS_TOKEN: '',
+
+  // OpenRouteService (optional; was used for 1h before Valhalla)
+  OPENROUTE_SERVICE_API_KEY: '',
+
   // ── Zoom thresholds ──────────────────────────────────────────────────────
   OUTLINES_MIN_ZOOM: 10,
   LIFTS_MIN_ZOOM:    10,

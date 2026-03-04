@@ -5,6 +5,7 @@
     "main": "server.js",
     "scripts": {
         "start": "node server.js",
+        "serve": "cross-env PORT=3010 node server.js",
         "start:tailwind": "cross-env NODE_ENV=development tailwindcss --postcss -i css/tailwind.css -o css/tailwind-runtime.css -w",
         "build:tailwind": "cross-env NODE_ENV=production tailwindcss --postcss -i css/tailwind.css -o css/tailwind-build.css --minify",
         "wiki:create-tables": "node scripts/wiki-create-tables.js",
