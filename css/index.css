@@ -2,6 +2,7 @@
 
 :root{
 
+    --header-height: 60px;
     --btn-color: #fdfdfd;/* button color*/
     --btn-bg: #0d0d0d;/* button bg color*/
 
@@ -20,6 +21,14 @@ html {
 header{
     /* background-color: #fff;
     color: #000; */
+    z-index: 9999;
+    pointer-events: auto;
+}
+
+/* Map pages: content starts below header; use with tw-flex-1 tw-min-h-0 on the wrapper */
+.map-wrapper {
+    margin-top: var(--header-height);
+    min-height: calc(100vh - var(--header-height));
 }
 
 
@@ -31,6 +40,12 @@ header > .collapsible-header{
     place-content: center;
     overflow: hidden;
     transition: width 0.3s ease;
+}
+
+@media (min-width: 1024px) {
+    header > .collapsible-header {
+        overflow: visible;
+    }
 }
 
 .animated-collapse{
@@ -49,6 +64,94 @@ header > .collapsible-header{
 
 .header-links:hover {
     color: var(--link-hover);
+}
+
+/* Header dropdown groups (tabs + dropdowns) */
+.header-dropdown-group {
+    position: relative;
+}
+.header-tab {
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 10px;
+    border-radius: 10px;
+    min-width: fit-content;
+    transition: background-color 0.5s, color 0.5s;
+    text-decoration: none;
+    color: inherit;
+}
+.header-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    min-width: 160px;
+    margin-top: 2px;
+    padding: 10px 0 8px 0;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+    border: 1px solid rgba(0,0,0,0.06);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.header-dropdown::before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    left: 0;
+    right: 0;
+    height: 12px;
+    pointer-events: none;
+}
+.header-dropdown-group:hover .header-dropdown {
+    opacity: 1;
+    visibility: visible;
+}
+.header-dropdown .header-links {
+    display: block;
+    padding: 8px 14px;
+    white-space: nowrap;
+    border-radius: 6px;
+    margin: 0 6px;
+}
+.header-dropdown .header-links:hover {
+    background: #f3f4f6;
+}
+@media not all and (min-width: 1024px) {
+    .header-dropdown-group {
+        width: 100%;
+        max-width: 100%;
+    }
+    .header-tab {
+        cursor: default;
+        color: black;
+        font-weight: 600;
+    }
+    .header-dropdown {
+        position: static;
+        opacity: 1;
+        visibility: visible;
+        box-shadow: none;
+        border: none;
+        background: transparent;
+        padding: 4px 0 8px 0;
+        margin-top: 2px;
+        margin-left: 12px;
+        min-width: 0;
+        gap: 2px;
+    }
+    .header-dropdown .header-links {
+        padding: 6px 0;
+        margin: 0;
+        font-weight: 400;
+    }
 }
 
 .material-icons.md-40 { 

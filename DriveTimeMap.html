@@ -20,9 +20,9 @@
       flex: 1;
       min-height: 0;
       position: relative;
-      margin-top: 60px;
-      min-height: calc(100vh - 60px);
-      min-height: calc(100dvh - 60px);
+      margin-top: var(--header-height);
+      min-height: calc(100vh - var(--header-height));
+      min-height: calc(100dvh - var(--header-height));
     }
     .map-legend {
       position: absolute;
@@ -146,7 +146,7 @@
     .dt-warning::before { content: "⚠ "; }
     .dt-hint { font-size: 11px; color: #6b7280; margin-top: 4px; }
     @media (max-width: 768px) {
-      .map-wrapper { margin-top: 60px; min-height: calc(100vh - 60px); }
+      .map-wrapper { margin-top: var(--header-height); min-height: calc(100vh - var(--header-height)); }
       .map-legend { bottom: 12px; left: 12px; padding: 8px 10px; font-size: 11px; }
       #driveTimePanel { width: 100%; }
       #dt-toggle { bottom: 12px; right: 10px; padding: 8px 12px; font-size: 13px; }
@@ -156,25 +156,64 @@
 <body class="tw-flex tw-min-h-[100vh] tw-flex-col tw-bg-[#fff]">
   <h1 class="tw-sr-only">Ski resorts by drive time – see what you can reach in 1 hour</h1>
   <header
-    class="tw-absolute tw-top-0 tw-z-[1001] tw-flex tw-h-[60px] tw-w-full tw-bg-white tw-shadow-sm
-           tw-border-b tw-border-gray-200 tw-px-[5%] max-lg:tw-mr-auto max-lg:tw-px-4 lg:tw-justify-around"
+    class="tw-absolute tw-top-0 tw-z-[100] tw-flex tw-h-[60px] tw-w-full tw-bg-opacity-0 
+           tw-px-[5%] max-lg:tw-mr-auto max-lg:tw-px-4 lg:tw-justify-around"
   >
     <a class="tw-h-[50px] tw-w-[50px] tw-p-[4px]" href="index.html" aria-label="Global Ski Atlas home">
       <img src="./assets/logo.png?v=2" alt="Global Ski Atlas" class="tw-object tw-h-full tw-w-full" />
     </a>
     <div class="collapsible-header animated-collapse max-lg:tw-shadow-md" id="collapsed-header-items">
       <div
-        class="tw-flex tw-h-full tw-w-max tw-gap-5 tw-text-base tw-text-black
+        class="header-nav-inner tw-flex tw-h-full tw-w-max tw-flex-wrap tw-gap-5 tw-text-base tw-text-black
                max-lg:tw-mt-[30px] max-lg:tw-flex-col max-lg:tw-place-items-end
                max-lg:tw-gap-5 lg:tw-mx-auto lg:tw-place-items-center"
       >
-        <a class="header-links" href="coffee-table-book.html">Coffee Table Book</a>
-        <a class="header-links" href="mainmap.html">Online Atlas</a>
-        <a class="header-links tw-font-semibold" href="DriveTimeMap.html">Drive Time</a>
-        <a class="header-links" href="TravelMap.html">Road Trip Planner</a>
+        <div class="header-dropdown-group">
+          <a class="header-tab header-links" href="wiki/browse.html" aria-haspopup="true">Atlas <i class="bi bi-chevron-down tw-text-xs"></i></a>
+          <div class="header-dropdown" role="menu">
+            <a class="header-links" href="coffee-table-book.html" role="menuitem">Coffee Table Book</a>
+            <a class="header-links" href="wiki/browse.html" role="menuitem">Online Atlas</a>
+          </div>
+        </div>
+        <div class="header-dropdown-group">
+          <a class="header-tab header-links" href="mainmap.html" aria-haspopup="true">Driving <i class="bi bi-chevron-down tw-text-xs"></i></a>
+          <div class="header-dropdown" role="menu">
+            <a class="header-links" href="mainmap.html" role="menuitem">Trip Planner</a>
+            <a class="header-links" href="DriveTimeMap.html" role="menuitem">Drive Time</a>
+          </div>
+        </div>
+        <div class="header-dropdown-group">
+          <a class="header-tab header-links" href="SkiResortFacts.html" aria-haspopup="true">Statistics <i class="bi bi-chevron-down tw-text-xs"></i></a>
+          <div class="header-dropdown" role="menu">
+            <a class="header-links" href="SkiResortFacts.html" role="menuitem">Resort Facts</a>
+            <a class="header-links" href="SkiTrailFacts.html" role="menuitem">Trail Facts</a>
+            <a class="header-links" href="SkiLiftFacts.html" role="menuitem">Lift Facts</a>
+          </div>
+        </div>
         <a class="header-links" href="resort-comparison.html">Compare Resorts</a>
-        <a class="header-links" href="SkiResortFacts.html">Resort Facts</a>
+        <a class="header-links" href="weather-map.html">Weather</a>
+        <a class="header-links" href="skiing-ai.html">AI Assistant</a>
         <a class="header-links" href="About.html">About</a>
+      </div>
+      <div
+        class="tw-mx-4 tw-flex tw-place-items-center tw-gap-[20px] tw-text-base
+               max-md:tw-w-full max-md:tw-flex-col max-md:tw-place-content-center"
+      >
+        <span
+          role="button"
+          aria-label="Download app coming soon"
+          class="tw-flex tw-h-[40px] tw-place-items-center tw-gap-2 tw-rounded-full
+                 tw-bg-black tw-p-1 tw-pl-4 tw-text-white"
+        >
+          <span>Download App Coming Soon</span>
+          <div
+            class="tw-flex tw-h-[30px] tw-w-[30px] tw-place-content-center
+                   tw-place-items-center tw-rounded-full tw-bg-primary
+                   tw-font-semibold tw-text-black"
+          >
+            <i class="bi bi-download"></i>
+          </div>
+        </span>
       </div>
     </div>
     <button
