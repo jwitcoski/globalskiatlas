@@ -208,16 +208,19 @@ function circleLabelPoint(lon, lat, radiusKm) {
 
       if (samples.length === 0) throw new Error('No drive times returned');
 
-      // 3. Radius per hour: for each hour H, max straight-line dist among resorts with drive time <= H*3600
+      // 3. Only show a ring for hour H if at least one resort has drive time in that band (H-1 to H hours)
+      const hoursWithResorts = new Set();
+      samples.forEach((s) => {
+        const h = Math.ceil(s.driveSec / 3600);
+        if (h >= 1 && h <= 10) hoursWithResorts.add(h);
+      });
+      const hours = Array.from(hoursWithResorts).sort((a, b) => a - b);
       const radiusByHour = {};
-      for (let H = 1; H <= 10; H++) {
+      hours.forEach((H) => {
         const maxSec = H * 3600;
         const within = samples.filter((s) => s.driveSec <= maxSec);
-        if (within.length) {
-          radiusByHour[H] = Math.max(...within.map((s) => s.distKm));
-        }
-      }
-      const hours = Object.keys(radiusByHour).map(Number).sort((a, b) => a - b);
+        if (within.length) radiusByHour[H] = Math.max(...within.map((s) => s.distKm));
+      });
       if (hours.length === 0) throw new Error('No hour bands from sample resorts');
 
       // 4. Draw each hour as an outline ring (line only) with distinct color + label
