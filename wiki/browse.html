@@ -158,13 +158,19 @@
       ywikiAuth.init(function () { ywikiAuth.renderWidget('resort-auth-widget'); });
       document.getElementById('browse-search').focus();
 
-      fetch('/api/wiki/index')
+      fetch('/api/wiki/index', { cache: 'no-store' })
         .then(function (r) {
           var ct = (r.headers.get('Content-Type') || '');
           if (!r.ok || !ct.includes('application/json')) {
             return Promise.reject(new Error(r.ok ? 'Server returned non-JSON (is /api/wiki routed to the API?)' : 'API error ' + r.status));
           }
-          return r.json();
+          return r.text().then(function (text) {
+            try {
+              return JSON.parse(text);
+            } catch (e) {
+              return Promise.reject(new Error('Server returned non-JSON'));
+            }
+          });
         })
         .then(function (data) {
           _allPages = data.pages || [];
