@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Ski Atlas – Resort Wiki</title>
   <link rel="stylesheet" href="/wiki/css/style.css?v=3"/>
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.css" crossorigin="">
 </head>
 <body>
 
@@ -25,9 +26,23 @@
         <div class="resort-stats" id="resort-stats"></div>
         <p class="resort-trail-breakdown" id="resort-trail-breakdown" style="display:none"></p>
         <p class="resort-meta" id="resort-meta" style="display:none"></p>
+        <p class="resort-osm-note" id="resort-osm-note" style="display:none">
+          Stats sourced from <a href="https://www.openstreetmap.org" target="_blank" rel="noopener" class="resort-osm-link">OpenStreetMap</a>.
+          To correct this data, <a id="resort-osm-edit-link" href="https://www.openstreetmap.org" target="_blank" rel="noopener" class="resort-osm-link">edit it on OSM</a> — changes sync periodically.
+        </p>
 
         <div class="resort-body js-resort-body"></div>
       </div>
+      <aside class="resort-map" id="resort-map-aside" style="display:none">
+        <div class="resort-map-toggle" id="resort-map-toggle">
+          <button type="button" class="resort-map-tab resort-map-tab--active" id="tab-live" onclick="switchMapTab('live')">Live Map</button>
+          <button type="button" class="resort-map-tab" id="tab-static" onclick="switchMapTab('static')">Resort Map</button>
+        </div>
+        <div id="resort-map-gl" class="resort-map-gl"></div>
+        <div id="resort-map-static" class="resort-map-gl resort-map-static" style="display:none">
+          <img id="resort-map-static-img" class="resort-map-static-img" src="" alt="Resort trail map" onerror="this.src='/wiki/assets/resort-map-placeholder.png'"/>
+        </div>
+      </aside>
     </div>
 
     <footer class="resort-footer">
@@ -63,6 +78,7 @@
     </div>
   </section>
 
+  <script src="https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.js" crossorigin=""></script>
   <script src="/wiki/js/showdown.min.js"></script>
   <script src="/wiki/js/auth.js"></script>
   <script src="/wiki/js/script.js"></script>

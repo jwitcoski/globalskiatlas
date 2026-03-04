@@ -135,6 +135,80 @@ body {
   margin-top: 0.35rem;
 }
 
+.resort-map-toggle {
+  display: flex;
+  gap: 0;
+  margin-bottom: 0.5rem;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--resort-edit-border);
+  width: fit-content;
+}
+
+.resort-map-tab {
+  padding: 0.3rem 0.85rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--resort-footer-color);
+  background: #f8fafc;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.resort-map-tab + .resort-map-tab {
+  border-left: 1px solid var(--resort-edit-border);
+}
+.resort-map-tab:hover {
+  background: #e8f0f7;
+  color: var(--resort-title-color);
+}
+.resort-map-tab--active {
+  background: var(--resort-title-color);
+  color: #fff;
+}
+.resort-map-tab--active:hover {
+  background: #2c5282;
+  color: #fff;
+}
+
+.resort-map-gl {
+  width: 100%;
+  height: 280px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--resort-edit-border);
+}
+
+.resort-map-static {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f1f5f9;
+}
+
+.resort-map-static-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 10px;
+  display: block;
+}
+
+.resort-osm-note {
+  font-size: 0.78rem;
+  color: var(--resort-footer-color);
+  margin: -0.5rem 0 0.75rem 0;
+  line-height: 1.4;
+}
+
+.resort-osm-link {
+  color: var(--resort-subtitle-color);
+  text-decoration: none;
+}
+.resort-osm-link:hover {
+  text-decoration: underline;
+}
+
 .resort-trail-breakdown,
 .resort-meta {
   font-size: 0.85rem;

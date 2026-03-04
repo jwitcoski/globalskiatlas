@@ -1,3 +1,73 @@
+var RESORT_MAP_INSTANCE = null;
+var MAPTILER_KEY = '0P06ORgY8WvmMOnPr0p2';
+var RESORT_STATIC_MAP_BASE = 'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/resort-maps/';
+
+function switchMapTab(tab) {
+  var livePanel = document.getElementById('resort-map-gl');
+  var staticPanel = document.getElementById('resort-map-static');
+  var tabLive = document.getElementById('tab-live');
+  var tabStatic = document.getElementById('tab-static');
+  if (!livePanel || !staticPanel) return;
+  if (tab === 'live') {
+    livePanel.style.display = '';
+    staticPanel.style.display = 'none';
+    if (tabLive) { tabLive.classList.add('resort-map-tab--active'); }
+    if (tabStatic) { tabStatic.classList.remove('resort-map-tab--active'); }
+    if (RESORT_MAP_INSTANCE) { RESORT_MAP_INSTANCE.resize(); }
+  } else {
+    livePanel.style.display = 'none';
+    staticPanel.style.display = '';
+    if (tabLive) { tabLive.classList.remove('resort-map-tab--active'); }
+    if (tabStatic) { tabStatic.classList.add('resort-map-tab--active'); }
+  }
+}
+
+function initResortMap(lat, lon, pageId) {
+  var aside = document.getElementById('resort-map-aside');
+  var container = document.getElementById('resort-map-gl');
+  if (!aside || !container) return;
+
+  aside.style.display = '';
+
+  // Static map: point at S3, fall back to placeholder on error
+  var staticImg = document.getElementById('resort-map-static-img');
+  if (staticImg && pageId) {
+    staticImg.src = RESORT_STATIC_MAP_BASE + encodeURIComponent(pageId) + '.png';
+  }
+
+  if (lat == null || lon == null || typeof maplibregl === 'undefined') {
+    // No coords: show only the static/placeholder tab
+    var tabLive = document.getElementById('tab-live');
+    if (tabLive) tabLive.style.display = 'none';
+    switchMapTab('static');
+    return;
+  }
+  if (RESORT_MAP_INSTANCE) {
+    RESORT_MAP_INSTANCE.remove();
+    RESORT_MAP_INSTANCE = null;
+    container.innerHTML = '';
+  }
+  var m = new maplibregl.Map({
+    container: 'resort-map-gl',
+    style: {
+      version: 8,
+      sources: {
+        raster: {
+          type: 'raster',
+          tiles: ['https://api.maptiler.com/maps/winter-v4/256/{z}/{x}/{y}.png?key=' + MAPTILER_KEY],
+          tileSize: 256,
+        },
+      },
+      layers: [{ id: 'raster', type: 'raster', source: 'raster', minzoom: 3, maxzoom: 18 }],
+    },
+    center: [lon, lat],
+    zoom: 11,
+    attributionControl: false,
+  });
+  RESORT_MAP_INSTANCE = m;
+  new maplibregl.Marker({ color: '#1a365d' }).setLngLat([lon, lat]).addTo(m);
+}
+
 var YWIKI_PATH = (function () {
   var p = new URLSearchParams(window.location.search).get('page') || '';
   if (!p) { window.location.replace('/wiki/browse.html'); }
@@ -136,6 +206,19 @@ function populatePage(page) {
     statsEl.style.display = stats.length ? '' : 'none';
   }
 
+  var osmNoteEl = document.getElementById('resort-osm-note');
+  var osmEditLink = document.getElementById('resort-osm-edit-link');
+  if (osmNoteEl) {
+    var osmId = page.winterSportsId || null;
+    var osmType = (page.winterSportsType || '').toLowerCase().trim();
+    var validTypes = { node: true, way: true, relation: true };
+    if (osmId && validTypes[osmType]) {
+      var osmUrl = 'https://www.openstreetmap.org/' + osmType + '/' + encodeURIComponent(osmId);
+      if (osmEditLink) osmEditLink.href = osmUrl;
+    }
+    osmNoteEl.style.display = stats.length ? '' : 'none';
+  }
+
   var trailParts = [];
   if (page.trailsNovice) trailParts.push('Novice ' + page.trailsNovice);
   if (page.trailsEasy) trailParts.push('Easy ' + page.trailsEasy);
@@ -167,6 +250,16 @@ function populatePage(page) {
   var textarea = document.getElementById('sourceTA');
   if (textarea) textarea.value = page.content || '';
   renderFromMarkdown(page.content || '');
+
+  var lat = (page.centroidLat != null) ? Number(page.centroidLat) : null;
+  var lon = (page.centroidLon != null) ? Number(page.centroidLon) : null;
+  var hasCoords = lat != null && !isNaN(lat) && lon != null && !isNaN(lon);
+  if (hasCoords || page.pageId) {
+    initResortMap(hasCoords ? lat : null, hasCoords ? lon : null, page.pageId || YWIKI_PATH);
+  } else {
+    var aside = document.getElementById('resort-map-aside');
+    if (aside) aside.style.display = 'none';
+  }
 }
 
 async function loadEntry() {
