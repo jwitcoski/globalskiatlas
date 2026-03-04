@@ -30,7 +30,7 @@
         <link rel="stylesheet" href="./css/tailwind-build.css" />
         <link rel="stylesheet" href="css/index.css" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" integrity="sha512-dPXYcDub/aeb08c63jRq/k6GaKccl256JQy/AnOq7CAnEZ9FzSL9wSbcZkMp4R26vBsMLFYH4kQ67/bbV8XaCQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+        <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.css" crossorigin="">
         <style>
             .fact-map { width: 280px; height: 280px; border-radius: 12px; overflow: hidden; }
             .fact-map.placeholder { background: #e5e7eb; display: flex; align-items: center; justify-content: center; color: #6b7280; font-size: 14px; }
@@ -233,7 +233,7 @@
             </div>
         </footer>
 
-        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+        <script src="https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.js" crossorigin=""></script>
         <script>
             function toggleHeader() {
                 var el = document.getElementById('collapsed-header-items');
@@ -241,6 +241,7 @@
             }
         </script>
         <script type="module">
+            import { loadParquetAsRows } from './scripts/parquet-wasm-loader.js';
             (async function () {
                 const PISTES_URL = 'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/pistes.parquet';
                 const MAPTILER_KEY = '0P06ORgY8WvmMOnPr0p2';
@@ -367,14 +368,18 @@
                 function boundsFromGeom(geom) {
                     const coords = allCoords(geom);
                     if (!coords.length) return null;
-                    const lls = coords.map((c) => L.latLng(c[1], c[0]));
-                    return L.latLngBounds(lls);
+                    let minLng = Infinity, minLat = Infinity, maxLng = -Infinity, maxLat = -Infinity;
+                    coords.forEach(([lng, lat]) => {
+                        if (lng < minLng) minLng = lng; if (lng > maxLng) maxLng = lng;
+                        if (lat < minLat) minLat = lat; if (lat > maxLat) maxLat = lat;
+                    });
+                    return [[minLng, minLat], [maxLng, maxLat]];
                 }
 
                 const factMapInstances = {};
                 function initTrailMap(containerId, row) {
                     const el = document.getElementById(containerId);
-                    if (!el || typeof L === 'undefined') return;
+                    if (!el || typeof maplibregl === 'undefined') return;
                     const geom = row.geometry;
                     if (!geom) return;
                     const centroid = trailCentroid(geom);
@@ -385,24 +390,32 @@
                     }
                     el.classList.remove('placeholder', 'loading');
                     el.innerHTML = '';
-                    const m = L.map(containerId, { center: [centroid[1], centroid[0]], zoom: 12, zoomControl: false, scrollWheelZoom: false, dragging: false });
-                    factMapInstances[containerId] = m;
-                    L.control.zoom({ position: 'bottomright' }).addTo(m);
-                    L.tileLayer('https://api.maptiler.com/maps/winter-v4/256/{z}/{x}/{y}.png?key=' + MAPTILER_KEY, {
-                        attribution: '\u00A9 MapTiler \u00A9 OSM', minZoom: 3, maxZoom: 18
-                    }).addTo(m);
                     const diff = getDifficulty(row);
                     let color = '#64748b';
                     if (diff === 'easy' || diff === 'novice' || diff === 'beginner') color = '#22c55e';
                     else if (diff === 'intermediate' || diff === 'medium') color = '#2563eb';
                     else if (diff === 'advanced' || diff === 'hard') color = '#1a1a1a';
                     else if (diff === 'expert' || diff === 'freeride' || diff === 'extreme') color = '#991b1b';
-                    const feature = { type: 'Feature', geometry: geom, properties: {} };
-                    L.geoJSON(feature, { style: { color, weight: 4, opacity: 1 } }).addTo(m);
-                    const bounds = boundsFromGeom(geom);
-                    if (bounds && bounds.isValid()) {
-                        m.fitBounds(bounds, { padding: [20, 20], maxZoom: 15 });
-                    }
+                    const m = new maplibregl.Map({
+                        container: containerId,
+                        style: {
+                            version: 8,
+                            sources: {
+                                raster: { type: 'raster', tiles: ['https://api.maptiler.com/maps/winter-v4/256/{z}/{x}/{y}.png?key=' + MAPTILER_KEY], tileSize: 256 }
+                            },
+                            layers: [{ id: 'raster', type: 'raster', source: 'raster', minzoom: 3, maxzoom: 18 }]
+                        },
+                        center: [centroid[0], centroid[1]],
+                        zoom: 12,
+                        attributionControl: false
+                    });
+                    factMapInstances[containerId] = m;
+                    m.on('load', () => {
+                        m.addSource('line', { type: 'geojson', data: { type: 'Feature', geometry: geom, properties: {} } });
+                        m.addLayer({ id: 'line', type: 'line', source: 'line', paint: { 'line-color': color, 'line-width': 4 } });
+                        const bbox = boundsFromGeom(geom);
+                        if (bbox) m.fitBounds(bbox, { padding: 20, maxZoom: 15 });
+                    });
                 }
 
                 function setFact(nameId, descId, name, desc) {
@@ -548,9 +561,8 @@
 
                 // Main data load
                 try {
-                    const { asyncBufferFromUrl, parquetReadObjects } = await import('https://esm.sh/hyparquet@1');
-                    const buf = await asyncBufferFromUrl({ url: PISTES_URL });
-                    const data = await parquetReadObjects({ file: buf });
+                    const rows = await loadParquetAsRows(PISTES_URL);
+                    const data = rows.map((r) => ({ ...r.properties, geometry: r.geometry }));
 
                     const excludeUntypedCb = document.getElementById('exclude-untyped');
                     const allTrails = data.filter((r) =>

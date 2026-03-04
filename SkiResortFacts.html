@@ -30,7 +30,7 @@
         <link rel="stylesheet" href="./css/tailwind-build.css" />
         <link rel="stylesheet" href="css/index.css" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" integrity="sha512-dPXYcDub/aeb08c63jRq/k6GaKccl256JQy/AnOq7CAnEZ9FzSL9wSbcZkMp4R26vBsMLFYH4kQ67/bbV8XaCQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+        <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.css" crossorigin="">
         <style>
             .fact-map { width: 280px; height: 280px; border-radius: 12px; overflow: hidden; }
             .fact-map.placeholder { background: #e5e7eb; display: flex; align-items: center; justify-content: center; color: #6b7280; font-size: 14px; }
@@ -220,7 +220,7 @@
             </div>
         </footer>
 
-        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+        <script src="https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.js" crossorigin=""></script>
         <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
         <script>
             function toggleHeader() {
@@ -229,6 +229,8 @@
             }
         </script>
         <script type="module">
+            import { loadParquetAsRows } from './scripts/parquet-wasm-loader.js';
+            console.log('[SkiResortFacts] Module started');
             (async function () {
                 const GEOPARQUET_URL = 'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/ski_areas_analyzed.parquet';
                 const SKI_AREAS_OUTLINES_URL = 'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/ski_areas.parquet';
@@ -317,11 +319,23 @@
                     if (!geom || !geom.coordinates) return null;
                     function flatten(c, depth) {
                         if (depth > 4) return;
-                        if (typeof c[0] === 'number' && c.length >= 2) coords.push([c[1], c[0]]);
+                        if (typeof c[0] === 'number' && c.length >= 2) coords.push([c[0], c[1]]);
                         else if (Array.isArray(c)) c.forEach((cc) => flatten(cc, depth + 1));
                     }
                     flatten(geom.coordinates, 0);
-                    return coords.length ? L.latLngBounds(coords) : null;
+                    if (!coords.length) return null;
+                    let minLng = Infinity, minLat = Infinity, maxLng = -Infinity, maxLat = -Infinity;
+                    coords.forEach(([lng, lat]) => {
+                        if (lng < minLng) minLng = lng; if (lng > maxLng) maxLng = lng;
+                        if (lat < minLat) minLat = lat; if (lat > maxLat) maxLat = lat;
+                    });
+                    return [[minLng, minLat], [maxLng, maxLat]];
+                }
+                function extendBbox(bbox, feature) {
+                    const b = boundsFromGeoJSONFeature(feature);
+                    if (!b) return bbox;
+                    if (!bbox) return b;
+                    return [[Math.min(bbox[0][0], b[0][0]), Math.min(bbox[0][1], b[0][1])], [Math.max(bbox[1][0], b[1][0]), Math.max(bbox[1][1], b[1][1])]];
                 }
                 function setFact(idName, idDesc, name, desc) {
                     const nEl = idName ? document.getElementById(idName) : null;
@@ -336,15 +350,24 @@
                 };
 
                 try {
-                    const { asyncBufferFromUrl, parquetReadObjects } = await import('https://esm.sh/hyparquet@1');
-                    const analyzedPromise = asyncBufferFromUrl({ url: GEOPARQUET_URL }).then((f) => parquetReadObjects({ file: f }));
-                    const outlinesPromise = asyncBufferFromUrl({ url: SKI_AREAS_OUTLINES_URL }).then((f) => parquetReadObjects({ file: f }));
-                    const liftsPromise = asyncBufferFromUrl({ url: LIFTS_URL }).then((f) => parquetReadObjects({ file: f }));
-                    const pistesPromise = asyncBufferFromUrl({ url: PISTES_URL }).then((f) => parquetReadObjects({ file: f }));
-
-                    const dataAnalyzed = await analyzedPromise;
+                    console.log('[SkiResortFacts] Loading 4 parquets...');
+                    const [analyzedRows, outlineRows, liftRows, pisteRows] = await Promise.all([
+                        loadParquetAsRows(GEOPARQUET_URL),
+                        loadParquetAsRows(SKI_AREAS_OUTLINES_URL),
+                        loadParquetAsRows(LIFTS_URL),
+                        loadParquetAsRows(PISTES_URL)
+                    ]);
+                    console.log('[SkiResortFacts] Parquet row counts:', { analyzed: analyzedRows.length, outline: outlineRows.length, lifts: liftRows.length, pistes: pisteRows.length });
+                    const dataAnalyzed = analyzedRows.map((r) => ({ ...r.properties, geometry: r.geometry }));
+                    const isPolygon = (t) => t === 'Polygon' || t === 'MultiPolygon';
+                    const isLine = (t) => t === 'LineString' || t === 'MultiLineString';
+                    let outlineFeatures = outlineRows.filter((r) => r.geometry && isPolygon(r.geometry.type)).map((r) => ({ type: 'Feature', geometry: r.geometry, properties: r.properties }));
+                    let liftFeatures = liftRows.filter((r) => r.geometry && isLine(r.geometry.type)).map((r) => ({ type: 'Feature', geometry: r.geometry, properties: r.properties }));
+                    let pisteFeatures = pisteRows.filter((r) => r.geometry && isLine(r.geometry.type)).map((r) => ({ type: 'Feature', geometry: r.geometry, properties: r.properties }));
+                    console.log('[SkiResortFacts] Feature counts:', { outline: outlineFeatures.length, lifts: liftFeatures.length, pistes: pisteFeatures.length });
 
                     const downhillAll = dataAnalyzed.filter((r) => !isNotDownhill(r));
+                    console.log('[SkiResortFacts] downhillAll.length =', downhillAll.length);
                     const getName = (r) => getProp(r, NAME_KEYS) || 'Unknown';
                     const getCountry = (r) => getProp(r, COUNTRY_KEYS) || 'Unknown';
 
@@ -364,7 +387,6 @@
 
                     let downhill = downhillAll;
                     let byCountry = { ...byCountryAll };
-                    let outlineFeatures, liftFeatures, pisteFeatures;
 
                     function findResortMapData(row, outlineFeatures, liftFeatures, pisteFeatures) {
                         const resortLat = getLat(row);
@@ -393,12 +415,10 @@
                         }
                         let extentBounds = null;
                         if (outlineFeature) {
-                            const b = boundsFromGeoJSONFeature(outlineFeature);
-                            if (b && b.isValid()) extentBounds = b;
+                            extentBounds = boundsFromGeoJSONFeature(outlineFeature);
                         }
                         features.forEach((f) => {
-                            const b = boundsFromGeoJSONFeature(f);
-                            if (b && b.isValid()) extentBounds = extentBounds ? extentBounds.extend(b) : b;
+                            extentBounds = extendBbox(extentBounds, f);
                         });
                         return { outlineFeature, resortMapFeatures: features, extentBounds, resortLat, resortLon };
                     }
@@ -408,10 +428,12 @@
                     let topCountry = '', topCount = 0;
 
                     function applyFacts(filteredDownhill) {
+                        console.log('[SkiResortFacts] applyFacts called, filteredDownhill.length =', filteredDownhill.length);
                         downhill = filteredDownhill;
                         byCountry = {};
                         downhill.forEach((r) => { const c = getCountry(r); byCountry[c] = (byCountry[c] || 0) + 1; });
                         if (downhill.length === 0) {
+                            console.log('[SkiResortFacts] applyFacts: no resorts, showing empty state');
                             setFact('fact-largest-name', 'fact-largest-desc', '—', 'No resorts found for selected country.');
                             setFact('fact-smallest-name', 'fact-smallest-desc', '—', '');
                             setFact('fact-northern-name', 'fact-northern-desc', '—', '');
@@ -468,16 +490,20 @@
                             country: getCountry(r)
                         })).filter((d) => d.trails != null && d.trails > 0 && d.area != null && d.area > 0);
                         if (typeof d3 !== 'undefined') initScatterPlot();
+                        console.log('[SkiResortFacts] applyFacts: calling initWorldMap()');
                         initWorldMap();
                         const sumEl = document.getElementById('facts-summary');
                         if (sumEl) sumEl.innerHTML = '<div class="tw-flex tw-max-w-[260px] tw-flex-col tw-place-items-center tw-gap-2 tw-text-center"><span class="tw-text-3xl tw-font-bold" style="color:#0d9488">' + downhill.length.toLocaleString() + '</span><span class="tw-text-gray-700">downhill resorts</span></div><div class="tw-flex tw-max-w-[260px] tw-flex-col tw-place-items-center tw-gap-2 tw-text-center"><span class="tw-text-3xl tw-font-bold" style="color:#BDB8FF">' + Object.keys(byCountry).length + '</span><span class="tw-text-gray-700">countries</span></div><div class="tw-flex tw-max-w-[260px] tw-flex-col tw-place-items-center tw-gap-2 tw-text-center"><span class="tw-text-3xl tw-font-bold" style="color:#0d9488">' + topCountry + '</span><span class="tw-text-gray-700">most resorts (' + topCount.toLocaleString() + ')</span></div>';
                         if (outlineFeatures && liftFeatures && pisteFeatures) {
+                            console.log('[SkiResortFacts] applyFacts: initializing 6 fact maps');
                             initFactMap('map-largest', largest, outlineFeatures, liftFeatures, pisteFeatures);
                             initFactMap('map-smallest', smallest, outlineFeatures, liftFeatures, pisteFeatures);
                             initFactMap('map-northern', northern, outlineFeatures, liftFeatures, pisteFeatures);
                             initFactMap('map-southern', southern, outlineFeatures, liftFeatures, pisteFeatures);
                             initFactMap('map-equator', equator, outlineFeatures, liftFeatures, pisteFeatures);
                             initFactMap('map-most-trails', mostTrails, outlineFeatures, liftFeatures, pisteFeatures);
+                        } else {
+                            console.log('[SkiResortFacts] applyFacts: skipping fact maps (missing outline/lift/piste features)');
                         }
                     }
                     let scatterData = downhill.map((r) => ({
@@ -491,7 +517,7 @@
                     function initFactMap(containerId, row, outlineFeatures, liftFeatures, pisteFeatures) {
                         const mapData = findResortMapData(row, outlineFeatures, liftFeatures, pisteFeatures);
                         const el = document.getElementById(containerId);
-                        if (!el || typeof L === 'undefined') return;
+                        if (!el || typeof maplibregl === 'undefined') return;
                         const lat = mapData.resortLat ?? getLat(row);
                         const lon = mapData.resortLon ?? getLon(row);
                         if (lat == null || lon == null) return;
@@ -501,31 +527,38 @@
                         }
                         el.classList.remove('placeholder');
                         el.innerHTML = '';
-                        const m = L.map(containerId, { center: [lat, lon], zoom: 11, zoomControl: false, scrollWheelZoom: false, dragging: false });
-                        factMapInstances[containerId] = m;
-                        L.control.zoom({ position: 'bottomright' }).addTo(m);
-                        L.tileLayer('https://api.maptiler.com/maps/winter-v4/256/{z}/{x}/{y}.png?key=' + MAPTILER_KEY, {
-                            attribution: '\u00A9 MapTiler \u00A9 OSM', minZoom: 3, maxZoom: 18
-                        }).addTo(m);
-                        if (mapData.outlineFeature) {
-                            L.geoJSON(mapData.outlineFeature, { style: { color: '#000', weight: 2, fill: false, dashArray: '3, 6' } }).addTo(m);
-                        }
-                        mapData.resortMapFeatures.forEach((f) => {
-                            if (isLift(f.properties)) {
-                                L.geoJSON(f, { style: { color: '#f87171', weight: 2, opacity: 0.9 } }).addTo(m);
-                            } else {
-                                const d = getPisteDifficulty(f.properties);
-                                let color = '#64748b';
-                                if (d === 'easy' || d === 'novice') color = '#22c55e';
-                                else if (d === 'intermediate' || d === 'medium') color = '#2563eb';
-                                else if (d === 'advanced' || d === 'hard') color = '#1a1a1a';
-                                else if (d === 'expert' || d === 'freeride' || d === 'extreme') color = '#991b1b';
-                                L.geoJSON(f, { style: { color, weight: 3, opacity: 0.95 } }).addTo(m);
-                            }
+                        const m = new maplibregl.Map({
+                            container: containerId,
+                            style: {
+                                version: 8,
+                                sources: { raster: { type: 'raster', tiles: ['https://api.maptiler.com/maps/winter-v4/256/{z}/{x}/{y}.png?key=' + MAPTILER_KEY], tileSize: 256 } },
+                                layers: [{ id: 'raster', type: 'raster', source: 'raster', minzoom: 3, maxzoom: 18 }]
+                            },
+                            center: [lon, lat],
+                            zoom: 11,
+                            attributionControl: false
                         });
-                        if (mapData.extentBounds && mapData.extentBounds.isValid()) {
-                            m.fitBounds(mapData.extentBounds, { padding: [8, 8], maxZoom: 15 });
-                        }
+                        factMapInstances[containerId] = m;
+                        m.on('load', () => {
+                            if (mapData.outlineFeature) {
+                                m.addSource('outline', { type: 'geojson', data: mapData.outlineFeature });
+                                m.addLayer({ id: 'outline', type: 'line', source: 'outline', paint: { 'line-color': '#000', 'line-width': 2, 'line-dasharray': [3, 6] } });
+                            }
+                            const liftFeats = mapData.resortMapFeatures.filter((f) => isLift(f.properties));
+                            const pisteFeats = mapData.resortMapFeatures.filter((f) => !isLift(f.properties)).map((f) => ({ ...f, properties: { ...f.properties, _difficulty: getPisteDifficulty(f.properties) } }));
+                            if (liftFeats.length) {
+                                m.addSource('lifts', { type: 'geojson', data: { type: 'FeatureCollection', features: liftFeats } });
+                                m.addLayer({ id: 'lifts', type: 'line', source: 'lifts', paint: { 'line-color': '#f87171', 'line-width': 2 } });
+                            }
+                            if (pisteFeats.length) {
+                                m.addSource('pistes', { type: 'geojson', data: { type: 'FeatureCollection', features: pisteFeats } });
+                                m.addLayer({
+                                    id: 'pistes', type: 'line', source: 'pistes',
+                                    paint: { 'line-color': ['match', ['get', '_difficulty'], 'easy', '#22c55e', 'novice', '#22c55e', 'intermediate', '#2563eb', 'medium', '#2563eb', 'advanced', '#1a1a1a', 'hard', '#1a1a1a', 'expert', '#991b1b', 'freeride', '#991b1b', 'extreme', '#991b1b', '#64748b'], 'line-width': 3 }
+                                });
+                            }
+                            if (mapData.extentBounds) m.fitBounds(mapData.extentBounds, { padding: 8, maxZoom: 15 });
+                        });
                     }
 
                     const COUNTRY_ALIAS = {
@@ -579,7 +612,7 @@
                         ring.forEach((p) => {
                             if (typeof p[0] === 'number') { xs += p[0]; ys += p[1]; n++; }
                         });
-                        return n ? [ys / n, xs / n] : null;
+                        return n ? [xs / n, ys / n] : null;
                     }
                     function largestPolygonCenter(feature) {
                         const polygons = getPolygons(feature);
@@ -592,25 +625,15 @@
                         }
                         return centroidFromRing(best);
                     }
-                    function polygonPixelSize(map, ring) {
-                        if (!ring || ring.length < 2) return { w: 0, h: 0 };
-                        let minLon = Infinity, maxLon = -Infinity, minLat = Infinity, maxLat = -Infinity;
-                        ring.forEach((p) => {
-                            const lon = p[0], lat = p[1];
-                            if (lon < minLon) minLon = lon;
-                            if (lon > maxLon) maxLon = lon;
-                            if (lat < minLat) minLat = lat;
-                            if (lat > maxLat) maxLat = lat;
-                        });
-                        const sw = map.latLngToLayerPoint(L.latLng(minLat, minLon));
-                        const ne = map.latLngToLayerPoint(L.latLng(maxLat, maxLon));
-                        return { w: Math.abs(ne.x - sw.x), h: Math.abs(ne.y - sw.y) };
-                    }
                     let worldMapInstance = null;
                     async function initWorldMap() {
                         const el = document.getElementById('map-world');
-                        if (!el || typeof L === 'undefined') return;
+                        if (!el || typeof maplibregl === 'undefined') {
+                            console.log('[SkiResortFacts] initWorldMap: skip (no el or maplibregl)');
+                            return;
+                        }
                         try {
+                            console.log('[SkiResortFacts] initWorldMap: fetching countries GeoJSON...');
                             if (worldMapInstance) { worldMapInstance.remove(); worldMapInstance = null; }
                             el.classList.add('placeholder', 'loading');
                             el.innerHTML = '<div class="tw-flex tw-flex-col tw-place-items-center tw-gap-3 tw-text-gray-600"><div class="loading-spinner"></div><span>Loading world map…</span></div>';
@@ -618,38 +641,57 @@
                             const worldGeo = await resp.json();
                             el.classList.remove('placeholder', 'loading');
                             el.innerHTML = '';
-                            const m = L.map('map-world', { center: [30, 0], zoom: 2, zoomControl: false, scrollWheelZoom: true, dragging: true });
+                            const m = new maplibregl.Map({
+                                container: 'map-world',
+                                style: {
+                                    version: 8,
+                                    glyphs: 'https://api.maptiler.com/fonts/{fontstack}/{range}.pbf?key=' + MAPTILER_KEY,
+                                    sources: {
+                                        raster: { type: 'raster', tiles: ['https://api.maptiler.com/maps/winter-v4/256/{z}/{x}/{y}.png?key=' + MAPTILER_KEY], tileSize: 256 },
+                                        countries: { type: 'geojson', data: worldGeo }
+                                    },
+                                    layers: [
+                                        { id: 'raster', type: 'raster', source: 'raster', minzoom: 2, maxzoom: 18 },
+                                        { id: 'countries-fill', type: 'fill', source: 'countries', paint: { 'fill-color': '#e5e7eb', 'fill-opacity': 0.6, 'fill-outline-color': '#333' } }
+                                    ]
+                                },
+                                center: [0, 30],
+                                zoom: 2,
+                                attributionControl: false
+                            });
                             worldMapInstance = m;
-                            L.control.zoom({ position: 'bottomright' }).addTo(m);
-                            L.tileLayer('https://api.maptiler.com/maps/winter-v4/256/{z}/{x}/{y}.png?key=' + MAPTILER_KEY, {
-                                attribution: '\u00A9 MapTiler \u00A9 OSM', minZoom: 2, maxZoom: 18
-                            }).addTo(m);
                             const mapTooltip = document.createElement('div');
                             mapTooltip.className = 'map-tooltip';
                             mapTooltip.style.display = 'none';
                             document.body.appendChild(mapTooltip);
-                            const showMapTooltip = (admin, count, e) => {
-                                mapTooltip.textContent = admin + ': ' + count.toLocaleString() + ' ski resorts';
-                                mapTooltip.style.display = 'block';
-                                mapTooltip.style.left = (e.originalEvent.clientX + 12) + 'px';
-                                mapTooltip.style.top = (e.originalEvent.clientY + 12) + 'px';
-                            };
-                            const moveMapTooltip = (e) => {
-                                mapTooltip.style.left = (e.originalEvent.clientX + 12) + 'px';
-                                mapTooltip.style.top = (e.originalEvent.clientY + 12) + 'px';
-                            };
-                            const hideMapTooltip = () => { mapTooltip.style.display = 'none'; };
-                            const geoLayer = L.geoJSON(worldGeo, {
-                                style: { color: '#333', weight: 1, fillColor: '#e5e7eb', fillOpacity: 0.6 },
-                                onEachFeature: (feature, layer) => {
-                                    const admin = feature.properties.ADMIN || feature.properties.NAME || feature.properties.NAME_LONG || feature.properties.SOVEREIGNT || '';
+                            const features = Array.isArray(worldGeo.features) ? worldGeo.features : [];
+                            m.on('load', () => {
+                                m.on('mouseenter', 'countries-fill', (e) => {
+                                    m.getCanvas().style.cursor = 'pointer';
+                                    const admin = e.features[0].properties.ADMIN || e.features[0].properties.NAME || e.features[0].properties.NAME_LONG || e.features[0].properties.SOVEREIGNT || '';
                                     const count = getCountryCount(admin);
                                     if (count > 0) {
-                                        layer.on('mouseover', (e) => showMapTooltip(admin, count, e));
-                                        layer.on('mousemove', moveMapTooltip);
-                                        layer.on('mouseout', hideMapTooltip);
-                                        const polygons = getPolygons(feature);
-                                        if (polygons.length === 0) return;
+                                        mapTooltip.textContent = admin + ': ' + count.toLocaleString() + ' ski resorts';
+                                        mapTooltip.style.display = 'block';
+                                    }
+                                });
+                                m.on('mousemove', 'countries-fill', (e) => {
+                                    if (mapTooltip.style.display === 'block') {
+                                        mapTooltip.style.left = (e.point.x + 12) + 'px';
+                                        mapTooltip.style.top = (e.point.y + 12) + 'px';
+                                    }
+                                });
+                                m.on('mouseleave', 'countries-fill', () => {
+                                    m.getCanvas().style.cursor = '';
+                                    mapTooltip.style.display = 'none';
+                                });
+                                const labelFeatures = features
+                                    .map((f) => {
+                                        const admin = f.properties.ADMIN || f.properties.NAME || f.properties.NAME_LONG || f.properties.SOVEREIGNT || '';
+                                        const count = getCountryCount(admin);
+                                        if (count <= 0) return null;
+                                        const polygons = getPolygons(f);
+                                        if (!polygons.length) return null;
                                         let bestRing = polygons[0];
                                         let bestArea = ringArea(bestRing);
                                         for (let i = 1; i < polygons.length; i++) {
@@ -657,22 +699,18 @@
                                             if (a > bestArea) { bestArea = a; bestRing = polygons[i]; }
                                         }
                                         const c = centroidFromRing(bestRing);
-                                        if (c) {
-                                            const px = polygonPixelSize(m, bestRing);
-                                            const minDim = Math.min(px.w, px.h);
-                                            const fontSize = Math.max(14, Math.min(72, minDim * 0.35));
-                                            const lbl = L.divIcon({
-                                                className: 'world-country-label',
-                                                html: '<span style="font-weight:800;color:#0a0a0a;font-size:' + Math.round(fontSize) + 'px;text-shadow:0 0 2px #fff,0 0 4px #fff;line-height:1;white-space:nowrap">' + count.toLocaleString() + '</span>',
-                                                iconSize: [Math.max(40, px.w), Math.max(24, px.h)],
-                                                iconAnchor: [Math.max(40, px.w) / 2, Math.max(24, px.h) / 2]
-                                            });
-                                            L.marker([c[0], c[1]], { icon: lbl }).addTo(m);
-                                        }
-                                    }
+                                        if (!c) return null;
+                                        return { type: 'Feature', geometry: { type: 'Point', coordinates: c }, properties: { admin, count: count.toLocaleString() } };
+                                    })
+                                    .filter(Boolean);
+                                if (labelFeatures.length) {
+                                    m.addSource('country-labels', { type: 'geojson', data: { type: 'FeatureCollection', features: labelFeatures } });
+                                    m.addLayer({ id: 'country-labels', type: 'symbol', source: 'country-labels', layout: { 'text-field': ['get', 'count'], 'text-size': 14, 'text-allow-overlap': false }, paint: { 'text-color': '#0a0a0a', 'text-halo-color': '#fff', 'text-halo-width': 2 } });
                                 }
-                            }).addTo(m);
+                                console.log('[SkiResortFacts] initWorldMap: done');
+                            });
                         } catch (e) {
+                            console.warn('[SkiResortFacts] initWorldMap failed', e);
                             el.textContent = 'Could not load world map.';
                         }
                     }
@@ -752,20 +790,7 @@
                         g.append('text').attr('transform', 'rotate(-90)').attr('x', -h / 2).attr('y', -44).attr('text-anchor', 'middle').attr('fill', '#374151').style('font-size', '13px').text('Acres');
                     }
                     applyFacts(downhillAll);
-
-                    const [dataOutlines, dataLifts, dataPistes] = await Promise.all([outlinesPromise, liftsPromise, pistesPromise]);
-                    outlineFeatures = (dataOutlines || [])
-                        .filter((row) => row.geometry && (row.geometry.type === 'Polygon' || row.geometry.type === 'MultiPolygon'))
-                        .map((row) => ({ type: 'Feature', geometry: row.geometry, properties: Object.fromEntries(Object.entries(row).filter(([k]) => k !== 'geometry')) }));
-                    liftFeatures = (dataLifts || []).filter((r) => r.geometry && (r.geometry.type === 'LineString' || r.geometry.type === 'MultiLineString')).map(toFeature).filter(Boolean);
-                    pisteFeatures = (dataPistes || []).filter((r) => r.geometry && (r.geometry.type === 'LineString' || r.geometry.type === 'MultiLineString')).map(toFeature).filter(Boolean);
-
-                    initFactMap('map-largest', largest, outlineFeatures, liftFeatures, pisteFeatures);
-                    initFactMap('map-smallest', smallest, outlineFeatures, liftFeatures, pisteFeatures);
-                    initFactMap('map-northern', northern, outlineFeatures, liftFeatures, pisteFeatures);
-                    initFactMap('map-southern', southern, outlineFeatures, liftFeatures, pisteFeatures);
-                    initFactMap('map-equator', equator, outlineFeatures, liftFeatures, pisteFeatures);
-                    initFactMap('map-most-trails', mostTrails, outlineFeatures, liftFeatures, pisteFeatures);
+                    console.log('[SkiResortFacts] Initial applyFacts(downhillAll) done');
 
                     countrySelect.addEventListener('change', () => {
                         const val = countrySelect.value;
@@ -780,8 +805,10 @@
                         });
                     });
                 } catch (e) {
-                    console.warn('Ski facts: could not load data', e);
-                    document.getElementById('facts-summary').innerHTML = '<div class="tw-text-center tw-text-red-600">Could not load resort data. Check network.</div>';
+                    console.error('[SkiResortFacts] Load error', e);
+                    if (e && e.stack) console.error(e.stack);
+                    const sumEl = document.getElementById('facts-summary');
+                    if (sumEl) sumEl.innerHTML = '<div class="tw-text-center tw-text-red-600">Could not load resort data. Check network.</div><pre class="tw-mt-2 tw-text-left tw-text-xs tw-overflow-auto tw-max-h-24">' + (e && e.message ? e.message : String(e)) + '</pre>';
                 }
             })();
         </script>
