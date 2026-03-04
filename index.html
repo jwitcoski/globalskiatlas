@@ -90,6 +90,7 @@
                     <a class="header-links" href="coffee-table-book.html">Coffee Table Book</a>
                     <a class="header-links" href="wiki/browse.html">Online Atlas</a>
                     <a class="header-links" href="mainmap.html">Trip Planner</a>
+                    <a class="header-links" href="DriveTimeMap.html">Drive Time</a>
                     <a class="header-links" href="resort-comparison.html">Compare Resorts</a>
                     <a class="header-links" href="SkiResortFacts.html">Resort Facts</a>
                     <a class="header-links" href="SkiTrailFacts.html">Trail Facts</a>
@@ -224,6 +225,13 @@
                     </div>
                     <div class="reveal-up tw-flex tw-flex-col tw-place-items-center tw-text-center">
                         <div class="tw-flex tw-h-16 tw-w-16 tw-place-content-center tw-place-items-center tw-rounded-full tw-border tw-border-gray-300 tw-bg-gray-100">
+                            <i class="bi bi-car-front-fill tw-text-2xl tw-text-gray-700"></i>
+                        </div>
+                        <h3 class="tw-mt-4 tw-text-xl tw-font-bold">Drive-Time Map</h3>
+                        <p class="tw-mt-2 tw-text-sm tw-leading-relaxed tw-text-gray-600">Enter any location and see concentric rings for 1h, 2h, 3h, 4h drive time to the nearest ski resorts. Plan day trips or see how far you are from the slopes.</p>
+                    </div>
+                    <div class="reveal-up tw-flex tw-flex-col tw-place-items-center tw-text-center">
+                        <div class="tw-flex tw-h-16 tw-w-16 tw-place-content-center tw-place-items-center tw-rounded-full tw-border tw-border-gray-300 tw-bg-gray-100">
                             <i class="bi bi-bar-chart tw-text-2xl tw-text-gray-700"></i>
                         </div>
                         <h3 class="tw-mt-4 tw-text-xl tw-font-bold">Resort Comparison</h3>
@@ -235,13 +243,6 @@
                         </div>
                         <h3 class="tw-mt-4 tw-text-xl tw-font-bold">Coffee Table Book</h3>
                         <p class="tw-mt-2 tw-text-sm tw-leading-relaxed tw-text-gray-600">A beautiful photographic journey through the world's most stunning ski destinations.</p>
-                    </div>
-                    <div class="reveal-up tw-flex tw-flex-col tw-place-items-center tw-text-center">
-                        <div class="tw-flex tw-h-16 tw-w-16 tw-place-content-center tw-place-items-center tw-rounded-full tw-border tw-border-gray-300 tw-bg-gray-100">
-                            <i class="bi bi-cloud tw-text-2xl tw-text-gray-700"></i>
-                        </div>
-                        <h3 class="tw-mt-4 tw-text-xl tw-font-bold">AWS-Powered Analytics</h3>
-                        <p class="tw-mt-2 tw-text-sm tw-leading-relaxed tw-text-gray-600">Advanced data analytics and AI features to enhance your resort selection experience.</p>
                     </div>
                 </div>
                 <div class="tw-flex tw-gap-3 tw-flex-wrap tw-justify-center">
@@ -258,6 +259,13 @@
                         class="reveal-up tw-mt-6 tw-flex tw-h-12 tw-min-w-[180px] tw-place-content-center tw-place-items-center tw-rounded-lg tw-border tw-border-gray-300 tw-bg-white tw-px-6 tw-py-3 tw-text-black hover:tw-bg-gray-50"
                     >
                         Trip Planner
+                    </a>
+                    <a
+                        href="#drive-time-map-detail"
+                        aria-label="Drive-Time Map"
+                        class="reveal-up tw-mt-6 tw-flex tw-h-12 tw-min-w-[180px] tw-place-content-center tw-place-items-center tw-rounded-lg tw-border tw-border-gray-300 tw-bg-white tw-px-6 tw-py-3 tw-text-black hover:tw-bg-gray-50"
+                    >
+                        Drive Time
                     </a>
                 </div>
             </div>
@@ -409,7 +417,35 @@
         </section>
 
         <section
-            id="weather-map-detail"
+            id="drive-time-map-detail"
+            class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6"
+        >
+            <div
+                class="reveal-up tw-flex tw-min-h-[60vh] tw-place-content-center tw-place-items-center
+                        tw-gap-[10%] max-lg:tw-flex-col max-lg:tw-gap-10"
+            >
+                <div
+                    class="tw-mt-6 tw-flex tw-max-w-[450px] tw-flex-col tw-gap-4"
+                >
+                    <h3 class="tw-text-4xl tw-font-medium">Drive-Time Map</h3>
+                    <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700">See which ski resorts you can drive to in 1, 2, 3, or 4 hours</p>
+                    <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600">Enter any address or use your location. We find the nearest resorts by road and draw drive-time rings (1h, 2h, 3h, 4h…) so you can see how far you are from the slopes. Perfect for planning day trips or choosing where to stay.</p>
+                    <a href="DriveTimeMap.html" class="tw-mt-6 tw-inline-flex tw-items-center tw-gap-2 tw-rounded-lg tw-px-8 tw-py-4 tw-text-lg tw-font-semibold tw-shadow-md tw-no-underline tw-text-white hover:tw-opacity-90" style="background-color: #2563eb;" aria-label="Open Drive-Time Map">Open Drive-Time Map <i class="bi bi-arrow-right"></i></a>
+                </div>
+
+                <a href="DriveTimeMap.html" class="tw-flex tw-cursor-pointer">
+                    <div class="tw-h-[450px] tw-w-[300px]">
+                        <img
+                            src="./assets/phone-online-atlas-map.png"
+                            alt="Drive-time rings: ski resorts within 1–4 hours by car"
+                            class="tw-h-full tw-w-full tw-object-contain tw-transition-opacity hover:tw-opacity-90"
+                        />
+                    </div>
+                </a>
+            </div>
+        </section>
+
+        <section
             class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6"
         >
             <div
@@ -645,10 +681,12 @@
                     <a href="coffee-table-book.html" class="footer-link">Coffee Table Book</a>
                     <a href="wiki/browse.html" class="footer-link">Online Atlas</a>
                     <a href="mainmap.html" class="footer-link">Trip Planner</a>
+                    <a href="DriveTimeMap.html" class="footer-link">Drive Time</a>
                     <a href="resort-comparison.html" class="footer-link">Compare Resorts</a>
                     <a href="SkiResortFacts.html" class="footer-link">Resort Facts</a>
                     <a href="SkiTrailFacts.html" class="footer-link">Trail Facts</a>
                     <a href="SkiLiftFacts.html" class="footer-link">Lift Facts</a>
+                    <a href="weather-map.html" class="footer-link">Weather</a>
                     <a href="skiing-ai.html" class="footer-link">AI Assistant</a>
                 </div>
             </div>
