@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ski Resorts by Drive Time – Global Ski Atlas</title>
+  <meta name="description" content="See which ski resorts you can drive to in 1 hour from any location. Drive-time isochrone map with 3,000+ ski areas worldwide." />
+  <link rel="preconnect" href="https://api.maptiler.com" crossorigin />
+  <link rel="preconnect" href="https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com" crossorigin />
+  <link rel="shortcut icon" href="./assets/logo.png?v=2" type="image/x-icon" />
+  <link rel="stylesheet" href="./css/tailwind-build.css" />
+  <link rel="stylesheet" href="css/index.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" integrity="sha512-dPXYcDub/aeb08c63jRq/k6GaKccl256JQy/AnOq7CAnEZ9FzSL9wSbcZkMp4R26vBsMLFYH4kQ67/bbV8XaCQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.css" crossorigin="" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; font-family: system-ui, -apple-system, sans-serif; }
+    #map { position: absolute; inset: 0; width: 100%; height: 100%; }
+    .map-wrapper {
+      flex: 1;
+      min-height: 0;
+      position: relative;
+      margin-top: 60px;
+      min-height: calc(100vh - 60px);
+      min-height: calc(100dvh - 60px);
+    }
+    .map-legend {
+      position: absolute;
+      bottom: 24px;
+      left: 24px;
+      z-index: 1000;
+      background: #fff;
+      padding: 10px 14px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      font-size: 12px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .map-legend h3 { margin: 0 0 8px 0; font-size: 13px; }
+    .map-legend .legend-row { display: flex; align-items: center; gap: 8px; margin: 4px 0; }
+    .map-legend .legend-swatch { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
+    .map-legend .legend-fill { width: 18px; height: 14px; border-radius: 4px; flex-shrink: 0; }
+    .mountain-marker { background: none !important; border: none !important; }
+    .resort-tooltip::before { display: none; }
+    #dt-toggle {
+      position: absolute;
+      bottom: 24px;
+      right: 12px;
+      z-index: 1000;
+      background: #0d9488;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.28);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    #dt-toggle:hover { background: #0f766e; }
+    #driveTimePanel {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 320px;
+      z-index: 1002;
+      background: #fff;
+      box-shadow: -4px 0 20px rgba(0,0,0,0.18);
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    #driveTimePanel.open { transform: translateX(0); }
+    .dt-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      background: #0d9488;
+      color: #fff;
+      flex-shrink: 0;
+    }
+    .dt-header h2 { font-size: 15px; font-weight: 700; margin: 0; }
+    .dt-close-btn { background: none; border: none; color: #fff; font-size: 22px; cursor: pointer; line-height: 1; padding: 0; }
+    .dt-body { padding: 14px; display: flex; flex-direction: column; gap: 14px; flex: 1; }
+    .dt-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #6b7280; margin-bottom: 5px; }
+    .dt-input-row { display: flex; gap: 6px; }
+    .dt-input-row input {
+      flex: 1;
+      padding: 8px 10px;
+      font-size: 14px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      outline: none;
+    }
+    .dt-input-row input:focus { border-color: #0d9488; }
+    .dt-btn {
+      padding: 8px 14px;
+      background: #0d9488;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .dt-btn:hover { background: #0f766e; }
+    .dt-btn:disabled { background: #9ca3af; cursor: not-allowed; }
+    .dt-btn-full { width: 100%; padding: 10px; font-size: 14px; }
+    .dt-loc-btn {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-top: 6px;
+      padding: 6px 10px;
+      background: none;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 12px;
+      cursor: pointer;
+      color: #374151;
+    }
+    .dt-loc-btn:hover { background: #f3f4f6; }
+    .dt-status { font-size: 12px; margin-top: 5px; color: #6b7280; min-height: 16px; }
+    .dt-results { display: none; margin-top: 8px; }
+    .dt-results.visible { display: block; }
+    .dt-band { margin-bottom: 14px; }
+    .dt-band h4 { font-size: 13px; font-weight: 600; margin: 0 0 6px 0; display: flex; align-items: center; gap: 8px; }
+    .dt-band ul { list-style: none; margin: 0; padding: 0; font-size: 13px; max-height: 140px; overflow-y: auto; }
+    .dt-band li { padding: 6px 8px; border-radius: 6px; margin-bottom: 2px; }
+    .dt-band li:hover { background: #f0fdfa; }
+    .dt-band-1h .dt-band-fill { background: rgba(13, 148, 136, 0.45); }
+    .dt-band-2h .dt-band-fill { background: rgba(13, 148, 136, 0.35); }
+    .dt-band-3h .dt-band-fill { background: rgba(13, 148, 136, 0.28); }
+    .dt-band-4h .dt-band-fill { background: rgba(13, 148, 136, 0.15); }
+    .dt-band-fill { width: 12px; height: 12px; border-radius: 3px; }
+    .dt-warning { padding: 10px 12px; border-radius: 8px; background: #fef3c7; border: 1px solid #f59e0b; color: #92400e; font-size: 13px; line-height: 1.4; }
+    .dt-warning::before { content: "⚠ "; }
+    .dt-hint { font-size: 11px; color: #6b7280; margin-top: 4px; }
+    @media (max-width: 768px) {
+      .map-wrapper { margin-top: 60px; min-height: calc(100vh - 60px); }
+      .map-legend { bottom: 12px; left: 12px; padding: 8px 10px; font-size: 11px; }
+      #driveTimePanel { width: 100%; }
+      #dt-toggle { bottom: 12px; right: 10px; padding: 8px 12px; font-size: 13px; }
+    }
+  </style>
+</head>
+<body class="tw-flex tw-min-h-[100vh] tw-flex-col tw-bg-[#fff]">
+  <h1 class="tw-sr-only">Ski resorts by drive time – see what you can reach in 1 hour</h1>
+  <header
+    class="tw-absolute tw-top-0 tw-z-[1001] tw-flex tw-h-[60px] tw-w-full tw-bg-white tw-shadow-sm
+           tw-border-b tw-border-gray-200 tw-px-[5%] max-lg:tw-mr-auto max-lg:tw-px-4 lg:tw-justify-around"
+  >
+    <a class="tw-h-[50px] tw-w-[50px] tw-p-[4px]" href="index.html" aria-label="Global Ski Atlas home">
+      <img src="./assets/logo.png?v=2" alt="Global Ski Atlas" class="tw-object tw-h-full tw-w-full" />
+    </a>
+    <div class="collapsible-header animated-collapse max-lg:tw-shadow-md" id="collapsed-header-items">
+      <div
+        class="tw-flex tw-h-full tw-w-max tw-gap-5 tw-text-base tw-text-black
+               max-lg:tw-mt-[30px] max-lg:tw-flex-col max-lg:tw-place-items-end
+               max-lg:tw-gap-5 lg:tw-mx-auto lg:tw-place-items-center"
+      >
+        <a class="header-links" href="coffee-table-book.html">Coffee Table Book</a>
+        <a class="header-links" href="mainmap.html">Online Atlas</a>
+        <a class="header-links tw-font-semibold" href="DriveTimeMap.html">Drive Time</a>
+        <a class="header-links" href="TravelMap.html">Road Trip Planner</a>
+        <a class="header-links" href="resort-comparison.html">Compare Resorts</a>
+        <a class="header-links" href="SkiResortFacts.html">Resort Facts</a>
+        <a class="header-links" href="About.html">About</a>
+      </div>
+    </div>
+    <button
+      class="bi bi-list tw-absolute tw-right-3 tw-top-3 tw-z-50 tw-text-3xl tw-text-black lg:tw-hidden"
+      onclick="toggleHeader()"
+      aria-label="menu"
+      id="collapse-btn"
+    ></button>
+  </header>
+
+  <div class="map-wrapper tw-flex-1 tw-min-h-0">
+    <div id="map"></div>
+    <div id="legend" class="map-legend" style="display: none;"></div>
+
+    <button id="dt-toggle">
+      <i class="bi bi-car-front-fill"></i> Drive-time areas
+    </button>
+
+    <div id="driveTimePanel">
+      <div class="dt-header">
+        <h2><i class="bi bi-car-front-fill" style="margin-right:6px"></i>Drive-time to ski resorts</h2>
+        <button class="dt-close-btn" id="dtClose" aria-label="Close">&#x2715;</button>
+      </div>
+      <div class="dt-body">
+        <p class="dt-hint">We use the 10 nearest resorts (by straight-line distance), get their drive times from OSRM, then draw estimated rings at the nearest hour. Resorts are listed by distance band.</p>
+        <div>
+          <div class="dt-label">Starting point</div>
+          <div class="dt-input-row">
+            <input type="text" id="dtOriginInput" placeholder="Address or city…" autocomplete="off" />
+            <button class="dt-btn" id="dtGeocodeBtn">Go</button>
+          </div>
+          <button class="dt-loc-btn" id="dtUseLocationBtn">
+            <i class="bi bi-geo-alt-fill"></i> Use my location
+          </button>
+          <div class="dt-status" id="dtOriginStatus"></div>
+        </div>
+        <div id="dtApiWarning" class="dt-warning" style="display:none;"></div>
+        <div>
+          <button class="dt-btn dt-btn-full" id="dtDrawBtn" disabled>Show estimated drive-time rings</button>
+          <p class="dt-hint" style="margin-top:6px">Rings based on 10 nearest resorts + OSRM drive times (no API key).</p>
+        </div>
+        <div id="dtResults" class="dt-results">
+          <div id="dtBandList"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer
+    class="tw-flex tw-w-full tw-place-content-around tw-gap-3 tw-border-t tw-border-gray-200
+           tw-bg-gray-50 tw-py-6 tw-px-[10%] tw-text-black max-md:tw-flex-col"
+  >
+    <div class="tw-flex tw-h-full tw-w-[250px] tw-flex-col tw-place-items-center tw-gap-6 max-md:tw-w-full">
+      <img src="./assets/logo.png?v=2" alt="Global Ski Atlas" class="tw-max-w-[120px]" />
+      <div>Global Ski Atlas</div>
+    </div>
+    <div class="tw-flex tw-h-full tw-w-[250px] tw-flex-col tw-gap-4">
+      <h2 class="tw-text-3xl max-md:tw-text-xl">Explore</h2>
+      <div class="tw-flex tw-flex-col tw-gap-3 max-md:tw-text-sm">
+        <a href="mainmap.html" class="footer-link">Online Atlas</a>
+        <a href="TravelMap.html" class="footer-link">Road Trip Planner</a>
+        <a href="DriveTimeMap.html" class="footer-link">Drive-time map</a>
+        <a href="About.html" class="footer-link">About</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="scripts/header-toggle.js"></script>
+  <script defer src="https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.js" crossorigin=""></script>
+  <script type="module" src="scripts/drive-time-map-ml.js"></script>
+</body>
+</html>
