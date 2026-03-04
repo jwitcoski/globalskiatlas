@@ -64,6 +64,38 @@ If `https://{api-id}.execute-api.us-east-1.amazonaws.com/api/wiki/index` returns
 6. **After changes**  
    Invalidate or wait for cache: try `https://globalskiatlas.com/api/wiki/index` in an incognito window or after a short wait.
 
+### Invalidate cache (clear stale API responses)
+
+If the API works when you open the URL directly but the wiki page still gets XML/errors, CloudFront may be serving a cached old response. Invalidate both the API path and the wiki page so the updated script and API responses are used:
+
+**Invalidate these paths:**
+
+- `/api/wiki/*` — so API responses are not stale (and not cached by Referer).
+- `/wiki/browse.html` — so the browser gets the latest page (with `cache: 'no-store'` on the fetch).
+
+**Cache policy:** For the `api/wiki*` behavior, use **CachingDisabled**. If you use a custom cache policy, avoid caching by `Referer` or other request headers so that a request from the wiki page gets the same API response as a direct request.
+
+**AWS Console**
+
+1. Open **CloudFront** in the AWS Console.
+2. Click your distribution (the one for globalskiatlas.com).
+3. Open the **Invalidations** tab.
+4. Click **Create invalidation**.
+5. Under **Object paths**, enter one path per line:
+   - `/api/wiki/*`
+   - `/wiki/browse.html`
+6. Click **Create invalidation**.
+
+Wait a minute or two, then hard refresh the wiki page (Ctrl+Shift+R) or try in incognito.
+
+**AWS CLI**
+
+Replace `DISTRIBUTION_ID` with your CloudFront distribution ID (find it in the distribution list; it looks like `E1ABC2DEF3GHI`):
+
+```bash
+aws cloudfront create-invalidation --distribution-id DISTRIBUTION_ID --paths "/api/wiki/*" "/wiki/browse.html"
+```
+
 ## Local development
 
 The Express server serves the same routes under `/api/wiki/*`, so no config change is needed. Run `npm start` and open `http://localhost:3010/wiki/browse.html`; it will call `/api/wiki/index` on the same host.
@@ -73,3 +105,7 @@ The Express server serves the same routes under `/api/wiki/*`, so no config chan
 - `DYNAMODB_TABLE_PREFIX`: table prefix (e.g. `atlas` → `atlas-WikiPages`, etc.).
 - `AWS_REGION`: region for DynamoDB (and Cognito).
 - `COGNITO_USER_POOL_ID`, `COGNITO_CLIENT_ID`, `COGNITO_REGION`: optional; when set, POST/wiki and comments/revisions require a valid Cognito JWT.
+
+## Auth config (production static site)
+
+The wiki auth widget requests `/auth/config`. Locally the Express server serves it from env; in production (S3) a static file is used. The repo includes `auth/config` with `{"configured":false,...}` so the live site returns 200 instead of 403. The widget then shows “Sign in (Cognito not configured).” To enable sign-in on the live site, replace the contents of `auth/config` with your Cognito values (e.g. from a build step that injects secrets) and redeploy.
