@@ -130,6 +130,7 @@ export async function loadParquetAsRows(url) {
   console.log('[parquet-wasm-loader] rows from', url, ':', arr.length);
   let geometryColumnName = null;
   let firstRowKeys = null;
+  const YIELD_EVERY = 25000; // yield to the browser every N rows to keep the tab responsive
   for (let i = 0; i < arr.length; i++) {
     const rowObject = arr[i];
     const json = rowObject.toJSON();
@@ -158,6 +159,10 @@ export async function loadParquetAsRows(url) {
       if (geometryColumnName) delete properties[geometryColumnName];
       delete properties.geometry; delete properties.geometry_bbox;
       rows.push({ geometry, properties: sanitizeProperties(properties) });
+    }
+    // Yield to browser periodically so the page remains responsive for large files
+    if (i > 0 && i % YIELD_EVERY === 0) {
+      await new Promise(resolve => setTimeout(resolve, 0));
     }
   }
   if (rows.length === 0 && arr.length > 0 && firstRowKeys) {

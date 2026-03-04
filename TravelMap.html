@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-KJGNL3KJL0"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){ dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'G-KJGNL3KJL0');
+  </script>
+  <!-- Ad script loaded after map is interactive (see mainmap module) -->
+  <title>Ski Road Trip Planner & Interactive Ski Resort Map – Global Ski Atlas</title>
+  <meta name="description" content="Free ski road trip planner: plan multi-resort ski trips with turn-by-turn directions. Interactive map of 3,000+ ski resorts worldwide—trails, lifts, route planner." />
+  <meta name="keywords" content="ski road trip planner, ski trip planner, ski resort map, multi resort ski trip, ski road trip route, ski resort directions, interactive ski map" />
+  <!-- Open Graph -->
+  <meta property="og:title" content="Ski Road Trip Planner & Interactive Ski Resort Map – Global Ski Atlas" />
+  <meta property="og:description" content="Plan a ski road trip with turn-by-turn directions. Interactive map of 3,000+ ski resorts—trails, lifts, and free route planner." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://globalskiatlas.com/mainmap.html" />
+  <meta property="og:image" content="https://globalskiatlas.com/assets/og-banner.png" />
+  <meta property="og:site_name" content="Global Ski Atlas" />
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Ski Road Trip Planner & Interactive Ski Resort Map – Global Ski Atlas" />
+  <meta name="twitter:description" content="Plan a ski road trip with turn-by-turn directions. Interactive map of 3,000+ ski resorts—trails, lifts, route planner." />
+  <meta name="twitter:image" content="https://globalskiatlas.com/assets/og-banner.png" />
+  <!-- Canonical -->
+  <link rel="canonical" href="https://globalskiatlas.com/mainmap.html" />
+  <!-- Preconnect to critical origins for faster tile and parquet fetches -->
+  <link rel="preconnect" href="https://api.maptiler.com" crossorigin />
+  <link rel="preconnect" href="https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com" crossorigin />
+  <link rel="shortcut icon" href="./assets/logo.png?v=2" type="image/x-icon" />
+  <link rel="stylesheet" href="./css/tailwind-build.css" />
+  <link rel="stylesheet" href="css/index.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" integrity="sha512-dPXYcDub/aeb08c63jRq/k6GaKccl256JQy/AnOq7CAnEZ9FzSL9wSbcZkMp4R26vBsMLFYH4kQ67/bbV8XaCQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.css" crossorigin="" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; font-family: system-ui, -apple-system, sans-serif; }
+    #map { position: absolute; inset: 0; width: 100%; height: 100%; }
+    .map-wrapper {
+      flex: 1;
+      min-height: 0;
+      position: relative;
+      margin-top: 60px;
+      min-height: calc(100vh - 60px);
+      min-height: calc(100dvh - 60px);
+    }
+    .map-legend {
+      position: absolute;
+      bottom: 24px;
+      left: 24px;
+      z-index: 1000;
+      background: #fff;
+      padding: 10px 14px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      font-size: 12px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .map-legend h3 { margin: 0 0 8px 0; font-size: 13px; }
+    .map-legend .legend-row { display: flex; align-items: center; gap: 8px; margin: 4px 0; }
+    .map-legend .legend-swatch { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
+    .map-legend .legend-line { width: 18px; height: 4px; border-radius: 2px; flex-shrink: 0; display: inline-block; }
+    .popup-table { border-collapse: collapse; font-size: 13px; }
+    .popup-table th { text-align: left; padding: 2px 8px 2px 0; color: #666; font-weight: 500; }
+    .popup-table td { padding: 2px 0; }
+    .search-box {
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      width: 90%;
+      max-width: 360px;
+    }
+    .search-box input {
+      width: 100%;
+      padding: 10px 14px;
+      font-size: 15px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      outline: none;
+    }
+    .search-box input:focus { border-color: #2563eb; }
+    .search-box .search-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      margin-top: 4px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      max-height: 280px;
+      overflow-y: auto;
+      display: none;
+    }
+    .search-box .search-dropdown.visible { display: block; }
+    .search-box .search-item {
+      padding: 10px 14px;
+      cursor: pointer;
+      border-bottom: 1px solid #eee;
+      font-size: 14px;
+    }
+    .search-box .search-item:hover,
+    .search-box .search-item.active { background: #f0f4ff; }
+    .search-box .search-item:last-child { border-bottom: none; }
+    .lift-marker-icon { background: none !important; border: none !important; }
+    .olympic-rings-marker { background: none !important; border: none !important; }
+    .mountain-marker { background: none !important; border: none !important; }
+    .resort-tooltip {
+      background: rgba(15,23,42,0.92);
+      border: none;
+      border-radius: 7px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+      color: #f1f5f9;
+      font-size: 13px;
+      padding: 6px 10px;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+    .resort-tooltip::before { display: none; }
+    .resort-tooltip .tt-name { font-weight: 600; }
+    .resort-tooltip .tt-hint { color: #94a3b8; font-size: 11px; margin-top: 2px; }
+    #vt-tooltip {
+      position: fixed;
+      display: none;
+      z-index: 9999;
+      pointer-events: none;
+      background: rgba(15,23,42,0.92);
+      border-radius: 7px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+      color: #f1f5f9;
+      font-size: 13px;
+      padding: 6px 10px;
+      white-space: nowrap;
+    }
+    #vt-tooltip .tt-name { font-weight: 600; }
+    #vt-tooltip .tt-hint { color: #94a3b8; font-size: 11px; margin-top: 2px; }
+    #vt-tooltip .tt-diff { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+    .legend-mountain-icon { display: inline-flex; align-items: center; vertical-align: middle; margin-right: 6px; }
+    @media (max-width: 768px) {
+      .map-wrapper {
+        margin-top: 60px;
+        min-height: calc(100vh - 60px);
+        min-height: calc(100dvh - 60px);
+      }
+      .map-legend {
+        bottom: 12px;
+        left: 12px;
+        padding: 8px 10px;
+        font-size: 11px;
+        max-height: 140px;
+      }
+      .map-legend h3 { font-size: 11px; margin: 0 0 4px 0; }
+      .map-legend .legend-row { margin: 2px 0; gap: 6px; }
+      .map-legend .legend-swatch { width: 10px; height: 10px; }
+      .map-legend .legend-line { width: 14px; height: 3px; }
+      .search-box { top: 8px; width: calc(100% - 24px); max-width: none; }
+      .search-box input { padding: 8px 12px; font-size: 14px; }
+    }
+    /* ── Road Trip Planner ──────────────────────────────────────────────────── */
+    #roadTripToggle {
+      position: absolute;
+      bottom: 80px;
+      right: 12px;
+      z-index: 1000;
+      background: #1e40af;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.28);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.2s;
+    }
+    #roadTripToggle:hover { background: #1d4ed8; }
+    #roadTripPanel {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 320px;
+      z-index: 1002;
+      background: #fff;
+      box-shadow: -4px 0 20px rgba(0,0,0,0.18);
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    #roadTripPanel.open { transform: translateX(0); }
+    .rtp-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      background: #1e40af;
+      color: #fff;
+      flex-shrink: 0;
+    }
+    .rtp-header h2 { font-size: 15px; font-weight: 700; margin: 0; }
+    .rtp-close-btn { background: none; border: none; color: #fff; font-size: 22px; cursor: pointer; line-height: 1; padding: 0; }
+    .rtp-body { padding: 14px; display: flex; flex-direction: column; gap: 14px; flex: 1; }
+    .rtp-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #6b7280; margin-bottom: 5px; }
+    .rtp-input-row { display: flex; gap: 6px; }
+    .rtp-input-row input, .rtp-search-input {
+      flex: 1;
+      padding: 8px 10px;
+      font-size: 14px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      outline: none;
+      width: 100%;
+    }
+    .rtp-input-row input:focus, .rtp-search-input:focus { border-color: #2563eb; }
+    .rtp-btn {
+      padding: 8px 14px;
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .rtp-btn:hover { background: #1d4ed8; }
+    .rtp-btn:disabled { background: #9ca3af; cursor: not-allowed; }
+    .rtp-btn-full { width: 100%; padding: 10px; font-size: 14px; }
+    .rtp-loc-btn {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-top: 6px;
+      padding: 6px 10px;
+      background: none;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 12px;
+      cursor: pointer;
+      color: #374151;
+    }
+    .rtp-loc-btn:hover { background: #f3f4f6; }
+    .rtp-status { font-size: 12px; margin-top: 5px; color: #6b7280; min-height: 16px; }
+    .rtp-end-options { display: flex; flex-direction: column; gap: 4px; }
+    .rtp-radio { display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; color: #374151; }
+    .rtp-radio input { margin: 0; }
+    .rtp-max-hint { font-weight: 400; color: #9ca3af; font-size: 11px; }
+    .rtp-warning { padding: 10px 12px; border-radius: 8px; background: #fef3c7; border: 1px solid #f59e0b; color: #92400e; font-size: 13px; line-height: 1.4; margin-bottom: 8px; }
+    .rtp-warning::before { content: "⚠ "; }
+    .waypoint-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      background: #f8fafc;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      margin-bottom: 4px;
+      font-size: 13px;
+    }
+    .wp-num { font-size: 12px; font-weight: 700; color: #fff; background: #2563eb; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .wp-name { flex: 1; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .wp-move { display: flex; flex-direction: column; gap: 0; flex-shrink: 0; }
+    .wp-up, .wp-down { background: none; border: none; color: #6b7280; cursor: pointer; font-size: 14px; padding: 0; line-height: 1; display: flex; align-items: center; justify-content: center; }
+    .wp-up:hover, .wp-down:hover { color: #2563eb; }
+    .wp-up:disabled, .wp-down:disabled { color: #d1d5db; cursor: not-allowed; }
+    .wp-remove { background: none; border: none; color: #9ca3af; cursor: pointer; font-size: 18px; padding: 0; line-height: 1; flex-shrink: 0; }
+    .wp-remove:hover { color: #ef4444; }
+    .waypoint-empty { text-align: center; color: #9ca3af; font-size: 13px; padding: 14px 10px; border: 1px dashed #d1d5db; border-radius: 8px; line-height: 1.5; }
+    .rtp-search-wrapper { position: relative; margin-top: 6px; }
+    .rtp-search-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.18);
+      max-height: 200px;
+      overflow-y: auto;
+      z-index: 9999;
+      display: none;
+      margin-top: 2px;
+    }
+    .rtp-search-dropdown.visible { display: block; }
+    .rtp-search-item { padding: 9px 12px; cursor: pointer; font-size: 13px; border-bottom: 1px solid #f3f4f6; }
+    .rtp-search-item:hover { background: #f0f4ff; }
+    .rtp-search-item:last-child { border-bottom: none; }
+    #routeSummary {
+      background: #f0f9ff;
+      border: 1px solid #bae6fd;
+      border-radius: 8px;
+      padding: 12px;
+      display: none;
+    }
+    .rtp-sum-row { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #0369a1; font-weight: 600; margin-bottom: 4px; }
+    .rtp-sum-row:last-child { margin-bottom: 0; }
+    #rtpClearBtn {
+      width: 100%;
+      margin-top: 6px;
+      padding: 7px 14px;
+      background: none;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 12px;
+      cursor: pointer;
+      color: #6b7280;
+    }
+    #rtpClearBtn:hover { background: #fee2e2; border-color: #fca5a5; color: #ef4444; }
+    .rtp-add-btn {
+      margin-left: 6px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      border-radius: 8px;
+      background: #eff6ff;
+      border: 1px solid #93c5fd;
+      color: #1d4ed8;
+      padding: 8px 12px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .rtp-add-btn:hover { background: #dbeafe; }
+    @media (max-width: 768px) {
+      #roadTripPanel { width: 100%; }
+      #roadTripToggle { bottom: 100px; right: 10px; padding: 8px 12px; font-size: 13px; }
+    }
+  </style>
+</head>
+<body class="tw-flex tw-min-h-[100vh] tw-flex-col tw-bg-[#fff]">
+  <h1 class="tw-sr-only">Ski Road Trip Planner – Interactive map of 3,000+ ski resorts worldwide with trails, lifts, and turn-by-turn route planning</h1>
+  <header
+    class="tw-absolute tw-top-0 tw-z-[1001] tw-flex tw-h-[60px] tw-w-full tw-bg-white tw-shadow-sm
+           tw-border-b tw-border-gray-200 tw-px-[5%] max-lg:tw-mr-auto max-lg:tw-px-4 lg:tw-justify-around"
+  >
+    <a class="tw-h-[50px] tw-w-[50px] tw-p-[4px]" href="index.html" aria-label="Global Ski Atlas home">
+      <img src="./assets/logo.png?v=2" alt="Global Ski Atlas" class="tw-object tw-h-full tw-w-full" />
+    </a>
+    <div class="collapsible-header animated-collapse max-lg:tw-shadow-md" id="collapsed-header-items">
+      <div
+        class="tw-flex tw-h-full tw-w-max tw-gap-5 tw-text-base tw-text-black
+               max-lg:tw-mt-[30px] max-lg:tw-flex-col max-lg:tw-place-items-end
+               max-lg:tw-gap-5 lg:tw-mx-auto lg:tw-place-items-center"
+      >
+        <a class="header-links" href="coffee-table-book.html">Coffee Table Book</a>
+        <a class="header-links tw-font-semibold" href="mainmap.html">Online Atlas</a>
+        <a class="header-links" href="resort-comparison.html">Compare Resorts</a>
+        <a class="header-links" href="SkiResortFacts.html">Resort Facts</a>
+        <a class="header-links" href="SkiTrailFacts.html">Trail Facts</a>
+        <a class="header-links" href="SkiLiftFacts.html">Lift Facts</a>
+        <a class="header-links" href="About.html">About</a>
+        <a class="header-links" href="weather-map.html">Weather</a>
+        <a class="header-links" href="skiing-ai.html">AI Assistant</a>
+      </div>
+      <div
+        class="tw-mx-4 tw-flex tw-place-items-center tw-gap-[20px] tw-text-base
+               max-md:tw-w-full max-md:tw-flex-col max-md:tw-place-content-center"
+      >
+          <span
+            role="button"
+            aria-label="Download app coming soon"
+            class="tw-flex tw-h-[40px] tw-place-items-center tw-gap-2 tw-rounded-full
+                 tw-bg-black tw-p-1 tw-pl-4 tw-text-white"
+          >
+            <span>Download App Coming Soon</span>
+            <div
+              class="tw-flex tw-h-[30px] tw-w-[30px] tw-place-content-center
+                     tw-place-items-center tw-rounded-full tw-bg-primary
+                     tw-font-semibold tw-text-black"
+            >
+              <i class="bi bi-download"></i>
+            </div>
+          </span>
+      </div>
+    </div>
+    <button
+      class="bi bi-list tw-absolute tw-right-3 tw-top-3 tw-z-50 tw-text-3xl
+             tw-text-black lg:tw-hidden"
+      onclick="toggleHeader()"
+      aria-label="menu"
+      id="collapse-btn"
+    ></button>
+  </header>
+
+  <div class="map-wrapper tw-flex-1 tw-min-h-0">
+    <div id="map"></div>
+    <div class="search-box" id="searchBox" style="display: none;">
+      <input type="text" id="searchInput" placeholder="Search for a resort..." autocomplete="off" />
+      <div class="search-dropdown" id="searchDropdown"></div>
+    </div>
+    <div id="legend" class="map-legend" style="display: none;"></div>
+    <div id="heavyLoadIndicator" class="map-legend" style="display:none;bottom:12px;top:auto;background:rgba(255,255,255,0.95);padding:10px 14px;font-size:13px;">
+      Loading trail & lift data…
+    </div>
+
+    <button id="roadTripToggle">
+      <i class="bi bi-signpost-2-fill"></i> Plan Road Trip
+    </button>
+
+    <div id="roadTripPanel">
+      <div class="rtp-header">
+        <h2><i class="bi bi-signpost-2-fill" style="margin-right:6px"></i>Road Trip Planner</h2>
+        <button class="rtp-close-btn" id="roadTripClose" aria-label="Close">&#x2715;</button>
+      </div>
+      <div class="rtp-body">
+        <div>
+          <div class="rtp-label">Starting Point</div>
+          <div class="rtp-input-row">
+            <input type="text" id="homeAddressInput" placeholder="Enter your address…" autocomplete="off" />
+            <button class="rtp-btn" id="geocodeHomeBtn">Go</button>
+          </div>
+          <button class="rtp-loc-btn" id="useMyLocationBtn">
+            <i class="bi bi-geo-alt-fill"></i> Use my location
+          </button>
+          <div class="rtp-status" id="homePointStatus"></div>
+        </div>
+        <div>
+          <div class="rtp-label">Ending Point</div>
+          <div class="rtp-end-options">
+            <label class="rtp-radio"><input type="radio" name="rtpEnd" value="last" checked /> End at last resort</label>
+            <label class="rtp-radio"><input type="radio" name="rtpEnd" value="start" /> Return to start</label>
+            <label class="rtp-radio"><input type="radio" name="rtpEnd" value="custom" /> Different address</label>
+          </div>
+          <div id="rtpEndAddressRow" class="rtp-input-row" style="display:none; margin-top:6px;">
+            <input type="text" id="endAddressInput" placeholder="Enter ending address…" autocomplete="off" />
+            <button class="rtp-btn" id="geocodeEndBtn">Go</button>
+          </div>
+          <div class="rtp-status" id="endPointStatus"></div>
+        </div>
+        <div>
+          <div class="rtp-label">Ski Resorts <span id="waypointCount"></span> <span class="rtp-max-hint">(max 25 – routing API limit)</span></div>
+          <div id="waypointList">
+            <div class="waypoint-empty">No resorts added yet.<br>Search below or click a resort on the map.</div>
+          </div>
+          <div class="rtp-search-wrapper">
+            <input type="text" class="rtp-search-input" id="resortAddInput" placeholder="Search resort to add…" autocomplete="off" />
+            <div id="resortAddDropdown" class="rtp-search-dropdown"></div>
+          </div>
+        </div>
+        <div id="rtpRegionWarning" class="rtp-warning" style="display:none;"></div>
+        <div>
+          <button class="rtp-btn rtp-btn-full" id="rtpCalcBtn" disabled>Calculate Route</button>
+          <button id="rtpClearBtn">&#x2715; Clear All</button>
+        </div>
+        <div id="routeSummary"></div>
+      </div>
+    </div>
+  </div>
+
+  <footer
+    class="tw-flex tw-w-full tw-place-content-around tw-gap-3 tw-border-t tw-border-gray-200
+           tw-bg-gray-50 tw-py-6 tw-px-[10%] tw-text-black max-md:tw-flex-col"
+  >
+    <div
+      class="tw-flex tw-h-full tw-w-[250px] tw-flex-col tw-place-items-center tw-gap-6
+             max-md:tw-w-full"
+    >
+      <img src="./assets/logo.png?v=2" alt="Global Ski Atlas" class="tw-max-w-[120px]" />
+      <div>Global Ski Atlas</div>
+      <div class="tw-mt-3 tw-text-lg tw-font-semibold">Follow us</div>
+      <div class="tw-flex tw-gap-4 tw-text-2xl">
+        <a href="javascript:void(0)" aria-label="Facebook" title="Coming soon"><i class="bi bi-facebook"></i></a>
+        <a href="https://twitter.com/@pauls_freeman" aria-label="Twitter"><i class="bi bi-twitter"></i></a>
+        <a href="https://instagram.com/" class="tw-h-[40px] tw-w-[40px]" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
+      </div>
+    </div>
+    <div class="tw-flex tw-h-full tw-w-[250px] tw-flex-col tw-gap-4">
+      <h2 class="tw-text-3xl max-md:tw-text-xl">Explore</h2>
+      <div class="tw-flex tw-flex-col tw-gap-3 max-md:tw-text-sm">
+        <a href="coffee-table-book.html" class="footer-link">Coffee Table Book</a>
+        <a href="mainmap.html" class="footer-link">Online Atlas</a>
+        <a href="resort-comparison.html" class="footer-link">Compare Resorts</a>
+        <a href="SkiResortFacts.html" class="footer-link">Resort Facts</a>
+        <a href="SkiTrailFacts.html" class="footer-link">Trail Facts</a>
+        <a href="SkiLiftFacts.html" class="footer-link">Lift Facts</a>
+        <a href="skiing-ai.html" class="footer-link">AI Assistant</a>
+      </div>
+    </div>
+    <div class="tw-flex tw-h-full tw-w-[250px] tw-flex-col tw-gap-4">
+      <h2 class="tw-text-3xl max-md:tw-text-xl">Download Parquet Data</h2>
+      <div class="tw-flex tw-flex-col tw-gap-3 max-md:tw-text-sm">
+        <a href="DownloadData.html" class="footer-link tw-inline-flex tw-items-center tw-gap-1">Data downloads & how we create it <i class="bi bi-arrow-right tw-text-sm"></i></a>
+      </div>
+    </div>
+    <div class="tw-flex tw-h-full tw-w-[250px] tw-flex-col tw-gap-4">
+      <h2 class="tw-text-3xl max-md:tw-text-xl">Resources</h2>
+      <div class="tw-flex tw-flex-col tw-gap-3 max-md:tw-text-sm">
+        <a href="About.html" class="footer-link">About</a>
+        <a href="faq.html" class="footer-link">FAQ</a>
+        <a href="https://witcoskitech.com" class="footer-link" target="_blank" rel="noopener">Contact</a>
+        <a href="privacy-policy.html" class="footer-link">Privacy Policy</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="scripts/header-toggle.js"></script>
+  <script defer src="https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.js" crossorigin=""></script>
+  <script type="module" src="scripts/roadtripskimap-ml-main.js"></script>
+</body>
+</html>
