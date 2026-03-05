@@ -22,7 +22,7 @@ if (fs.existsSync(localPropsPath)) {
   });
 }
 
-require('dotenv').config();
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 const express = require('express');
 const { createServer } = require('http');
@@ -98,6 +98,17 @@ async function requireCognito(req, res, next) {
   res.status(401).json({ error: 'Unauthorized', message: 'Valid Cognito token required' });
 }
 
+const adminUserIds = (process.env.ADMIN_USER_IDS || '').split(',').map((s) => s.trim()).filter(Boolean);
+function isAdmin(principal) {
+  return principal && adminUserIds.length > 0 && adminUserIds.includes(principal.sub);
+}
+async function requireAdmin(req, res, next) {
+  await requireCognito(req, res, function () {
+    if (isAdmin(req.cognitoPrincipal)) return next();
+    res.status(403).json({ error: 'Forbidden', message: 'Admin required' });
+  });
+}
+
 function userDisplayName(principal) {
   if (!principal) return null;
   return principal.username || principal.email || principal.sub || null;
@@ -118,6 +129,9 @@ async function handleWikiGetPage(req, res) {
   const pageId = req.params.pageId;
   try {
     const entry = await wikiStore.getPage(pageId);
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('GET page "%s" -> %s', pageId, entry ? 'found' : 'null');
+    }
     res.json(entry || null);
   } catch (err) {
     console.error('GET wiki page', err);
@@ -164,16 +178,19 @@ async function handleWikiPostPage(req, res) {
   const now = new Date().toISOString();
   const displayName = userDisplayName(req.cognitoPrincipal);
   try {
-    let page = await wikiStore.getPage(pageId);
-    if (!page) {
-      page = { pageId, title, content, createdAt: now, updatedAt: now, createdBy: userId, updatedBy: userId, status: 'published', currentRevisionId: null };
-      await wikiStore.putPage(page);
-      const rev = await wikiStore.createRevision(pageId, content, userId, comment, 'approved', displayName, '');
-      await wikiStore.updatePageContent(pageId, content, now, userId, rev.revisionId);
-      await wikiStore.addComment(pageId, userId, 'Edit: ' + comment, null, displayName);
-      return res.status(200).end();
-    }
-    const rev = await wikiStore.createRevision(pageId, content, userId, comment, 'pending', displayName, page.content || '');
+  let page = await wikiStore.getPage(pageId);
+  if (!page) {
+    page = { pageId, title, content, createdAt: now, updatedAt: now, createdBy: userId, updatedBy: userId, status: 'published', currentRevisionId: null };
+    await wikiStore.putPage(page);
+    const rev = await wikiStore.createRevision(pageId, content, userId, comment, 'approved', displayName, '');
+    await wikiStore.updatePageContent(pageId, content, now, userId, rev.revisionId);
+    await wikiStore.addComment(pageId, userId, 'Edit: ' + comment, null, displayName);
+    return res.status(200).end();
+  }
+  if (page.locked && !isAdmin(req.cognitoPrincipal)) {
+    return res.status(403).json({ error: 'Forbidden', message: 'This page is locked. Only admins can edit.' });
+  }
+  const rev = await wikiStore.createRevision(pageId, content, userId, comment, 'pending', displayName, page.content || '');
     await wikiStore.addComment(pageId, userId, 'Proposed: ' + comment, null, displayName);
     res.status(202).json({ revisionId: rev.revisionId, status: 'pending', message: 'Change proposed; pending accept/reject' });
   } catch (err) {
@@ -195,7 +212,7 @@ async function handleWikiAcceptRevision(req, res) {
     if (rev.userId && rev.userId === userId) {
       return res.status(403).json({ error: 'Forbidden', message: 'You cannot accept your own revision; another user must accept it.' });
     }
-    const accepted = await wikiStore.acceptRevision(pageId, revisionId, userId);
+    const accepted = await wikiStore.acceptRevision(pageId, revisionId, userId, { adminOverride: isAdmin(req.cognitoPrincipal) });
     await wikiStore.addComment(pageId, userId, 'Accepted: ' + comment, null, displayName);
     res.json(accepted);
   } catch (err) {
@@ -211,7 +228,7 @@ async function handleWikiRejectRevision(req, res) {
   const userId = req.cognitoPrincipal ? req.cognitoPrincipal.sub : null;
   const displayName = userDisplayName(req.cognitoPrincipal);
   try {
-    const rev = await wikiStore.rejectRevision(pageId, revisionId);
+    const rev = await wikiStore.rejectRevision(pageId, revisionId, { adminOverride: isAdmin(req.cognitoPrincipal) });
     if (!rev) return res.status(404).json({ error: 'Not Found', message: 'Revision not found or not pending' });
     await wikiStore.addComment(pageId, userId, 'Rejected: ' + comment, null, displayName);
     res.json(rev);
@@ -296,6 +313,85 @@ app.post('/api/wiki/:pageId/revisions/:revisionId/accept', requireCognito, handl
 app.post('/wiki/:pageId/revisions/:revisionId/reject', requireCognito, handleWikiRejectRevision);
 app.post('/api/wiki/:pageId/revisions/:revisionId/reject', requireCognito, handleWikiRejectRevision);
 
+async function handleWikiPatchPage(req, res) {
+  const pageId = req.params.pageId;
+  const body = req.body || {};
+  const allowed = ['dataFlaggedWrong', 'fixedInOsm', 'fixedInOsmAt', 'visibleFactRanks', 'flaggedAt', 'flaggedBy'];
+  const updates = {};
+  for (const k of allowed) {
+    if (body[k] !== undefined) updates[k] = body[k];
+  }
+  if (Object.keys(updates).length === 0) {
+    return res.status(400).json({ error: 'Bad Request', message: 'No allowed fields to update' });
+  }
+  if (updates.fixedInOsm === true && !updates.fixedInOsmAt) {
+    updates.fixedInOsmAt = new Date().toISOString();
+  }
+  if (updates.dataFlaggedWrong === true && !updates.flaggedAt) {
+    updates.flaggedAt = new Date().toISOString();
+    if (req.cognitoPrincipal) updates.flaggedBy = req.cognitoPrincipal.sub;
+  }
+  try {
+    await wikiStore.updatePageFields(pageId, updates);
+    const page = await wikiStore.getPage(pageId);
+    res.json(page || { pageId, ...updates });
+  } catch (err) {
+    console.error('PATCH wiki page', err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+}
+
+app.patch('/wiki/:pageId', requireCognito, handleWikiPatchPage);
+app.patch('/api/wiki/:pageId', requireCognito, handleWikiPatchPage);
+
+async function handleWikiRefreshFromParquet(req, res) {
+  const pageId = req.params.pageId;
+  try {
+    const page = await wikiStore.getPage(pageId);
+    if (!page) return res.status(404).json({ error: 'Not Found', message: 'Page not found' });
+    if (page.pageType === 'country' || page.pageType === 'state') {
+      return res.status(400).json({ error: 'Bad Request', message: 'Refresh applies only to resort pages' });
+    }
+    res.status(501).json({ error: 'Not Implemented', message: 'Single-resort refresh from parquet not implemented on this server. Re-run wiki ingest to refresh all data.' });
+  } catch (err) {
+    console.error('POST wiki refresh-from-parquet', err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+}
+
+app.post('/wiki/:pageId/refresh-from-parquet', requireCognito, handleWikiRefreshFromParquet);
+app.post('/api/wiki/:pageId/refresh-from-parquet', requireCognito, handleWikiRefreshFromParquet);
+
+async function handleWikiLockPage(req, res) {
+  const pageId = req.params.pageId;
+  const now = new Date().toISOString();
+  const userId = req.cognitoPrincipal ? req.cognitoPrincipal.sub : null;
+  try {
+    await wikiStore.updatePageFields(pageId, { locked: true, lockedAt: now, lockedBy: userId });
+    const page = await wikiStore.getPage(pageId);
+    res.json(page || { pageId, locked: true });
+  } catch (err) {
+    console.error('POST wiki lock', err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+}
+async function handleWikiUnlockPage(req, res) {
+  const pageId = req.params.pageId;
+  try {
+    await wikiStore.updatePageFields(pageId, { locked: false });
+    const page = await wikiStore.getPage(pageId);
+    res.json(page || { pageId, locked: false });
+  } catch (err) {
+    console.error('DELETE wiki lock', err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+}
+
+app.post('/wiki/:pageId/lock', requireAdmin, handleWikiLockPage);
+app.post('/api/wiki/:pageId/lock', requireAdmin, handleWikiLockPage);
+app.delete('/wiki/:pageId/lock', requireAdmin, handleWikiUnlockPage);
+app.delete('/api/wiki/:pageId/lock', requireAdmin, handleWikiUnlockPage);
+
 app.get('/wiki/index', handleWikiIndex);
 app.get('/wiki/:pageId/revisions', handleWikiRevisions);
 app.get('/wiki/:pageId/comments', handleWikiComments);
@@ -346,12 +442,28 @@ server.on('error', (err) => {
   }
   process.exit(1);
 });
-server.listen(PORT, () => {
+server.listen(PORT, async () => {
   console.log('Global Ski Atlas server on http://localhost:' + PORT);
   if (wikiStore.useDynamo) {
     console.log('Wiki store: DynamoDB (prefix=%s)', process.env.DYNAMODB_TABLE_PREFIX);
+    try {
+      const pages = await wikiStore.listPages();
+      console.log('Wiki pages in DynamoDB: %d', pages.length);
+      if (pages.length === 0) {
+        console.log('  → Run: npm run wiki:ingest (then restart) to populate resort pages.');
+      } else {
+        const firstResort = pages.find((p) => p.pageType === 'resort');
+        const pid = firstResort && (firstResort.pageId || firstResort.PageId);
+        if (pid) {
+          const got = await wikiStore.getPage(pid);
+          console.log('  getPage("%s"): %s', pid, got ? 'found' : 'NULL (bug: list has it, get does not)');
+        }
+      }
+    } catch (e) {
+      console.error('Wiki DynamoDB check failed:', e.message);
+    }
   } else {
-    console.log('Wiki store: in-memory (set DYNAMODB_TABLE_PREFIX to use DynamoDB)');
+    console.log('Wiki store: in-memory (set DYNAMODB_TABLE_PREFIX in .env to use DynamoDB)');
   }
   if (isCognitoConfigured) {
     console.log('Cognito configured: region=%s, userPoolId=%s', cognito.region, cognito.userPoolId);

@@ -351,6 +351,12 @@ body {
   max-width: 42rem;
 }
 .resort-workflow-hint strong { color: #333; }
+.resort-char-count {
+  font-size: 0.85rem;
+  color: #555;
+  margin: 0 0 0.5rem 0;
+}
+.resort-char-count-over { color: #c53030; font-weight: 600; }
 .resort-edit-source {
   display: block;
   width: 100%;

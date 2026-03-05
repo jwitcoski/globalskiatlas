@@ -55,6 +55,32 @@ async function updatePageContent(pageId, content, updatedAt, updatedBy, currentR
   }));
 }
 
+async function updatePageFields(pageId, updates) {
+  if (!pageId || !updates || typeof updates !== 'object') return;
+  const allowed = ['dataFlaggedWrong', 'fixedInOsm', 'fixedInOsmAt', 'visibleFactRanks', 'flaggedAt', 'flaggedBy', 'locked', 'lockedAt', 'lockedBy'];
+  const setExpr = [];
+  const names = {};
+  const values = {};
+  let i = 0;
+  for (const key of Object.keys(updates)) {
+    if (!allowed.includes(key)) continue;
+    const n = '#f' + i;
+    const v = ':v' + i;
+    setExpr.push(n + ' = ' + v);
+    names[n] = key;
+    values[v] = updates[key];
+    i++;
+  }
+  if (setExpr.length === 0) return;
+  await docClient.send(new UpdateCommand({
+    TableName: tables.pages(),
+    Key: { pageId },
+    UpdateExpression: 'SET ' + setExpr.join(', '),
+    ExpressionAttributeNames: names,
+    ExpressionAttributeValues: values,
+  }));
+}
+
 function computeDiff(oldContent, newContent) {
   if (oldContent === newContent || (oldContent == null && newContent == null)) return null;
   const diff = require('diff');
@@ -93,9 +119,10 @@ async function getRevision(pageId, revisionId) {
   return res.Item || null;
 }
 
-async function acceptRevision(pageId, revisionId, userId) {
+async function acceptRevision(pageId, revisionId, userId, opts = {}) {
   const rev = await getRevision(pageId, revisionId);
-  if (!rev || rev.status !== 'pending') return null;
+  if (!rev) return null;
+  if (!opts.adminOverride && rev.status !== 'pending') return null;
   await docClient.send(new UpdateCommand({
     TableName: tables.revisions(),
     Key: { pageId, revisionId },
@@ -107,9 +134,10 @@ async function acceptRevision(pageId, revisionId, userId) {
   return { ...rev, status: 'approved' };
 }
 
-async function rejectRevision(pageId, revisionId) {
+async function rejectRevision(pageId, revisionId, opts = {}) {
   const rev = await getRevision(pageId, revisionId);
-  if (!rev || rev.status !== 'pending') return null;
+  if (!rev) return null;
+  if (!opts.adminOverride && rev.status !== 'pending') return null;
   await docClient.send(new UpdateCommand({
     TableName: tables.revisions(),
     Key: { pageId, revisionId },
@@ -164,7 +192,7 @@ async function listPages() {
   do {
     const params = {
       TableName: tables.pages(),
-      ProjectionExpression: 'pageId, title, country, #st, #rg, resortType, skiableTerrainAcres, totalLifts, downhillTrails',
+      ProjectionExpression: 'pageId, title, country, #st, #rg, resortType, skiableTerrainAcres, totalLifts, downhillTrails, book, resortSizeCategory, pageType',
       ExpressionAttributeNames: { '#st': 'state', '#rg': 'region' },
     };
     if (lastKey) params.ExclusiveStartKey = lastKey;
@@ -179,6 +207,7 @@ module.exports = {
   getPage,
   putPage,
   updatePageContent,
+  updatePageFields,
   createRevision,
   getRevision,
   acceptRevision,

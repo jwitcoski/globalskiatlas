@@ -89,6 +89,7 @@
 
   <article class="resort-entry">
     <header class="resort-header">
+      <p class="resort-breadcrumb" id="resort-breadcrumb" style="display:none"></p>
       <p class="resort-location" id="resort-location"></p>
       <h1 class="resort-title" id="resort-title">Loading…</h1>
       <p class="resort-subtitle" id="resort-subtitle"></p>
@@ -99,10 +100,17 @@
         <div class="resort-stats" id="resort-stats"></div>
         <p class="resort-trail-breakdown" id="resort-trail-breakdown" style="display:none"></p>
         <p class="resort-meta" id="resort-meta" style="display:none"></p>
+        <p class="resort-locked-note" id="resort-locked-note" style="display:none">This page is locked. Only admins can edit.</p>
         <p class="resort-osm-note" id="resort-osm-note" style="display:none">
           Stats sourced from <a href="https://www.openstreetmap.org" target="_blank" rel="noopener" class="resort-osm-link">OpenStreetMap</a>.
           To correct this data, <a id="resort-osm-edit-link" href="https://www.openstreetmap.org" target="_blank" rel="noopener" class="resort-osm-link">edit it on OSM</a> — changes sync periodically.
         </p>
+        <div class="resort-osm-actions" id="resort-osm-actions" style="display:none">
+          <button type="button" class="resort-edit-btn resort-btn-flag" id="resort-flag-wrong-btn">Flag as wrong</button>
+          <button type="button" class="resort-edit-btn resort-btn-fixed" id="resort-fixed-osm-btn">I fixed this in OSM</button>
+          <button type="button" class="resort-edit-btn resort-btn-refresh" id="resort-refresh-data-btn">Refresh from data</button>
+        </div>
+        <p class="resort-flag-callout" id="resort-flag-callout" style="display:none">This data has been flagged as incorrect. Edit on OpenStreetMap to fix, then mark as fixed below.</p>
 
         <div class="resort-body js-resort-body"></div>
       </div>
@@ -129,6 +137,7 @@
   <section class="resort-edit">
     <h2 class="resort-edit-title">Edit body (Markdown)</h2>
     <p class="resort-workflow-hint">Save <strong>proposes</strong> a change: the page does not update until another user accepts it. Add a required comment describing what you changed; it will appear in Comments. You can reject your own proposal if you change your mind.</p>
+    <p id="resort-char-count" class="resort-char-count" style="display:none"></p>
     <textarea id="sourceTA" class="resort-edit-source" rows="8" placeholder="Write the resort description in Markdown. Use **bold**, *italic*, and line breaks. First letter will appear as a drop cap."></textarea>
     <div class="resort-edit-revision-comment">
       <label for="revision-comment">Revision comment (required)</label>

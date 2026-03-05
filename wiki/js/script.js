@@ -1,6 +1,10 @@
 var RESORT_MAP_INSTANCE = null;
 var MAPTILER_KEY = '0P06ORgY8WvmMOnPr0p2';
-var RESORT_STATIC_MAP_BASE = 'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/resort-maps/';
+var RESORT_STATIC_MAP_BASE = 'https://globalskiatlas-resort-maps.s3.us-east-1.amazonaws.com/';
+
+// Plan section 2.3: max main-stat rank per category (facts 12-14 yes/no shown when present for all)
+var RESORT_FACT_MAX_RANK = { small_hill: 4, ski_mountain: 10, multiple_mountains: 11, mega_resort: 14, unknown: 4 };
+var RESORT_TEXT_LIMIT = { small_hill: 1500, ski_mountain: 3000, multiple_mountains: 5500, mega_resort: 11000, unknown: 1500 };
 
 function switchMapTab(tab) {
   var livePanel = document.getElementById('resort-map-gl');
@@ -111,6 +115,13 @@ async function saveEntry() {
 
   var titleEl = document.querySelector('.resort-title');
   var title = titleEl ? titleEl.textContent.trim() : YWIKI_PATH;
+  var page = (window._ywikiLastPage && window._ywikiLastPage.pageId === YWIKI_PATH) ? window._ywikiLastPage : null;
+  var category = page && (page.resortSizeCategory || page.categorization && page.categorization.size) ? page.resortSizeCategory || page.categorization.size : 'unknown';
+  var textLimit = RESORT_TEXT_LIMIT[category] != null ? RESORT_TEXT_LIMIT[category] : 1500;
+  if (content.length > textLimit) {
+    alert('Body exceeds the limit for this resort size (' + content.length + ' / ' + textLimit + ' characters). Shorten the text to save.');
+    return;
+  }
 
   var user = (window.ywikiAuth && typeof ywikiAuth.getUser === 'function')
     ? (ywikiAuth.getUser() || '')
@@ -175,6 +186,58 @@ function setText(id, val) {
   if (el) el.textContent = val || '';
 }
 
+function bindOsmActionButtons() {
+  var pageId = YWIKI_PATH;
+  var flagBtn = document.getElementById('resort-flag-wrong-btn');
+  var fixedBtn = document.getElementById('resort-fixed-osm-btn');
+  var refreshBtn = document.getElementById('resort-refresh-data-btn');
+  var token = (window.ywikiAuth && typeof ywikiAuth.getToken === 'function') ? ywikiAuth.getToken() : null;
+  if (!token) {
+    if (flagBtn) flagBtn.disabled = true;
+    if (fixedBtn) fixedBtn.disabled = true;
+    if (refreshBtn) refreshBtn.disabled = true;
+    return;
+  }
+  if (flagBtn && !flagBtn._bound) {
+    flagBtn._bound = true;
+    flagBtn.addEventListener('click', function () {
+      fetch('/api/wiki/' + encodeURIComponent(pageId), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ dataFlaggedWrong: true })
+      }).then(function (r) {
+        if (r.ok) { loadEntry(); } else { alert('Failed to flag.'); }
+      }).catch(function () { alert('Network error.'); });
+    });
+  }
+  if (fixedBtn && !fixedBtn._bound) {
+    fixedBtn._bound = true;
+    fixedBtn.addEventListener('click', function () {
+      fetch('/api/wiki/' + encodeURIComponent(pageId), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ fixedInOsm: true })
+      }).then(function (r) {
+        if (r.ok) { loadEntry(); } else { alert('Failed to update.'); }
+      }).catch(function () { alert('Network error.'); });
+    });
+  }
+  if (refreshBtn && !refreshBtn._bound) {
+    refreshBtn._bound = true;
+    refreshBtn.addEventListener('click', function () {
+      refreshBtn.disabled = true;
+      fetch('/api/wiki/' + encodeURIComponent(pageId) + '/refresh-from-parquet', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token }
+      }).then(function (r) {
+        return r.json().then(function (data) {
+          if (r.ok) { loadEntry(); } else { alert(data.message || data.error || 'Refresh failed.'); }
+        });
+      }).catch(function () { alert('Network error.'); }).then(function () { refreshBtn.disabled = false; });
+    });
+  }
+}
+
 function populatePage(page) {
   if (!page) {
     document.title = 'Not Found – Ski Atlas';
@@ -183,25 +246,93 @@ function populatePage(page) {
     return;
   }
 
+  window._ywikiLastPage = page;
   document.title = (page.title || YWIKI_PATH) + ' – Ski Atlas';
   setText('resort-location', [page.state, page.country].filter(Boolean).join(', '));
   setText('resort-title', page.title || YWIKI_PATH);
 
+  function slug(str) {
+    if (!str || typeof str !== 'string') return '';
+    return str.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').replace(/-+/g, '-').replace(/^-|-$/g, '') || '';
+  }
+  var bcEl = document.getElementById('resort-breadcrumb');
+  if (bcEl && (page.pageType === 'resort' || !page.pageType) && (page.state || page.country)) {
+    var bcParts = [];
+    if (page.state && page.country) {
+      var statePageId = 'state-' + slug(page.state) + '-' + slug(page.country);
+      bcParts.push('<a href="/wiki/resort.html?page=' + encodeURIComponent(statePageId) + '">' + esc(page.state) + '</a>');
+    }
+    if (page.country) {
+      var countryPageId = 'country-' + slug(page.country);
+      bcParts.push('<a href="/wiki/resort.html?page=' + encodeURIComponent(countryPageId) + '">' + esc(page.country) + '</a>');
+    }
+    if (bcParts.length) {
+      bcEl.innerHTML = bcParts.join(' · ');
+      bcEl.style.display = '';
+    } else {
+      bcEl.style.display = 'none';
+    }
+  } else if (bcEl) {
+    bcEl.style.display = 'none';
+  }
+
+  if (page.pageType === 'country' || page.pageType === 'state') {
+    setText('resort-subtitle', (page.book || '') + (page.pageType === 'state' && page.country ? ' · ' + page.country : ''));
+    var statsEl = document.getElementById('resort-stats');
+    if (statsEl) { statsEl.style.display = 'none'; }
+    var tbEl = document.getElementById('resort-trail-breakdown');
+    if (tbEl) { tbEl.style.display = 'none'; }
+    var metaEl = document.getElementById('resort-meta');
+    if (metaEl) { metaEl.style.display = 'none'; }
+    var osmNoteEl = document.getElementById('resort-osm-note');
+    if (osmNoteEl) { osmNoteEl.style.display = 'none'; }
+    var textarea = document.getElementById('sourceTA');
+    if (textarea) textarea.value = page.content || '';
+    renderFromMarkdown(page.content || '');
+    var charCountEl = document.getElementById('resort-char-count');
+    if (charCountEl) { charCountEl.style.display = 'none'; }
+    var aside = document.getElementById('resort-map-aside');
+    if (aside) { aside.style.display = 'none'; }
+    return;
+  }
+
+  var category = page.resortSizeCategory || page.categorization && page.categorization.size || 'unknown';
+  var maxRank = RESORT_FACT_MAX_RANK[category] != null ? RESORT_FACT_MAX_RANK[category] : 4;
+  var useRanks = page.visibleFactRanks && Array.isArray(page.visibleFactRanks) && page.visibleFactRanks.length
+    ? page.visibleFactRanks
+    : null;
+  function rankAllowed(r) {
+    if (useRanks) return useRanks.indexOf(r) !== -1;
+    if (r >= 12) return true;
+    return r <= maxRank;
+  }
+
   var subParts = [];
-  if (page.resortType) subParts.push(page.resortType);
-  if (page.totalLifts) subParts.push(page.totalLifts + ' lifts');
-  if (page.downhillTrails) subParts.push(page.downhillTrails + ' trails');
+  if (category === 'unknown') {
+    subParts.push('Not a downhill ski hill');
+  } else {
+    if (page.resortType && category !== 'unknown') subParts.push(page.resortType);
+    if (page.totalLifts) subParts.push(page.totalLifts + ' lifts');
+    if (page.downhillTrails) subParts.push(page.downhillTrails + ' trails');
+    if (category === 'mega_resort') subParts.push('Mega resort');
+  }
   setText('resort-subtitle', subParts.join(' · '));
 
   var stats = [];
-  if (page.totalAreaAcres) stats.push(['TOTAL AREA', page.totalAreaAcres + ' acres']);
-  else if (page.totalAreaHa) stats.push(['TOTAL AREA', page.totalAreaHa + ' ha']);
-  if (page.skiableTerrainAcres) stats.push(['SKIABLE TERRAIN', page.skiableTerrainAcres + ' acres']);
-  else if (page.skiableTerrainHa) stats.push(['SKIABLE TERRAIN', page.skiableTerrainHa + ' ha']);
-  if (page.totalLifts) stats.push(['LIFTS', page.totalLifts]);
-  if (page.longestLiftMi) stats.push(['LONGEST LIFT', page.longestLiftMi + ' mi']);
-  if (page.downhillTrails) stats.push(['TRAILS', page.downhillTrails]);
-  if (page.longestTrailMi) stats.push(['LONGEST TRAIL', page.longestTrailMi + ' mi']);
+  if (rankAllowed(2)) {
+    if (page.skiableTerrainAcres) stats.push(['SKIABLE TERRAIN', page.skiableTerrainAcres + ' acres']);
+    else if (page.skiableTerrainHa) stats.push(['SKIABLE TERRAIN', page.skiableTerrainHa + ' ha']);
+  }
+  if (rankAllowed(3) && page.downhillTrails) stats.push(['TRAILS', page.downhillTrails]);
+  if (rankAllowed(4) && page.totalLifts) stats.push(['LIFTS', page.totalLifts]);
+  if (rankAllowed(5) && page.longestTrailMi) stats.push(['LONGEST TRAIL', page.longestTrailMi + ' mi']);
+  if (rankAllowed(6) && page.longestLiftMi) stats.push(['LONGEST LIFT', page.longestLiftMi + ' mi']);
+  if (rankAllowed(7)) {
+    if (page.totalAreaAcres) stats.push(['TOTAL AREA', page.totalAreaAcres + ' acres']);
+    else if (page.totalAreaHa) stats.push(['TOTAL AREA', page.totalAreaHa + ' ha']);
+  }
+  if (rankAllowed(9) && page.highElevationM != null) stats.push(['ELEVATION (HIGH)', page.highElevationM + ' m']);
+  if (rankAllowed(10) && page.lowElevationM != null) stats.push(['ELEVATION (LOW)', page.lowElevationM + ' m']);
 
   var statsEl = document.getElementById('resort-stats');
   if (statsEl) {
@@ -209,6 +340,37 @@ function populatePage(page) {
       return '<div class="resort-stat"><span class="stat-label">' + esc(s[0]) + '</span> <span class="stat-value">' + esc(String(s[1])) + '</span></div>';
     }).join('');
     statsEl.style.display = stats.length ? '' : 'none';
+  }
+
+  var trailParts = [];
+  if (rankAllowed(8)) {
+    if (page.trailsNovice) trailParts.push('Novice ' + page.trailsNovice);
+    if (page.trailsEasy) trailParts.push('Easy ' + page.trailsEasy);
+    if (page.trailsIntermediate) trailParts.push('Intermediate ' + page.trailsIntermediate);
+    if (page.trailsAdvanced) trailParts.push('Advanced ' + page.trailsAdvanced);
+    if (page.trailsExpert) trailParts.push('Expert ' + page.trailsExpert);
+    if (page.trailsFreeride) trailParts.push('Freeride ' + page.trailsFreeride);
+    if (page.trailsExtreme) trailParts.push('Extreme ' + page.trailsExtreme);
+  }
+  var tbEl = document.getElementById('resort-trail-breakdown');
+  if (tbEl) {
+    if (trailParts.length) {
+      tbEl.innerHTML = '<span class="stat-label">Trail breakdown</span> ' + esc(trailParts.join(' · '));
+      tbEl.style.display = '';
+    } else {
+      tbEl.style.display = 'none';
+    }
+  }
+
+  var metaParts = [];
+  if (rankAllowed(11) && page.liftTypes) metaParts.push('Lift types: ' + page.liftTypes);
+  if (rankAllowed(12) && (page.gladedTerrain || page.gladedTerrain === 'yes' || page.gladedTerrain === 'no')) metaParts.push('Gladed: ' + (page.gladedTerrain === 'yes' ? 'Yes' : page.gladedTerrain === 'no' ? 'No' : page.gladedTerrain));
+  if (rankAllowed(13) && (page.snowPark || page.snowPark === 'yes' || page.snowPark === 'no')) metaParts.push('Snow park: ' + (page.snowPark === 'yes' ? 'Yes' : page.snowPark === 'no' ? 'No' : page.snowPark));
+  if (rankAllowed(14) && (page.sleddingTubing || page.sleddingTubing === 'yes' || page.sleddingTubing === 'no')) metaParts.push('Sledding/tubing: ' + (page.sleddingTubing === 'yes' ? 'Yes' : page.sleddingTubing === 'no' ? 'No' : page.sleddingTubing));
+  var metaEl = document.getElementById('resort-meta');
+  if (metaEl) {
+    metaEl.textContent = metaParts.join(' · ');
+    metaEl.style.display = metaParts.length ? '' : 'none';
   }
 
   var osmNoteEl = document.getElementById('resort-osm-note');
@@ -221,40 +383,52 @@ function populatePage(page) {
       var osmUrl = 'https://www.openstreetmap.org/' + osmType + '/' + encodeURIComponent(osmId);
       if (osmEditLink) osmEditLink.href = osmUrl;
     }
-    osmNoteEl.style.display = stats.length ? '' : 'none';
+    osmNoteEl.style.display = (stats.length || category === 'unknown') ? '' : 'none';
   }
-
-  var trailParts = [];
-  if (page.trailsNovice) trailParts.push('Novice ' + page.trailsNovice);
-  if (page.trailsEasy) trailParts.push('Easy ' + page.trailsEasy);
-  if (page.trailsIntermediate) trailParts.push('Intermediate ' + page.trailsIntermediate);
-  if (page.trailsAdvanced) trailParts.push('Advanced ' + page.trailsAdvanced);
-  if (page.trailsExpert) trailParts.push('Expert ' + page.trailsExpert);
-  if (page.trailsFreeride) trailParts.push('Freeride ' + page.trailsFreeride);
-  var tbEl = document.getElementById('resort-trail-breakdown');
-  if (tbEl) {
-    if (trailParts.length) {
-      tbEl.innerHTML = '<span class="stat-label">Trail breakdown</span> ' + esc(trailParts.join(' · '));
-      tbEl.style.display = '';
+  var osmActionsEl = document.getElementById('resort-osm-actions');
+  var flagCalloutEl = document.getElementById('resort-flag-callout');
+  if (osmActionsEl) osmActionsEl.style.display = (page.pageType !== 'country' && page.pageType !== 'state') ? '' : 'none';
+  if (flagCalloutEl) flagCalloutEl.style.display = page.dataFlaggedWrong ? '' : 'none';
+  var lockedNoteEl = document.getElementById('resort-locked-note');
+  if (lockedNoteEl) lockedNoteEl.style.display = page.locked ? '' : 'none';
+  var editSection = document.querySelector('.resort-edit');
+  if (editSection) {
+    var ta = document.getElementById('sourceTA');
+    var saveBtn = editSection.querySelector('button[onclick="saveEntry()"]');
+    if (page.locked) {
+      if (ta) ta.disabled = true;
+      if (saveBtn) saveBtn.disabled = true;
     } else {
-      tbEl.style.display = 'none';
+      if (ta) ta.disabled = false;
+      if (saveBtn) saveBtn.disabled = false;
     }
   }
-
-  var metaParts = [];
-  if (page.liftTypes) metaParts.push('Lift types: ' + page.liftTypes);
-  if (page.gladedTerrain) metaParts.push('Gladed terrain: ' + page.gladedTerrain);
-  if (page.snowPark) metaParts.push('Snow park: ' + page.snowPark);
-  if (page.sleddingTubing) metaParts.push('Sledding / tubing: ' + page.sleddingTubing);
-  var metaEl = document.getElementById('resort-meta');
-  if (metaEl) {
-    metaEl.textContent = metaParts.join(' · ');
-    metaEl.style.display = metaParts.length ? '' : 'none';
-  }
+  bindOsmActionButtons();
 
   var textarea = document.getElementById('sourceTA');
   if (textarea) textarea.value = page.content || '';
   renderFromMarkdown(page.content || '');
+
+  var textLimit = RESORT_TEXT_LIMIT[category] != null ? RESORT_TEXT_LIMIT[category] : 1500;
+  var charCountEl = document.getElementById('resort-char-count');
+  if (charCountEl) {
+    var len = (page.content || '').length;
+    charCountEl.textContent = len.toLocaleString() + ' / ' + textLimit.toLocaleString() + ' characters';
+    charCountEl.style.display = '';
+  }
+  if (textarea) {
+    function updateCharCount() {
+      var el = document.getElementById('resort-char-count');
+      if (el) {
+        var len = (textarea.value || '').length;
+        el.textContent = len.toLocaleString() + ' / ' + textLimit.toLocaleString() + ' characters';
+        if (len > textLimit) el.classList.add('resort-char-count-over');
+        else el.classList.remove('resort-char-count-over');
+      }
+    }
+    textarea.removeEventListener('input', updateCharCount);
+    textarea.addEventListener('input', updateCharCount);
+  }
 
   var lat = (page.centroidLat != null) ? Number(page.centroidLat) : null;
   var lon = (page.centroidLon != null) ? Number(page.centroidLon) : null;
@@ -280,6 +454,7 @@ async function loadEntry() {
     var resp = await fetch('/api/wiki/' + encodeURIComponent(YWIKI_PATH));
     if (!resp.ok) { populatePage(null); return; }
     var page = await resp.json();
+    window._ywikiLastPage = page;
     populatePage(page);
   } catch (e) {
     populatePage(null);
