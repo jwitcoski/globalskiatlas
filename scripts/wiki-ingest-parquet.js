@@ -95,7 +95,11 @@ function buildContent(row) {
 
 function rowToItem(row) {
   const name = str(row.name);
-  const pageId = str(row.winter_sports_id) ? slug(row.winter_sports_id) : slug(name);
+  const nameSlug = slug(name);
+  const stateSlug = str(row.state) ? slug(row.state) : '';
+  const countrySlug = str(row.country) ? slug(row.country) : '';
+  // Human-readable pageId: "abenaki-ski-area" or "abenaki-ski-area-maine" (state/country disambiguates)
+  const pageId = stateSlug ? nameSlug + '-' + stateSlug : (countrySlug ? nameSlug + '-' + countrySlug : nameSlug) || 'unknown';
   const now = new Date().toISOString();
   const skiableHa = num(row.skiable_terrain_ha);
   const categorization = {

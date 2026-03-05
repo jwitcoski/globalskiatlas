@@ -111,7 +111,10 @@
           <button type="button" class="resort-map-tab resort-map-tab--active" id="tab-live" onclick="switchMapTab('live')">Live Map</button>
           <button type="button" class="resort-map-tab" id="tab-static" onclick="switchMapTab('static')">Resort Map</button>
         </div>
-        <div id="resort-map-gl" class="resort-map-gl"></div>
+        <div class="resort-map-gl-wrap" style="position:relative">
+          <div id="resort-map-gl" class="resort-map-gl"></div>
+          <div id="resort-map-legend" class="resort-map-legend" style="display:none"></div>
+        </div>
         <div id="resort-map-static" class="resort-map-gl resort-map-static" style="display:none">
           <img id="resort-map-static-img" class="resort-map-static-img" src="" alt="Resort trail map" onerror="this.src='/wiki/assets/resort-map-placeholder.png'"/>
         </div>
@@ -152,6 +155,7 @@
   </section>
 
   <script src="https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.js" crossorigin=""></script>
+  <script type="module" src="/wiki/js/resort-map-layers.js"></script>
   <script src="/wiki/js/showdown.min.js"></script>
   <script src="/wiki/js/auth.js"></script>
   <script>

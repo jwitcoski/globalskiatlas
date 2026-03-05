@@ -7,18 +7,21 @@ function switchMapTab(tab) {
   var staticPanel = document.getElementById('resort-map-static');
   var tabLive = document.getElementById('tab-live');
   var tabStatic = document.getElementById('tab-static');
+  var legendEl = document.getElementById('resort-map-legend');
   if (!livePanel || !staticPanel) return;
   if (tab === 'live') {
     livePanel.style.display = '';
     staticPanel.style.display = 'none';
     if (tabLive) { tabLive.classList.add('resort-map-tab--active'); }
     if (tabStatic) { tabStatic.classList.remove('resort-map-tab--active'); }
+    if (legendEl) { legendEl.style.display = ''; }
     if (RESORT_MAP_INSTANCE) { RESORT_MAP_INSTANCE.resize(); }
   } else {
     livePanel.style.display = 'none';
     staticPanel.style.display = '';
     if (tabLive) { tabLive.classList.remove('resort-map-tab--active'); }
     if (tabStatic) { tabStatic.classList.add('resort-map-tab--active'); }
+    if (legendEl) { legendEl.style.display = 'none'; }
   }
 }
 
@@ -45,6 +48,7 @@ function initResortMap(lat, lon, pageId) {
   if (RESORT_MAP_INSTANCE) {
     RESORT_MAP_INSTANCE.remove();
     RESORT_MAP_INSTANCE = null;
+    window.RESORT_MAP_INSTANCE = null;
     container.innerHTML = '';
   }
   var m = new maplibregl.Map({
@@ -65,6 +69,7 @@ function initResortMap(lat, lon, pageId) {
     attributionControl: false,
   });
   RESORT_MAP_INSTANCE = m;
+  window.RESORT_MAP_INSTANCE = m;
   new maplibregl.Marker({ color: '#1a365d' }).setLngLat([lon, lat]).addTo(m);
 }
 
@@ -256,6 +261,14 @@ function populatePage(page) {
   var hasCoords = lat != null && !isNaN(lat) && lon != null && !isNaN(lon);
   if (hasCoords || page.pageId) {
     initResortMap(hasCoords ? lat : null, hasCoords ? lon : null, page.pageId || YWIKI_PATH);
+    if (hasCoords && window.enhanceResortMap) {
+      window.enhanceResortMap({
+        title: page.title || YWIKI_PATH,
+        lat: lat,
+        lon: lon,
+        pageId: page.pageId || YWIKI_PATH
+      });
+    }
   } else {
     var aside = document.getElementById('resort-map-aside');
     if (aside) aside.style.display = 'none';
