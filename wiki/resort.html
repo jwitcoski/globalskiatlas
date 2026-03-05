@@ -243,6 +243,7 @@
     document.addEventListener('DOMContentLoaded', function () {
       ywikiAuth.init(function () {
         ywikiAuth.renderWidget('resort-auth-widget');
+        bindEditDetailsSignIn();
         loadEntry();
         loadRevisions();
         loadComments();

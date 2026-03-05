@@ -854,6 +854,39 @@ function populatePage(page) {
   }
 }
 
+/** Require sign-in before opening edit/OSM details; show message if not logged in. */
+function bindEditDetailsSignIn() {
+  var editWrap = document.getElementById('resort-edit-wrap');
+  var osmWrap = document.getElementById('resort-osm-actions-wrap');
+  function getToken() {
+    return (window.ywikiAuth && typeof ywikiAuth.getToken === 'function') ? ywikiAuth.getToken() : null;
+  }
+  if (editWrap && !editWrap._signInBound) {
+    editWrap._signInBound = true;
+    var editSummary = editWrap.querySelector('summary');
+    if (editSummary) {
+      editSummary.addEventListener('click', function (e) {
+        if (!getToken()) {
+          e.preventDefault();
+          alert('Please sign in to edit.');
+        }
+      });
+    }
+  }
+  if (osmWrap && !osmWrap._signInBound) {
+    osmWrap._signInBound = true;
+    var osmSummary = osmWrap.querySelector('summary');
+    if (osmSummary) {
+      osmSummary.addEventListener('click', function (e) {
+        if (!getToken()) {
+          e.preventDefault();
+          alert('Please sign in to improve or correct this data.');
+        }
+      });
+    }
+  }
+}
+
 async function loadEntry() {
   try {
     var resp = await fetch('/api/wiki/' + encodeURIComponent(YWIKI_PATH));
