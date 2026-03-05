@@ -132,11 +132,14 @@
           Stats sourced from <a href="https://www.openstreetmap.org" target="_blank" rel="noopener" class="resort-osm-link">OpenStreetMap</a>.
           To correct this data, <a id="resort-osm-edit-link" href="https://www.openstreetmap.org" target="_blank" rel="noopener" class="resort-osm-link">edit it on OSM</a> — changes sync periodically.
         </p>
-        <div class="resort-osm-actions" id="resort-osm-actions" style="display:none">
-          <button type="button" class="resort-edit-btn resort-btn-flag" id="resort-flag-wrong-btn">Flag as wrong</button>
-          <button type="button" class="resort-edit-btn resort-btn-fixed" id="resort-fixed-osm-btn">I fixed this in OSM</button>
-          <button type="button" class="resort-edit-btn resort-btn-refresh" id="resort-refresh-data-btn">Refresh from data</button>
-        </div>
+        <details class="resort-edit-details resort-osm-actions-wrap" id="resort-osm-actions-wrap" style="display:none">
+          <summary class="resort-edit-details-summary">Improve or correct this data</summary>
+          <div class="resort-osm-actions" id="resort-osm-actions">
+            <button type="button" class="resort-edit-btn resort-btn-flag" id="resort-flag-wrong-btn">Flag as wrong</button>
+            <button type="button" class="resort-edit-btn resort-btn-fixed" id="resort-fixed-osm-btn">I fixed this in OSM</button>
+            <button type="button" class="resort-edit-btn resort-btn-refresh" id="resort-refresh-data-btn">Refresh from data</button>
+          </div>
+        </details>
         <div class="resort-data-callout resort-data-callout--flagged" id="resort-flag-callout" style="display:none">
           <strong>Someone flagged this data as wrong.</strong> Edit on OpenStreetMap to fix it, then use “I fixed this in OSM” below. After that, run “Refresh from data” to update this page.
         </div>
@@ -171,6 +174,8 @@
     </footer>
   </article>
 
+  <details class="resort-edit-details" id="resort-edit-wrap">
+    <summary class="resort-edit-details-summary">Edit this page</summary>
   <section class="resort-edit">
     <h2 class="resort-edit-title">Edit body (Markdown)</h2>
     <p class="resort-workflow-hint">Save <strong>proposes</strong> a change: the page does not update until another user accepts it. Add a required comment describing what you changed; it will appear in Comments. You can reject your own proposal if you change your mind. <strong>Character limit depends on resort size:</strong> Small hill 1,500 · Ski mountain 3,000 · Multiple mountains 5,500 · Mega resort 11,000.</p>
@@ -209,6 +214,7 @@
       <button type="button" class="resort-edit-btn" id="comment-submit-btn" onclick="postComment()">Post comment</button>
     </div>
   </section>
+  </details>
 
   <script src="https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.js" crossorigin=""></script>
   <script type="module" src="/wiki/js/resort-map-layers.js"></script>

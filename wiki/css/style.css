@@ -467,6 +467,25 @@ body {
   transform: scale(0.98);
 }
 
+.resort-edit-details {
+  margin-top: 2rem;
+  padding: 1rem 0;
+  border-top: 1px solid var(--resort-edit-border);
+}
+.resort-edit-details-summary {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--resort-title-color);
+  cursor: pointer;
+  list-style: none;
+}
+.resort-edit-details-summary::-webkit-details-marker { display: none; }
+.resort-osm-actions-wrap.resort-edit-details {
+  margin-top: 0.75rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0;
+}
+
 .resort-customize-facts {
   margin-top: 1.25rem;
   padding-top: 1rem;

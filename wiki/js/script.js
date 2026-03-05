@@ -742,9 +742,11 @@ function populatePage(page) {
     }
   }
   var osmActionsEl = document.getElementById('resort-osm-actions');
+  var osmActionsWrap = document.getElementById('resort-osm-actions-wrap');
   var flagCalloutEl = document.getElementById('resort-flag-callout');
   var refreshCalloutEl = document.getElementById('resort-refresh-callout');
-  if (osmActionsEl) osmActionsEl.style.display = (page.pageType !== 'country' && page.pageType !== 'state' && page.pageType !== 'continent') ? '' : 'none';
+  if (osmActionsWrap) osmActionsWrap.style.display = (page.pageType !== 'country' && page.pageType !== 'state' && page.pageType !== 'continent') ? '' : 'none';
+  if (osmActionsEl) osmActionsEl.style.display = '';
   if (flagCalloutEl) flagCalloutEl.style.display = page.dataFlaggedWrong ? '' : 'none';
   if (refreshCalloutEl) refreshCalloutEl.style.display = page.fixedInOsm ? '' : 'none';
   var lockedNoteEl = document.getElementById('resort-locked-note');
