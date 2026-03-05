@@ -77,8 +77,8 @@ function resortSizeCategory(row) {
 /** Returns Americas | Europe | Asia/Africa/Oceania | Other (plan section 3). */
 function countryToBook(c) {
   if (!c || typeof c !== 'string') return 'Other';
-  const s = c.toLowerCase().trim();
-  if (/^(united states|usa|u\.?s\.?a\.?|canada|mexico|guatemala|belize|honduras|el salvador|nicaragua|costa rica|panama)$/i.test(s)) return 'Americas';
+  const s = c.toLowerCase().trim().replace(/\s+/g, ' ');
+  if (/^(united states|usa|u\.?s\.?a\.?|us|canada|mexico|guatemala|belize|honduras|el salvador|nicaragua|costa rica|panama)$/i.test(s)) return 'Americas';
   if (/^(argentina|bolivia|brazil|chile|colombia|ecuador|peru|venezuela|uruguay|paraguay)$/i.test(s)) return 'Americas';
   if (/^(japan|china|south korea|north korea|taiwan|mongolia)$/i.test(s)) return 'Asia/Africa/Oceania';
   if (/^(australia|new zealand)$/i.test(s)) return 'Asia/Africa/Oceania';
@@ -134,6 +134,9 @@ function rowToItem(row) {
   const elevationLowKeys = ['elevation_low_m', 'low_elevation_m', 'base_elevation_m', 'elevation_base_m', 'lowElevationM'];
   const highElevationM = num(getProp(row, elevationHighKeys));
   const lowElevationM = num(getProp(row, elevationLowKeys));
+  const verticalDropM = (highElevationM != null && lowElevationM != null && highElevationM >= lowElevationM)
+    ? highElevationM - lowElevationM
+    : undefined;
   const item = {
     pageId,
     title: name || pageId,
@@ -171,6 +174,7 @@ function rowToItem(row) {
     resortType: str(row.resort_type),
     ...(highElevationM != null && { highElevationM }),
     ...(lowElevationM != null && { lowElevationM }),
+    ...(verticalDropM != null && verticalDropM >= 0 && { verticalDropM }),
     pageType: 'resort',
     createdAt: now,
     updatedAt: now,
@@ -179,7 +183,15 @@ function rowToItem(row) {
   return item;
 }
 
-function buildCountryItem(country) {
+function centroidFromResorts(resortItems) {
+  const withCoords = resortItems.filter((i) => i.centroidLat != null && i.centroidLon != null && !Number.isNaN(Number(i.centroidLat)) && !Number.isNaN(Number(i.centroidLon)));
+  if (withCoords.length === 0) return null;
+  const lat = withCoords.reduce((s, i) => s + Number(i.centroidLat), 0) / withCoords.length;
+  const lon = withCoords.reduce((s, i) => s + Number(i.centroidLon), 0) / withCoords.length;
+  return { lat, lon };
+}
+
+function buildCountryItem(country, opts = {}) {
   const now = new Date().toISOString();
   const pageId = 'country-' + slug(country);
   const book = countryToBook(country);
@@ -191,13 +203,16 @@ function buildCountryItem(country) {
     country,
     categorization: { country, book },
     book,
+    ...(opts.latitude != null && { latitude: opts.latitude }),
+    ...(opts.longitude != null && { longitude: opts.longitude }),
+    ...(opts.mapZoom != null && { mapZoom: opts.mapZoom }),
     createdAt: now,
     updatedAt: now,
     status: 'published',
   };
 }
 
-function buildStateItem(state, country) {
+function buildStateItem(state, country, opts = {}) {
   const now = new Date().toISOString();
   const pageId = 'state-' + slug(state) + '-' + slug(country);
   const book = countryToBook(country);
@@ -210,6 +225,30 @@ function buildStateItem(state, country) {
     country,
     categorization: { state, country, book },
     book,
+    ...(opts.latitude != null && { latitude: opts.latitude }),
+    ...(opts.longitude != null && { longitude: opts.longitude }),
+    ...(opts.mapZoom != null && { mapZoom: opts.mapZoom }),
+    createdAt: now,
+    updatedAt: now,
+    status: 'published',
+  };
+}
+
+/** Continent (book) page: Americas, Europe, Asia/Africa/Oceania */
+function buildContinentItem(bookName, opts = {}) {
+  const now = new Date().toISOString();
+  const slugBook = (bookName || '').replace(/\//g, '-').toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').replace(/-+/g, '-').replace(/^-|-$/g, '') || 'other';
+  const pageId = 'continent-' + slugBook;
+  return {
+    pageId,
+    title: bookName,
+    content: '*Add an overview of ski areas in ' + (bookName || 'this region') + '.*',
+    pageType: 'continent',
+    book: bookName,
+    categorization: { book: bookName },
+    ...(opts.latitude != null && { latitude: opts.latitude }),
+    ...(opts.longitude != null && { longitude: opts.longitude }),
+    ...(opts.mapZoom != null && { mapZoom: opts.mapZoom }),
     createdAt: now,
     updatedAt: now,
     status: 'published',
@@ -280,17 +319,33 @@ async function main() {
     const s = str(row.state);
     if (s && c) stateCountryPairs.add(s + '\n' + c);
   }
+  const resorts = allItems.filter((i) => i.pageType === 'resort');
   const regionItems = [];
-  for (const c of countries) regionItems.push(buildCountryItem(c));
+  for (const c of countries) {
+    const inCountry = resorts.filter((i) => i.country === c);
+    const cent = centroidFromResorts(inCountry);
+    const mapZoom = cent ? 5 : undefined;
+    regionItems.push(buildCountryItem(c, cent ? { latitude: cent.lat, longitude: cent.lon, mapZoom } : {}));
+  }
   for (const pair of stateCountryPairs) {
     const [s, c] = pair.split('\n');
-    regionItems.push(buildStateItem(s, c));
+    const inState = resorts.filter((i) => i.state === s && i.country === c);
+    const cent = centroidFromResorts(inState);
+    const mapZoom = cent ? 7 : undefined;
+    regionItems.push(buildStateItem(s, c, cent ? { latitude: cent.lat, longitude: cent.lon, mapZoom } : {}));
+  }
+  const continentBooks = ['Americas', 'Europe', 'Asia/Africa/Oceania'];
+  for (const b of continentBooks) {
+    const inBook = resorts.filter((i) => i.book === b);
+    const cent = centroidFromResorts(inBook);
+    const mapZoom = cent ? 3 : undefined;
+    regionItems.push(buildContinentItem(b, cent ? { latitude: cent.lat, longitude: cent.lon, mapZoom } : {}));
   }
   const seen = new Map();
   for (const item of allItems) seen.set(item.pageId, item);
   for (const item of regionItems) seen.set(item.pageId, item);
   const items = Array.from(seen.values());
-  console.log('Unique pages:', items.length, '(resorts +', regionItems.length, 'country/state)');
+  console.log('Unique pages:', items.length, '(resorts +', regionItems.length, 'country/state/continent)');
 
   const resortItems = items.filter((it) => it.pageType === 'resort');
   const firstN = 5;

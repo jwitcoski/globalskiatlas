@@ -101,6 +101,33 @@
         <p class="resort-trail-breakdown" id="resort-trail-breakdown" style="display:none"></p>
         <p class="resort-meta" id="resort-meta" style="display:none"></p>
         <p class="resort-locked-note" id="resort-locked-note" style="display:none">This page is locked. Only admins can edit.</p>
+        <div class="resort-data-callout resort-data-callout--hidden" id="resort-hidden-callout" style="display:none">
+          This page is <strong>hidden</strong> from the public and does not appear in browse or search. Only admins can see it.
+        </div>
+        <div class="resort-admin-hide-actions" id="resort-hide-actions" style="display:none">
+          <button type="button" class="resort-edit-btn resort-btn-hide" id="resort-hide-page-btn">Hide page</button>
+          <button type="button" class="resort-edit-btn resort-btn-unhide" id="resort-unhide-page-btn">Unhide page</button>
+        </div>
+        <div class="resort-admin-category-wrap" id="resort-admin-category-wrap" style="display:none">
+          <label for="resort-admin-category-select" class="resort-admin-category-label">Resort category (admin)</label>
+          <select id="resort-admin-category-select" class="resort-admin-category-select">
+            <option value="small_hill">Small hill</option>
+            <option value="ski_mountain">Ski mountain</option>
+            <option value="multiple_mountains">Multiple mountains</option>
+            <option value="mega_resort">Mega resort</option>
+            <option value="unknown">Not a downhill ski hill</option>
+          </select>
+          <button type="button" class="resort-edit-btn resort-edit-btn-secondary" id="resort-save-category-btn">Save category</button>
+        </div>
+        <div class="resort-data-callout resort-data-callout--finished" id="resort-finished-callout" style="display:none">
+          This resort is marked <strong>finished</strong>. The write-up is complete.
+        </div>
+        <div class="resort-admin-status-actions" id="resort-admin-status-actions" style="display:none">
+          <button type="button" class="resort-edit-btn resort-btn-finished" id="resort-mark-finished-btn">Mark as finished</button>
+          <button type="button" class="resort-edit-btn resort-edit-btn-secondary" id="resort-mark-unfinished-btn">Mark as unfinished</button>
+          <button type="button" class="resort-edit-btn resort-btn-lock" id="resort-lock-page-btn">Lock page</button>
+          <button type="button" class="resort-edit-btn resort-edit-btn-secondary" id="resort-unlock-page-btn">Unlock page</button>
+        </div>
         <p class="resort-osm-note" id="resort-osm-note" style="display:none">
           Stats sourced from <a href="https://www.openstreetmap.org" target="_blank" rel="noopener" class="resort-osm-link">OpenStreetMap</a>.
           To correct this data, <a id="resort-osm-edit-link" href="https://www.openstreetmap.org" target="_blank" rel="noopener" class="resort-osm-link">edit it on OSM</a> — changes sync periodically.
@@ -110,7 +137,17 @@
           <button type="button" class="resort-edit-btn resort-btn-fixed" id="resort-fixed-osm-btn">I fixed this in OSM</button>
           <button type="button" class="resort-edit-btn resort-btn-refresh" id="resort-refresh-data-btn">Refresh from data</button>
         </div>
-        <p class="resort-flag-callout" id="resort-flag-callout" style="display:none">This data has been flagged as incorrect. Edit on OpenStreetMap to fix, then mark as fixed below.</p>
+        <div class="resort-data-callout resort-data-callout--flagged" id="resort-flag-callout" style="display:none">
+          <strong>Someone flagged this data as wrong.</strong> Edit on OpenStreetMap to fix it, then use “I fixed this in OSM” below. After that, run “Refresh from data” to update this page.
+        </div>
+        <div class="resort-data-callout resort-data-callout--refresh" id="resort-refresh-callout" style="display:none">
+          <strong>This data was marked as fixed in OSM.</strong> Please run <strong>Refresh from data</strong> (button above) to pull the latest data and update this page.
+        </div>
+
+        <section class="resort-region-list" id="resort-region-list" style="display:none">
+          <h2 class="resort-section-title" id="resort-region-list-title"></h2>
+          <div id="resort-region-list-body" class="resort-list"></div>
+        </section>
 
         <div class="resort-body js-resort-body"></div>
       </div>
@@ -136,7 +173,7 @@
 
   <section class="resort-edit">
     <h2 class="resort-edit-title">Edit body (Markdown)</h2>
-    <p class="resort-workflow-hint">Save <strong>proposes</strong> a change: the page does not update until another user accepts it. Add a required comment describing what you changed; it will appear in Comments. You can reject your own proposal if you change your mind.</p>
+    <p class="resort-workflow-hint">Save <strong>proposes</strong> a change: the page does not update until another user accepts it. Add a required comment describing what you changed; it will appear in Comments. You can reject your own proposal if you change your mind. <strong>Character limit depends on resort size:</strong> Small hill 1,500 · Ski mountain 3,000 · Multiple mountains 5,500 · Mega resort 11,000.</p>
     <p id="resort-char-count" class="resort-char-count" style="display:none"></p>
     <textarea id="sourceTA" class="resort-edit-source" rows="8" placeholder="Write the resort description in Markdown. Use **bold**, *italic*, and line breaks. First letter will appear as a drop cap."></textarea>
     <div class="resort-edit-revision-comment">
@@ -145,6 +182,16 @@
     </div>
     <button type="button" class="resort-edit-btn" onclick="run()">Convert</button>
     <button type="button" class="resort-edit-btn" onclick="saveEntry()">Save</button>
+
+    <details class="resort-customize-facts" id="resort-customize-facts-wrap" style="display:none">
+      <summary class="resort-customize-facts-summary">Customize facts</summary>
+      <p class="resort-workflow-hint">Choose which facts to show for this resort. You can select any combination—even facts that are not in the default set for this resort size. Saving updates your selection immediately.</p>
+      <div id="resort-fact-checkboxes" class="resort-fact-checkboxes"></div>
+      <div class="resort-customize-facts-actions">
+        <button type="button" class="resort-edit-btn" id="resort-save-facts-btn" onclick="saveFactSelection()">Save fact selection</button>
+        <button type="button" class="resort-edit-btn resort-edit-btn-secondary" id="resort-reset-facts-btn" onclick="resetFactSelection()">Reset to category default</button>
+      </div>
+    </details>
   </section>
 
   <section class="resort-revisions" id="resort-revisions-section">

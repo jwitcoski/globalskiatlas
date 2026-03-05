@@ -132,7 +132,7 @@
     <select id="browse-country" class="browse-filter"><option value="">All countries</option></select>
     <select id="browse-state" class="browse-filter"><option value="">All states / provinces</option></select>
     <select id="browse-book" class="browse-filter"><option value="">All books</option><option value="Americas">Americas</option><option value="Europe">Europe</option><option value="Asia/Africa/Oceania">Asia/Africa/Oceania</option><option value="unknown">Not a downhill ski hill</option></select>
-    <select id="browse-type" class="browse-filter"><option value="">All resort types</option></select>
+    <select id="browse-type" class="browse-filter"><option value="">All resort types</option><option value="downhill">Downhill ski resort</option><option value="unknown">Not a downhill ski resort</option></select>
   </div>
 
   <div class="browse-count" id="browse-count"></div>
@@ -161,24 +161,26 @@
     var _allPages = [];
     var _statesByCountry = {};
 
-    function buildDropdowns(pages) {
-      var countries = {}, types = {};
+    function buildDropdowns(pages, bookFilter) {
+      var countries = {};
       pages.forEach(function (p) {
+        var pBook = p.book || '';
+        if (bookFilter && bookFilter !== 'unknown' && pBook !== bookFilter) return;
+        if (bookFilter === 'unknown' && (p.resortSizeCategory || (p.categorization && p.categorization.size)) !== 'unknown') return;
         if (p.country) {
           if (!countries[p.country]) countries[p.country] = {};
           if (p.state) countries[p.country][p.state] = true;
         }
-        if (p.resortType) types[p.resortType] = true;
       });
       _statesByCountry = countries;
       var cSel = document.getElementById('browse-country');
+      var curCountry = cSel.value;
+      cSel.innerHTML = '<option value="">All countries</option>';
       Object.keys(countries).sort().forEach(function (c) {
         var o = document.createElement('option'); o.value = c; o.textContent = c; cSel.appendChild(o);
       });
-      var tSel = document.getElementById('browse-type');
-      Object.keys(types).sort().forEach(function (t) {
-        var o = document.createElement('option'); o.value = t; o.textContent = t; tSel.appendChild(o);
-      });
+      if (curCountry && countries[curCountry]) cSel.value = curCountry;
+      else cSel.value = '';
     }
 
     function updateStateDropdown(country) {
@@ -201,7 +203,7 @@
     }
 
     function resortPageSlug(p) {
-      if (p.pageType === 'country' || p.pageType === 'state') return p.pageId;
+      if (p.pageType === 'country' || p.pageType === 'state' || p.pageType === 'continent') return p.pageId;
       var t = slug(p.title || '');
       var st = slug(p.state || '');
       var co = slug(p.country || '');
@@ -224,7 +226,9 @@
         if (book === 'unknown') {
           if ((p.resortSizeCategory || (p.categorization && p.categorization.size)) !== 'unknown') return false;
         } else if (book && p.book !== book) return false;
-        if (type && p.resortType !== type) return false;
+        var cat = p.resortSizeCategory || (p.categorization && p.categorization.size);
+        if (type === 'downhill' && cat === 'unknown') return false;
+        if (type === 'unknown' && cat !== 'unknown') return false;
         return true;
       });
 
@@ -263,7 +267,12 @@
       renderResults();
     });
     document.getElementById('browse-state').addEventListener('change', renderResults);
-    document.getElementById('browse-book').addEventListener('change', renderResults);
+    document.getElementById('browse-book').addEventListener('change', function () {
+      var book = this.value;
+      buildDropdowns(_allPages, book);
+      updateStateDropdown(document.getElementById('browse-country').value);
+      renderResults();
+    });
     document.getElementById('browse-type').addEventListener('change', renderResults);
 
     document.addEventListener('DOMContentLoaded', function () {
@@ -288,10 +297,10 @@
           var raw = data.pages || [];
           _allPages = raw.filter(function (p) {
             var pt = p.pageType || '';
-            return pt !== 'country' && pt !== 'state';
+            return pt !== 'country' && pt !== 'state' && pt !== 'continent';
           });
           document.getElementById('browse-subtitle').textContent = _allPages.length.toLocaleString() + ' resorts in the index';
-          buildDropdowns(_allPages);
+          buildDropdowns(_allPages, document.getElementById('browse-book').value);
           renderResults();
         })
         .catch(function (err) {

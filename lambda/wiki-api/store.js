@@ -57,7 +57,7 @@ async function updatePageContent(pageId, content, updatedAt, updatedBy, currentR
 
 async function updatePageFields(pageId, updates) {
   if (!pageId || !updates || typeof updates !== 'object') return;
-  const allowed = ['dataFlaggedWrong', 'fixedInOsm', 'fixedInOsmAt', 'visibleFactRanks', 'flaggedAt', 'flaggedBy', 'locked', 'lockedAt', 'lockedBy'];
+  const allowed = ['dataFlaggedWrong', 'fixedInOsm', 'fixedInOsmAt', 'visibleFactRanks', 'flaggedAt', 'flaggedBy', 'locked', 'lockedAt', 'lockedBy', 'hidden', 'hiddenAt', 'hiddenBy', 'resortSizeCategory', 'finished', 'finishedAt', 'finishedBy'];
   const setExpr = [];
   const names = {};
   const values = {};
@@ -192,15 +192,21 @@ async function listPages() {
   do {
     const params = {
       TableName: tables.pages(),
-      ProjectionExpression: 'pageId, title, country, #st, #rg, resortType, skiableTerrainAcres, totalLifts, downhillTrails, book, resortSizeCategory, pageType',
-      ExpressionAttributeNames: { '#st': 'state', '#rg': 'region' },
+      ProjectionExpression: 'pageId, title, country, #st, #rg, resortType, skiableTerrainAcres, totalLifts, downhillTrails, book, resortSizeCategory, pageType, #h',
+      ExpressionAttributeNames: { '#st': 'state', '#rg': 'region', '#h': 'hidden' },
+      FilterExpression: 'attribute_not_exists(#h) OR #h <> :true',
+      ExpressionAttributeValues: { ':true': true },
     };
     if (lastKey) params.ExclusiveStartKey = lastKey;
     const res = await docClient.send(new ScanCommand(params));
     items.push(...(res.Items || []));
     lastKey = res.LastEvaluatedKey;
   } while (lastKey);
-  return items.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+  return items
+    .filter((item) => item.hidden !== true)
+    .map(({ pageId, title, country, state, region, resortType, skiableTerrainAcres, totalLifts, downhillTrails, book, resortSizeCategory, pageType }) =>
+      ({ pageId, title, country, state, region, resortType, skiableTerrainAcres, totalLifts, downhillTrails, book, resortSizeCategory, pageType }))
+    .sort((a, b) => (a.title || '').localeCompare(b.title || ''));
 }
 
 module.exports = {

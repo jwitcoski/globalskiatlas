@@ -109,9 +109,56 @@ async function requireAdmin(req, res, next) {
   });
 }
 
+/** Optional auth: set req.cognitoPrincipal if valid token present; never 401. */
+async function optionalCognito(req, res, next) {
+  if (!isCognitoConfigured || !jwtValidator) return next();
+  const principal = await jwtValidator.validate(req.headers.authorization);
+  if (principal) req.cognitoPrincipal = principal;
+  next();
+}
+
 function userDisplayName(principal) {
   if (!principal) return null;
   return principal.username || principal.email || principal.sub || null;
+}
+
+// --- Rate limiting (per user per minute) -------------------------------------
+const RATE_LIMIT_WINDOW_MS = 60 * 1000;
+const RATE_LIMIT_MAX = {
+  save:   parseInt(process.env.WIKI_RATE_LIMIT_SAVE, 10) || 10,
+  flag:   parseInt(process.env.WIKI_RATE_LIMIT_FLAG, 10) || 5,
+  refresh: parseInt(process.env.WIKI_RATE_LIMIT_REFRESH, 10) || 3,
+};
+const rateLimitBuckets = new Map(); // key (userId:action) -> [timestamps]
+
+function pruneOldTimestamps(timestamps) {
+  const cutoff = Date.now() - RATE_LIMIT_WINDOW_MS;
+  while (timestamps.length && timestamps[0] < cutoff) timestamps.shift();
+}
+
+function rateLimitByUser(action, maxPerMinute, options = {}) {
+  const onlyWhen = options.onlyWhen || (() => true);
+  return (req, res, next) => {
+    if (!onlyWhen(req)) return next();
+    const userId = req.cognitoPrincipal ? req.cognitoPrincipal.sub : null;
+    if (!userId) return next();
+    const key = userId + ':' + action;
+    let timestamps = rateLimitBuckets.get(key);
+    if (!timestamps) {
+      timestamps = [];
+      rateLimitBuckets.set(key, timestamps);
+    }
+    pruneOldTimestamps(timestamps);
+    if (timestamps.length >= maxPerMinute) {
+      res.set('Retry-After', '60');
+      return res.status(429).json({
+        error: 'Too Many Requests',
+        message: 'Rate limit exceeded. Try again in a minute.',
+      });
+    }
+    timestamps.push(Date.now());
+    next();
+  };
 }
 
 // --- Wiki API handlers (used for both /wiki and /api/wiki) --------------------
@@ -129,6 +176,9 @@ async function handleWikiGetPage(req, res) {
   const pageId = req.params.pageId;
   try {
     const entry = await wikiStore.getPage(pageId);
+    if (entry && entry.hidden && !isAdmin(req.cognitoPrincipal)) {
+      return res.status(404).json(null);
+    }
     if (process.env.NODE_ENV !== 'production') {
       console.log('GET page "%s" -> %s', pageId, entry ? 'found' : 'null');
     }
@@ -257,6 +307,10 @@ app.get('/auth/config', (req, res) => {
 // Explicit route so GET /api/wiki/index always works (avoids router path quirks)
 app.get('/api/wiki/index', handleWikiIndex);
 
+app.get('/api/wiki/admin/me', requireCognito, (req, res) => {
+  res.json({ admin: isAdmin(req.cognitoPrincipal) });
+});
+
 // Drive-time isochrones proxy (Valhalla supports 1h, 2h, 4h; no API key)
 const VALHALLA_ISOCHRONE_URL = 'https://valhalla1.openstreetmap.de/isochrone';
 app.post('/api/isochrone', async (req, res) => {
@@ -281,7 +335,7 @@ const apiWikiRouter = require('express').Router({ mergeParams: true });
 apiWikiRouter.get('/index', handleWikiIndex);
 apiWikiRouter.get('/:pageId/revisions', handleWikiRevisions);
 apiWikiRouter.get('/:pageId/comments', handleWikiComments);
-apiWikiRouter.get('/:pageId', handleWikiGetPage);
+apiWikiRouter.get('/:pageId', optionalCognito, handleWikiGetPage);
 app.use('/api/wiki', apiWikiRouter);
 
 async function handleWikiPostComment(req, res) {
@@ -304,8 +358,8 @@ async function handleWikiPostComment(req, res) {
 app.post('/wiki/:pageId/comments', requireCognito, handleWikiPostComment);
 app.post('/api/wiki/:pageId/comments', requireCognito, handleWikiPostComment);
 
-app.post('/wiki', requireCognito, handleWikiPostPage);
-app.post('/api/wiki', requireCognito, handleWikiPostPage);
+app.post('/wiki', requireCognito, rateLimitByUser('save', RATE_LIMIT_MAX.save), handleWikiPostPage);
+app.post('/api/wiki', requireCognito, rateLimitByUser('save', RATE_LIMIT_MAX.save), handleWikiPostPage);
 
 app.post('/wiki/:pageId/revisions/:revisionId/accept', requireCognito, handleWikiAcceptRevision);
 app.post('/api/wiki/:pageId/revisions/:revisionId/accept', requireCognito, handleWikiAcceptRevision);
@@ -317,9 +371,13 @@ async function handleWikiPatchPage(req, res) {
   const pageId = req.params.pageId;
   const body = req.body || {};
   const allowed = ['dataFlaggedWrong', 'fixedInOsm', 'fixedInOsmAt', 'visibleFactRanks', 'flaggedAt', 'flaggedBy'];
+  const adminOnlyFields = ['hidden', 'hiddenAt', 'hiddenBy', 'resortSizeCategory', 'finished', 'finishedAt', 'finishedBy'];
   const updates = {};
   for (const k of allowed) {
     if (body[k] !== undefined) updates[k] = body[k];
+  }
+  for (const k of adminOnlyFields) {
+    if (body[k] !== undefined && isAdmin(req.cognitoPrincipal)) updates[k] = body[k];
   }
   if (Object.keys(updates).length === 0) {
     return res.status(400).json({ error: 'Bad Request', message: 'No allowed fields to update' });
@@ -331,6 +389,22 @@ async function handleWikiPatchPage(req, res) {
     updates.flaggedAt = new Date().toISOString();
     if (req.cognitoPrincipal) updates.flaggedBy = req.cognitoPrincipal.sub;
   }
+  if (updates.hidden === true) {
+    updates.hiddenAt = updates.hiddenAt || new Date().toISOString();
+    if (req.cognitoPrincipal) updates.hiddenBy = req.cognitoPrincipal.sub;
+  }
+  if (updates.hidden === false) {
+    updates.hiddenAt = null;
+    updates.hiddenBy = null;
+  }
+  if (updates.finished === true) {
+    updates.finishedAt = updates.finishedAt || new Date().toISOString();
+    if (req.cognitoPrincipal) updates.finishedBy = req.cognitoPrincipal.sub;
+  }
+  if (updates.finished === false) {
+    updates.finishedAt = null;
+    updates.finishedBy = null;
+  }
   try {
     await wikiStore.updatePageFields(pageId, updates);
     const page = await wikiStore.getPage(pageId);
@@ -341,8 +415,8 @@ async function handleWikiPatchPage(req, res) {
   }
 }
 
-app.patch('/wiki/:pageId', requireCognito, handleWikiPatchPage);
-app.patch('/api/wiki/:pageId', requireCognito, handleWikiPatchPage);
+app.patch('/wiki/:pageId', requireCognito, rateLimitByUser('flag', RATE_LIMIT_MAX.flag, { onlyWhen: (req) => req.body && req.body.dataFlaggedWrong === true }), handleWikiPatchPage);
+app.patch('/api/wiki/:pageId', requireCognito, rateLimitByUser('flag', RATE_LIMIT_MAX.flag, { onlyWhen: (req) => req.body && req.body.dataFlaggedWrong === true }), handleWikiPatchPage);
 
 async function handleWikiRefreshFromParquet(req, res) {
   const pageId = req.params.pageId;
@@ -359,8 +433,8 @@ async function handleWikiRefreshFromParquet(req, res) {
   }
 }
 
-app.post('/wiki/:pageId/refresh-from-parquet', requireCognito, handleWikiRefreshFromParquet);
-app.post('/api/wiki/:pageId/refresh-from-parquet', requireCognito, handleWikiRefreshFromParquet);
+app.post('/wiki/:pageId/refresh-from-parquet', requireCognito, rateLimitByUser('refresh', RATE_LIMIT_MAX.refresh), handleWikiRefreshFromParquet);
+app.post('/api/wiki/:pageId/refresh-from-parquet', requireCognito, rateLimitByUser('refresh', RATE_LIMIT_MAX.refresh), handleWikiRefreshFromParquet);
 
 async function handleWikiLockPage(req, res) {
   const pageId = req.params.pageId;
@@ -406,12 +480,15 @@ app.get('/wiki', (req, res) => res.redirect(302, '/wiki/browse.html'));
 app.get('/wiki/browser.html', (req, res) => res.redirect(302, '/wiki/browse.html'));
 
 // Catch-all: GET /wiki/:pageId → return page JSON from DynamoDB/memory
-app.get('/wiki*', async (req, res) => {
+app.get('/wiki*', optionalCognito, async (req, res) => {
   const wikiPath = req.path.slice(5) || '';
   const key = wikiPath.replace(/^\/+/, '');
   if (!key) return res.redirect(302, '/wiki/browse.html');
   try {
     const entry = await wikiStore.getPage(key);
+    if (entry && entry.hidden && !isAdmin(req.cognitoPrincipal)) {
+      return res.status(404).json(null);
+    }
     res.json(entry || null);
   } catch (err) {
     console.error('GET /wiki', err);
