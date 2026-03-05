@@ -353,11 +353,11 @@ async function enhanceResortMap(params) {
       legendEl.style.display = 'block';
       legendEl.innerHTML =
         '<h3>Map Key</h3>' +
-        '<div class="resort-legend-row"><span class="resort-legend-line" style="background:#22c55e"></span> Easy</div>' +
-        '<div class="resort-legend-row"><span class="resort-legend-line" style="background:#2563eb"></span> Intermediate</div>' +
-        '<div class="resort-legend-row"><span class="resort-legend-line" style="background:#1a1a1a"></span> Advanced</div>' +
-        '<div class="resort-legend-row"><span class="resort-legend-line" style="background:#991b1b"></span> Expert</div>' +
-        '<div class="resort-legend-row" style="margin-top:4px"><span class="resort-legend-swatch" style="background:#dc2626"></span> Lift</div>';
+        '<div class="resort-legend-row"><span class="resort-legend-line resort-legend-line--easy"></span> Easy</div>' +
+        '<div class="resort-legend-row"><span class="resort-legend-line resort-legend-line--intermediate"></span> Intermediate</div>' +
+        '<div class="resort-legend-row"><span class="resort-legend-line resort-legend-line--advanced"></span> Advanced</div>' +
+        '<div class="resort-legend-row"><span class="resort-legend-line resort-legend-line--expert"></span> Expert</div>' +
+        '<div class="resort-legend-row resort-legend-row-lift"><span class="resort-legend-swatch resort-legend-swatch--lift"></span> Lift</div>';
     }
   } catch (err) {
     console.warn('[resort-map-layers] enhance failed', err);
