@@ -11,7 +11,11 @@ import {
   getProp, escapeHtml,
   RESORT_TYPE_KEYS, NOT_DOWNHILL,
   SIZE_BY_KEYS, COLOR_BY_KEYS,
-  NAME_KEYS, ID_KEYS, COUNTRY_KEYS, LIFTS_KEYS
+  NAME_KEYS, ID_KEYS, COUNTRY_KEYS, STATE_KEYS, LIFTS_KEYS,
+  slug,
+  SKIABLE_TERRAIN_ACRES_KEYS,
+  SKIABLE_TERRAIN_HA_KEYS,
+  formatSkiableTerrain
 } from './utils.js';
 
 const {
@@ -88,23 +92,27 @@ function buildPopupHtml(properties, latlng, options = {}) {
   const trails      = getProp(properties, COLOR_BY_KEYS);
   const lifts       = getProp(properties, LIFTS_KEYS);
   const country     = getProp(properties, COUNTRY_KEYS);
+  const state       = getProp(properties, STATE_KEYS);
   const trailsNum   = trails != null && trails !== '' ? Number(trails) : null;
   const liftsNum    = lifts  != null && lifts  !== '' ? Number(lifts)  : null;
   const trailsStr   = trailsNum != null && !Number.isNaN(trailsNum) ? trailsNum.toLocaleString() + ' slopes' : null;
   const liftsStr    = liftsNum  != null && !Number.isNaN(liftsNum)  ? liftsNum.toLocaleString()  + ' lifts'  : null;
   let countryStr    = country != null && String(country).trim() !== '' ? String(country).trim() : null;
   if (countryStr && /^united states/i.test(countryStr)) countryStr = 'USA';
-  const factsHtml = [trailsStr, liftsStr, countryStr].filter(Boolean).length
-    ? `<p style="margin:4px 0 8px 0;font-size:13px;color:#6b7280">${[trailsStr, liftsStr, countryStr].filter(Boolean).map(escapeHtml).join(' \u2022 ')}</p>`
+  const terrainStr  = formatSkiableTerrain(getProp(properties, SKIABLE_TERRAIN_ACRES_KEYS), getProp(properties, SKIABLE_TERRAIN_HA_KEYS));
+  const terrainFact = terrainStr ? 'Skiable Terrain ' + terrainStr : null;
+  const factsHtml = [trailsStr, liftsStr, terrainFact, countryStr].filter(Boolean).length
+    ? `<p style="margin:4px 0 8px 0;font-size:13px;color:#6b7280">${[trailsStr, liftsStr, terrainFact, countryStr].filter(Boolean).map(escapeHtml).join(' \u2022 ')}</p>`
     : '';
   const lat = latlng?.lat ?? null;
   const lon = latlng?.lng ?? null;
-  const params = new URLSearchParams();
-  if (id   != null && id   !== '') params.set('id',   String(id));
-  if (name != null && name !== '') params.set('name', String(name));
-  if (lat  != null && !Number.isNaN(lat)) params.set('lat', String(lat));
-  if (lon  != null && !Number.isNaN(lon)) params.set('lon', String(lon));
-  const popupUrl  = new URL('popup.html', location.href).href + (params.toString() ? '?' + params.toString() : '');
+  const nameSlug   = slug(name);
+  const stateSlug  = state != null && String(state).trim() !== '' ? slug(String(state).trim()) : '';
+  const countrySlug = country != null && String(country).trim() !== '' ? slug(String(country).trim()) : '';
+  const pageParam  = nameSlug ? (stateSlug ? nameSlug + '-' + stateSlug : countrySlug ? nameSlug + '-' + countrySlug : nameSlug) : '';
+  const popupUrl   = pageParam
+    ? new URL('wiki/resort.html', location.href).href + '?page=' + encodeURIComponent(pageParam)
+    : new URL('wiki/browse.html', location.href).href;
   const stored    = JSON.stringify({ name: name || null, id: id != null ? String(id) : null, lat, lon });
   const storedAttr = stored.replace(/"/g, '&quot;');
   let extraButtons = '';
@@ -204,6 +212,8 @@ export async function initSkiResortMap(options = {}) {
     const trails  = getProp(properties, COLOR_BY_KEYS);
     const trailsNum = trails != null && trails !== '' ? Number(trails) : 0;
     const countryDisp = country ? (String(country).match(/^united states/i) ? 'USA' : String(country).trim()) : '';
+    const terrainStr = formatSkiableTerrain(getProp(properties, SKIABLE_TERRAIN_ACRES_KEYS), getProp(properties, SKIABLE_TERRAIN_HA_KEYS));
+    const terrainDisp = terrainStr ? 'Skiable Terrain ' + terrainStr : null;
 
     // Circle layer feature (medium + small only; large always use icon markers)
     if (tier !== 'large') {
@@ -215,7 +225,8 @@ export async function initSkiResortMap(options = {}) {
           _color:   color,
           _name:    name ? String(name).trim() : '',
           _country: countryDisp,
-          _trails:  Number.isNaN(trailsNum) ? 0 : trailsNum
+          _trails:  Number.isNaN(trailsNum) ? 0 : trailsNum,
+          _terrain: terrainDisp || ''
         }
       });
     }
@@ -321,7 +332,7 @@ export async function initSkiResortMap(options = {}) {
     map.on('mousemove',  id, (e) => {
       if (!e.features.length) return;
       const p = e.features[0].properties;
-      const facts = [p._trails > 0 ? `${p._trails} slopes` : null, p._country || null].filter(Boolean).join(' · ');
+      const facts = [p._trails > 0 ? `${p._trails} slopes` : null, p._terrain || null, p._country || null].filter(Boolean).join(' · ');
       showVtTip(e.point,
         `<div class="tt-name">${escapeHtml(p._name || 'Resort')}</div>` +
         (facts ? `<div class="tt-hint">${escapeHtml(facts)}</div>` : '') +

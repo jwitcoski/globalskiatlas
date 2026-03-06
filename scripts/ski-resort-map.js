@@ -13,7 +13,12 @@ import {
   NAME_KEYS,
   ID_KEYS,
   COUNTRY_KEYS,
-  LIFTS_KEYS
+  STATE_KEYS,
+  LIFTS_KEYS,
+  slug,
+  SKIABLE_TERRAIN_ACRES_KEYS,
+  SKIABLE_TERRAIN_HA_KEYS,
+  formatSkiableTerrain
 } from './utils.js';
 
 const {
@@ -110,17 +115,20 @@ function buildPopupHtml(properties, latlng, options = {}) {
   const liftsStr = liftsNum != null && !Number.isNaN(liftsNum) ? liftsNum.toLocaleString() + ' lifts' : null;
   let countryStr = country != null && String(country).trim() !== '' ? String(country).trim() : null;
   if (countryStr && /^united states/i.test(countryStr)) countryStr = 'USA';
-  const facts = [trailsStr, liftsStr, countryStr].filter(Boolean);
+  const terrainStr = formatSkiableTerrain(getProp(properties, SKIABLE_TERRAIN_ACRES_KEYS), getProp(properties, SKIABLE_TERRAIN_HA_KEYS));
+  const terrainFact = terrainStr ? 'Skiable Terrain ' + terrainStr : null;
+  const facts = [trailsStr, liftsStr, terrainFact, countryStr].filter(Boolean);
   const factsHtml = facts.length > 0 ? '<p style="margin:4px 0 8px 0;font-size:13px;color:#6b7280">' + facts.map(escapeHtml).join(' \u2022 ') + '</p>' : '';
   const lat = latlng && latlng.lat != null ? latlng.lat : null;
   const lon = latlng && latlng.lng != null ? latlng.lng : null;
-  const params = new URLSearchParams();
-  if (id != null && id !== '') params.set('id', String(id));
-  if (name != null && name !== '') params.set('name', String(name));
-  if (lat != null && !Number.isNaN(lat)) params.set('lat', String(lat));
-  if (lon != null && !Number.isNaN(lon)) params.set('lon', String(lon));
-  const qs = params.toString();
-  const popupUrl = new URL('popup.html', location.href).href + (qs ? '?' + qs : '');
+  const state = getProp(properties, STATE_KEYS);
+  const nameSlug = slug(name);
+  const stateSlug = state != null && String(state).trim() !== '' ? slug(String(state).trim()) : '';
+  const countrySlug = country != null && String(country).trim() !== '' ? slug(String(country).trim()) : '';
+  const pageParam = nameSlug ? (stateSlug ? nameSlug + '-' + stateSlug : countrySlug ? nameSlug + '-' + countrySlug : nameSlug) : '';
+  const popupUrl = pageParam
+    ? new URL('wiki/resort.html', location.href).href + '?page=' + encodeURIComponent(pageParam)
+    : new URL('wiki/browse.html', location.href).href;
   const stored = JSON.stringify({ name: name || null, id: id != null ? String(id) : null, lat, lon });
   const storedAttr = stored.replace(/"/g, '&quot;');
   let extraButtons = '';
@@ -141,8 +149,11 @@ function buildTooltipHtml(feature, hint) {
   const trails = getProp(feature.properties, COLOR_BY_KEYS);
   const country = getProp(feature.properties, COUNTRY_KEYS);
   const n = trails != null && trails !== '' ? Number(trails) : null;
+  const terrainStr = formatSkiableTerrain(getProp(feature.properties, SKIABLE_TERRAIN_ACRES_KEYS), getProp(feature.properties, SKIABLE_TERRAIN_HA_KEYS));
+  const terrainFact = terrainStr ? 'Skiable Terrain ' + terrainStr : null;
   const facts = [
     (!Number.isNaN(n) && n > 0) ? n + ' slopes' : null,
+    terrainFact,
     country ? (String(country).match(/^united states/i) ? 'USA' : String(country)) : null
   ].filter(Boolean).join(' · ');
   return '<div class="tt-name">' + escapeHtml(String(name || 'Resort').trim()) + '</div>' +
