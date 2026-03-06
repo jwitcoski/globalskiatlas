@@ -20,6 +20,14 @@ jobs:
       - run: npm ci
       - run: npm run build:tailwind
 
+      - name: Generate auth/config for Cognito (production)
+        env:
+          COGNITO_USER_POOL_ID: ${{ secrets.COGNITO_USER_POOL_ID }}
+          COGNITO_CLIENT_ID: ${{ secrets.COGNITO_CLIENT_ID }}
+          COGNITO_REGION: ${{ secrets.COGNITO_REGION }}
+          COGNITO_DOMAIN: ${{ secrets.COGNITO_DOMAIN }}
+        run: node scripts/generate-auth-config.js
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:

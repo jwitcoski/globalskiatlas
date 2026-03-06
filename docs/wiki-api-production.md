@@ -108,4 +108,26 @@ The Express server serves the same routes under `/api/wiki/*`, so no config chan
 
 ## Auth config (production static site)
 
-The wiki auth widget requests `/auth/config`. Locally the Express server serves it from env; in production (S3) a static file is used. The repo includes `auth/config` with `{"configured":false,...}` so the live site returns 200 instead of 403. The widget then shows “Sign in (Cognito not configured).” To enable sign-in on the live site, replace the contents of `auth/config` with your Cognito values (e.g. from a build step that injects secrets) and redeploy.
+The wiki auth widget requests `/auth/config`. Locally the Express server serves it from env; in production (S3) a static file is used.
+
+### Enable Sign-in on https://globalskiatlas.com
+
+1. **Cognito User Pool (AWS Console)**  
+   - Open **Cognito** → **User pools** → your pool (e.g. `us-east-1_Ggqkiudld`).  
+   - **App integration** → **Domain name**: create or note the Cognito domain (e.g. prefix `globalskiatlas` → `https://globalskiatlas.auth.us-east-1.amazoncognito.com`).  
+   - **App integration** → **App client** (your client ID):  
+     - **Allowed callback URLs**: add `https://globalskiatlas.com/wiki/callback.html`  
+     - **Allowed sign-out URLs**: add `https://globalskiatlas.com/wiki/resort.html`  
+   - Save changes.
+
+2. **GitHub Secrets**  
+   In the repo: **Settings** → **Secrets and variables** → **Actions** → add:
+   - `COGNITO_USER_POOL_ID` — e.g. `us-east-1_Ggqkiudld`
+   - `COGNITO_CLIENT_ID` — your app client ID
+   - `COGNITO_REGION` — e.g. `us-east-1`
+   - `COGNITO_DOMAIN` — either the full URL or just the domain prefix (e.g. `globalskiatlas`)
+
+3. **Deploy**  
+   Push to `main` or re-run the Deploy to S3 workflow. The workflow runs `scripts/generate-auth-config.js` with these secrets and uploads the generated `auth/config` to S3. After deploy, the wiki will show **Sign in** instead of the "Cognito not configured" message.
+
+**Local / manual:** Set the same env vars (e.g. in `.env`) and run `node scripts/generate-auth-config.js`, then run or deploy the site as usual.

@@ -40,7 +40,7 @@ const cognito = {
   domain:     process.env.COGNITO_DOMAIN || '',
 };
 const domainUrl = cognito.domain
-  ? (cognito.domain.includes('://') ? cognito.domain : `https://${cognito.domain}.auth.${cognito.region}.amazonaws.com`)
+  ? (cognito.domain.includes('://') ? cognito.domain : `https://${cognito.domain}.auth.${cognito.region}.amazoncognito.com`)
   : '';
 const isCognitoConfigured = !!(cognito.userPoolId && cognito.clientId);
 
