@@ -61,6 +61,26 @@ function switchMapTab(tab) {
   }
 }
 
+function toggleMapExpanded() {
+  var layout = document.querySelector('.resort-layout');
+  var btn = document.getElementById('resort-map-expand-btn');
+  var label = btn ? btn.querySelector('.resort-map-expand-label') : null;
+  var icon = btn ? btn.querySelector('.bi') : null;
+  if (!layout || !btn) return;
+  var expanded = layout.classList.toggle('resort-map-expanded');
+  if (label) {
+    label.textContent = expanded ? 'Collapse map' : 'Expand map';
+  }
+  btn.setAttribute('aria-label', expanded ? 'Collapse map to side-by-side layout' : 'Expand map to full width');
+  if (icon) {
+    icon.classList.remove('bi-arrows-fullscreen', 'bi-fullscreen-exit');
+    icon.classList.add(expanded ? 'bi-fullscreen-exit' : 'bi-arrows-fullscreen');
+  }
+  if (RESORT_MAP_INSTANCE && expanded) {
+    setTimeout(function () { RESORT_MAP_INSTANCE.resize(); }, 100);
+  }
+}
+
 function initResortMap(lat, lon, pageId, zoom) {
   var aside = document.getElementById('resort-map-aside');
   var container = document.getElementById('resort-map-gl');

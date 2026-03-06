@@ -155,9 +155,15 @@
         <div class="resort-body js-resort-body"></div>
       </div>
       <aside class="resort-map" id="resort-map-aside" style="display:none">
-        <div class="resort-map-toggle" id="resort-map-toggle">
-          <button type="button" class="resort-map-tab resort-map-tab--active" id="tab-live" onclick="switchMapTab('live')">Live Map</button>
-          <button type="button" class="resort-map-tab" id="tab-static" onclick="switchMapTab('static')">Resort Map</button>
+        <div class="resort-map-header-row">
+          <div class="resort-map-toggle" id="resort-map-toggle">
+            <button type="button" class="resort-map-tab resort-map-tab--active" id="tab-live" onclick="switchMapTab('live')">Live Map</button>
+            <button type="button" class="resort-map-tab" id="tab-static" onclick="switchMapTab('static')">Resort Map</button>
+          </div>
+          <button type="button" class="resort-map-expand-btn" id="resort-map-expand-btn" onclick="toggleMapExpanded()" aria-label="Expand map to full width">
+            <i class="bi bi-arrows-fullscreen" aria-hidden="true"></i>
+            <span class="resort-map-expand-label">Expand map</span>
+          </button>
         </div>
         <div class="resort-map-gl-wrap" style="position:relative">
           <div id="resort-map-gl" class="resort-map-gl"></div>

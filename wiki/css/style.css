@@ -107,9 +107,52 @@ body {
   align-items: start;
   margin: 1rem 0;
 }
+.resort-layout.resort-map-expanded {
+  grid-template-columns: 1fr;
+  grid-template-rows: auto 1fr;
+}
+.resort-layout.resort-map-expanded .resort-content {
+  order: 2;
+}
+.resort-layout.resort-map-expanded .resort-map {
+  order: 1;
+  position: static;
+  width: 100%;
+}
+.resort-layout.resort-map-expanded .resort-map-gl-wrap,
+.resort-layout.resort-map-expanded .resort-map-static {
+  min-height: 70vh;
+}
+.resort-layout.resort-map-expanded .resort-map-static {
+  height: 70vh;
+  min-height: 400px;
+  align-items: stretch;
+}
+.resort-layout.resort-map-expanded .resort-map-static .resort-map-static-img {
+  flex: 1;
+  min-height: 0;
+}
+.resort-layout.resort-map-expanded .resort-map-gl {
+  height: 70vh;
+  min-height: 400px;
+}
+.resort-layout.resort-map-expanded .resort-map-static-img {
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  object-fit: contain;
+}
 @media (max-width: 720px) {
   .resort-layout {
     grid-template-columns: 1fr;
+  }
+  .resort-layout.resort-map-expanded .resort-map-gl {
+    height: 60vh;
+    min-height: 320px;
+  }
+  .resort-layout.resort-map-expanded .resort-map-static {
+    height: 60vh;
+    min-height: 320px;
   }
 }
 
@@ -135,14 +178,46 @@ body {
   margin-top: 0.35rem;
 }
 
+.resort-map-header-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
 .resort-map-toggle {
   display: flex;
   gap: 0;
-  margin-bottom: 0.5rem;
   border-radius: 6px;
   overflow: hidden;
   border: 1px solid var(--resort-edit-border);
   width: fit-content;
+}
+.resort-map-expand-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--resort-footer-color);
+  background: #f8fafc;
+  border: 1px solid var(--resort-edit-border);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.resort-map-expand-btn:hover {
+  background: #e8f0f7;
+  color: var(--resort-title-color);
+}
+.resort-map-expand-btn .bi {
+  font-size: 1rem;
+}
+.resort-layout.resort-map-expanded .resort-map-expand-btn {
+  background: #e8f0f7;
+  color: var(--resort-title-color);
 }
 
 .resort-map-tab {
