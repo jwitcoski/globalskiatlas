@@ -3,8 +3,46 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ski Area Tier Ranking – Global Ski Atlas</title>
-  <meta name="description" content="Rank ski resorts into tiers (S, A, B, C, D, E, F). Compare trail maps and auto-tier by size, runs, lifts, or difficulty." />
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-KJGNL3KJL0"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){ dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'G-KJGNL3KJL0');
+  </script>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4372859798489282" crossorigin="anonymous"></script>
+  <title>Ski Area Tier Ranking – Rank Resorts S to F | Global Ski Atlas</title>
+  <meta name="description" content="Create your own ski resort tier ranking. Rank 3,000+ ski areas into tiers S–F, compare trail map thumbnails, auto-tier by size or number of runs and lifts. Free tool from Global Ski Atlas." />
+  <meta name="keywords" content="ski resort ranking, tier ranking, ski area comparison, rank ski resorts, best ski resorts, ski resort tiers, trail map comparison, ski resort list" />
+  <!-- Open Graph -->
+  <meta property="og:title" content="Ski Area Tier Ranking – Rank Resorts S to F | Global Ski Atlas" />
+  <meta property="og:description" content="Create your own ski resort tier ranking. Rank 3,000+ ski areas into tiers S–F, compare trail maps, auto-tier by size or runs and lifts. Free tool." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://globalskiatlas.com/resort-tier-rank.html" />
+  <meta property="og:image" content="https://globalskiatlas.com/assets/og-banner.png" />
+  <meta property="og:site_name" content="Global Ski Atlas" />
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Ski Area Tier Ranking – Rank Resorts S to F | Global Ski Atlas" />
+  <meta name="twitter:description" content="Create your own ski resort tier ranking. Rank 3,000+ ski areas into tiers S–F, compare trail maps, auto-tier by size or runs and lifts." />
+  <meta name="twitter:image" content="https://globalskiatlas.com/assets/og-banner.png" />
+  <!-- Canonical -->
+  <link rel="canonical" href="https://globalskiatlas.com/resort-tier-rank.html" />
+  <!-- JSON-LD -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Ski Area Tier Ranking",
+    "description": "Rank ski resorts into tiers S–F. Compare trail map thumbnails and auto-tier by size, number of runs, lifts, or difficulty. Part of Global Ski Atlas.",
+    "url": "https://globalskiatlas.com/resort-tier-rank.html",
+    "applicationCategory": "TravelApplication",
+    "operatingSystem": "Any",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "publisher": { "@type": "Organization", "name": "Global Ski Atlas", "url": "https://globalskiatlas.com" }
+  }
+  </script>
   <link rel="shortcut icon" href="./assets/logo.png?v=2" type="image/x-icon" />
   <link rel="stylesheet" href="./css/tailwind-build.css" />
   <link rel="stylesheet" href="css/index.css" />
@@ -111,7 +149,7 @@
     }
     .resort-item:hover { background: #f3f4f6; }
     .resort-item.placed { opacity: 0.5; pointer-events: none; }
-    .resort-item label { cursor: pointer; font-size: 14px; color: #374151; margin-left: 8px; }
+    .resort-item .resort-item-name { cursor: pointer; font-size: 14px; color: #374151; margin-left: 8px; }
     .accordion-section { margin-bottom: 2px; }
     .resort-country-header {
       font-size: 13px;
@@ -467,7 +505,7 @@
   </header>
 
   <div class="tier-wrapper tw-flex-1 tw-min-h-0 tw-px-[5%] tw-pt-2 tw-pb-6 max-lg:tw-px-4">
-    <div class="page">
+    <main class="page" id="main-content">
       <div class="page-header-row">
         <h1 class="tw-text-4xl tw-font-medium tw-text-gray-900">Ski Area Tier Ranking</h1>
         <p class="page-description tw-text-lg tw-text-gray-600 tw-mt-1 tw-text-right max-md:tw-text-left">Place ski resorts into tiers (S–F). Click resorts to add, drag to move. Auto-tier by size, runs, lifts, or difficulty.</p>
@@ -557,7 +595,7 @@
       <div class="citation-section tw-mt-8 tw-pt-6 tw-border-t tw-border-gray-200 tw-text-gray-600 tw-text-sm">
         <p>Resort and piste data from OpenStreetMap. © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener" class="tw-text-blue-400">OpenStreetMap</a> contributors.</p>
       </div>
-    </div>
+    </main>
   </div>
 
   <footer
@@ -1104,13 +1142,13 @@
             html += `<span class="accordion-chevron">▶</span><span>${sk === '\u200b' ? 'Other' : sk} (${idxs.length})</span></div>`;
             html += '<div class="resort-state-body">';
             idxs.forEach((i) => {
-              html += `<div class="resort-item" data-index="${i}"><label>${resortData[i].name}</label></div>`;
+              html += `<div class="resort-item" data-index="${i}"><span class="resort-item-name">${resortData[i].name}</span></div>`;
             });
             html += '</div></div>';
           });
         } else {
           allIdx.forEach((i) => {
-            html += `<div class="resort-item" data-index="${i}"><label>${resortData[i].name}</label></div>`;
+            html += `<div class="resort-item" data-index="${i}"><span class="resort-item-name">${resortData[i].name}</span></div>`;
           });
         }
         html += '</div></div>';
