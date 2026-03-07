@@ -19,15 +19,29 @@ body {
   color: var(--resort-body-color);
   background: #fff;
   margin: 0;
-  padding: 1.5rem;
+  padding: 60px 5% 2rem 5%;
   line-height: 1.5;
-  max-width: 52rem;
-  margin-left: auto;
-  margin-right: auto;
+  width: 100%;
+  max-width: none;
+  overflow-x: hidden;
+}
+
+@media (max-width: 768px) {
+  body {
+    padding: 56px 1rem 1.5rem 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    padding: 56px 0.75rem 1rem 0.75rem;
+  }
 }
 
 .resort-auth-header {
+  margin-top: 0;
   margin-bottom: 1rem;
+  padding: 8px 0;
   display: flex;
   justify-content: flex-end;
   align-items: center;
@@ -153,6 +167,27 @@ body {
   .resort-layout.resort-map-expanded .resort-map-static {
     height: 60vh;
     min-height: 320px;
+  }
+  .resort-title {
+    font-size: 1.5rem;
+  }
+  .resort-map-gl {
+    height: 240px;
+  }
+}
+
+@media (max-width: 480px) {
+  .resort-title {
+    font-size: 1.35rem;
+  }
+  .resort-stats {
+    grid-template-columns: 1fr;
+    padding: 0.75rem;
+  }
+  .resort-auth-header {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 0.5rem;
   }
 }
 

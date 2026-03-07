@@ -34,6 +34,19 @@
     .browse-nav a { color: var(--resort-title-color); text-decoration: none; }
     .browse-nav a:hover { text-decoration: underline; }
     .browse-nav-current { font-weight: 600; color: var(--resort-body-color); }
+    @media (max-width: 768px) {
+      .browse-hero h1 { font-size: 1.5rem; }
+      .browse-controls { flex-direction: column; align-items: stretch; }
+      .browse-search-wrap { flex: 1 1 100%; min-width: 0; }
+      .browse-filter { min-width: 0; width: 100%; }
+      .browse-nav { flex-wrap: wrap; gap: 0.5rem; font-size: 0.8rem; }
+    }
+    @media (max-width: 480px) {
+      .browse-hero h1 { font-size: 1.35rem; }
+      .browse-card { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+      .browse-card-title { white-space: normal; overflow: visible; text-overflow: clip; }
+      .browse-card-meta { width: 100%; }
+    }
   </style>
 </head>
 <body class="tw-flex tw-min-h-[100vh] tw-flex-col tw-bg-[#fff]">
@@ -74,13 +87,13 @@
           </div>
         </div>
         <div class="header-dropdown-group">
-        <a class="header-tab header-links" href="../resort-comparison.html" aria-haspopup="true">Compare <i class="bi bi-chevron-down tw-text-xs"></i></a>
-        <div class="header-dropdown" role="menu">
-          <a class="header-links" href="../resort-comparison.html" role="menuitem">Resort Comparison</a>
-          <a class="header-links" href="../resort-tier-rank.html" role="menuitem">Tier Ranking</a>
+          <a class="header-tab header-links" href="../resort-comparison.html" aria-haspopup="true">Compare <i class="bi bi-chevron-down tw-text-xs"></i></a>
+          <div class="header-dropdown" role="menu">
+            <a class="header-links" href="../resort-comparison.html" role="menuitem">Resort Comparison</a>
+            <a class="header-links" href="../resort-tier-rank.html" role="menuitem">Tier Ranking</a>
+          </div>
         </div>
-      </div>
-      <a class="header-links" href="../weather-map.html">Weather</a>
+        <a class="header-links" href="../weather-map.html">Weather</a>
         <a class="header-links" href="../skiing-ai.html">AI Assistant</a>
         <a class="header-links" href="../About.html">About</a>
       </div>
@@ -114,7 +127,7 @@
     ></button>
   </header>
 
-  <div class="resort-auth-header" style="margin-top: 60px; padding: 8px 5%;">
+  <div class="resort-auth-header">
     <div id="resort-auth-widget" class="resort-auth-widget"></div>
   </div>
 
@@ -147,20 +160,42 @@
   <script src="/wiki/js/auth.js"></script>
   <script>
     (function() {
-      var collapsed = true;
+      var RESPONSIVE_WIDTH = 1024;
+      var isHeaderCollapsed = window.innerWidth < RESPONSIVE_WIDTH;
+      var collapseBtn = document.getElementById('collapse-btn');
+      var collapseHeaderItems = document.getElementById('collapsed-header-items');
+      function onHeaderClickOutside(e) {
+        if (collapseHeaderItems && !collapseHeaderItems.contains(e.target) && !collapseBtn.contains(e.target)) {
+          toggleHeader();
+        }
+      }
       function toggleHeader() {
-        var el = document.getElementById('collapsed-header-items');
-        if (!el) return;
-        collapsed = !collapsed;
-        if (collapsed) {
-          el.classList.remove('opacity-100');
-          el.style.width = '0vw';
+        if (!collapseHeaderItems || !collapseBtn) return;
+        if (isHeaderCollapsed) {
+          collapseHeaderItems.classList.add('opacity-100');
+          collapseHeaderItems.style.width = (window.innerWidth <= 480 ? '85vw' : '60vw');
+          collapseBtn.classList.remove('bi-list');
+          collapseBtn.classList.add('bi-x', 'max-lg:tw-fixed');
+          isHeaderCollapsed = false;
+          setTimeout(function() { window.addEventListener('click', onHeaderClickOutside); }, 1);
         } else {
-          el.classList.add('opacity-100');
-          el.style.width = '60vw';
+          collapseHeaderItems.classList.remove('opacity-100');
+          collapseHeaderItems.style.width = '0vw';
+          collapseBtn.classList.remove('bi-x', 'max-lg:tw-fixed');
+          collapseBtn.classList.add('bi-list');
+          isHeaderCollapsed = true;
+          window.removeEventListener('click', onHeaderClickOutside);
+        }
+      }
+      function responsive() {
+        if (window.innerWidth >= RESPONSIVE_WIDTH && collapseHeaderItems) {
+          collapseHeaderItems.style.width = '';
+        } else {
+          isHeaderCollapsed = true;
         }
       }
       window.toggleHeader = toggleHeader;
+      window.addEventListener('resize', responsive);
     })();
   </script>
   <script>
