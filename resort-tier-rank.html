@@ -1,0 +1,1239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ski Area Tier Ranking – Global Ski Atlas</title>
+  <meta name="description" content="Rank ski resorts into tiers (S, A, B, C, D, E, F). Compare trail maps and auto-tier by size, runs, lifts, or difficulty." />
+  <link rel="shortcut icon" href="./assets/logo.png?v=2" type="image/x-icon" />
+  <link rel="stylesheet" href="./css/tailwind-build.css" />
+  <link rel="stylesheet" href="css/index.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" integrity="sha512-dPXYcDub/aeb08c63jRq/k6GaKccl256JQy/AnOq7CAnEZ9FzSL9wSbcZkMp4R26vBsMLFYH4kQ67/bbV8XaCQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; font-family: system-ui, -apple-system, sans-serif; background: #fff; color: #111; }
+    .tier-wrapper {
+      flex: 1;
+      min-height: 0;
+      margin-top: 60px;
+      min-height: calc(100vh - 60px);
+      overflow-y: auto;
+    }
+    .page { max-width: 1800px; margin: 0 auto; padding: 24px; }
+    .page-header-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; flex-wrap: wrap; margin-bottom: 12px; }
+    .page-header-row .page-description { max-width: 380px; text-align: right; }
+    .tier-subheader-wrap { margin-bottom: 12px; }
+    .tier-subheader-editable {
+      font-size: 1.125rem;
+      color: #6b7280;
+      min-height: 1.5em;
+      padding: 6px 10px;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      outline: none;
+      width: 100%;
+      max-width: 600px;
+    }
+    .tier-subheader-editable:hover { border-color: #e5e7eb; background: #fafafa; }
+    .tier-subheader-editable:focus { border-color: #2563eb; background: #fff; }
+    .content-wrapper { display: flex; gap: 32px; margin-top: 12px; flex-wrap: wrap; }
+    .controls {
+      width: 320px;
+      min-width: 280px;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+    .controls-section {
+      padding: 24px 0;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .controls-section:first-child { padding-top: 0; }
+    .controls-section:last-of-type { border-bottom: none; padding-bottom: 0; }
+    .controls-section-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .control-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
+    .control-buttons button {
+      flex: 1;
+      min-width: 80px;
+      padding: 10px 14px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      background: #fff;
+      color: #111;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .control-buttons button:hover { background: #f9fafb; border-color: #9ca3af; }
+    .control-option-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+    .control-option-row label { font-size: 14px; color: #374151; cursor: pointer; }
+    .search-container { position: relative; }
+    .search-container input {
+      width: 100%;
+      padding: 10px 14px 10px 38px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 14px;
+      background: #fff;
+      color: #111;
+    }
+    .search-container input:focus { outline: none; border-color: #2563eb; }
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #9ca3af;
+    }
+    .resort-list {
+      max-height: 420px;
+      overflow-y: auto;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 12px;
+      background: #fff;
+      margin-top: 4px;
+    }
+    .resort-item {
+      display: flex;
+      align-items: center;
+      padding: 6px 8px;
+      margin-bottom: 4px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .resort-item:hover { background: #f3f4f6; }
+    .resort-item.placed { opacity: 0.5; pointer-events: none; }
+    .resort-item label { cursor: pointer; font-size: 14px; color: #374151; margin-left: 8px; }
+    .accordion-section { margin-bottom: 2px; }
+    .resort-country-header {
+      font-size: 13px;
+      font-weight: 600;
+      color: #333;
+      margin-top: 8px;
+      padding: 8px 10px;
+      background: #f0f0f0;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      user-select: none;
+    }
+    .resort-country-header:hover { background: #e5e5e5; }
+    .resort-country-header .accordion-chevron { font-size: 10px; color: #666; transition: transform 0.2s; }
+    .accordion-section.open .resort-country-header .accordion-chevron { transform: rotate(90deg); }
+    .resort-country-body {
+      overflow: hidden;
+      display: none;
+      padding-left: 8px;
+      padding-top: 4px;
+    }
+    .accordion-section.open .resort-country-body { display: block; }
+    .resort-state-section { margin-top: 6px; }
+    .resort-state-header {
+      font-size: 12px;
+      font-weight: 600;
+      color: #555;
+      padding: 6px 10px;
+      background: #f8f8f8;
+      border-radius: 5px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      user-select: none;
+    }
+    .resort-state-header:hover { background: #eee; }
+    .resort-state-header .accordion-chevron { font-size: 9px; color: #777; transition: transform 0.2s; }
+    .resort-state-section.open .resort-state-header .accordion-chevron { transform: rotate(90deg); }
+    .resort-state-body { overflow: hidden; display: none; padding-left: 6px; margin-top: 2px; }
+    .resort-state-section.open .resort-state-body { display: block; }
+    .no-results { padding: 10px; color: #666; font-style: italic; text-align: center; }
+    .loading { padding: 20px; text-align: center; color: #9ca3af; }
+    .error { padding: 12px; background: #fee; color: #c00; border-radius: 6px; margin-top: 8px; }
+
+    .tier-chart-wrapper { position: relative; flex: 1; min-width: 400px; }
+    .tier-container {
+      background: #1a1a1a;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid #333;
+      min-height: 400px;
+    }
+    .tier-row {
+      display: flex;
+      align-items: center;
+      min-height: 110px;
+      padding: 8px 12px;
+      border-bottom: 2px solid rgba(0,0,0,0.08);
+      gap: 12px;
+    }
+    .tier-row:last-child { border-bottom: none; }
+    .tier-label {
+      min-width: 48px;
+      width: auto;
+      font-size: 24px;
+      white-space: nowrap;
+      font-weight: bold;
+      text-align: center;
+      flex-shrink: 0;
+      color: #1a1a1a;
+    }
+    .tier-row.S .tier-label { color: #1a1a1a; }
+    .tier-row.A .tier-label { color: #1a1a1a; }
+    .tier-row.B .tier-label { color: #1a1a1a; }
+    .tier-row.C .tier-label { color: #1a1a1a; }
+    .tier-row.D .tier-label { color: #1a1a1a; }
+    .tier-row.E .tier-label { color: #fff; }
+    .tier-row.F .tier-label { color: #1a1a1a; }
+    .tier-label.tier-label-desc { font-size: 13px; min-width: 100px; }
+    .tier-row.S { background: #dc2626; }
+    .tier-row.A { background: #ea580c; }
+    .tier-row.B { background: #ca8a04; }
+    .tier-row.C { background: #16a34a; }
+    .tier-row.D { background: #0ea5e9; }
+    .tier-row.E { background: #7c3aed; }
+    .tier-row.F { background: #ec4899; }
+    .tier-cards {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      flex: 1;
+    }
+    .resort-card {
+      width: 90px;
+      flex-shrink: 0;
+      cursor: grab;
+      border-radius: 8px;
+      overflow: hidden;
+      background: rgba(255,255,255,0.4);
+      border: 2px solid transparent;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .resort-card:hover { border-color: rgba(255,255,255,0.8); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+    .resort-card.dragging { cursor: grabbing; opacity: 0.8; }
+    .tier-row.drag-over { box-shadow: inset 0 0 0 4px rgba(255,255,255,0.6); }
+    .resort-card svg {
+      display: block;
+      width: 100%;
+      height: 70px;
+      background: #fafafa;
+    }
+    .resort-card .card-name {
+      font-size: 10px;
+      padding: 4px 6px;
+      color: #fff;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .resort-card .card-name.hide-name { display: none; }
+
+    #resort-tier-tooltip {
+      position: fixed;
+      display: none;
+      z-index: 9999;
+      pointer-events: auto;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+      border: 1px solid #e5e7eb;
+      color: #111;
+      font-size: 13px;
+      padding: 8px 12px;
+      max-width: 260px;
+    }
+    #resort-tier-tooltip .tt-name { font-weight: 600; margin-bottom: 4px; }
+    #resort-tier-tooltip .tt-hint { color: #6b7280; font-size: 11px; margin: 4px 0; }
+    #resort-tier-tooltip .tt-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 6px;
+      color: #2563eb;
+      text-decoration: none;
+      font-size: 12px;
+    }
+    #resort-tier-tooltip .tt-link:hover { color: #1d4ed8; text-decoration: underline; }
+
+    #resort-tier-popup {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 10000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.5);
+      pointer-events: auto;
+    }
+    #resort-tier-popup.visible { display: flex; }
+    #resort-tier-popup .popup-inner {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      padding: 20px 24px;
+      max-width: 340px;
+      position: relative;
+      color: #111;
+      font-size: 14px;
+    }
+    #resort-tier-popup .popup-close {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: none;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      color: #666;
+      padding: 4px;
+    }
+    #resort-tier-popup .popup-close:hover { color: #111; }
+    #resort-tier-popup .popup-name { font-weight: 600; font-size: 16px; margin-bottom: 8px; }
+    #resort-tier-popup .popup-facts { font-size: 13px; color: #6b7280; margin: 8px 0 12px 0; }
+    #resort-tier-popup .popup-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      background: #2563eb;
+      color: #fff;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 14px;
+    }
+    #resort-tier-popup .popup-link:hover { background: #1d4ed8; }
+    #resort-tier-popup .popup-actions { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+    #resort-tier-popup .popup-remove {
+      padding: 8px 14px;
+      background: transparent;
+      color: #dc2626;
+      border: 1px solid #dc2626;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    #resort-tier-popup .popup-remove:hover { background: #dc2626; color: #fff; }
+
+    .print-chart-btn {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      z-index: 10;
+      display: none;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      background: #fff;
+      color: #111;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .print-chart-btn:hover { background: #f9fafb; border-color: #9ca3af; }
+    .print-chart-btn.visible { display: flex; }
+
+    .watermark {
+      position: absolute;
+      bottom: 12px;
+      right: 12px;
+      font-size: 14px;
+      color: rgba(0,0,0,0.4);
+    }
+
+    select {
+      padding: 8px 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      background: #fff;
+      color: #111;
+      font-size: 14px;
+    }
+
+    @media (max-width: 768px) {
+      .content-wrapper { flex-direction: column; }
+      .controls { width: 100%; }
+      .resort-list { max-height: 280px; }
+    }
+    @media print {
+      body { background: #fff; }
+      header, .controls, .citation-section, footer, .print-chart-btn, .tier-row.empty-print, .page-description { display: none !important; }
+      .tier-wrapper { margin-top: 0; }
+      .tier-container { background: #fff; border: 1px solid #ddd; }
+      .tier-row { border: 1px solid #ddd; min-height: 80px; }
+      .resort-card { width: 70px; border: 1px solid #999; }
+      .resort-card svg { height: 55px; }
+      .resort-card .card-name { color: #111; font-size: 8px; }
+      .watermark { color: rgba(0,0,0,0.5); }
+    }
+  </style>
+</head>
+<body class="tw-flex tw-min-h-[100vh] tw-flex-col tw-bg-[#fff]">
+  <header
+    class="tw-absolute tw-top-0 tw-z-[100] tw-flex tw-h-[60px] tw-w-full tw-bg-opacity-0 
+           tw-px-[5%] max-lg:tw-mr-auto max-lg:tw-px-4 lg:tw-justify-around"
+  >
+    <a class="tw-h-[50px] tw-w-[50px] tw-p-[4px]" href="index.html" aria-label="Global Ski Atlas home">
+      <img
+        src="./assets/logo.png?v=2"
+        alt="Global Ski Atlas"
+        class="tw-object tw-h-full tw-w-full"
+      />
+    </a>
+    <div
+      class="collapsible-header animated-collapse max-lg:tw-shadow-md"
+      id="collapsed-header-items"
+    >
+      <div
+        class="header-nav-inner tw-flex tw-h-full tw-w-max tw-flex-wrap tw-gap-5 tw-text-base tw-text-black 
+                max-lg:tw-mt-[30px] max-lg:tw-flex-col max-lg:tw-place-items-end 
+                max-lg:tw-gap-5 lg:tw-mx-auto lg:tw-place-items-center"
+      >
+        <div class="header-dropdown-group">
+          <a class="header-tab header-links" href="wiki/browse.html" aria-haspopup="true">Atlas <i class="bi bi-chevron-down tw-text-xs"></i></a>
+          <div class="header-dropdown" role="menu">
+            <a class="header-links" href="coffee-table-book.html" role="menuitem">Coffee Table Book</a>
+            <a class="header-links" href="wiki/browse.html" role="menuitem">Online Atlas</a>
+          </div>
+        </div>
+        <div class="header-dropdown-group">
+          <a class="header-tab header-links" href="mainmap.html" aria-haspopup="true">Driving <i class="bi bi-chevron-down tw-text-xs"></i></a>
+          <div class="header-dropdown" role="menu">
+            <a class="header-links" href="mainmap.html" role="menuitem">Trip Planner</a>
+            <a class="header-links" href="DriveTimeMap.html" role="menuitem">Drive Time</a>
+          </div>
+        </div>
+        <div class="header-dropdown-group">
+          <a class="header-tab header-links" href="SkiResortFacts.html" aria-haspopup="true">Statistics <i class="bi bi-chevron-down tw-text-xs"></i></a>
+          <div class="header-dropdown" role="menu">
+            <a class="header-links" href="SkiResortFacts.html" role="menuitem">Resort Facts</a>
+            <a class="header-links" href="SkiTrailFacts.html" role="menuitem">Trail Facts</a>
+            <a class="header-links" href="SkiLiftFacts.html" role="menuitem">Lift Facts</a>
+          </div>
+        </div>
+        <div class="header-dropdown-group">
+          <a class="header-tab header-links" href="resort-comparison.html" aria-haspopup="true">Compare <i class="bi bi-chevron-down tw-text-xs"></i></a>
+          <div class="header-dropdown" role="menu">
+            <a class="header-links" href="resort-comparison.html" role="menuitem">Resort Comparison</a>
+            <a class="header-links" href="resort-tier-rank.html" role="menuitem">Tier Ranking</a>
+          </div>
+        </div>
+        <a class="header-links" href="weather-map.html">Weather</a>
+        <a class="header-links" href="skiing-ai.html">AI Assistant</a>
+        <a class="header-links" href="About.html">About</a>
+      </div>
+      <div
+        class="tw-mx-4 tw-flex tw-place-items-center tw-gap-[20px] tw-text-base 
+                max-md:tw-w-full max-md:tw-flex-col max-md:tw-place-content-center"
+      >
+          <span
+            role="button"
+            aria-label="Download app coming soon"
+            class="tw-flex tw-h-[40px] tw-place-items-center tw-gap-2 tw-rounded-full
+                  tw-bg-black tw-p-1 tw-pl-4 tw-text-white"
+          >
+            <span>Download App Coming Soon</span>
+            <div
+              class="tw-flex tw-h-[30px] tw-w-[30px] tw-place-content-center
+                     tw-place-items-center tw-rounded-full tw-bg-primary
+                     tw-font-semibold tw-text-black"
+            >
+              <i class="bi bi-download"></i>
+            </div>
+          </span>
+      </div>
+    </div>
+    <button
+      class="bi bi-list tw-absolute tw-right-3 tw-top-3 tw-z-50 tw-text-3xl 
+              tw-text-black lg:tw-hidden"
+      onclick="toggleHeader()"
+      aria-label="menu"
+      id="collapse-btn"
+    ></button>
+  </header>
+
+  <div class="tier-wrapper tw-flex-1 tw-min-h-0 tw-px-[5%] tw-pt-2 tw-pb-6 max-lg:tw-px-4">
+    <div class="page">
+      <div class="page-header-row">
+        <h1 class="tw-text-4xl tw-font-medium tw-text-gray-900">Ski Area Tier Ranking</h1>
+        <p class="page-description tw-text-lg tw-text-gray-600 tw-mt-1 tw-text-right max-md:tw-text-left">Place ski resorts into tiers (S–F). Click resorts to add, drag to move. Auto-tier by size, runs, lifts, or difficulty.</p>
+      </div>
+      <div class="tier-subheader-wrap">
+        <input type="text" id="tier-subheader" class="tier-subheader-editable" placeholder="Add a subheading (e.g. ranked by size)…">
+      </div>
+
+      <div class="content-wrapper">
+        <div class="tier-chart-wrapper">
+          <div class="tier-container" id="tier-container">
+            <div class="loading" id="loading">Loading resort data…</div>
+          </div>
+          <span class="watermark" id="watermark">globalskiatlas.com</span>
+          <button type="button" id="print-chart-btn" class="print-chart-btn" aria-label="Print tier ranking">
+            <i class="bi bi-printer"></i> Print
+          </button>
+        </div>
+        <div class="controls">
+          <div class="controls-section">
+            <div class="controls-section-title">Options</div>
+            <div class="control-option-row">
+              <input type="checkbox" id="show-names" checked>
+              <label for="show-names">Show names</label>
+            </div>
+            <div class="control-option-row">
+              <input type="checkbox" id="relative-sizes">
+              <label for="relative-sizes">Make resorts relative sizes</label>
+            </div>
+            <div class="control-option-row">
+              <input type="checkbox" id="tier-descriptions">
+              <label for="tier-descriptions">Show tier descriptions</label>
+            </div>
+            <div class="control-option-row">
+              <input type="checkbox" id="downhill-only" checked>
+              <label for="downhill-only">Only show downhill resorts</label>
+            </div>
+          </div>
+          <div class="controls-section">
+            <div class="controls-section-title">Actions</div>
+            <div class="control-buttons">
+              <button type="button" id="random-10-btn">Add 10 random</button>
+              <button type="button" id="reset-btn">Reset</button>
+              <button type="button" id="clear-btn">Clear All</button>
+            </div>
+          </div>
+          <div class="controls-section">
+            <div class="controls-section-title">Auto-tier by criteria</div>
+            <select id="auto-tier-criteria">
+              <option value="">-- Choose criterion --</option>
+              <option value="size">Size (acres)</option>
+              <option value="runs">Number of runs</option>
+              <option value="lifts">Number of lifts</option>
+              <option value="difficult">Difficult/extreme runs</option>
+              <option value="random">Random</option>
+            </select>
+            <div class="control-buttons" style="margin-top: 10px;">
+              <button type="button" id="auto-tier-btn">Apply</button>
+            </div>
+          </div>
+          <div class="controls-section">
+            <div class="controls-section-title">Add to tier</div>
+            <select id="add-to-tier">
+              <option value="S">S</option>
+              <option value="A">A</option>
+              <option value="B">B</option>
+              <option value="C">C</option>
+              <option value="D">D</option>
+              <option value="E">E</option>
+              <option value="F">F</option>
+            </select>
+          </div>
+          <div class="controls-section">
+            <div class="controls-section-title">Search</div>
+            <div class="search-container">
+              <i class="fas fa-search search-icon"></i>
+              <input type="text" id="resort-search" placeholder="Search resorts…" autocomplete="off">
+            </div>
+          </div>
+          <div class="controls-section">
+            <div class="controls-section-title">Resorts</div>
+            <div class="resort-list" id="resort-list"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="citation-section tw-mt-8 tw-pt-6 tw-border-t tw-border-gray-200 tw-text-gray-600 tw-text-sm">
+        <p>Resort and piste data from OpenStreetMap. © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener" class="tw-text-blue-400">OpenStreetMap</a> contributors.</p>
+      </div>
+    </div>
+  </div>
+
+  <footer
+    class="tw-flex tw-w-full tw-place-content-around tw-gap-3 tw-border-t tw-border-gray-200
+           tw-bg-gray-50 tw-py-6 tw-px-[10%] tw-text-black max-md:tw-flex-col"
+  >
+    <div
+      class="tw-flex tw-h-full tw-w-[250px] tw-flex-col tw-place-items-center tw-gap-6
+             max-md:tw-w-full"
+    >
+      <img src="./assets/logo.png?v=2" alt="Global Ski Atlas" class="tw-max-w-[120px]" />
+      <div>Global Ski Atlas</div>
+      <div class="tw-mt-3 tw-text-lg tw-font-semibold">Follow us</div>
+      <div class="tw-flex tw-gap-4 tw-text-2xl">
+        <a href="javascript:void(0)" aria-label="Facebook" title="Coming soon"><i class="bi bi-facebook"></i></a>
+        <a href="https://twitter.com/@pauls_freeman" aria-label="Twitter"><i class="bi bi-twitter"></i></a>
+        <a href="https://instagram.com/" class="tw-h-[40px] tw-w-[40px]" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
+      </div>
+    </div>
+    <div class="tw-flex tw-h-full tw-w-[250px] tw-flex-col tw-gap-4">
+      <h2 class="tw-text-3xl max-md:tw-text-xl">Explore</h2>
+      <div class="tw-flex tw-flex-col tw-gap-3 max-md:tw-text-sm">
+        <a href="coffee-table-book.html" class="footer-link">Coffee Table Book</a>
+        <a href="mainmap.html" class="footer-link">Online Atlas</a>
+        <a href="resort-comparison.html" class="footer-link">Compare Resorts</a>
+        <a href="resort-tier-rank.html" class="footer-link">Tier Ranking</a>
+        <a href="SkiResortFacts.html" class="footer-link">Resort Facts</a>
+        <a href="SkiTrailFacts.html" class="footer-link">Trail Facts</a>
+        <a href="SkiLiftFacts.html" class="footer-link">Lift Facts</a>
+        <a href="skiing-ai.html" class="footer-link">AI Assistant</a>
+      </div>
+    </div>
+    <div class="tw-flex tw-h-full tw-w-[250px] tw-flex-col tw-gap-4">
+      <h2 class="tw-text-3xl max-md:tw-text-xl">Download Parquet Data</h2>
+      <div class="tw-flex tw-flex-col tw-gap-3 max-md:tw-text-sm">
+        <a href="DownloadData.html" class="footer-link tw-inline-flex tw-items-center tw-gap-1">Data downloads & how we create it <i class="bi bi-arrow-right tw-text-sm"></i></a>
+      </div>
+    </div>
+    <div class="tw-flex tw-h-full tw-w-[250px] tw-flex-col tw-gap-4">
+      <h2 class="tw-text-3xl max-md:tw-text-xl">Resources</h2>
+      <div class="tw-flex tw-flex-col tw-gap-3 max-md:tw-text-sm">
+        <a href="About.html" class="footer-link">About</a>
+        <a href="faq.html" class="footer-link">FAQ</a>
+        <a href="https://witcoskitech.com" class="footer-link" target="_blank" rel="noopener">Contact</a>
+        <a href="privacy-policy.html" class="footer-link">Privacy Policy</a>
+      </div>
+    </div>
+  </footer>
+
+  <div id="resort-tier-tooltip"></div>
+  <div id="resort-tier-popup" role="dialog" aria-modal="true" aria-labelledby="popup-resort-name">
+    <div class="popup-inner">
+      <button type="button" class="popup-close" aria-label="Close">&times;</button>
+      <div id="popup-resort-name" class="popup-name"></div>
+      <div class="popup-facts"></div>
+      <div class="popup-actions">
+        <a href="#" class="popup-link" target="_blank" rel="noopener">View details <i class="bi bi-arrow-up-right"></i></a>
+        <button type="button" class="popup-remove" aria-label="Remove from tier">Remove from tier</button>
+      </div>
+    </div>
+  </div>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" crossorigin="anonymous" />
+  <script>
+    (function () {
+      var RESPONSIVE_WIDTH = 1024;
+      var isHeaderCollapsed = window.innerWidth < RESPONSIVE_WIDTH;
+      var collapseBtn = document.getElementById('collapse-btn');
+      var collapseHeaderItems = document.getElementById('collapsed-header-items');
+      function onHeaderClickOutside(e) {
+        if (collapseHeaderItems && !collapseHeaderItems.contains(e.target) && !collapseBtn.contains(e.target)) {
+          toggleHeader();
+        }
+      }
+      function toggleHeader() {
+        if (!collapseHeaderItems || !collapseBtn) return;
+        if (isHeaderCollapsed) {
+          collapseHeaderItems.classList.add('opacity-100');
+          collapseHeaderItems.style.width = '60vw';
+          collapseBtn.classList.remove('bi-list');
+          collapseBtn.classList.add('bi-x', 'max-lg:tw-fixed');
+          isHeaderCollapsed = false;
+          setTimeout(function () { window.addEventListener('click', onHeaderClickOutside); }, 1);
+        } else {
+          collapseHeaderItems.classList.remove('opacity-100');
+          collapseHeaderItems.style.width = '0vw';
+          collapseBtn.classList.remove('bi-x', 'max-lg:tw-fixed');
+          collapseBtn.classList.add('bi-list');
+          isHeaderCollapsed = true;
+          window.removeEventListener('click', onHeaderClickOutside);
+        }
+      }
+      function responsive() {
+        if (window.innerWidth >= RESPONSIVE_WIDTH && collapseHeaderItems) {
+          collapseHeaderItems.style.width = '';
+        } else {
+          isHeaderCollapsed = true;
+        }
+      }
+      window.toggleHeader = toggleHeader;
+      window.addEventListener('resize', responsive);
+    })();
+  </script>
+  <script type="module">
+    const GEOPARQUET_URL = 'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/ski_areas_analyzed.parquet';
+    const SKI_AREAS_OUTLINES_URL = 'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/ski_areas.parquet';
+    const PISTES_URL = 'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/pistes.parquet';
+
+    const TIERS = ['S', 'A', 'B', 'C', 'D', 'E', 'F'];
+    const AUTO_TIER_LABELS = { size: 'Size (acres)', runs: 'Number of runs', lifts: 'Number of lifts', difficult: 'Difficult/extreme runs', random: 'Random' };
+    const TIER_LABELS = { S: 'Top tier (best)', A: 'Very strong', B: 'Above average', C: 'Average', D: 'Below average', E: 'Weak', F: 'Bottom tier (worst)' };
+    const NAME_KEYS = ['name', 'resort_name', 'title', 'area_name', 'Name'];
+    const COUNTRY_KEYS = ['country', 'Country', 'country_name', 'addr:country'];
+    const STATE_KEYS = ['state', 'State', 'addr:state', 'province', 'addr:province'];
+    const STATE_DRILLDOWN_THRESHOLD = 50;
+    const PISTE_DIFFICULTY_KEYS = ['piste:difficulty', 'piste_difficulty', 'difficulty'];
+    const COLOR_BY_KEYS = ['downhill_trails', 'number_of_downhill_trails', 'trails'];
+    const SIZE_BY_KEYS = ['total_area_acres', 'Total Area Acres', 'area_acres', 'skiable_terrain_acres'];
+    const LIFTS_KEYS = ['total_lifts', 'lifts', 'number_of_lifts'];
+    const RESORT_TYPE_KEYS = ['resort_type', 'Resort Type'];
+    const NOT_DOWNHILL = 'not a downhill ski resort';
+    const SKIABLE_TERRAIN_ACRES_KEYS = ['skiable_terrain_acres', 'total_area_acres', 'Total Area Acres', 'area_acres'];
+    const SKIABLE_TERRAIN_HA_KEYS = ['skiable_terrain_ha', 'total_area_ha', 'area_ha'];
+    const CARD_W = 90;
+    const CARD_H = 70;
+
+    function escapeHtml(s) { const div = document.createElement('div'); div.textContent = s; return div.innerHTML; }
+    function slug(str) { if (str == null || str === '') return ''; return String(str).toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').replace(/-+/g, '-').replace(/^-|-$/g, '') || ''; }
+    const HA_TO_ACRES = 2.471054;
+    function formatSkiableTerrain(acresVal, haVal) { let acres = acresVal != null && acresVal !== '' ? Number(acresVal) : null; let ha = haVal != null && haVal !== '' ? Number(haVal) : null; if (Number.isNaN(acres)) acres = null; if (Number.isNaN(ha)) ha = null; if (acres == null && ha == null) return null; if (acres == null && ha != null) acres = ha * HA_TO_ACRES; if (ha == null && acres != null) ha = acres / HA_TO_ACRES; return Math.round(acres).toLocaleString() + ' acres (' + ha.toFixed(1).replace(/\.0$/, '') + ' ha)'; }
+    function getProp(obj, keyList) {
+      if (!obj) return undefined;
+      for (const k of keyList) {
+        if (Object.prototype.hasOwnProperty.call(obj, k)) return obj[k];
+      }
+      return undefined;
+    }
+    function rowToFeature(row) {
+      const g = row.geometry;
+      if (!g || !g.type) return null;
+      const { geometry, ...properties } = row;
+      return { type: 'Feature', geometry, properties };
+    }
+    function extractRing(geom) {
+      if (geom.type === 'Polygon' && geom.coordinates && geom.coordinates[0]) return geom.coordinates[0];
+      if (geom.type === 'MultiPolygon' && geom.coordinates && geom.coordinates[0] && geom.coordinates[0][0]) return geom.coordinates[0][0];
+      return null;
+    }
+    function getRings(geom) {
+      if (!geom || !geom.coordinates) return [];
+      if (geom.type === 'Polygon') return geom.coordinates[0] ? [geom.coordinates[0]] : [];
+      if (geom.type === 'MultiPolygon') return (geom.coordinates || []).map((p) => p[0]).filter(Boolean);
+      return [];
+    }
+    function pointInRing(lon, lat, ring) {
+      const n = ring.length;
+      let inside = false;
+      for (let i = 0, j = n - 1; i < n; j = i++) {
+        const xi = ring[i][0], yi = ring[i][1], xj = ring[j][0], yj = ring[j][1];
+        if (yi > lat !== yj > lat && lon < (xj - xi) * (lat - yi) / (yj - yi) + xi) inside = !inside;
+      }
+      return inside;
+    }
+    function pointInPolygon(lon, lat, geom) {
+      return getRings(geom).some((ring) => pointInRing(lon, lat, ring));
+    }
+    function lineCentroid(geom) {
+      let xs = 0, ys = 0, count = 0;
+      const coords = geom.type === 'LineString' ? geom.coordinates : (geom.coordinates || []).flat();
+      coords.forEach((c) => { xs += c[0]; ys += c[1]; count += 1; });
+      return count ? [xs / count, ys / count] : null;
+    }
+    function normalizeResortName(s) {
+      return (s == null ? '' : String(s)).trim().toLowerCase();
+    }
+    function isNotDownhill(r) {
+      const props = (r && r.analyzedRow) || (r && r.outlineFeature && r.outlineFeature.properties) || {};
+      const v = getProp(props, RESORT_TYPE_KEYS);
+      return v != null && String(v).toLowerCase().trim() === NOT_DOWNHILL.toLowerCase();
+    }
+    function getPisteDifficulty(props) {
+      let v = getProp(props, PISTE_DIFFICULTY_KEYS);
+      if (v == null && props && typeof props.other_tags === 'string') {
+        const m = props.other_tags.match(/"piste:difficulty"=>"([^"]+)"/);
+        if (m) v = m[1];
+      }
+      return v != null ? String(v).toLowerCase().trim() : '';
+    }
+    const difficultyColors = { easy: '#22c55e', novice: '#22c55e', intermediate: '#2563eb', medium: '#2563eb', advanced: '#1a1a1a', hard: '#1a1a1a', expert: '#991b1b', freeride: '#991b1b', extreme: '#991b1b' };
+    function getPisteColor(props) { return difficultyColors[getPisteDifficulty(props)] || '#64748b'; }
+
+    let resortData = [];
+    let tierAssignments = { S: [], A: [], B: [], C: [], D: [], E: [], F: [] };
+    let pisteFeaturesCache = null;
+
+    async function loadData() {
+      const { asyncBufferFromUrl, parquetReadObjects } = await import('https://esm.sh/hyparquet@1');
+      const [fileOutlines, fileAnalyzed] = await Promise.all([
+        asyncBufferFromUrl({ url: SKI_AREAS_OUTLINES_URL }),
+        asyncBufferFromUrl({ url: GEOPARQUET_URL })
+      ]);
+      const [dataOutlines, dataAnalyzed] = await Promise.all([
+        parquetReadObjects({ file: fileOutlines }),
+        parquetReadObjects({ file: fileAnalyzed })
+      ]);
+      const analyzedByName = new Map();
+      (dataAnalyzed || []).forEach((row) => {
+        const name = getProp(row, NAME_KEYS);
+        if (name != null && String(name).trim() !== '') analyzedByName.set(normalizeResortName(name), row);
+      });
+      const outlineFeatures = (dataOutlines || []).filter((r) => r.geometry && (r.geometry.type === 'Polygon' || r.geometry.type === 'MultiPolygon')).map(rowToFeature).filter(Boolean);
+      resortData = outlineFeatures.map((f) => {
+        const name = getProp(f.properties, NAME_KEYS);
+        if (name == null || String(name).trim() === '') return null;
+        const key = normalizeResortName(name);
+        const ar = analyzedByName.get(key) || null;
+        return {
+          name: String(name).trim(),
+          key,
+          country: (ar && getProp(ar, COUNTRY_KEYS)) ? String(getProp(ar, COUNTRY_KEYS)).trim() : 'Other',
+          state: (ar && getProp(ar, STATE_KEYS)) ? String(getProp(ar, STATE_KEYS)).trim() : '',
+          outlineFeature: f,
+          pisteFeatures: [],
+          analyzedRow: ar
+        };
+      }).filter(Boolean);
+      resortData.sort((a, b) => {
+        const ta = getProp(a.analyzedRow || {}, COLOR_BY_KEYS) || 0;
+        const tb = getProp(b.analyzedRow || {}, COLOR_BY_KEYS) || 0;
+        if (tb !== ta) return (Number(tb) || 0) - (Number(ta) || 0);
+        return a.name.localeCompare(b.name);
+      });
+      return resortData;
+    }
+
+    async function loadPistesForIndices(indices) {
+      if (indices.length === 0) return;
+      const { asyncBufferFromUrl, parquetReadObjects } = await import('https://esm.sh/hyparquet@1');
+      if (!pisteFeaturesCache) {
+        const filePistes = await asyncBufferFromUrl({ url: PISTES_URL });
+        const dataPistes = await parquetReadObjects({ file: filePistes });
+        pisteFeaturesCache = (dataPistes || []).filter((r) => r.geometry && (r.geometry.type === 'LineString' || r.geometry.type === 'MultiLineString')).map(rowToFeature).filter(Boolean);
+      }
+      const outlines = indices.map((i) => resortData[i].outlineFeature);
+      const byKey = new Map();
+      indices.forEach((i) => byKey.set(resortData[i].key, []));
+      pisteFeaturesCache.forEach((f) => {
+        const c = lineCentroid(f.geometry);
+        if (!c) return;
+        for (let i = 0; i < indices.length; i++) {
+          if (pointInPolygon(c[0], c[1], outlines[i].geometry)) {
+            byKey.get(resortData[indices[i]].key).push(f);
+            break;
+          }
+        }
+      });
+      indices.forEach((i) => { resortData[i].pisteFeatures = byKey.get(resortData[i].key) || []; });
+    }
+
+    function getAtlasUrl(r) {
+      const name = r.name || getProp(r.analyzedRow || r.outlineFeature?.properties || {}, NAME_KEYS);
+      const state = r.state || getProp(r.analyzedRow || r.outlineFeature?.properties || {}, STATE_KEYS);
+      const country = r.country || getProp(r.analyzedRow || r.outlineFeature?.properties || {}, COUNTRY_KEYS);
+      const nameSlug = slug(name);
+      const stateSlug = state != null && String(state).trim() ? slug(String(state).trim()) : '';
+      const countrySlug = country != null && String(country).trim() ? slug(String(country).trim()) : '';
+      const pageParam = nameSlug ? (stateSlug ? nameSlug + '-' + stateSlug : countrySlug ? nameSlug + '-' + countrySlug : nameSlug) : '';
+      return pageParam ? new URL('wiki/resort.html', location.href).href + '?page=' + encodeURIComponent(pageParam) : new URL('wiki/browse.html', location.href).href;
+    }
+    let popupIndex = null;
+    function showPopup(index) {
+      const r = resortData[index];
+      if (!r) return;
+      popupIndex = index;
+      const props = r.analyzedRow || (r.outlineFeature && r.outlineFeature.properties) || {};
+      const name = getProp(props, NAME_KEYS) || r.name || 'Resort';
+      const trails = getProp(props, COLOR_BY_KEYS);
+      const lifts = getProp(props, LIFTS_KEYS);
+      const country = getProp(props, COUNTRY_KEYS);
+      const trailsStr = trails != null && trails !== '' ? (Number(trails) || 0).toLocaleString() + ' slopes' : null;
+      const liftsStr = lifts != null && lifts !== '' ? (Number(lifts) || 0).toLocaleString() + ' lifts' : null;
+      const terrainStr = formatSkiableTerrain(getProp(props, SKIABLE_TERRAIN_ACRES_KEYS), getProp(props, SKIABLE_TERRAIN_HA_KEYS));
+      const terrainFact = terrainStr ? 'Skiable Terrain ' + terrainStr : null;
+      let countryStr = country != null && String(country).trim() ? String(country).trim() : null;
+      if (countryStr && /^united states/i.test(countryStr)) countryStr = 'USA';
+      const facts = [trailsStr, liftsStr, terrainFact, countryStr].filter(Boolean).join(' · ');
+      const popup = document.getElementById('resort-tier-popup');
+      if (!popup) return;
+      popup.querySelector('.popup-name').textContent = name;
+      popup.querySelector('.popup-facts').textContent = facts || '';
+      const link = popup.querySelector('.popup-link');
+      if (link) link.href = getAtlasUrl(r);
+      popup.classList.add('visible');
+    }
+    function closePopup() {
+      const popup = document.getElementById('resort-tier-popup');
+      if (popup) popup.classList.remove('visible');
+      popupIndex = null;
+    }
+    function removeResortFromTier() {
+      if (popupIndex == null) return;
+      const t = TIERS.find((tier) => tierAssignments[tier].includes(popupIndex));
+      if (t) {
+        tierAssignments[t] = tierAssignments[t].filter((i) => i !== popupIndex);
+        renderTiers();
+        renderResortList();
+      }
+      closePopup();
+    }
+
+    function buildTooltipHtml(index) {
+      const r = resortData[index];
+      const props = r.analyzedRow || (r.outlineFeature && r.outlineFeature.properties) || {};
+      const name = getProp(props, NAME_KEYS) || r.name || 'Resort';
+      const trails = getProp(props, COLOR_BY_KEYS);
+      const lifts = getProp(props, LIFTS_KEYS);
+      const country = getProp(props, COUNTRY_KEYS);
+      const trailsStr = trails != null && trails !== '' ? (Number(trails) || 0).toLocaleString() + ' slopes' : null;
+      const liftsStr = lifts != null && lifts !== '' ? (Number(lifts) || 0).toLocaleString() + ' lifts' : null;
+      const terrainStr = formatSkiableTerrain(getProp(props, SKIABLE_TERRAIN_ACRES_KEYS), getProp(props, SKIABLE_TERRAIN_HA_KEYS));
+      const terrainFact = terrainStr ? 'Skiable Terrain ' + terrainStr : null;
+      let countryStr = country != null && String(country).trim() ? String(country).trim() : null;
+      if (countryStr && /^united states/i.test(countryStr)) countryStr = 'USA';
+      const facts = [trailsStr, liftsStr, terrainFact, countryStr].filter(Boolean).join(' · ');
+      const atlasUrl = getAtlasUrl(r);
+      return '<div class="tt-name">' + escapeHtml(String(name)) + '</div>' +
+        (facts ? '<div class="tt-hint">' + escapeHtml(facts) + '</div>' : '') +
+        '<a href="' + escapeHtml(atlasUrl) + '" target="_blank" rel="noopener" class="tt-link">View atlas <i class="bi bi-arrow-up-right"></i></a>';
+    }
+    function getPlacedIndices() {
+      return TIERS.flatMap((t) => tierAssignments[t]);
+    }
+
+    function getGlobalMaxDimension(indices) {
+      let globalMax = 0;
+      (indices || getPlacedIndices()).forEach((i) => {
+        const r = resortData[i];
+        const ring = r && r.outlineFeature ? extractRing(r.outlineFeature.geometry) : null;
+        if (!ring) return;
+        const rangeX = Math.max(...ring.map((c) => c[0])) - Math.min(...ring.map((c) => c[0])) || 1;
+        const rangeY = Math.max(...ring.map((c) => c[1])) - Math.min(...ring.map((c) => c[1])) || 1;
+        globalMax = Math.max(globalMax, rangeX, rangeY);
+      });
+      return globalMax || 1;
+    }
+
+    function renderResortCard(index, globalScaleFactor) {
+      const r = resortData[index];
+      const ring = extractRing(r.outlineFeature.geometry);
+      if (!ring) return '<div class="resort-card"><div class="card-name">' + (r.name || '') + '</div></div>';
+      const minX = Math.min(...ring.map((c) => c[0]));
+      const minY = Math.min(...ring.map((c) => c[1]));
+      const rangeX = Math.max(...ring.map((c) => c[0])) - minX || 1;
+      const rangeY = Math.max(...ring.map((c) => c[1])) - minY || 1;
+      const scale = globalScaleFactor || Math.min((CARD_W - 12) / rangeX, (CARD_H - 12) / rangeY);
+      const coords = ring.map((c) => [(c[0] - minX) * scale, (c[1] - minY) * scale]);
+      let minCx = Infinity, minCy = Infinity, maxCx = -Infinity, maxCy = -Infinity;
+      coords.forEach((c) => { minCx = Math.min(minCx, c[0]); minCy = Math.min(minCy, c[1]); maxCx = Math.max(maxCx, c[0]); maxCy = Math.max(maxCy, c[1]); });
+      const pad = 4;
+      const cx = pad + (maxCx - minCx) / 2;
+      const cy = pad + (maxCy - minCy) / 2;
+      const normCoords = coords.map((c) => [c[0] - minCx + pad, c[1] - minCy + pad]);
+      const trailPaths = (r.pisteFeatures || []).map((t) => {
+        const pts = t.geometry.type === 'LineString' ? t.geometry.coordinates : t.geometry.coordinates.flat();
+        const tc = pts.map((c) => [(c[0] - minX) * scale - minCx + pad, (c[1] - minY) * scale - minCy + pad]);
+        const color = getPisteColor(t.properties);
+        try { return `<path fill="none" stroke="${color}" stroke-width="1" vector-effect="non-scaling-stroke" d="${d3.line()(tc)}"/>`; } catch (e) { return ''; }
+      }).join('');
+      const outlineD = d3.line().curve(d3.curveLinearClosed)(normCoords);
+      const showNames = document.getElementById('show-names') && document.getElementById('show-names').checked;
+      const tx = CARD_W / 2 - cx;
+      const ty = CARD_H / 2 - cy;
+      return `<div class="resort-card" data-index="${index}" data-resort-key="${r.key}">
+          <svg viewBox="0 0 ${CARD_W} ${CARD_H}" preserveAspectRatio="xMidYMid meet">
+            <g transform="translate(${tx}, ${ty})">
+              ${trailPaths}
+              <path fill="none" stroke="#333" stroke-width="1.5" vector-effect="non-scaling-stroke" d="${outlineD}"/>
+            </g>
+          </svg>
+          <div class="card-name ${showNames ? '' : 'hide-name'}">${r.name}</div>
+        </div>`;
+    }
+
+    function renderTiers() {
+      const container = document.getElementById('tier-container');
+      if (!container) return;
+      const showNames = document.getElementById('show-names') && document.getElementById('show-names').checked;
+      const useRelativeSizes = document.getElementById('relative-sizes') && document.getElementById('relative-sizes').checked;
+      const useTierDescriptions = document.getElementById('tier-descriptions') && document.getElementById('tier-descriptions').checked;
+      const placed = getPlacedIndices();
+      const globalMaxDim = getGlobalMaxDimension(placed);
+      const globalScaleFactor = useRelativeSizes ? (CARD_W - 12) / globalMaxDim : null;
+      let html = '';
+      TIERS.forEach((t) => {
+        const indices = tierAssignments[t];
+        const isEmpty = indices.length === 0;
+        const emptyClass = isEmpty ? ' empty-print' : '';
+        html += `<div class="tier-row ${t}${emptyClass}" data-tier="${t}">`;
+        const labelText = useTierDescriptions ? (TIER_LABELS[t] || t) : t;
+        const labelClass = 'tier-label' + (useTierDescriptions ? ' tier-label-desc' : '');
+        html += `<span class="${labelClass}" title="${TIER_LABELS[t] || t}">${labelText}</span>`;
+        html += '<div class="tier-cards">';
+        indices.forEach((idx) => {
+          const r = resortData[idx];
+          const card = document.createElement('div');
+          card.innerHTML = renderResortCard(idx, globalScaleFactor);
+          const cardEl = card.firstElementChild;
+          if (cardEl) {
+            const nameEl = cardEl.querySelector('.card-name');
+            if (nameEl) nameEl.classList.toggle('hide-name', !showNames);
+            html += card.innerHTML;
+          }
+        });
+        html += '</div></div>';
+      });
+      container.innerHTML = html;
+
+      const tipEl = document.getElementById('resort-tier-tooltip');
+      let tipHideTimeout = null;
+      function showTip(evt, idx) { if (tipEl) { tipEl.innerHTML = buildTooltipHtml(idx); tipEl.style.display = 'block'; moveTip(evt); } }
+      function moveTip(evt) { if (tipEl) { tipEl.style.left = (evt.clientX + 14) + 'px'; tipEl.style.top = (evt.clientY - 12) + 'px'; } }
+      function hideTip() { if (tipEl) tipEl.style.display = 'none'; }
+      container.querySelectorAll('.resort-card').forEach((el) => {
+        const index = parseInt(el.dataset.index, 10);
+        if (Number.isNaN(index)) return;
+        el.addEventListener('mousedown', (e) => { if (e.button === 0) startDrag(e, el, index); });
+        el.addEventListener('dblclick', () => {
+          const t = TIERS.find((tier) => tierAssignments[tier].includes(index));
+          if (t) { tierAssignments[t] = tierAssignments[t].filter((i) => i !== index); renderTiers(); renderResortList(); }
+        });
+        el.addEventListener('mouseenter', (e) => { clearTimeout(tipHideTimeout); showTip(e, index); });
+        el.addEventListener('mouseleave', () => { tipHideTimeout = setTimeout(hideTip, 200); });
+      });
+      if (tipEl) tipEl.addEventListener('mouseenter', () => clearTimeout(tipHideTimeout));
+      if (tipEl) tipEl.addEventListener('mouseleave', () => { tipHideTimeout = setTimeout(hideTip, 150); });
+    }
+
+    let dragEl = null, dragIndex = null, dragTier = null, dragStartX = 0, dragStartY = 0;
+
+    function startDrag(e, el, index) {
+      dragEl = el;
+      dragIndex = index;
+      dragTier = TIERS.find((t) => tierAssignments[t].includes(index));
+      dragStartX = e.clientX;
+      dragStartY = e.clientY;
+      el.classList.add('dragging');
+      document.body.style.cursor = 'grabbing';
+      document.addEventListener('mousemove', onDragMove);
+      document.addEventListener('mouseup', onDragEnd, { once: true });
+    }
+    function onDragMove(e) {
+      if (!dragEl || !e) return;
+      const rows = document.querySelectorAll('.tier-row');
+      const mouseY = e.clientY;
+      for (const row of rows) {
+        const r = row.getBoundingClientRect();
+        if (mouseY >= r.top && mouseY <= r.bottom) {
+          row.classList.add('drag-over');
+          break;
+        } else row.classList.remove('drag-over');
+      }
+    }
+    function onDragEnd(e) {
+      if (!dragEl || dragIndex == null) return;
+      document.body.style.cursor = '';
+      document.removeEventListener('mousemove', onDragMove);
+      dragEl.classList.remove('dragging');
+      document.querySelectorAll('.tier-row').forEach((r) => r.classList.remove('drag-over'));
+      const rows = document.querySelectorAll('.tier-row');
+      const dropY = e && e.clientY != null ? e.clientY : (dragEl.getBoundingClientRect().top + dragEl.getBoundingClientRect().height / 2);
+      let targetTier = null;
+      for (const row of rows) {
+        const r = row.getBoundingClientRect();
+        if (dropY >= r.top && dropY <= r.bottom) { targetTier = row.dataset.tier; break; }
+      }
+      const dx = e ? Math.abs(e.clientX - dragStartX) : 999;
+      const dy = e ? Math.abs(e.clientY - dragStartY) : 999;
+      const movedLittle = dx < 5 && dy < 5;
+      if (targetTier && targetTier !== dragTier) {
+        tierAssignments[dragTier] = tierAssignments[dragTier].filter((i) => i !== dragIndex);
+        if (!tierAssignments[targetTier].includes(dragIndex)) tierAssignments[targetTier].push(dragIndex);
+        renderTiers();
+        renderResortList();
+      } else if (movedLittle && !targetTier) {
+        showPopup(dragIndex);
+      } else if (movedLittle && targetTier === dragTier) {
+        showPopup(dragIndex);
+      }
+      dragEl = null;
+      dragIndex = null;
+      dragTier = null;
+    }
+
+    function addResortToTier(index, tier) {
+      const placed = getPlacedIndices();
+      if (placed.includes(index)) return;
+      tierAssignments[tier].push(index);
+      renderTiers();
+      renderResortList();
+      loadPistesForIndices([index]).then(() => renderTiers());
+    }
+
+    function renderResortList() {
+      const list = document.getElementById('resort-list');
+      if (!list) return;
+      const openCountries = new Set();
+      const openStates = new Set();
+      list.querySelectorAll('.accordion-section.open').forEach((sec) => {
+        const c = sec.dataset.country;
+        if (c) openCountries.add(c);
+      });
+      list.querySelectorAll('.resort-state-section.open').forEach((sec) => {
+        const key = (sec.dataset.country || '') + '::' + (sec.dataset.state || '');
+        if (sec.dataset.country != null) openStates.add(key);
+      });
+      const placed = new Set(getPlacedIndices());
+      const q = (document.getElementById('resort-search') && document.getElementById('resort-search').value || '').toLowerCase().trim();
+      const downhillOnly = document.getElementById('downhill-only') && document.getElementById('downhill-only').checked;
+      const byCountryState = {};
+      resortData.forEach((r, i) => {
+        if (placed.has(i)) return;
+        if (downhillOnly && isNotDownhill(r)) return;
+        if (q && !r.name.toLowerCase().includes(q)) return;
+        if (!byCountryState[r.country]) byCountryState[r.country] = {};
+        const sk = r.state ? String(r.state).trim() : '\u200b';
+        if (!byCountryState[r.country][sk]) byCountryState[r.country][sk] = [];
+        byCountryState[r.country][sk].push(i);
+      });
+      const targetTier = (document.getElementById('add-to-tier') && document.getElementById('add-to-tier').value) || 'S';
+      let html = '';
+      Object.keys(byCountryState).sort().forEach((country) => {
+        const stateMap = byCountryState[country];
+        const allIdx = Object.values(stateMap).flat();
+        if (allIdx.length === 0) return;
+        const stateKeys = Object.keys(stateMap).filter((k) => k !== '\u200b').sort();
+        const useDrill = allIdx.length >= STATE_DRILLDOWN_THRESHOLD && stateKeys.length > 0;
+        html += `<div class="accordion-section" data-country="${escapeHtml(country)}"><div class="resort-country-header">`;
+        html += `<span class="accordion-chevron">▶</span><span>${country} (${allIdx.length})</span></div>`;
+        html += '<div class="resort-country-body">';
+        if (useDrill) {
+          [...stateKeys, '\u200b'].filter((k) => stateMap[k]).forEach((sk) => {
+            const idxs = stateMap[sk];
+            const stateKey = sk === '\u200b' ? '\u200b' : sk;
+            html += `<div class="resort-state-section" data-country="${escapeHtml(country)}" data-state="${escapeHtml(stateKey)}"><div class="resort-state-header">`;
+            html += `<span class="accordion-chevron">▶</span><span>${sk === '\u200b' ? 'Other' : sk} (${idxs.length})</span></div>`;
+            html += '<div class="resort-state-body">';
+            idxs.forEach((i) => {
+              html += `<div class="resort-item" data-index="${i}"><label>${resortData[i].name}</label></div>`;
+            });
+            html += '</div></div>';
+          });
+        } else {
+          allIdx.forEach((i) => {
+            html += `<div class="resort-item" data-index="${i}"><label>${resortData[i].name}</label></div>`;
+          });
+        }
+        html += '</div></div>';
+      });
+      list.innerHTML = html || '<div class="no-results">No resorts found</div>';
+      list.querySelectorAll('.accordion-section').forEach((sec) => {
+        const c = sec.dataset.country;
+        if (openCountries.has(c)) sec.classList.add('open');
+        sec.querySelector('.resort-country-header').addEventListener('click', () => sec.classList.toggle('open'));
+      });
+      list.querySelectorAll('.resort-state-section').forEach((sec) => {
+        const key = (sec.dataset.country || '') + '::' + (sec.dataset.state || '');
+        if (openStates.has(key)) sec.classList.add('open');
+        sec.querySelector('.resort-state-header').addEventListener('click', (e) => { e.stopPropagation(); sec.classList.toggle('open'); });
+      });
+      list.querySelectorAll('.resort-item').forEach((el) => {
+        const i = parseInt(el.dataset.index, 10);
+        if (!Number.isNaN(i)) el.addEventListener('click', () => addResortToTier(i, (document.getElementById('add-to-tier') && document.getElementById('add-to-tier').value) || 'S'));
+      });
+    }
+
+    function setTierSubheader(text) {
+      const el = document.getElementById('tier-subheader');
+      if (el) el.value = text || '';
+    }
+
+    function applyAutoTier() {
+      const crit = document.getElementById('auto-tier-criteria') && document.getElementById('auto-tier-criteria').value;
+      if (!crit) return;
+      const label = AUTO_TIER_LABELS[crit];
+      if (label) setTierSubheader('Ranked by ' + label);
+      let indices = getPlacedIndices();
+      if (indices.length === 0) indices = d3.range(Math.min(100, resortData.length));
+      let sorted;
+      if (crit === 'random') {
+        sorted = d3.shuffle([...indices]);
+      } else if (crit === 'size') {
+        sorted = indices.slice().sort((a, b) => (getProp(resortData[b].analyzedRow || {}, SIZE_BY_KEYS) || 0) - (getProp(resortData[a].analyzedRow || {}, SIZE_BY_KEYS) || 0));
+      } else if (crit === 'runs') {
+        sorted = indices.slice().sort((a, b) => (getProp(resortData[b].analyzedRow || {}, COLOR_BY_KEYS) || 0) - (getProp(resortData[a].analyzedRow || {}, COLOR_BY_KEYS) || 0));
+      } else if (crit === 'lifts') {
+        sorted = indices.slice().sort((a, b) => (getProp(resortData[b].analyzedRow || {}, LIFTS_KEYS) || 0) - (getProp(resortData[a].analyzedRow || {}, LIFTS_KEYS) || 0));
+      } else if (crit === 'difficult') {
+        const loadProm = loadPistesForIndices(indices);
+        loadProm.then(() => {
+          const counts = indices.map((i) => {
+            const p = (resortData[i].pisteFeatures || []).filter((f) => ['advanced', 'hard', 'expert', 'freeride', 'extreme'].includes(getPisteDifficulty(f.properties)));
+            return p.length;
+          });
+          const withCount = indices.map((i, j) => ({ i, c: counts[j] }));
+          withCount.sort((a, b) => b.c - a.c);
+          sorted = withCount.map((x) => x.i);
+          binAndAssign(sorted);
+        });
+        return;
+      } else return;
+      binAndAssign(sorted);
+    }
+
+    function binAndAssign(sorted) {
+      const n = sorted.length;
+      if (n === 0) return;
+      TIERS.forEach((t) => { tierAssignments[t] = []; });
+      const binSize = Math.ceil(n / 7);
+      sorted.forEach((idx, j) => {
+        const tIdx = Math.min(6, Math.floor(j / binSize));
+        tierAssignments[TIERS[tIdx]].push(idx);
+      });
+      loadPistesForIndices(sorted).then(() => { renderTiers(); renderResortList(); });
+    }
+
+    document.getElementById('auto-tier-btn')?.addEventListener('click', applyAutoTier);
+    document.getElementById('show-names')?.addEventListener('change', renderTiers);
+    document.getElementById('relative-sizes')?.addEventListener('change', renderTiers);
+    document.getElementById('tier-descriptions')?.addEventListener('change', renderTiers);
+    document.getElementById('downhill-only')?.addEventListener('change', renderResortList);
+    document.getElementById('add-to-tier')?.addEventListener('change', () => {});
+    document.getElementById('random-10-btn')?.addEventListener('click', () => {
+      const placed = new Set(getPlacedIndices());
+      const downhillOnly = document.getElementById('downhill-only') && document.getElementById('downhill-only').checked;
+      let unplaced = resortData.map((_, i) => i).filter((i) => !placed.has(i));
+      if (downhillOnly) unplaced = unplaced.filter((i) => !isNotDownhill(resortData[i]));
+      const targetTier = (document.getElementById('add-to-tier')?.value) || 'S';
+      const toAdd = d3.shuffle([...unplaced]).slice(0, 10);
+      toAdd.forEach((i) => { if (!placed.has(i)) { tierAssignments[targetTier].push(i); placed.add(i); } });
+      if (toAdd.length > 0) { renderTiers(); renderResortList(); loadPistesForIndices(toAdd).then(() => renderTiers()); }
+    });
+    document.getElementById('reset-btn')?.addEventListener('click', () => {
+      const placed = getPlacedIndices();
+      TIERS.forEach((t) => { tierAssignments[t] = []; });
+      tierAssignments.S = placed;
+      renderTiers();
+      renderResortList();
+    });
+    document.getElementById('clear-btn')?.addEventListener('click', () => { TIERS.forEach((t) => { tierAssignments[t] = []; }); renderTiers(); renderResortList(); });
+    document.getElementById('resort-search')?.addEventListener('input', renderResortList);
+
+    document.getElementById('resort-tier-popup')?.querySelector('.popup-close')?.addEventListener('click', closePopup);
+    document.getElementById('resort-tier-popup')?.querySelector('.popup-remove')?.addEventListener('click', removeResortFromTier);
+    document.getElementById('resort-tier-popup')?.addEventListener('click', (e) => {
+      if (e.target.id === 'resort-tier-popup') closePopup();
+    });
+
+    const tipEl = document.getElementById('resort-tier-tooltip');
+    document.addEventListener('mousemove', (ev) => {
+      if (tipEl && tipEl.style.display === 'block') {
+        tipEl.style.left = (ev.clientX + 14) + 'px';
+        tipEl.style.top = (ev.clientY - 12) + 'px';
+      }
+    });
+    loadData()
+      .then(() => {
+        document.getElementById('loading')?.remove();
+        renderTiers();
+        renderResortList();
+        const printBtn = document.getElementById('print-chart-btn');
+        if (printBtn) { printBtn.classList.add('visible'); printBtn.onclick = () => window.print(); }
+      })
+      .catch((err) => {
+        const c = document.getElementById('tier-container');
+        if (c) c.innerHTML = `<div class="error">Failed to load data: ${err.message}. Check network and CORS.</div>`;
+        console.error(err);
+      });
+  </script>
+</body>
+</html>
