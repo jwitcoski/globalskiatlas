@@ -3,6 +3,7 @@
 
 User-agent: *
 Allow: /
+Disallow: /assets/svg/
 
 # Sitemap (uncomment when you add sitemap.xml)
 # Sitemap: https://globalskiatlas.com/sitemap.xml
