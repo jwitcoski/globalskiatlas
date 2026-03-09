@@ -720,6 +720,8 @@
     function normalizeResortName(s) {
       return (s == null ? '' : String(s)).trim().toLowerCase();
     }
+    /** Fold diacritics for accent-insensitive search (e.g. Š→S, é→e). */
+    function foldDiacritics(str) { if (str == null || str === '') return ''; return String(str).normalize('NFD').replace(/\p{M}/gu, ''); }
 
     /** Load outlines + analyzed only (fast). Pistes load lazily when user selects resorts. */
     async function loadData() {
@@ -1151,10 +1153,10 @@
       });
       d3.select('#offset-toggle').on('change', applyOffsetToResorts);
       d3.select('#resort-search').on('input', function () {
-        const q = this.value.toLowerCase().trim();
+        const q = foldDiacritics(this.value).toLowerCase().trim();
         let visibleCount = 0;
         d3.selectAll('.resort-item').each(function () {
-          const name = d3.select(this).select('label').text().toLowerCase();
+          const name = foldDiacritics(d3.select(this).select('label').text()).toLowerCase();
           const show = !q || name.includes(q);
           d3.select(this).style('display', show ? 'flex' : 'none');
           if (show) visibleCount++;

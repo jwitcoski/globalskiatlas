@@ -16,6 +16,7 @@ import {
   STATE_KEYS,
   LIFTS_KEYS,
   slug,
+  foldDiacritics,
   SKIABLE_TERRAIN_ACRES_KEYS,
   SKIABLE_TERRAIN_HA_KEYS,
   formatSkiableTerrain
@@ -405,10 +406,10 @@ export async function initSkiResortMap(options = {}) {
   }
 
   if (searchInput) {
-    searchInput.addEventListener('input', () => renderDropdown(searchResorts.filter((r) => r.name.toLowerCase().includes(searchInput.value.toLowerCase().trim())).slice(0, maxSuggestions)));
+    searchInput.addEventListener('input', () => renderDropdown(searchResorts.filter((r) => foldDiacritics(r.name).toLowerCase().includes(foldDiacritics(searchInput.value).toLowerCase().trim())).slice(0, maxSuggestions)));
     searchInput.addEventListener('focus', () => {
-      const q = searchInput.value.trim();
-      renderDropdown(q.length ? searchResorts.filter((r) => r.name.toLowerCase().includes(q)).slice(0, maxSuggestions) : []);
+      const q = foldDiacritics(searchInput.value).toLowerCase().trim();
+      renderDropdown(q.length ? searchResorts.filter((r) => foldDiacritics(r.name).toLowerCase().includes(q)).slice(0, maxSuggestions) : []);
     });
     searchInput.addEventListener('keydown', (e) => {
       if (!searchDropdown.classList.contains('visible') || currentMatches.length === 0) return;

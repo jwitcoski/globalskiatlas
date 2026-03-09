@@ -722,6 +722,8 @@
     const CARD_H = 70;
 
     function escapeHtml(s) { const div = document.createElement('div'); div.textContent = s; return div.innerHTML; }
+    /** Fold diacritics for accent-insensitive search (e.g. Š→S, é→e). */
+    function foldDiacritics(str) { if (str == null || str === '') return ''; return String(str).normalize('NFD').replace(/\p{M}/gu, ''); }
     function slug(str) { if (str == null || str === '') return ''; return String(str).toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').replace(/-+/g, '-').replace(/^-|-$/g, '') || ''; }
     const HA_TO_ACRES = 2.471054;
     function formatSkiableTerrain(acresVal, haVal) { let acres = acresVal != null && acresVal !== '' ? Number(acresVal) : null; let ha = haVal != null && haVal !== '' ? Number(haVal) : null; if (Number.isNaN(acres)) acres = null; if (Number.isNaN(ha)) ha = null; if (acres == null && ha == null) return null; if (acres == null && ha != null) acres = ha * HA_TO_ACRES; if (ha == null && acres != null) ha = acres / HA_TO_ACRES; return Math.round(acres).toLocaleString() + ' acres (' + ha.toFixed(1).replace(/\.0$/, '') + ' ha)'; }
@@ -1111,13 +1113,13 @@
         if (sec.dataset.country != null) openStates.add(key);
       });
       const placed = new Set(getPlacedIndices());
-      const q = (document.getElementById('resort-search') && document.getElementById('resort-search').value || '').toLowerCase().trim();
+      const q = foldDiacritics(document.getElementById('resort-search') && document.getElementById('resort-search').value || '').toLowerCase().trim();
       const downhillOnly = document.getElementById('downhill-only') && document.getElementById('downhill-only').checked;
       const byCountryState = {};
       resortData.forEach((r, i) => {
         if (placed.has(i)) return;
         if (downhillOnly && isNotDownhill(r)) return;
-        if (q && !r.name.toLowerCase().includes(q)) return;
+        if (q && !foldDiacritics(r.name).toLowerCase().includes(q)) return;
         if (!byCountryState[r.country]) byCountryState[r.country] = {};
         const sk = r.state ? String(r.state).trim() : '\u200b';
         if (!byCountryState[r.country][sk]) byCountryState[r.country][sk] = [];

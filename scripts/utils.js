@@ -28,6 +28,12 @@ export const ID_KEYS = ['id', 'ref', 'area_id', 'resort_id', 'skiresort_id'];
 export const COUNTRY_KEYS = ['country', 'Country', 'country_name', 'addr:country'];
 export const STATE_KEYS = ['state', 'State', 'addr:state', 'province', 'addr:province', 'state_province', 'region'];
 
+/** Fold diacritics for accent-insensitive search (e.g. Š→S, é→e). */
+export function foldDiacritics(str) {
+  if (str == null || str === '') return '';
+  return String(str).normalize('NFD').replace(/\p{M}/gu, '');
+}
+
 /** Lowercase, spaces to hyphens, strip non-alphanumeric except hyphen. Matches wiki-ingest pageId. */
 export function slug(str) {
   if (str == null || str === '') return '';

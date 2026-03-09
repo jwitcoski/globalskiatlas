@@ -242,6 +242,7 @@
       if (!s || typeof s !== 'string') return '';
       return s.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').replace(/-+/g, '-').replace(/^-|-$/g, '') || '';
     }
+    function foldDiacritics(str) { if (str == null || str === '') return ''; return String(str).normalize('NFD').replace(/\p{M}/gu, ''); }
 
     function resortPageSlug(p) {
       if (p.pageType === 'country' || p.pageType === 'state' || p.pageType === 'continent') return p.pageId;
@@ -254,14 +255,14 @@
     }
 
     function renderResults() {
-      var q = (document.getElementById('browse-search').value || '').trim().toLowerCase();
+      var q = foldDiacritics(document.getElementById('browse-search').value || '').toLowerCase().trim();
       var country = document.getElementById('browse-country').value;
       var state = document.getElementById('browse-state').value;
       var book = document.getElementById('browse-book').value;
       var type = document.getElementById('browse-type').value;
 
       var filtered = _allPages.filter(function (p) {
-        if (q && !(p.title||'').toLowerCase().includes(q) && !(p.state||'').toLowerCase().includes(q) && !(p.country||'').toLowerCase().includes(q)) return false;
+        if (q && !foldDiacritics(p.title||'').toLowerCase().includes(q) && !foldDiacritics(p.state||'').toLowerCase().includes(q) && !foldDiacritics(p.country||'').toLowerCase().includes(q)) return false;
         if (country && p.country !== country) return false;
         if (state && p.state !== state) return false;
         if (book === 'unknown') {

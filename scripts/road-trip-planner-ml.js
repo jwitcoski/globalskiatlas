@@ -8,6 +8,8 @@
 
 const RTP_MAX_RESORTS = 25;
 
+function foldDiacritics(str) { if (str == null || str === '') return ''; return String(str).normalize('NFD').replace(/\p{M}/gu, ''); }
+
 function countryToRegion(c) {
   if (!c || typeof c !== 'string') return null;
   const s = c.toLowerCase().trim();
@@ -241,9 +243,9 @@ export function initRoadTripPlanner({ map, searchResorts, escapeHtml }) {
   // Resort search-in-panel
   let rtpAddMatches = [];
   rtpAddInput.addEventListener('input', () => {
-    const q = rtpAddInput.value.toLowerCase().trim();
+    const q = foldDiacritics(rtpAddInput.value).toLowerCase().trim();
     if (!q) { rtpAddDrop.classList.remove('visible'); return; }
-    rtpAddMatches = searchResorts.filter(r => r.name.toLowerCase().includes(q)).slice(0, 7);
+    rtpAddMatches = searchResorts.filter(r => foldDiacritics(r.name).toLowerCase().includes(q)).slice(0, 7);
     if (!rtpAddMatches.length) { rtpAddDrop.classList.remove('visible'); return; }
     rtpAddDrop.innerHTML = rtpAddMatches.map((r, i) =>
       `<div class="rtp-search-item" data-index="${i}">${escapeHtml(r.name)}</div>`
