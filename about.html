@@ -121,14 +121,14 @@
     <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6">
       <div class="tw-flex tw-min-h-[60vh] tw-place-content-center tw-place-items-center tw-gap-[10%] max-lg:tw-flex-col max-lg:tw-gap-10">
         <div class="tw-flex tw-flex-shrink-0">
-          <div class="tw-h-[280px] tw-w-[420px] max-md:tw-h-[220px] max-md:tw-w-full">
-            <img src="./assets/images/legacy/AWS_Diagram.png" alt="AWS architecture diagram" class="tw-h-full tw-w-full tw-object-contain tw-rounded-lg tw-bg-white tw-border tw-border-gray-200" />
+          <div class="tw-h-[450px] tw-w-[300px]">
+            <img src="./assets/images/cloud-native-mapping-architecture.png" alt="Cloud-Native Mapping Platform Architecture: GitHub, GitHub Actions, Kubernetes, QGIS, ArcGIS Pro, Docker stations, OpenStreetMap, Sedona, Iceberg, S3 GeoParquet, CloudFront, Route 53, API Gateway, Lambda, DynamoDB, MapLibre" class="tw-h-full tw-w-full tw-object-contain tw-rounded-lg tw-bg-white tw-border tw-border-gray-200" />
           </div>
         </div>
         <div class="tw-mt-6 tw-flex tw-max-w-[450px] tw-flex-col tw-gap-4">
           <h2 class="tw-text-4xl tw-font-medium">Technology</h2>
-          <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700">Serverless architecture on AWS</p>
-          <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600">This site is built with AWS: static site on S3 with CloudFront, resort data in DynamoDB, API via Gateway and Lambda. Data is managed in Google Sheets and synced to DynamoDB. QGIS, OpenStreetMap, S3, CloudFront, Lambda, API Gateway, DynamoDB.</p>
+          <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700">GeoParquet, Sedona/Iceberg, MapLibre, AWS</p>
+          <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600">OpenStreetMap is the primary data source. QGIS and ESRI ArcGIS Pro run inside Kubernetes for processing and editing. Docker stations load data into GeoParquet files stored in S3; Apache Sedona and Apache Iceberg handle lakehouse-style processing. Code lives in GitHub with CI/CD via GitHub Actions. Route 53 hosts the domain; CloudFront serves the site; API Gateway and Lambda connect the app to DynamoDB for the wiki and editorial content. MapLibre loads GeoParquet in the browser for maps. <a href="https://vectorscopeai.com" class="tw-text-blue-600 hover:tw-underline" target="_blank" rel="noopener">Vector Scope</a> uses Global Ski Atlas as a case study for combining ESRI and open-source tools with Sedona and Iceberg.</p>
         </div>
       </div>
     </section>
@@ -142,8 +142,8 @@
           <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600">Global Ski Atlas is a solo project by Jonathan Witcoski. To learn more about me and my other projects, visit <a href="https://witcoskitech.com" class="tw-text-blue-600 hover:tw-underline">witcoskitech.com</a> or <a href="https://www.linkedin.com/in/jonathan-witcoski/" class="tw-text-blue-600 hover:tw-underline">connect on LinkedIn</a>.</p>
         </div>
         <div class="tw-flex tw-flex-shrink-0 max-lg:tw-order-2">
-          <div class="tw-h-[280px] tw-w-[420px] max-md:tw-h-[220px] max-md:tw-w-full">
-            <img src="./assets/images/legacy/team_photo.jpg" alt="Jonathan Witcoski" class="tw-h-full tw-w-full tw-object-cover tw-rounded-lg" />
+          <div class="tw-h-[450px] tw-w-[300px]">
+            <img src="./assets/images/legacy/team_photo.jpg" alt="Jonathan Witcoski" class="tw-h-full tw-w-full tw-object-contain tw-rounded-lg" />
           </div>
         </div>
       </div>
@@ -153,8 +153,8 @@
     <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6">
       <div class="tw-flex tw-min-h-[60vh] tw-place-content-center tw-place-items-center tw-gap-[10%] max-lg:tw-flex-col max-lg:tw-gap-10">
         <div class="tw-flex tw-flex-shrink-0">
-          <div class="tw-h-[280px] tw-w-[420px] max-md:tw-h-[220px] max-md:tw-w-full">
-            <img src="./assets/images/legacy/about_header.jpg" alt="Ski mountains" class="tw-h-full tw-w-full tw-object-cover tw-rounded-lg" />
+          <div class="tw-h-[450px] tw-w-[300px]">
+            <img src="./assets/images/legacy/about_header.jpg" alt="Ski mountains" class="tw-h-full tw-w-full tw-object-contain tw-rounded-lg" />
           </div>
         </div>
         <div class="tw-mt-6 tw-flex tw-max-w-[450px] tw-flex-col tw-gap-4">
@@ -165,35 +165,35 @@
       </div>
     </section>
 
-    <!-- Section 4: Text LEFT, Image RIGHT - React -->
+    <!-- Section 4: Text LEFT, Image RIGHT - React & maps -->
     <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6">
       <div class="tw-flex tw-min-h-[60vh] tw-place-content-center tw-place-items-center tw-gap-[10%] max-lg:tw-flex-col max-lg:tw-gap-10">
         <div class="tw-mt-6 tw-flex tw-max-w-[450px] tw-flex-col tw-gap-4 max-lg:tw-order-1">
-          <h2 class="tw-text-4xl tw-font-medium">Built with React</h2>
-          <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700">Modern, interactive web experiences</p>
-          <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600">Several parts of Global Ski Atlas use React for responsive, interactive UIs—including the resort comparison tool and other data-rich views. React helps deliver fast, component-based interfaces that work well across devices.</p>
+          <h2 class="tw-text-4xl tw-font-medium">Built with React &amp; MapLibre</h2>
+          <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700">Modern, interactive maps and UIs</p>
+          <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600">Maps are powered by MapLibre, loading GeoParquet data for fast, client-side rendering. Several parts of the site use React for responsive UIs—including the resort comparison tool and other data-rich views—so you get component-based interfaces that work well across devices.</p>
         </div>
         <div class="tw-flex tw-flex-shrink-0 max-lg:tw-order-2">
-          <div class="tw-h-[280px] tw-w-[420px] max-md:tw-h-[220px] max-md:tw-w-full">
-            <img src="./assets/images/react-ski-themed.png" alt="Ski-themed React - modern web meets skiing" class="tw-h-full tw-w-full tw-object-contain tw-rounded-lg" />
+          <div class="tw-h-[450px] tw-w-[300px]">
+            <img src="./assets/images/react-maplibre-ski.png" alt="React and MapLibre: interactive maps with GeoParquet and component-based UIs" class="tw-h-full tw-w-full tw-object-contain tw-rounded-lg" />
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Section 5: Image LEFT, Text RIGHT - Witcoskitech -->
+    <!-- Section 5: Image LEFT, Text RIGHT - Vector Scope -->
     <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6 tw-pb-16">
       <div class="tw-flex tw-min-h-[60vh] tw-place-content-center tw-place-items-center tw-gap-[10%] max-lg:tw-flex-col max-lg:tw-gap-10">
         <div class="tw-flex tw-flex-shrink-0">
-          <div class="tw-h-[280px] tw-w-[420px] max-md:tw-h-[220px] max-md:tw-w-full">
-            <img src="./assets/images/legacy/team_photo.jpg" alt="Jonathan Witcoski" class="tw-h-full tw-w-full tw-object-cover tw-rounded-lg" />
+          <div class="tw-h-[450px] tw-w-[300px]">
+            <img src="./assets/images/vectorscope-ai-logo.png" alt="Vector Scope AI – Collaborative map updates for agencies, ArcGIS and GeoParquet data lakes" class="tw-h-full tw-w-full tw-object-contain tw-rounded-lg" />
           </div>
         </div>
         <div class="tw-mt-6 tw-flex tw-max-w-[450px] tw-flex-col tw-gap-4">
-          <h2 class="tw-text-4xl tw-font-medium">Witcoski Tech</h2>
-          <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700">Consulting, development, and more</p>
-          <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600">I run <a href="https://witcoskitech.com" class="tw-text-blue-600 hover:tw-underline">witcoskitech.com</a> for consulting, custom development, and tech projects beyond Global Ski Atlas. Whether you need web apps, data pipelines, or geospatial solutions, get in touch to discuss your project.</p>
-          <a href="https://witcoskitech.com" class="tw-mt-6 tw-inline-flex tw-gap-2 tw-rounded-lg tw-px-8 tw-py-4 tw-text-lg tw-font-semibold tw-shadow-md tw-no-underline tw-text-white hover:tw-opacity-90" style="background-color: #2563eb;" target="_blank" rel="noopener">Visit witcoskitech.com <i class="bi bi-box-arrow-up-right"></i></a>
+          <h2 class="tw-text-4xl tw-font-medium">Vector Scope</h2>
+          <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700">ESRI and open-source geospatial integration</p>
+          <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600"><a href="https://vectorscopeai.com" class="tw-text-blue-600 hover:tw-underline" target="_blank" rel="noopener">Vector Scope</a> uses Global Ski Atlas as a case study for integrating ESRI and open-source geospatial—Sedona, Iceberg, and GeoParquet—with modern web mapping. Whether you need web apps, data pipelines, or lakehouse-style GIS, get in touch to discuss your project.</p>
+          <a href="https://vectorscopeai.com" class="tw-mt-6 tw-inline-flex tw-gap-2 tw-rounded-lg tw-px-8 tw-py-4 tw-text-lg tw-font-semibold tw-shadow-md tw-no-underline tw-text-white hover:tw-opacity-90" style="background-color: #2563eb;" target="_blank" rel="noopener">Visit Vector Scope <i class="bi bi-box-arrow-up-right"></i></a>
         </div>
       </div>
     </section>

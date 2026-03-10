@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 280" width="420" height="280" role="img" aria-label="Witcoski Tech and Vector Scope: consulting, ESRI and open-source geospatial integration">
+  <defs>
+    <linearGradient id="cardLeft" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2563eb"/>
+      <stop offset="100%" style="stop-color:#1d4ed8"/>
+    </linearGradient>
+    <linearGradient id="cardRight" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1A73E8"/>
+      <stop offset="100%" style="stop-color:#1557b0"/>
+    </linearGradient>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f8fafc"/>
+      <stop offset="100%" style="stop-color:#e2e8f0"/>
+    </linearGradient>
+    <filter id="cardShadow" x="-6%" y="-4%" width="112%" height="108%">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-opacity="0.12"/>
+    </filter>
+  </defs>
+  <title>Witcoski Tech and Vector Scope: consulting, development, ESRI and open-source geospatial</title>
+
+  <rect width="420" height="280" rx="12" fill="url(#bgGrad)" stroke="#cbd5e1" stroke-width="1"/>
+
+  <!-- Witcoski Tech card -->
+  <g filter="url(#cardShadow)" transform="translate(24, 24)">
+    <rect x="0" y="0" width="180" height="112" rx="10" fill="url(#cardLeft)" stroke="#1d4ed8" stroke-width="1"/>
+    <text x="90" y="36" font-family="Segoe UI, system-ui, sans-serif" font-size="16" font-weight="700" fill="#fff" text-anchor="middle">Witcoski Tech</text>
+    <text x="90" y="56" font-family="Segoe UI, system-ui, sans-serif" font-size="11" fill="rgba(255,255,255,0.9)" text-anchor="middle">witcoskitech.com</text>
+    <line x1="16" y1="68" x2="164" y2="68" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
+    <text x="90" y="88" font-family="Segoe UI, system-ui, sans-serif" font-size="10" fill="rgba(255,255,255,0.95)" text-anchor="middle">Consulting &amp; custom development</text>
+    <text x="90" y="104" font-family="Segoe UI, system-ui, sans-serif" font-size="10" fill="rgba(255,255,255,0.95)" text-anchor="middle">Web apps · Data pipelines · GIS</text>
+  </g>
+
+  <!-- Vector Scope card -->
+  <g filter="url(#cardShadow)" transform="translate(216, 24)">
+    <rect x="0" y="0" width="180" height="112" rx="10" fill="url(#cardRight)" stroke="#1557b0" stroke-width="1"/>
+    <text x="90" y="36" font-family="Segoe UI, system-ui, sans-serif" font-size="16" font-weight="700" fill="#fff" text-anchor="middle">Vector Scope</text>
+    <text x="90" y="56" font-family="Segoe UI, system-ui, sans-serif" font-size="11" fill="rgba(255,255,255,0.9)" text-anchor="middle">vectorscopeai.com</text>
+    <line x1="16" y1="68" x2="164" y2="68" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
+    <text x="90" y="86" font-family="Segoe UI, system-ui, sans-serif" font-size="10" fill="rgba(255,255,255,0.95)" text-anchor="middle">ESRI + open-source integration</text>
+    <text x="90" y="102" font-family="Segoe UI, system-ui, sans-serif" font-size="10" fill="rgba(255,255,255,0.95)" text-anchor="middle">Sedona · Iceberg · GeoParquet</text>
+  </g>
+
+  <!-- Bridge / case study strip -->
+  <g transform="translate(24, 152)">
+    <rect x="0" y="0" width="372" height="52" rx="10" fill="#fff" stroke="#cbd5e1" stroke-width="1.5" filter="url(#cardShadow)"/>
+    <text x="186" y="22" font-family="Segoe UI, system-ui, sans-serif" font-size="12" font-weight="600" fill="#334155" text-anchor="middle">Global Ski Atlas — case study</text>
+    <text x="186" y="40" font-family="Segoe UI, system-ui, sans-serif" font-size="10" fill="#64748b" text-anchor="middle">Modern web mapping with ESRI and open-source geospatial</text>
+  </g>
+
+  <!-- Tech pills -->
+  <g transform="translate(24, 218)">
+    <rect x="0" y="0" width="64" height="28" rx="14" fill="#e0f2fe" stroke="#0ea5e9" stroke-width="1"/>
+    <text x="32" y="18" font-family="Segoe UI, system-ui, sans-serif" font-size="10" font-weight="600" fill="#0369a1" text-anchor="middle">ESRI</text>
+    <rect x="72" y="0" width="72" height="28" rx="14" fill="#ede9fe" stroke="#8b5cf6" stroke-width="1"/>
+    <text x="108" y="18" font-family="Segoe UI, system-ui, sans-serif" font-size="10" font-weight="600" fill="#5b21b6" text-anchor="middle">Sedona</text>
+    <rect x="152" y="0" width="72" height="28" rx="14" fill="#ede9fe" stroke="#8b5cf6" stroke-width="1"/>
+    <text x="188" y="18" font-family="Segoe UI, system-ui, sans-serif" font-size="10" font-weight="600" fill="#5b21b6" text-anchor="middle">Iceberg</text>
+    <rect x="232" y="0" width="82" height="28" rx="14" fill="#d1fae5" stroke="#10b981" stroke-width="1"/>
+    <text x="273" y="18" font-family="Segoe UI, system-ui, sans-serif" font-size="10" font-weight="600" fill="#047857" text-anchor="middle">GeoParquet</text>
+    <rect x="322" y="0" width="74" height="28" rx="14" fill="#dbeafe" stroke="#2563eb" stroke-width="1"/>
+    <text x="359" y="18" font-family="Segoe UI, system-ui, sans-serif" font-size="10" font-weight="600" fill="#1d4ed8" text-anchor="middle">Lakehouse</text>
+  </g>
+</svg>
