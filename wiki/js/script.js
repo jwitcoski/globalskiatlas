@@ -10,7 +10,9 @@ var RESORT_CATEGORY_LABEL = { small_hill: 'Small hill', ski_mountain: 'Ski mount
 var RESORT_FACT_LABELS = {
   1: 'Location', 2: 'Skiable terrain', 3: 'Trails count', 4: 'Lifts count', 5: 'Longest trail', 6: 'Longest lift',
   7: 'Total area', 8: 'Trail breakdown', 9: 'High elevation', 10: 'Low elevation', 11: 'Lift types',
-  12: 'Gladed terrain', 13: 'Snow park', 14: 'Sledding / tubing', 15: 'Vertical drop'
+  12: 'Gladed terrain', 13: 'Snow park', 14: 'Sledding / tubing', 15: 'Vertical drop',
+  16: 'Night skiing', 17: 'Lit pistes', 18: 'Lit lifts', 19: 'Snowmaking', 20: 'Website', 21: 'Operator',
+  22: 'Opening hours', 23: 'Phone', 24: 'Elevation source', 25: 'Total trail length', 26: 'Ski north angle', 27: 'Vertical drop (ft)'
 };
 
 // Dual units: m ↔ ft, acres ↔ ha, mi ↔ km (show both for all audiences)
@@ -140,6 +142,14 @@ var YWIKI_PATH = (function () {
   return p;
 }());
 
+function resortDisplayName(p) {
+  if (!p) return '';
+  var en = (p.englishName != null && p.englishName !== '') ? String(p.englishName).trim() : '';
+  var ti = (p.title != null && p.title !== '') ? String(p.title).trim() : '';
+  if (en && ti && en !== ti) return en + ' (' + ti + ')';
+  return en || ti || p.pageId || '';
+}
+
 function renderFromMarkdown(text) {
   var target = document.querySelector('.js-resort-body');
   if (!target) return;
@@ -265,6 +275,7 @@ function renderStatsTrailAndMeta(page, useRanksOverride) {
     : (page.visibleFactRanks && Array.isArray(page.visibleFactRanks) && page.visibleFactRanks.length ? page.visibleFactRanks : null);
   function rankAllowed(r) {
     if (useRanks) return useRanks.indexOf(r) !== -1;
+    if (r >= 16) return false;
     if (r >= 12) return true;
     if (r === 15) return maxRank >= 9;
     return r <= maxRank;
@@ -297,6 +308,12 @@ function renderStatsTrailAndMeta(page, useRanksOverride) {
   }
   if (rankAllowed(9) && page.highElevationM != null) stats.push(['ELEVATION (HIGH)', formatElevation(Number(page.highElevationM))]);
   if (rankAllowed(10) && page.lowElevationM != null) stats.push(['ELEVATION (LOW)', formatElevation(Number(page.lowElevationM))]);
+  if (rankAllowed(17) && page.litPistes != null && !isNaN(Number(page.litPistes))) stats.push(['LIT PISTES', String(page.litPistes)]);
+  if (rankAllowed(18) && page.litLifts != null && !isNaN(Number(page.litLifts))) stats.push(['LIT LIFTS', String(page.litLifts)]);
+  if (rankAllowed(25) && page.totalTrailMi != null && !isNaN(Number(page.totalTrailMi))) stats.push(['TOTAL TRAIL LENGTH', formatDistanceMi(Number(page.totalTrailMi))]);
+  else if (rankAllowed(25) && page.totalTrailMi) stats.push(['TOTAL TRAIL LENGTH', page.totalTrailMi + ' mi']);
+  if (rankAllowed(26) && page.skiNorthAngle != null && !isNaN(Number(page.skiNorthAngle))) stats.push(['SKI NORTH ANGLE', Number(page.skiNorthAngle) + '\u00B0']);
+  if (rankAllowed(27) && page.verticalDropFt != null && !isNaN(Number(page.verticalDropFt))) stats.push(['VERTICAL DROP (FT)', Number(page.verticalDropFt).toLocaleString() + ' ft']);
   var statsEl = document.getElementById('resort-stats');
   if (statsEl) {
     statsEl.innerHTML = stats.map(function (s) {
@@ -328,6 +345,13 @@ function renderStatsTrailAndMeta(page, useRanksOverride) {
   if (rankAllowed(12) && (page.gladedTerrain || page.gladedTerrain === 'yes' || page.gladedTerrain === 'no')) metaParts.push('Gladed: ' + (page.gladedTerrain === 'yes' ? 'Yes' : page.gladedTerrain === 'no' ? 'No' : page.gladedTerrain));
   if (rankAllowed(13) && (page.snowPark || page.snowPark === 'yes' || page.snowPark === 'no')) metaParts.push('Snow park: ' + (page.snowPark === 'yes' ? 'Yes' : page.snowPark === 'no' ? 'No' : page.snowPark));
   if (rankAllowed(14) && (page.sleddingTubing || page.sleddingTubing === 'yes' || page.sleddingTubing === 'no')) metaParts.push('Sledding/tubing: ' + (page.sleddingTubing === 'yes' ? 'Yes' : page.sleddingTubing === 'no' ? 'No' : page.sleddingTubing));
+  if (rankAllowed(16) && (page.nightSkiing || page.nightSkiing === 'yes' || page.nightSkiing === 'no')) metaParts.push('Night skiing: ' + (page.nightSkiing === 'yes' ? 'Yes' : page.nightSkiing === 'no' ? 'No' : page.nightSkiing));
+  if (rankAllowed(19) && (page.snowmaking || page.snowmaking === 'yes' || page.snowmaking === 'no')) metaParts.push('Snowmaking: ' + (page.snowmaking === 'yes' ? 'Yes' : page.snowmaking === 'no' ? 'No' : page.snowmaking));
+  if (rankAllowed(20) && page.website) metaParts.push('Website: ' + page.website);
+  if (rankAllowed(21) && page.operator) metaParts.push('Operator: ' + page.operator);
+  if (rankAllowed(22) && page.openingHours) metaParts.push('Opening hours: ' + page.openingHours);
+  if (rankAllowed(23) && page.phone) metaParts.push('Phone: ' + page.phone);
+  if (rankAllowed(24) && page.elevationSource) metaParts.push('Elevation source: ' + page.elevationSource);
   var metaEl = document.getElementById('resort-meta');
   if (metaEl) {
     metaEl.textContent = metaParts.join(' · ');
@@ -339,7 +363,7 @@ function renderStatsTrailAndMeta(page, useRanksOverride) {
   }
 }
 
-/** Populate Customize facts checkboxes (plan 9.1). Shows all facts 1–15; user can select any subset. */
+/** Populate Customize facts checkboxes (plan 9.1). Shows all facts 1–27; user can select any subset. */
 function renderFactCheckboxes(page, category, maxRank) {
   var wrap = document.getElementById('resort-customize-facts-wrap');
   var container = document.getElementById('resort-fact-checkboxes');
@@ -353,13 +377,14 @@ function renderFactCheckboxes(page, category, maxRank) {
     ? page.visibleFactRanks
     : null;
   var checkedSet = {};
+  var maxFactRank = 27;
   if (current) {
-    current.forEach(function (r) { if (r >= 1 && r <= 15) checkedSet[r] = true; });
+    current.forEach(function (r) { if (r >= 1 && r <= maxFactRank) checkedSet[r] = true; });
   } else {
     defaultRanks.forEach(function (r) { checkedSet[r] = true; });
   }
   var allRanks = [];
-  for (var r = 1; r <= 15; r++) allRanks.push(r);
+  for (var r = 1; r <= maxFactRank; r++) allRanks.push(r);
   container.innerHTML = allRanks.map(function (rank) {
     var label = RESORT_FACT_LABELS[rank] || 'Fact ' + rank;
     var checked = checkedSet[rank] ? ' checked' : '';
@@ -451,7 +476,7 @@ function loadRegionList(page) {
         bodyEl.innerHTML = list.length === 0
           ? '<p class="resort-workflow-hint">No countries in this region.</p>'
           : '<ul class="resort-region-links">' + list.map(function (p) {
-              return '<li><a href="/wiki/resort.html?page=' + encodeURIComponent(p.pageId) + '">' + esc(p.title || p.pageId) + '</a></li>';
+              return '<li><a href="/wiki/resort.html?page=' + encodeURIComponent(p.pageId) + '">' + esc(resortDisplayName(p)) + '</a></li>';
             }).join('') + '</ul>';
       } else if (isCountry) {
         list = pages.filter(function (p) {
@@ -461,7 +486,7 @@ function loadRegionList(page) {
         bodyEl.innerHTML = list.length === 0
           ? '<p class="resort-workflow-hint">No states or regions in this country.</p>'
           : '<ul class="resort-region-links">' + list.map(function (p) {
-              return '<li><a href="/wiki/resort.html?page=' + encodeURIComponent(p.pageId) + '">' + esc(p.title || p.pageId) + '</a></li>';
+              return '<li><a href="/wiki/resort.html?page=' + encodeURIComponent(p.pageId) + '">' + esc(resortDisplayName(p)) + '</a></li>';
             }).join('') + '</ul>';
       } else {
         list = pages.filter(function (p) {
@@ -471,7 +496,7 @@ function loadRegionList(page) {
         bodyEl.innerHTML = list.length === 0
           ? '<p class="resort-workflow-hint">No resorts in this region.</p>'
           : '<ul class="resort-region-links">' + list.map(function (p) {
-              return '<li><a href="/wiki/resort.html?page=' + encodeURIComponent(p.pageId || '') + '">' + esc(p.title || p.pageId) + '</a></li>';
+              return '<li><a href="/wiki/resort.html?page=' + encodeURIComponent(p.pageId || '') + '">' + esc(resortDisplayName(p)) + '</a></li>';
             }).join('') + '</ul>';
       }
     })
@@ -659,9 +684,9 @@ function populatePage(page) {
   }
 
   window._ywikiLastPage = page;
-  document.title = (page.title || YWIKI_PATH) + ' – Ski Atlas';
+  document.title = (resortDisplayName(page) || YWIKI_PATH) + ' – Ski Atlas';
   setText('resort-location', [page.state, page.country].filter(Boolean).join(', '));
-  setText('resort-title', page.title || YWIKI_PATH);
+  setText('resort-title', resortDisplayName(page) || YWIKI_PATH);
 
   function slug(str) {
     if (!str || typeof str !== 'string') return '';
@@ -861,12 +886,14 @@ function populatePage(page) {
   if (hasCoords || page.pageId) {
     initResortMap(hasCoords ? lat : null, hasCoords ? lon : null, page.pageId || YWIKI_PATH);
     if (hasCoords && window.enhanceResortMap) {
-      window.enhanceResortMap({
+      var enhanceParams = {
         title: page.title || YWIKI_PATH,
         lat: lat,
         lon: lon,
         pageId: page.pageId || YWIKI_PATH
-      });
+      };
+      if (page.skiNorthAngle != null && !isNaN(Number(page.skiNorthAngle))) enhanceParams.skiNorthAngle = Number(page.skiNorthAngle);
+      window.enhanceResortMap(enhanceParams);
     }
   } else {
     var aside = document.getElementById('resort-map-aside');

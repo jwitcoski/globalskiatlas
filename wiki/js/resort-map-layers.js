@@ -80,7 +80,7 @@ function formatTrailLength(meters) {
 }
 
 async function enhanceResortMap(params) {
-  const { title, lat, lon, pageId } = params || {};
+  const { title, lat, lon, pageId, skiNorthAngle } = params || {};
   const map = window.RESORT_MAP_INSTANCE;
   if (!map || lat == null || lon == null || !title) return;
 
@@ -108,6 +108,10 @@ async function enhanceResortMap(params) {
     }
     const { outlineFeature, liftFeats, pisteFeats, extentBounds, southToNorthBearing } = data;
     worker.terminate();
+
+    const bearing = (skiNorthAngle != null && !Number.isNaN(Number(skiNorthAngle)))
+      ? -Number(skiNorthAngle)
+      : (southToNorthBearing != null ? -southToNorthBearing : 0);
 
     try {
       if (!map.getSource('outline') && outlineFeature) {
@@ -204,10 +208,10 @@ async function enhanceResortMap(params) {
       if (extentBounds) {
         map.fitBounds(extentBounds, { padding: 20, maxZoom: 16 });
         map.once('moveend', () => {
-          if (outlineFeature) map.setBearing(-southToNorthBearing);
+          map.setBearing(bearing);
         });
-      } else if (outlineFeature) {
-        map.setBearing(-southToNorthBearing);
+      } else {
+        map.setBearing(bearing);
       }
 
       const legendEl = document.getElementById('resort-map-legend');

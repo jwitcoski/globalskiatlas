@@ -244,6 +244,13 @@
     }
     function foldDiacritics(str) { if (str == null || str === '') return ''; return String(str).normalize('NFD').replace(/\p{M}/gu, ''); }
 
+    function browseDisplayName(p) {
+      var en = (p.englishName != null && p.englishName !== '') ? String(p.englishName).trim() : '';
+      var ti = (p.title != null && p.title !== '') ? String(p.title).trim() : '';
+      if (en && ti && en !== ti) return en + ' (' + ti + ')';
+      return en || ti || p.pageId || '';
+    }
+
     function resortPageSlug(p) {
       if (p.pageType === 'country' || p.pageType === 'state' || p.pageType === 'continent') return p.pageId;
       var t = slug(p.title || '');
@@ -262,7 +269,13 @@
       var type = document.getElementById('browse-type').value;
 
       var filtered = _allPages.filter(function (p) {
-        if (q && !foldDiacritics(p.title||'').toLowerCase().includes(q) && !foldDiacritics(p.state||'').toLowerCase().includes(q) && !foldDiacritics(p.country||'').toLowerCase().includes(q)) return false;
+        if (q) {
+          var en = foldDiacritics(p.englishName || '').toLowerCase();
+          var ti = foldDiacritics(p.title || '').toLowerCase();
+          var st = foldDiacritics(p.state || '').toLowerCase();
+          var co = foldDiacritics(p.country || '').toLowerCase();
+          if (!en.includes(q) && !ti.includes(q) && !st.includes(q) && !co.includes(q)) return false;
+        }
         if (country && p.country !== country) return false;
         if (state && p.state !== state) return false;
         if (book === 'unknown') {
@@ -290,7 +303,7 @@
         if (p.downhillTrails) badges.push(p.downhillTrails + ' trails');
         if (p.skiableTerrainAcres) badges.push(Math.round(p.skiableTerrainAcres) + ' acres');
         return '<a class="browse-card" href="/wiki/resort.html?page=' + esc(resortPageSlug(p)) + '">' +
-          '<div class="browse-card-main"><div class="browse-card-title">' + esc(p.title || p.pageId) + '</div>' +
+          '<div class="browse-card-main"><div class="browse-card-title">' + esc(browseDisplayName(p)) + '</div>' +
           (location ? '<div class="browse-card-location">' + esc(location) + '</div>' : '') + '</div>' +
           (badges.length ? '<div class="browse-card-meta">' + badges.map(function(b){return '<span class="browse-badge">'+esc(b)+'</span>';}).join('') + '</div>' : '') +
           '</a>';
