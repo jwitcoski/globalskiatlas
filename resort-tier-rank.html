@@ -707,6 +707,16 @@
     const AUTO_TIER_LABELS = { size: 'Size (acres)', runs: 'Number of runs', lifts: 'Number of lifts', difficult: 'Difficult/extreme runs', random: 'Random' };
     const TIER_LABELS = { S: 'Top tier (best)', A: 'Very strong', B: 'Above average', C: 'Average', D: 'Below average', E: 'Weak', F: 'Bottom tier (worst)' };
     const NAME_KEYS = ['name', 'resort_name', 'title', 'area_name', 'Name'];
+    /** Display english_name (name) when both exist; else english_name or name. */
+    function getDisplayName(props) {
+      if (!props) return undefined;
+      const en = props.english_name != null && String(props.english_name).trim() !== '' ? String(props.english_name).trim() : null;
+      const name = getProp(props, NAME_KEYS);
+      const nameStr = name != null && String(name).trim() !== '' ? String(name).trim() : null;
+      if (en && nameStr && en !== nameStr) return en + ' (' + nameStr + ')';
+      if (en) return en;
+      return nameStr || undefined;
+    }
     const COUNTRY_KEYS = ['country', 'Country', 'country_name', 'addr:country'];
     const STATE_KEYS = ['state', 'State', 'addr:state', 'province', 'addr:province'];
     const STATE_DRILLDOWN_THRESHOLD = 50;
@@ -813,8 +823,9 @@
         if (name == null || String(name).trim() === '') return null;
         const key = normalizeResortName(name);
         const ar = analyzedByName.get(key) || null;
+        const displayName = getDisplayName(ar || f.properties) || String(name).trim();
         return {
-          name: String(name).trim(),
+          name: displayName,
           key,
           country: (ar && getProp(ar, COUNTRY_KEYS)) ? String(getProp(ar, COUNTRY_KEYS)).trim() : 'Other',
           state: (ar && getProp(ar, STATE_KEYS)) ? String(getProp(ar, STATE_KEYS)).trim() : '',

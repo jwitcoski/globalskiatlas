@@ -540,6 +540,16 @@
     const PISTES_URL = 'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/pistes.parquet';
 
     const NAME_KEYS = ['name', 'resort_name', 'title', 'area_name', 'Name'];
+    /** Display english_name (name) when both exist; else english_name or name. */
+    function getDisplayName(props) {
+      if (!props) return undefined;
+      const en = props.english_name != null && String(props.english_name).trim() !== '' ? String(props.english_name).trim() : null;
+      const name = getProp(props, NAME_KEYS);
+      const nameStr = name != null && String(name).trim() !== '' ? String(name).trim() : null;
+      if (en && nameStr && en !== nameStr) return en + ' (' + nameStr + ')';
+      if (en) return en;
+      return nameStr || undefined;
+    }
     const COUNTRY_KEYS = ['country', 'Country', 'country_name', 'country_name_en', 'addr:country'];
     const STATE_KEYS = ['state', 'State', 'addr:state', 'province', 'addr:province'];
     const STATE_DRILLDOWN_THRESHOLD = 50; // use state/province grouping when country has this many resorts
@@ -760,6 +770,7 @@
           if (name == null || String(name).trim() === '') return null;
           const key = normalizeResortName(name);
           const analyzedRow = analyzedByName.get(key) || null;
+          const displayName = getDisplayName(analyzedRow || f.properties) || String(name).trim();
           const country = (analyzedRow && getProp(analyzedRow, COUNTRY_KEYS)) != null
             ? String(getProp(analyzedRow, COUNTRY_KEYS)).trim()
             : '';
@@ -767,7 +778,7 @@
             ? String(getProp(analyzedRow, STATE_KEYS)).trim()
             : '';
           return {
-            name: String(name).trim(),
+            name: displayName,
             key,
             country: country || 'Other',
             state: state || '',
