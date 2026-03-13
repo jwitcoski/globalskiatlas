@@ -22,6 +22,19 @@ The wiki (browse, resort pages, comments, revisions) is served by the Express se
 
 2. **Note the API URL** from the stack output `WikiApiUrl` (e.g. `https://abc123.execute-api.us-east-1.amazonaws.com`).
 
+3. **Iceberg stats (optional)**  
+   To show live Iceberg table counts and sample resorts on the [Download Data](https://globalskiatlas.com/DownloadData.html) page, set the **`IcebergStatsBucket`** parameter to the S3 bucket that holds (or will hold) `iceberg-stats/latest.json`. The Lambda then serves that JSON at `/api/iceberg-stats`. Example:
+
+   ```bash
+   sam deploy --parameter-overrides \
+     DynamoDBTablePrefix=atlas \
+     CognitoUserPoolId=us-east-1_xxx \
+     CognitoClientId=xxx \
+     IcebergStatsBucket=globalskiatlas-backend-k8s-output
+   ```
+
+   `samconfig.toml` can include `IcebergStatsBucket=\"globalskiatlas-backend-k8s-output\"` in `parameter_overrides` so future deploys keep it. The Lambda gets **read-only** access to that bucket (no public read required). To populate the stats, run the upload script in the **globalskiatlas_data** repo (see [docs/ICEBERG.md](https://github.com/jwitcoski/globalskiatlas_data/blob/main/docs/ICEBERG.md) and `scripts/upload_iceberg_stats.py`) after your Iceberg pipeline runs.
+
 ## CloudFront behavior (production site)
 
 So that `https://globalskiatlas.com/api/wiki/index` (and other `/api/wiki/*` calls) hit API Gateway instead of S3:
@@ -38,7 +51,14 @@ So that `https://globalskiatlas.com/api/wiki/index` (and other `/api/wiki/*` cal
    - **Origin request policy**: Either leave default or use one that does **not** forward the viewer’s Host header (e.g. **CachingDisabled** or a policy that only forwards needed headers). Sending `Host: yourdomain.com` to API Gateway can break routing; CloudFront should use the origin’s hostname.
    - Put this behavior **above** the default `*` (S3) so it takes precedence for `/api/wiki/*`.
 
-After saving, requests to `https://globalskiatlas.com/api/wiki/index` will go to API Gateway → Lambda → DynamoDB, and the wiki will work on the live site.
+4. **Iceberg stats (optional)**  
+   If you set `IcebergStatsBucket`, add another behavior so the Download Data page can load live stats:
+   - **Path pattern**: `api/iceberg-stats`
+   - **Origin**: same Wiki API origin as above.
+   - **Cache policy**: CachingDisabled (or short TTL).
+   - Put this behavior **above** the default `*` (and usually same level as or above `api/wiki*`).
+
+After saving, requests to `https://globalskiatlas.com/api/wiki/index` will go to API Gateway → Lambda → DynamoDB, and the wiki will work on the live site. Requests to `https://globalskiatlas.com/api/iceberg-stats` will return the Iceberg stats JSON when the bucket and object are configured.
 
 ### Troubleshooting: "Direct API works, CloudFront doesn't"
 
