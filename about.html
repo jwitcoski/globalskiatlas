@@ -117,18 +117,34 @@
       <p class="tw-mt-2 tw-text-gray-500">Learn about Global Ski Atlas, the technology behind it, and the team.</p>
     </div>
 
-    <!-- Section 1: Image LEFT, Text RIGHT - Technology -->
+    <!-- Section 1: Frontend – static site, wiki, CI/CD (image left, text right) -->
     <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6">
       <div class="tw-flex tw-min-h-[60vh] tw-place-content-center tw-place-items-center tw-gap-[10%] max-lg:tw-flex-col max-lg:tw-gap-10">
         <div class="tw-flex tw-flex-shrink-0">
-          <div class="tw-h-[450px] tw-w-[300px]">
-            <img src="./assets/images/cloud-native-mapping-architecture.png" alt="Cloud-Native Mapping Platform Architecture: GitHub, GitHub Actions, Kubernetes, QGIS, ArcGIS Pro, Docker stations, OpenStreetMap, Sedona, Iceberg, S3 GeoParquet, CloudFront, Route 53, API Gateway, Lambda, DynamoDB, MapLibre" class="tw-h-full tw-w-full tw-object-contain tw-rounded-lg tw-bg-white tw-border tw-border-gray-200" />
+          <div class="tw-h-[675px] tw-w-[450px]">
+            <img src="./assets/images/AWS_Frontend.png" alt="AWS Frontend: GitHub, GitHub Actions, S3 static site, CloudFront CDN, API Gateway, Lambda wiki API, DynamoDB (WikiPages, WikiRevisions, WikiComments), Wiki (Online Atlas)" class="tw-h-full tw-w-full tw-object-contain tw-rounded-lg tw-bg-white tw-border tw-border-gray-200" />
           </div>
         </div>
         <div class="tw-mt-6 tw-flex tw-max-w-[450px] tw-flex-col tw-gap-4">
-          <h2 class="tw-text-4xl tw-font-medium">Technology</h2>
-          <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700">GeoParquet, Sedona/Iceberg, MapLibre, AWS</p>
-          <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600">OpenStreetMap is the primary data source. QGIS and ESRI ArcGIS Pro run inside Kubernetes for processing and editing. Docker stations load data into GeoParquet files stored in S3; Apache Sedona and Apache Iceberg handle lakehouse-style processing. Code lives in GitHub with CI/CD via GitHub Actions. Route 53 hosts the domain; CloudFront serves the site; API Gateway and Lambda connect the app to DynamoDB for the wiki and editorial content. MapLibre loads GeoParquet in the browser for maps. <a href="https://vectorscopeai.com" class="tw-text-blue-600 hover:tw-underline" target="_blank" rel="noopener">Vector Scope</a> uses Global Ski Atlas as a case study for combining ESRI and open-source tools with Sedona and Iceberg.</p>
+          <h2 class="tw-text-4xl tw-font-medium">Frontend</h2>
+          <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700">Static site, CDN, and Online Atlas wiki</p>
+          <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600">The site is built and deployed from GitHub via GitHub Actions. Static content—<code class="tw-text-sm tw-bg-gray-100 tw-px-1 tw-rounded">about.html</code>, other pages, <code class="tw-text-sm tw-bg-gray-100 tw-px-1 tw-rounded">css/</code>, and <code class="tw-text-sm tw-bg-gray-100 tw-px-1 tw-rounded">assets</code>—lives in Amazon S3; Amazon CloudFront serves it over HTTPS to users and browsers. The <a href="wiki/browse.html" class="tw-text-blue-600 hover:tw-underline">Online Atlas</a> wiki is powered by API Gateway and AWS Lambda. Lambda reads and writes Amazon DynamoDB tables (WikiPages, WikiRevisions, WikiComments) for resort pages and edits. Map data can optionally come from the backend S3 GeoParquet layer.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 1b: Backend – data pipeline (text left, image right) -->
+    <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6">
+      <div class="tw-flex tw-min-h-[60vh] tw-place-content-center tw-place-items-center tw-gap-[10%] max-lg:tw-flex-col max-lg:tw-gap-10">
+        <div class="tw-mt-6 tw-flex tw-max-w-[450px] tw-flex-col tw-gap-4 max-lg:tw-order-1">
+          <h2 class="tw-text-4xl tw-font-medium">Backend</h2>
+          <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700">Data pipeline: from code to map</p>
+          <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600">The data pipeline runs on AWS. Code in GitHub is built and pushed as container images to Amazon ECR; GitHub Actions drives CI/CD. Amazon ECS Fargate runs the pipeline jobs, which write processed data into Amazon S3—public GeoParquet in <code class="tw-text-sm tw-bg-gray-100 tw-px-1 tw-rounded">combined/</code> for the frontend map, and versioned Iceberg tables in <code class="tw-text-sm tw-bg-gray-100 tw-px-1 tw-rounded">iceberg/</code> for analytics. AWS Glue provides the Data Catalog; Athena and Spark query the data. The frontend map consumes the public GeoParquet from S3.</p>
+        </div>
+        <div class="tw-flex tw-flex-shrink-0 max-lg:tw-order-2">
+          <div class="tw-h-[675px] tw-w-[450px]">
+            <img src="./assets/images/AWS_Backend.png" alt="AWS Backend: GitHub, GitHub Actions, ECR, ECS Fargate, S3 GeoParquet and Iceberg, Glue, Athena/Spark, Frontend (map)" class="tw-h-full tw-w-full tw-object-contain tw-rounded-lg tw-bg-white tw-border tw-border-gray-200" />
+          </div>
         </div>
       </div>
     </section>
@@ -142,7 +158,7 @@
           <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600">Global Ski Atlas is a solo project by Jonathan Witcoski. To learn more about me and my other projects, visit <a href="https://witcoskitech.com" class="tw-text-blue-600 hover:tw-underline">witcoskitech.com</a> or <a href="https://www.linkedin.com/in/jonathan-witcoski/" class="tw-text-blue-600 hover:tw-underline">connect on LinkedIn</a>.</p>
         </div>
         <div class="tw-flex tw-flex-shrink-0 max-lg:tw-order-2">
-          <div class="tw-h-[450px] tw-w-[300px]">
+          <div class="tw-h-[675px] tw-w-[450px]">
             <img src="./assets/images/legacy/team_photo.jpg" alt="Jonathan Witcoski" class="tw-h-full tw-w-full tw-object-contain tw-rounded-lg" />
           </div>
         </div>
@@ -153,7 +169,7 @@
     <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6">
       <div class="tw-flex tw-min-h-[60vh] tw-place-content-center tw-place-items-center tw-gap-[10%] max-lg:tw-flex-col max-lg:tw-gap-10">
         <div class="tw-flex tw-flex-shrink-0">
-          <div class="tw-h-[450px] tw-w-[300px]">
+          <div class="tw-h-[675px] tw-w-[450px]">
             <img src="./assets/images/legacy/about_header.jpg" alt="Ski mountains" class="tw-h-full tw-w-full tw-object-contain tw-rounded-lg" />
           </div>
         </div>
@@ -174,7 +190,7 @@
           <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600">Maps are powered by MapLibre, loading GeoParquet data for fast, client-side rendering. Several parts of the site use React for responsive UIs—including the resort comparison tool and other data-rich views—so you get component-based interfaces that work well across devices.</p>
         </div>
         <div class="tw-flex tw-flex-shrink-0 max-lg:tw-order-2">
-          <div class="tw-h-[450px] tw-w-[300px]">
+          <div class="tw-h-[675px] tw-w-[450px]">
             <img src="./assets/images/react-maplibre-ski.png" alt="React and MapLibre: interactive maps with GeoParquet and component-based UIs" class="tw-h-full tw-w-full tw-object-contain tw-rounded-lg" />
           </div>
         </div>
@@ -185,7 +201,7 @@
     <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6 tw-pb-16">
       <div class="tw-flex tw-min-h-[60vh] tw-place-content-center tw-place-items-center tw-gap-[10%] max-lg:tw-flex-col max-lg:tw-gap-10">
         <div class="tw-flex tw-flex-shrink-0">
-          <div class="tw-h-[450px] tw-w-[300px]">
+          <div class="tw-h-[675px] tw-w-[450px]">
             <img src="./assets/images/vectorscope-ai-logo.png" alt="Vector Scope AI – Collaborative map updates for agencies, ArcGIS and GeoParquet data lakes" class="tw-h-full tw-w-full tw-object-contain tw-rounded-lg" />
           </div>
         </div>
