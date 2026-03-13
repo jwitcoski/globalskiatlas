@@ -3,8 +3,10 @@
  * Revisions and comments are not created from parquet.
  *
  * Usage:
- *   node scripts/wiki-ingest-parquet.js [parquet-url-or-path]
+ *   node scripts/wiki-ingest-parquet.js [parquet-url-or-path] [--clear] [--prefix atlas]
  * Default URL: https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/ski_areas_analyzed.parquet
+ * Use --clear to delete all existing WikiPages before ingesting (ensures a clean replace).
+ * Use --prefix atlas to target atlas-WikiPages (production); default prefix is ywiki.
  *
  * Env: AWS_REGION, DYNAMODB_TABLE_PREFIX (default ywiki). Loads .env from project root if present.
  * Requires AWS credentials.
@@ -14,10 +16,17 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
-const { DynamoDBDocumentClient, BatchWriteCommand } = require('@aws-sdk/lib-dynamodb');
+const { DynamoDBDocumentClient, BatchWriteCommand, ScanCommand } = require('@aws-sdk/lib-dynamodb');
 
 const defaultParquetUrl = 'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/ski_areas_analyzed.parquet';
-const prefix = process.env.DYNAMODB_TABLE_PREFIX || 'ywiki';
+// Prefix: --prefix atlas (CLI) or DYNAMODB_TABLE_PREFIX env; default ywiki
+function getPrefix() {
+  const argv = process.argv.slice(2);
+  const i = argv.indexOf('--prefix');
+  if (i !== -1 && argv[i + 1]) return argv[i + 1];
+  return process.env.DYNAMODB_TABLE_PREFIX || 'ywiki';
+}
+const prefix = getPrefix();
 const tableName = `${prefix}-WikiPages`;
 const region = process.env.AWS_REGION || 'us-east-1';
 const BATCH_SIZE = 25;
@@ -308,9 +317,54 @@ async function writeBatch(items) {
   await docClient.send(new BatchWriteCommand(req));
 }
 
+/** Scan table for all pageIds, then batch-delete. WikiPages has HASH key pageId only. */
+async function clearWikiPagesTable() {
+  const pageIds = [];
+  let lastKey;
+  do {
+    const cmd = new ScanCommand({
+      TableName: tableName,
+      ProjectionExpression: 'pageId',
+      ...(lastKey && { ExclusiveStartKey: lastKey }),
+    });
+    const out = await docClient.send(cmd);
+    for (const item of out.Items || []) {
+      if (item.pageId) pageIds.push(item.pageId);
+    }
+    lastKey = out.LastEvaluatedKey;
+  } while (lastKey);
+
+  if (pageIds.length === 0) {
+    console.log('Table', tableName, 'is already empty.');
+    return;
+  }
+  console.log('Clearing', pageIds.length, 'existing items from', tableName);
+  for (let i = 0; i < pageIds.length; i += BATCH_SIZE) {
+    const batch = pageIds.slice(i, i + BATCH_SIZE);
+    const req = {
+      RequestItems: {
+        [tableName]: batch.map((pageId) => ({
+          DeleteRequest: { Key: { pageId } },
+        })),
+      },
+    };
+    await docClient.send(new BatchWriteCommand(req));
+    if ((i + batch.length) % 250 === 0 || i + batch.length === pageIds.length) {
+      console.log('  Deleted', Math.min(i + batch.length, pageIds.length), '/', pageIds.length);
+    }
+  }
+  console.log('Table cleared.');
+}
+
 async function main() {
-  const input = process.argv[2] || defaultParquetUrl;
+  const rawArgv = process.argv.slice(2);
+  const clearFirst = rawArgv.includes('--clear');
+  const input = rawArgv.filter((a, i) => a !== '--clear' && a !== '--prefix' && (i === 0 || rawArgv[i - 1] !== '--prefix'))[0] || defaultParquetUrl;
   let filePath = input;
+
+  if (clearFirst) {
+    await clearWikiPagesTable();
+  }
   if (input.startsWith('http://') || input.startsWith('https://')) {
     console.log('Downloading parquet from', input);
     filePath = await downloadParquet(input);

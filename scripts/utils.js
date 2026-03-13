@@ -24,9 +24,22 @@ export const SKIABLE_TERRAIN_ACRES_KEYS = ['skiable_terrain_acres', 'total_area_
 export const SKIABLE_TERRAIN_HA_KEYS = ['skiable_terrain_ha', 'total_area_ha', 'area_ha'];
 export const COLOR_BY_KEYS = ['downhill_trails', 'number_of_downhill_trails', 'Downhill Trails', 'trails'];
 export const NAME_KEYS = ['name', 'resort_name', 'title', 'area_name', 'Name'];
+/** English name (parquet/source may use english_name). Same format as wiki resort/browse: "English (local)". */
+export const ENGLISH_NAME_KEYS = ['english_name', 'englishName'];
 export const ID_KEYS = ['id', 'ref', 'area_id', 'resort_id', 'skiresort_id'];
 export const COUNTRY_KEYS = ['country', 'Country', 'country_name', 'addr:country'];
 export const STATE_KEYS = ['state', 'State', 'addr:state', 'province', 'addr:province', 'state_province', 'region'];
+
+/** Display name for resort: "English (local)" when both exist and differ, else English or local. Same as wiki resort/browse. */
+export function resortDisplayName(props) {
+  if (!props) return '';
+  const en = getProp(props, ENGLISH_NAME_KEYS);
+  const local = getProp(props, NAME_KEYS);
+  const enStr = (en != null && en !== '') ? String(en).trim() : '';
+  const localStr = (local != null && local !== '') ? String(local).trim() : '';
+  if (enStr && localStr && enStr !== localStr) return enStr + ' (' + localStr + ')';
+  return enStr || localStr || '';
+}
 
 /** Fold diacritics for accent-insensitive search (e.g. Š→S, é→e). */
 export function foldDiacritics(str) {

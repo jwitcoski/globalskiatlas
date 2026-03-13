@@ -304,8 +304,9 @@ app.get('/auth/config', (req, res) => {
   });
 });
 
-// Explicit route so GET /api/wiki/index always works (avoids router path quirks)
+// Explicit routes so GET /api/wiki and GET /api/wiki/index both return the index
 app.get('/api/wiki/index', handleWikiIndex);
+app.get('/api/wiki', handleWikiIndex);
 
 app.get('/api/wiki/admin/me', requireCognito, (req, res) => {
   res.json({ admin: isAdmin(req.cognitoPrincipal) });

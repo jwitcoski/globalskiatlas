@@ -6,6 +6,8 @@ import { config } from './map-config.js';
 import {
   getProp,
   escapeHtml,
+  resortDisplayName,
+  ENGLISH_NAME_KEYS,
   RESORT_TYPE_KEYS,
   NOT_DOWNHILL,
   SIZE_BY_KEYS,
@@ -102,10 +104,20 @@ function getMountainIcon(feature) {
   });
 }
 
-function buildPopupHtml(properties, latlng, options = {}) {
+/** Same format as wiki resort/browse: "English (local)" from a wiki page object. */
+function wikiDisplayName(p) {
+  if (!p) return '';
+  const en = (p.englishName != null && p.englishName !== '') ? String(p.englishName).trim() : '';
+  const ti = (p.title != null && p.title !== '') ? String(p.title).trim() : '';
+  if (en && ti && en !== ti) return en + ' (' + ti + ')';
+  return en || ti || '';
+}
+
+function buildPopupHtml(properties, latlng, options = {}, wikiPage = null) {
   if (!properties || !Object.keys(properties).length) return '<em>No data</em>';
   const name = getProp(properties, NAME_KEYS);
-  const displayName = name ? escapeHtml(String(name)) : 'Resort';
+  const displayStr = wikiPage ? wikiDisplayName(wikiPage) : (resortDisplayName(properties) || (name ? String(name).trim() : ''));
+  const displayName = displayStr ? escapeHtml(displayStr) : 'Resort';
   const id = getProp(properties, ID_KEYS);
   const trails = getProp(properties, COLOR_BY_KEYS);
   const lifts = getProp(properties, LIFTS_KEYS);
@@ -123,18 +135,25 @@ function buildPopupHtml(properties, latlng, options = {}) {
   const lat = latlng && latlng.lat != null ? latlng.lat : null;
   const lon = latlng && latlng.lng != null ? latlng.lng : null;
   const state = getProp(properties, STATE_KEYS);
-  const nameSlug = slug(name);
-  const stateSlug = state != null && String(state).trim() !== '' ? slug(String(state).trim()) : '';
-  const countrySlug = country != null && String(country).trim() !== '' ? slug(String(country).trim()) : '';
-  const pageParam = nameSlug ? (stateSlug ? nameSlug + '-' + stateSlug : countrySlug ? nameSlug + '-' + countrySlug : nameSlug) : '';
+  let pageParam = '';
+  if (wikiPage && wikiPage.pageId) {
+    pageParam = wikiPage.pageId;
+  } else {
+    const englishName = getProp(properties, ENGLISH_NAME_KEYS);
+    const nameForSlug = (englishName != null && englishName !== '') ? String(englishName).trim() : (name != null ? String(name).trim() : '');
+    const nameSlug = slug(nameForSlug);
+    const stateSlug = state != null && String(state).trim() !== '' ? slug(String(state).trim()) : '';
+    const countrySlug = country != null && String(country).trim() !== '' ? slug(String(country).trim()) : '';
+    pageParam = nameSlug ? (stateSlug ? nameSlug + '-' + stateSlug : countrySlug ? nameSlug + '-' + countrySlug : nameSlug) : '';
+  }
   const popupUrl = pageParam
     ? new URL('wiki/resort.html', location.href).href + '?page=' + encodeURIComponent(pageParam)
     : new URL('wiki/browse.html', location.href).href;
-  const stored = JSON.stringify({ name: name || null, id: id != null ? String(id) : null, lat, lon });
+  const stored = JSON.stringify({ name: displayStr || name || null, id: id != null ? String(id) : null, lat, lon });
   const storedAttr = stored.replace(/"/g, '&quot;');
   let extraButtons = '';
   if (options.includeRoadTripButton) {
-    const resortNameAttr = escapeHtml(String(name || 'Resort'));
+    const resortNameAttr = escapeHtml(String(displayStr || name || 'Resort'));
     const countryAttr = (country != null && String(country).trim() !== '') ? escapeHtml(String(country).trim()) : '';
     extraButtons = '<button class="rtp-add-btn" data-resort-name="' + resortNameAttr + '" data-resort-lat="' + (lat || 0) + '" data-resort-lon="' + (lon || 0) + '" data-resort-country="' + countryAttr + '"><i class="bi bi-plus-circle"></i> Road Trip</button>';
   }
@@ -145,8 +164,8 @@ function buildPopupHtml(properties, latlng, options = {}) {
     '</div>';
 }
 
-function buildTooltipHtml(feature, hint) {
-  const name = getProp(feature.properties, NAME_KEYS);
+function buildTooltipHtml(feature, hint, wikiPage = null) {
+  const displayStr = wikiPage ? wikiDisplayName(wikiPage) : (resortDisplayName(feature.properties) || getProp(feature.properties, NAME_KEYS));
   const trails = getProp(feature.properties, COLOR_BY_KEYS);
   const country = getProp(feature.properties, COUNTRY_KEYS);
   const n = trails != null && trails !== '' ? Number(trails) : null;
@@ -157,7 +176,7 @@ function buildTooltipHtml(feature, hint) {
     terrainFact,
     country ? (String(country).match(/^united states/i) ? 'USA' : String(country)) : null
   ].filter(Boolean).join(' · ');
-  return '<div class="tt-name">' + escapeHtml(String(name || 'Resort').trim()) + '</div>' +
+  return '<div class="tt-name">' + escapeHtml(String(displayStr || 'Resort').trim()) + '</div>' +
     (facts ? '<div class="tt-hint">' + escapeHtml(facts) + '</div>' : '') +
     '<div class="tt-hint" style="margin-top:3px;color:#7dd3fc">' + hint + '</div>';
 }
@@ -256,6 +275,40 @@ export async function initSkiResortMap(options = {}) {
     };
   }
 
+  let wikiPages = [];
+  try {
+    const wikiResp = await fetch('/api/wiki/index', { cache: 'no-store' });
+    if (wikiResp.ok) {
+      const wikiData = await wikiResp.json();
+      const raw = wikiData.pages || [];
+      wikiPages = raw.filter((p) => {
+        const pt = p.pageType || '';
+        return pt !== 'country' && pt !== 'state' && pt !== 'continent';
+      });
+    }
+  } catch (e) {
+    if (process.env.NODE_ENV !== 'production') console.warn('[ski-resort-map] Wiki index fetch failed', e);
+  }
+
+  function findWikiPage(properties) {
+    const name = getProp(properties, NAME_KEYS);
+    if (name == null || String(name).trim() === '') return null;
+    const nameTrim = String(name).trim();
+    const state = getProp(properties, STATE_KEYS);
+    const stateTrim = state != null && state !== '' ? String(state).trim() : '';
+    const country = getProp(properties, COUNTRY_KEYS);
+    const countryTrim = country != null && country !== '' ? String(country).trim() : '';
+    for (const p of wikiPages) {
+      const pState = (p.state != null && p.state !== '') ? String(p.state).trim() : '';
+      const pCountry = (p.country != null && p.country !== '') ? String(p.country).trim() : '';
+      if (pCountry !== countryTrim || pState !== stateTrim) continue;
+      const pTitle = (p.title != null && p.title !== '') ? String(p.title).trim() : '';
+      const pEn = (p.englishName != null && p.englishName !== '') ? String(p.englishName).trim() : '';
+      if (pTitle === nameTrim || pEn === nameTrim) return p;
+    }
+    return null;
+  }
+
   const legendEl = document.getElementById('legend');
   if (legendEl) {
     legendEl.style.display = 'block';
@@ -284,24 +337,29 @@ export async function initSkiResortMap(options = {}) {
   });
 
   function makeIconMarker(feature, latlng) {
+    const wikiPage = findWikiPage(feature.properties);
     const marker = L.marker(latlng, { icon: getMountainIcon(feature) });
-    marker.bindPopup(buildPopupHtml(feature.properties, latlng, { includeRoadTripButton }), { maxWidth: 320 });
-    marker.bindTooltip(buildTooltipHtml(feature, '🖱 Click for resort details'), { direction: 'top', offset: [0, -14], className: 'resort-tooltip' });
+    marker.bindPopup(buildPopupHtml(feature.properties, latlng, { includeRoadTripButton }, wikiPage), { maxWidth: 320 });
+    marker.bindTooltip(buildTooltipHtml(feature, '🖱 Click for resort details', wikiPage), { direction: 'top', offset: [0, -14], className: 'resort-tooltip' });
     const name = getProp(feature.properties, NAME_KEYS);
     if (name != null && String(name).trim() !== '') {
       const country = getProp(feature.properties, COUNTRY_KEYS);
-      searchResorts.push({ name: String(name).trim(), layer: marker, latlng, country: country != null ? String(country).trim() : '' });
+      const displayStr = wikiPage ? wikiDisplayName(wikiPage) : (resortDisplayName(feature.properties) || String(name).trim());
+      const en = wikiPage ? (wikiPage.englishName || '') : getProp(feature.properties, ENGLISH_NAME_KEYS) || '';
+      const searchText = [displayStr, en, wikiPage ? wikiPage.title : ''].filter(Boolean).join(' ');
+      searchResorts.push({ name: displayStr, searchText: searchText.trim() || displayStr, layer: marker, latlng, country: country != null ? String(country).trim() : '' });
     }
     return marker;
   }
 
   function makeDot(latlng, feature, radius) {
+    const wikiPage = findWikiPage(feature.properties);
     const dot = L.circleMarker(latlng, {
       renderer: canvasRenderer, radius, interactive: true,
       fillColor: getColorFor(feature), fillOpacity: 0.85,
       color: 'rgba(255,255,255,0.65)', weight: 1.5
     });
-    dot.bindTooltip(buildTooltipHtml(feature, '🔍 Click to zoom in'), { direction: 'top', offset: [0, -radius - 2], className: 'resort-tooltip' });
+    dot.bindTooltip(buildTooltipHtml(feature, '🔍 Click to zoom in', wikiPage), { direction: 'top', offset: [0, -radius - 2], className: 'resort-tooltip' });
     dot.on('click', () => map.flyTo(latlng, Math.max(map.getZoom() + 4, 11), { duration: 0.5 }));
     return dot;
   }
@@ -406,10 +464,11 @@ export async function initSkiResortMap(options = {}) {
   }
 
   if (searchInput) {
-    searchInput.addEventListener('input', () => renderDropdown(searchResorts.filter((r) => foldDiacritics(r.name).toLowerCase().includes(foldDiacritics(searchInput.value).toLowerCase().trim())).slice(0, maxSuggestions)));
+    const searchable = (r) => foldDiacritics(r.searchText || r.name).toLowerCase();
+    searchInput.addEventListener('input', () => renderDropdown(searchResorts.filter((r) => searchable(r).includes(foldDiacritics(searchInput.value).toLowerCase().trim())).slice(0, maxSuggestions)));
     searchInput.addEventListener('focus', () => {
       const q = foldDiacritics(searchInput.value).toLowerCase().trim();
-      renderDropdown(q.length ? searchResorts.filter((r) => foldDiacritics(r.name).toLowerCase().includes(q)).slice(0, maxSuggestions) : []);
+      renderDropdown(q.length ? searchResorts.filter((r) => searchable(r).includes(q)).slice(0, maxSuggestions) : []);
     });
     searchInput.addEventListener('keydown', (e) => {
       if (!searchDropdown.classList.contains('visible') || currentMatches.length === 0) return;

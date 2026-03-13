@@ -244,11 +244,13 @@
     }
     function foldDiacritics(str) { if (str == null || str === '') return ''; return String(str).normalize('NFD').replace(/\p{M}/gu, ''); }
 
+    // Same format as resort.html (wiki/js/script.js resortDisplayName): englishName then (title/name)
     function browseDisplayName(p) {
+      if (!p) return '';
       var en = (p.englishName != null && p.englishName !== '') ? String(p.englishName).trim() : '';
-      var ti = (p.title != null && p.title !== '') ? String(p.title).trim() : '';
-      if (en && ti && en !== ti) return en + ' (' + ti + ')';
-      return en || ti || p.pageId || '';
+      var local = (p.title != null && p.title !== '') ? String(p.title).trim() : ((p.name != null && p.name !== '') ? String(p.name).trim() : '');
+      if (en && local && en !== local) return en + ' (' + local + ')';
+      return en || local || p.pageId || '';
     }
 
     function resortPageSlug(p) {
@@ -359,7 +361,13 @@
           renderResults();
         })
         .catch(function (err) {
-          document.getElementById('browse-results').innerHTML = '<div class="browse-empty">Failed to load resort index. Is the server running?</div>';
+          var msg = 'Failed to load resort index. ';
+          if (window.location.port === '' || window.location.protocol === 'file:') {
+            msg += 'Open this site from the Node server (e.g. http://localhost:3000/wiki/browse.html) and run: npm start';
+          } else {
+            msg += 'Is the server running?';
+          }
+          document.getElementById('browse-results').innerHTML = '<div class="browse-empty">' + msg + '</div>';
           console.error(err);
         });
     });
