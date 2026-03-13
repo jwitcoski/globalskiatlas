@@ -225,7 +225,37 @@
       </div>
     </section>
 
-    <!-- Section 5: Text LEFT, Image RIGHT -->
+    <!-- Section 5: Iceberg + Glue (and Sedona) -->
+    <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6">
+      <div class="tw-flex tw-min-h-[50vh] tw-place-content-center tw-place-items-center tw-gap-[10%] max-lg:tw-flex-col max-lg:tw-gap-10">
+        <div class="tw-mt-6 tw-flex tw-max-w-[450px] tw-flex-col tw-gap-4">
+          <h2 class="tw-text-4xl tw-font-medium">Iceberg Data & AWS Glue</h2>
+          <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700">Same datasets as Apache Iceberg, query with Sedona or PyIceberg</p>
+          <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600">The same ski area, lift, and piste data is also published as <strong>Apache Iceberg</strong> tables in S3, with <strong>AWS Glue</strong> as the catalog. You can query them with <strong>PyIceberg</strong> (Python) or use <strong>Apache Sedona</strong> (Spark) for geospatial analytics on Iceberg.</p>
+          <p class="tw-mt-4 tw-text-lg tw-leading-relaxed tw-text-gray-600">In the <a href="https://github.com/jwitcoski/globalskiatlas_data" class="tw-text-blue-600 hover:tw-underline" target="_blank" rel="noopener">globalskiatlas_data</a> repo, <code class="tw-bg-gray-100 tw-px-1 tw-rounded">scripts/query_iceberg.py</code> shows how to connect to the Glue catalog, list table counts and versioning, and dump sample rows (or <code class="tw-bg-gray-100 tw-px-1 tw-rounded">--json</code> for API use).</p>
+          <ul class="tw-mt-4 tw-list-disc tw-list-inside tw-space-y-1 tw-text-lg tw-leading-relaxed tw-text-gray-600">
+            <li><strong>Catalog:</strong> AWS Glue (database <code class="tw-bg-gray-100 tw-px-1 tw-rounded">ski_atlas</code>)</li>
+            <li><strong>Tables:</strong> <code class="tw-bg-gray-100 tw-px-1 tw-rounded">ski_areas_analyzed</code>, <code class="tw-bg-gray-100 tw-px-1 tw-rounded">ski_areas</code>, <code class="tw-bg-gray-100 tw-px-1 tw-rounded">lifts</code>, <code class="tw-bg-gray-100 tw-px-1 tw-rounded">pistes</code></li>
+            <li><strong>Stack:</strong> Iceberg in S3 + Glue catalog; query with Sedona Iceberg or PyIceberg</li>
+          </ul>
+          <a href="https://github.com/jwitcoski/globalskiatlas_data/blob/main/scripts/query_iceberg.py" class="tw-mt-6 tw-inline-flex tw-gap-2 tw-rounded-lg tw-px-6 tw-py-3 tw-text-base tw-font-semibold tw-shadow-md tw-no-underline tw-text-white hover:tw-opacity-90" style="background-color: #2563eb;" target="_blank" rel="noopener">View query_iceberg.py <i class="bi bi-box-arrow-up-right"></i></a>
+        </div>
+        <div class="tw-flex tw-flex-shrink-0 tw-flex-col tw-gap-4">
+          <div class="tw-w-[320px] tw-rounded-lg tw-border tw-border-gray-200 tw-bg-gray-50 tw-p-4 tw-font-mono tw-text-sm tw-text-gray-700">
+            <div class="tw-mb-2 tw-font-semibold tw-text-gray-900">Example (globalskiatlas_data)</div>
+            <pre class="tw-whitespace-pre-wrap tw-break-all">pip install -r requirements-iceberg.txt
+python scripts/query_iceberg.py --s3-bucket globalskiatlas-backend-k8s-output
+python scripts/query_iceberg.py --json --limit 20</pre>
+          </div>
+          <div id="iceberg-fun-stats" class="tw-w-[320px] tw-rounded-lg tw-border tw-border-gray-200 tw-bg-slate-50 tw-p-4 tw-text-sm">
+            <div class="tw-mb-2 tw-font-semibold tw-text-gray-900">Live Iceberg stats</div>
+            <div id="iceberg-stats-content" class="tw-text-gray-600">Loading…</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 6: Text LEFT, Image RIGHT -->
     <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6 tw-pb-16">
       <div class="tw-flex tw-min-h-[60vh] tw-place-content-center tw-place-items-center tw-gap-[10%] max-lg:tw-flex-col max-lg:tw-gap-10">
         <div class="tw-mt-6 tw-flex tw-max-w-[450px] tw-flex-col tw-gap-4">
@@ -362,6 +392,70 @@
           })
           .catch(function () {});
       });
+    })();
+
+    (function () {
+      function escapeHtml(s) {
+        var div = document.createElement('div');
+        div.textContent = s;
+        return div.innerHTML;
+      }
+      var container = document.getElementById('iceberg-stats-content');
+      if (!container) return;
+      fetch('/api/iceberg-stats', { cache: 'no-store' })
+        .then(function (r) {
+          if (!r.ok) throw new Error(r.status);
+          return r.json();
+        })
+        .then(function (data) {
+          var counts = data.table_counts || {};
+          var sample = data.sample_resorts || [];
+          var versioning = data.versioning || {};
+          var msg = data.message;
+          var html = '';
+          if (msg && (!counts || Object.keys(counts).length === 0)) {
+            html = '<p class="tw-text-gray-500 tw-mb-0">' + escapeHtml(msg) + '</p>';
+            container.innerHTML = html;
+            return;
+          }
+          html += '<div class="tw-mb-2 tw-font-medium tw-text-gray-800">Row counts</div>';
+          html += '<ul class="tw-list-none tw-pl-0 tw-mb-3 tw-space-y-0.5">';
+          ['ski_areas_analyzed', 'ski_areas', 'lifts', 'pistes'].forEach(function (t) {
+            var c = counts[t];
+            var disp = c == null ? '—' : (typeof c === 'number' ? c.toLocaleString() : String(c));
+            html += '<li><span class="tw-font-mono tw-text-xs">' + escapeHtml(t) + '</span>: ' + escapeHtml(disp) + '</li>';
+          });
+          html += '</ul>';
+          var latestTable = 'ski_areas_analyzed';
+          var ver = versioning[latestTable];
+          if (ver && ver.snapshots && ver.snapshots.length) {
+            var last = ver.snapshots[ver.snapshots.length - 1];
+            var ts = last.timestamp_ms;
+            if (ts) {
+              var d = new Date(ts);
+              html += '<div class="tw-mb-1 tw-text-gray-500 tw-text-xs">Latest snapshot: ' + d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + '</div>';
+            }
+          }
+          if (sample.length) {
+            html += '<div class="tw-mt-2 tw-font-medium tw-text-gray-800">Sample resorts</div>';
+            html += '<ul class="tw-list-none tw-pl-0 tw-mt-0.5 tw-space-y-0.5 tw-text-xs">';
+            sample.slice(0, 5).forEach(function (row) {
+              if (row.error) return;
+              var name = row.name || row.name_en || row.region || '—';
+              var extra = [];
+              if (row.country_code) extra.push(row.country_code);
+              if (row.pistes_km != null) extra.push(row.pistes_km + ' km');
+              var line = escapeHtml(String(name));
+              if (extra.length) line += ' <span class="tw-text-gray-500">(' + escapeHtml(extra.join(', ')) + ')</span>';
+              html += '<li>' + line + '</li>';
+            });
+            html += '</ul>';
+          }
+          container.innerHTML = html || '<p class="tw-text-gray-500 tw-mb-0">No stats yet.</p>';
+        })
+        .catch(function () {
+          container.innerHTML = '<p class="tw-text-gray-500 tw-mb-0">Stats load from <code class="tw-bg-gray-200 tw-px-0.5 tw-rounded">/api/iceberg-stats</code> when deployed with <code class="tw-bg-gray-200 tw-px-0.5 tw-rounded">IcebergStatsBucket</code> and <code class="tw-bg-gray-200 tw-px-0.5 tw-rounded">iceberg-stats/latest.json</code> in S3.</p>';
+        });
     })();
   </script>
 </body>

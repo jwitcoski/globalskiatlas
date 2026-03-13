@@ -312,6 +312,18 @@ app.get('/api/wiki/admin/me', requireCognito, (req, res) => {
   res.json({ admin: isAdmin(req.cognitoPrincipal) });
 });
 
+// Iceberg stats (local dev: empty; prod: Lambda serves from S3 iceberg-stats/latest.json)
+app.get('/api/iceberg-stats', (req, res) => {
+  res.set('Access-Control-Allow-Origin', '*');
+  res.json({
+    source: 'Apache Iceberg via AWS Glue',
+    table_counts: {},
+    versioning: {},
+    sample_resorts: [],
+    message: 'Stats appear when deployed with IcebergStatsBucket and iceberg-stats/latest.json in S3 (from query_iceberg.py --json).',
+  });
+});
+
 // Drive-time isochrones proxy (Valhalla supports 1h, 2h, 4h; no API key)
 const VALHALLA_ISOCHRONE_URL = 'https://valhalla1.openstreetmap.de/isochrone';
 app.post('/api/isochrone', async (req, res) => {

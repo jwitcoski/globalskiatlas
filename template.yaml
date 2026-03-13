@@ -15,6 +15,10 @@ Parameters:
     Type: String
     Default: ''
     Description: Cognito App client ID (optional)
+  IcebergStatsBucket:
+    Type: String
+    Default: ''
+    Description: S3 bucket that contains iceberg-stats/latest.json (from query_iceberg.py --json). Leave empty to disable.
 
 Globals:
   Function:
@@ -70,6 +74,36 @@ Resources:
             ApiId: !Ref WikiApi
             Path: /api/wiki/{proxy+}
             Method: ANY
+
+  IcebergStatsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.handler
+      CodeUri: lambda/iceberg-stats/
+      Description: Serve Iceberg stats JSON from S3 for Download Data page
+      Environment:
+        Variables:
+          ICEBERG_STATS_BUCKET: !Ref IcebergStatsBucket
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Ref IcebergStatsBucket
+      Events:
+        IcebergStatsGet:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref WikiApi
+            Path: /api/iceberg-stats
+            Method: GET
+        IcebergStatsOptions:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref WikiApi
+            Path: /api/iceberg-stats
+            Method: OPTIONS
+    Condition: HasIcebergStatsBucket
+
+Conditions:
+  HasIcebergStatsBucket: !Not [!Equals [!Ref IcebergStatsBucket, '']]
 
 Outputs:
   WikiApiUrl:
