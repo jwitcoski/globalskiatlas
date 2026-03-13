@@ -132,7 +132,7 @@
         <div class="tw-mt-6 tw-flex tw-max-w-[450px] tw-flex-col tw-gap-4">
           <h2 class="tw-text-4xl tw-font-medium">How We Create the Data</h2>
           <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700">Built from OpenStreetMap using a multi-step pipeline</p>
-          <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600">Our datasets are built from <strong>OpenStreetMap</strong> (OSM) using a multi-step pipeline. We use regional PBF extracts from <a href="https://download.geofabrik.de/" class="tw-text-blue-600 hover:tw-underline" target="_blank" rel="noopener">Geofabrik</a>—continental or country-level OSM data—then process each region through an 8-step pipeline.</p>
+          <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600">Our datasets are built from <strong>OpenStreetMap</strong> (OSM) using a multi-step pipeline. We use regional PBF extracts from <a href="https://download.geofabrik.de/" class="tw-text-blue-600 hover:tw-underline" target="_blank" rel="noopener">Geofabrik</a>—continental or country-level OSM data—then process each region through an 11-step pipeline.</p>
         </div>
         <div class="tw-flex tw-flex-shrink-0">
           <img src="./assets/images/datadownload/1-how-we-create-data.png" alt="Aerial view of ski resort with map data overlay" class="tw-h-[450px] tw-w-[300px] tw-object-cover tw-rounded-lg" />
@@ -147,15 +147,20 @@
           <img src="./assets/images/datadownload/2-eight-step-pipeline.png" alt="Ski lift ascending mountain with pistes" class="tw-h-[450px] tw-w-[300px] tw-object-cover tw-rounded-lg" />
         </div>
         <div class="tw-mt-6 tw-flex tw-max-w-[450px] tw-flex-col tw-gap-4 max-lg:tw-order-1">
-          <h2 class="tw-text-4xl tw-font-medium">The 8-Step Pipeline</h2>
+          <h2 class="tw-text-4xl tw-font-medium">The 11-Step Pipeline</h2>
           <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700">From OSM extract to GeoParquet output</p>
-          <ol class="tw-mt-4 tw-list-decimal tw-list-inside tw-space-y-2 tw-text-xl tw-leading-relaxed tw-text-gray-600">
+          <ol class="tw-mt-4 tw-list-decimal tw-list-inside tw-space-y-2 tw-text-lg tw-leading-relaxed tw-text-gray-600">
             <li><strong>Extract winter_sports</strong> – Pull ski areas and winter sport facilities from OSM</li>
             <li><strong>osm_nearby</strong> – Extract OSM features within ~2 km of each ski area</li>
             <li><strong>lifts and pistes</strong> – Extract lift lines and piste (trail) geometries</li>
             <li><strong>enrich</strong> – Add boundaries, administrative data, and enrich attributes</li>
             <li><strong>analyze</strong> – Compute statistics (trail counts, elevation, area, etc.)</li>
             <li><strong>parquet</strong> – Export to GeoParquet format for compact storage and fast reads</li>
+            <li><strong>1000 ft buffer</strong> – Build a buffer polygon around each ski area for mapping</li>
+            <li><strong>translate</strong> – Add or fill English names for resort display</li>
+            <li><strong>elevation / contours</strong> – Attach elevation and contour data per ski area</li>
+            <li><strong>re-export CSV</strong> – Regenerate analyzed CSV with elevation and final fields</li>
+            <li><strong>combine_regions</strong> – Merge all regional outputs into one global dataset</li>
           </ol>
         </div>
       </div>
@@ -225,30 +230,21 @@
       </div>
     </section>
 
-    <!-- Section 5: Iceberg + Glue (and Sedona) -->
+    <!-- Section 5: Iceberg + Glue (ELI10) -->
     <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6">
       <div class="tw-flex tw-min-h-[50vh] tw-place-content-center tw-place-items-center tw-gap-[10%] max-lg:tw-flex-col max-lg:tw-gap-10">
         <div class="tw-mt-6 tw-flex tw-max-w-[450px] tw-flex-col tw-gap-4">
-          <h2 class="tw-text-4xl tw-font-medium">Iceberg Data & AWS Glue</h2>
-          <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700">Same datasets as Apache Iceberg, query with Sedona or PyIceberg</p>
-          <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600">The same ski area, lift, and piste data is also published as <strong>Apache Iceberg</strong> tables in S3, with <strong>AWS Glue</strong> as the catalog. You can query them with <strong>PyIceberg</strong> (Python) or use <strong>Apache Sedona</strong> (Spark) for geospatial analytics on Iceberg.</p>
-          <p class="tw-mt-4 tw-text-lg tw-leading-relaxed tw-text-gray-600">In the <a href="https://github.com/jwitcoski/globalskiatlas_data" class="tw-text-blue-600 hover:tw-underline" target="_blank" rel="noopener">globalskiatlas_data</a> repo, <code class="tw-bg-gray-100 tw-px-1 tw-rounded">scripts/query_iceberg.py</code> shows how to connect to the Glue catalog, list table counts and versioning, and dump sample rows (or <code class="tw-bg-gray-100 tw-px-1 tw-rounded">--json</code> for API use).</p>
-          <ul class="tw-mt-4 tw-list-disc tw-list-inside tw-space-y-1 tw-text-lg tw-leading-relaxed tw-text-gray-600">
-            <li><strong>Catalog:</strong> AWS Glue (database <code class="tw-bg-gray-100 tw-px-1 tw-rounded">ski_atlas</code>)</li>
-            <li><strong>Tables:</strong> <code class="tw-bg-gray-100 tw-px-1 tw-rounded">ski_areas_analyzed</code>, <code class="tw-bg-gray-100 tw-px-1 tw-rounded">ski_areas</code>, <code class="tw-bg-gray-100 tw-px-1 tw-rounded">lifts</code>, <code class="tw-bg-gray-100 tw-px-1 tw-rounded">pistes</code></li>
-            <li><strong>Stack:</strong> Iceberg in S3 + Glue catalog; query with Sedona Iceberg or PyIceberg</li>
-          </ul>
-          <a href="https://github.com/jwitcoski/globalskiatlas_data/blob/main/scripts/query_iceberg.py" class="tw-mt-6 tw-inline-flex tw-gap-2 tw-rounded-lg tw-px-6 tw-py-3 tw-text-base tw-font-semibold tw-shadow-md tw-no-underline tw-text-white hover:tw-opacity-90" style="background-color: #2563eb;" target="_blank" rel="noopener">View query_iceberg.py <i class="bi bi-box-arrow-up-right"></i></a>
+          <h2 class="tw-text-4xl tw-font-medium">Why Iceberg &amp; AWS Glue?</h2>
+          <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700">So lots of people and apps can use the same data without stepping on each other’s toes.</p>
+          <p class="tw-mt-4 tw-text-lg tw-leading-relaxed tw-text-gray-600">We have millions of rows about ski areas, lifts, and trails. If we only kept them in one big file, only one person could update them at a time, and it’d be easy to overwrite someone else’s work.</p>
+          <p class="tw-mt-4 tw-text-lg tw-leading-relaxed tw-text-gray-600"><strong>Apache Iceberg</strong> is like a tidy filing system in the cloud: it keeps the data in chunks, tracks changes over time, and lets many tools read or write without breaking anything. <strong>AWS Glue</strong> is the “card catalog” that tells everyone where to find those files—so data scientists, apps, and this website can all use the same tables without getting lost.</p>
+          <p class="tw-mt-4 tw-text-lg tw-leading-relaxed tw-text-gray-600">Together they give us one shared source of truth for ski data that stays consistent and is easy to query. The numbers below are live from that system.</p>
+          <a href="https://github.com/jwitcoski/globalskiatlas_data/blob/main/scripts/query_iceberg.py" class="tw-mt-4 tw-inline-flex tw-gap-2 tw-text-blue-600 hover:tw-underline" target="_blank" rel="noopener">How we query it (query_iceberg.py) <i class="bi bi-box-arrow-up-right tw-text-sm"></i></a>
         </div>
-        <div class="tw-flex tw-flex-shrink-0 tw-flex-col tw-gap-4">
-          <div class="tw-w-[320px] tw-rounded-lg tw-border tw-border-gray-200 tw-bg-gray-50 tw-p-4 tw-font-mono tw-text-sm tw-text-gray-700">
-            <div class="tw-mb-2 tw-font-semibold tw-text-gray-900">Example (globalskiatlas_data)</div>
-            <pre class="tw-whitespace-pre-wrap tw-break-all">pip install -r requirements-iceberg.txt
-python scripts/query_iceberg.py --s3-bucket globalskiatlas-backend-k8s-output
-python scripts/query_iceberg.py --json --limit 20</pre>
-          </div>
-          <div id="iceberg-fun-stats" class="tw-w-[320px] tw-rounded-lg tw-border tw-border-gray-200 tw-bg-slate-50 tw-p-4 tw-text-sm">
-            <div class="tw-mb-2 tw-font-semibold tw-text-gray-900">Live Iceberg stats</div>
+        <div class="tw-flex tw-flex-shrink-0">
+          <div id="iceberg-fun-stats" class="tw-w-[320px] tw-rounded-xl tw-border-2 tw-border-blue-100 tw-bg-slate-50 tw-p-4 tw-text-sm tw-shadow-sm">
+            <div class="tw-mb-1 tw-font-semibold tw-text-gray-900">Live Iceberg stats</div>
+            <div class="tw-mb-2 tw-text-xs tw-text-gray-500">From <code class="tw-bg-gray-200 tw-px-0.5 tw-rounded">/api/iceberg-stats</code> (Lambda)</div>
             <div id="iceberg-stats-content" class="tw-text-gray-600">Loading…</div>
           </div>
         </div>
@@ -400,23 +396,58 @@ python scripts/query_iceberg.py --json --limit 20</pre>
         div.textContent = s;
         return div.innerHTML;
       }
+      var box = document.getElementById('iceberg-fun-stats');
       var container = document.getElementById('iceberg-stats-content');
-      if (!container) return;
-      fetch('/api/iceberg-stats', { cache: 'no-store' })
-        .then(function (r) {
-          if (!r.ok) throw new Error(r.status);
-          return r.json();
+      if (!box || !container) return;
+      var apiPath = '/api/iceberg-stats';
+      var apiUrl = (typeof window !== 'undefined' && window.location && window.location.origin)
+        ? (window.location.origin + apiPath)
+        : ('https://globalskiatlas.com' + apiPath);
+      function showError(statusOrReason, noData) {
+        box.style.display = '';
+        var html = '<p class="tw-text-amber-700 tw-font-medium tw-mb-2">' + (noData ? 'No stats yet' : 'API error: ' + escapeHtml(String(statusOrReason))) + '</p>';
+        if (!noData) {
+          html += '<ul class="tw-text-xs tw-text-gray-600 tw-list-disc tw-pl-4 tw-mb-2">';
+          html += '<li>Deploy SAM with <code class="tw-bg-gray-200 tw-px-0.5">IcebergStatsBucket</code> set (e.g. globalskiatlas-backend-k8s-output)</li>';
+          html += '<li>In CloudFront, add a behavior for path <code class="tw-bg-gray-200 tw-px-0.5">api/iceberg-stats</code> to the same API Gateway origin as wiki</li>';
+          html += '</ul>';
+        } else {
+          html += '<p class="tw-text-xs tw-text-gray-600 tw-mb-2">Upload <code class="tw-bg-gray-200 tw-px-0.5">iceberg-stats/latest.json</code> to S3: run <code class="tw-bg-gray-200 tw-px-0.5">upload_iceberg_stats.py</code> in globalskiatlas_data.</p>';
+        }
+        html += '<a href="https://globalskiatlas.com' + escapeHtml(apiPath) + '" target="_blank" rel="noopener" class="tw-text-xs tw-text-blue-600 hover:tw-underline">Open API →</a>';
+        container.innerHTML = html;
+      }
+      function doFetch(url) {
+        return fetch(url + (url.indexOf('?') >= 0 ? '&' : '?') + '_=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); });
+      }
+      doFetch(apiUrl)
+        .catch(function (status) {
+          if (status === 404 && apiUrl.indexOf('globalskiatlas.com') === -1) {
+            return doFetch('https://globalskiatlas.com' + apiPath);
+          }
+          throw status;
         })
         .then(function (data) {
+          if (!data) return;
           var counts = data.table_counts || {};
           var sample = data.sample_resorts || [];
           var versioning = data.versioning || {};
-          var msg = data.message;
-          var html = '';
-          if (msg && (!counts || Object.keys(counts).length === 0)) {
-            html = '<p class="tw-text-gray-500 tw-mb-0">' + escapeHtml(msg) + '</p>';
-            container.innerHTML = html;
+          var hasCounts = counts && Object.keys(counts).length > 0;
+          var hasSample = sample && sample.length > 0 && !sample[0].error;
+          if (!hasCounts && !hasSample) {
+            showError(null, true);
             return;
+          }
+          var source = data.source;
+          var database = data.database;
+          var bucket = data.bucket;
+          var html = '';
+          if (source || database || bucket) {
+            html += '<div class="tw-mb-2 tw-text-xs tw-text-gray-500">';
+            if (source) html += escapeHtml(source);
+            if (database) html += ' · ' + escapeHtml(database);
+            if (bucket) html += ' · ' + escapeHtml(bucket);
+            html += '</div>';
           }
           html += '<div class="tw-mb-2 tw-font-medium tw-text-gray-800">Row counts</div>';
           html += '<ul class="tw-list-none tw-pl-0 tw-mb-3 tw-space-y-0.5">';
@@ -451,10 +482,10 @@ python scripts/query_iceberg.py --json --limit 20</pre>
             });
             html += '</ul>';
           }
-          container.innerHTML = html || '<p class="tw-text-gray-500 tw-mb-0">No stats yet.</p>';
+          container.innerHTML = html;
         })
-        .catch(function () {
-          container.innerHTML = '<p class="tw-text-gray-500 tw-mb-0">Stats load from <code class="tw-bg-gray-200 tw-px-0.5 tw-rounded">/api/iceberg-stats</code> when deployed with <code class="tw-bg-gray-200 tw-px-0.5 tw-rounded">IcebergStatsBucket</code> and <code class="tw-bg-gray-200 tw-px-0.5 tw-rounded">iceberg-stats/latest.json</code> in S3.</p>';
+        .catch(function (err) {
+          showError(typeof err === 'number' ? err : 'network', false);
         });
     })();
   </script>
