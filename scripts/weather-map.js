@@ -31,8 +31,27 @@
   const SIZE_BY_KEYS = ['total_area_acres', 'Total Area Acres', 'area_acres'];
   const COLOR_BY_KEYS = ['downhill_trails', 'number_of_downhill_trails', 'Downhill Trails', 'trails'];
   const NAME_KEYS = ['name', 'resort_name', 'title', 'area_name', 'Name'];
+  const ENGLISH_NAME_KEYS = ['english_name', 'englishName'];
   const COUNTRY_KEYS = ['country', 'Country', 'country_name', 'addr:country'];
+  const STATE_KEYS = ['state', 'State', 'addr:state', 'province', 'addr:province', 'state_province', 'region'];
   const TRAILS_SMALL = 50;
+
+  function resortDisplayName(props) {
+    if (!props) return '';
+    var en = getProp(props, ENGLISH_NAME_KEYS);
+    var local = getProp(props, NAME_KEYS);
+    var enStr = (en != null && en !== '') ? String(en).trim() : '';
+    var localStr = (local != null && local !== '') ? String(local).trim() : '';
+    if (enStr && localStr && enStr !== localStr) return enStr + ' (' + localStr + ')';
+    return enStr || localStr || '';
+  }
+  function wikiDisplayName(p) {
+    if (!p) return '';
+    var en = (p.englishName != null && p.englishName !== '') ? String(p.englishName).trim() : '';
+    var ti = (p.title != null && p.title !== '') ? String(p.title).trim() : '';
+    if (en && ti && en !== ti) return en + ' (' + ti + ')';
+    return en || ti || '';
+  }
   const TRAILS_MEDIUM = 100;
   const ACRES_SMALL = 1000;
   const ACRES_MEDIUM = 5000;
@@ -310,18 +329,23 @@
         return;
       }
       var coords = best.geometry.coordinates;
-      var name = (best.properties && best.properties.name != null) ? String(best.properties.name).trim() : 'Resort';
-      var country = (best.properties && best.properties.country != null) ? String(best.properties.country).trim() : '';
+      var props = best.properties || {};
+      var name = (props.displayName != null && props.displayName !== '') ? String(props.displayName).trim() : (props.name != null ? String(props.name).trim() : 'Resort');
+      var country = (props.country != null) ? String(props.country).trim() : '';
       if (country && /^united states/i.test(country)) country = 'USA';
       map.flyTo({ center: coords, zoom: Math.max(map.getZoom(), 10), duration: 1500 });
       var accumDisplay = useImperial ? (bestVal * 0.03937).toFixed(2) + ' in' : bestVal.toFixed(1) + ' mm';
       var snowEst = useImperial
         ? '~' + (bestVal * 0.03937 * 10).toFixed(1) + ' in'
         : '~' + (bestVal >= 1 ? (bestVal).toFixed(1) + ' cm' : (bestVal * 10).toFixed(0) + ' mm');
+      var resortDetailsUrl = new URL('wiki/resort.html', window.location.href).href;
       var html = '<p style="margin:0 0 4px 0;font-weight:600">' + escapeHtmlAttr(name) + '</p>' +
         '<p style="margin:0;font-size:13px;color:#6b7280">Most precipitation (' + periodLabel + '): <strong>' + accumDisplay + '</strong></p>' +
         '<p style="margin:2px 0 0 0;font-size:12px;color:#6b7280">' + snowEst + ' estimated snowfall (10:1 ratio)</p>' +
         (country ? '<p style="margin:4px 0 0 0;font-size:12px;color:#9ca3af">' + escapeHtmlAttr(country) + '</p>' : '');
+      if (props.pageId) {
+        html += '<p style="margin:6px 0 0 0;"><a href="' + escapeHtmlAttr(resortDetailsUrl + '?page=' + encodeURIComponent(props.pageId)) + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:4px;border-radius:8px;background:#2563eb;color:#fff;padding:8px 12px;font-size:13px;font-weight:500;text-decoration:none;">View details <i class="bi bi-arrow-up-right" style="font-size:12px"></i></a></p>';
+      }
       window.wettestResortPopup.setLngLat(coords).setHTML(html).addTo(map);
     }
 
@@ -340,59 +364,106 @@
   }
 
   function addSkiResortsLayer() {
-    fetch(SKI_AREAS_URL)
-      .then(function (r) { return r.ok ? r.json() : Promise.reject(new Error('Ski areas fetch failed: ' + r.status)); })
-      .then(function (geojson) {
-        var features = (geojson.features || []).filter(function (f) {
-          return f.geometry && f.geometry.type === 'Point';
+    var wikiPromise = fetch('/api/wiki/index', { cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : {}; })
+      .catch(function () { return {}; });
+    Promise.all([
+      fetch(SKI_AREAS_URL).then(function (r) { return r.ok ? r.json() : Promise.reject(new Error('Ski areas fetch failed: ' + r.status)); }),
+      wikiPromise
+    ]).then(function (results) {
+      var geojson = results[0];
+      var wikiData = results[1];
+      var wikiPages = [];
+      if (wikiData && wikiData.pages) {
+        wikiPages = wikiData.pages.filter(function (p) {
+          var pt = p.pageType || '';
+          return pt !== 'country' && pt !== 'state' && pt !== 'continent';
         });
-        var collection = {
-          type: 'FeatureCollection',
-          features: features.map(function (f) {
-            var tier = getSizeTier(f);
-            var color = getColorFor(f);
-            return {
-              type: 'Feature',
-              geometry: f.geometry,
-              properties: {
-                name: getProp(f.properties, NAME_KEYS),
-                country: getProp(f.properties, COUNTRY_KEYS),
-                trails: getProp(f.properties, COLOR_BY_KEYS),
-                tier: tier,
-                color: color,
-                icon: getIconId(tier, color)
-              }
-            };
-          })
-        };
-        map.addSource('ski-resorts', { type: 'geojson', data: collection });
-        skiResortFeatures = collection.features;
-
-        function addResortLayerEvents(layerIds) {
-          layerIds.forEach(function (layerId) {
-            map.on('click', layerId, function (e) {
-              var props = e.features[0].properties;
-              var name = props.name != null ? String(props.name).trim() : 'Resort';
-              var country = props.country != null ? String(props.country).trim() : '';
-              if (country && /^united states/i.test(country)) country = 'USA';
-              var trails = props.trails;
-              var trailsStr = trails != null && trails !== '' && !Number.isNaN(Number(trails)) ? Number(trails).toLocaleString() + ' slopes' : '';
-              var html = '<p style="margin:0 0 4px 0;font-weight:600">' + escapeHtmlAttr(name) + '</p>';
-              if (trailsStr || country) html += '<p style="margin:0;font-size:13px;color:#6b7280">' + [trailsStr, country].filter(Boolean).join(' · ') + '</p>';
-              popup.setLngLat(e.lngLat).setHTML(html).addTo(map);
-            });
-            map.on('mouseenter', layerId, function (e) {
-              map.getCanvas().style.cursor = 'pointer';
-              var props = e.features[0].properties;
-              var name = props.name != null ? String(props.name).trim() : 'Resort';
-              hoverPopup.setLngLat(e.lngLat).setHTML('<div class="tt-name">' + escapeHtmlAttr(name) + '</div><div class="tt-hint" style="color:#7dd3fc">🖱 Click for resort details</div>').addTo(map);
-            });
-            map.on('mouseleave', layerId, function () {
-              map.getCanvas().style.cursor = '';
-              hoverPopup.remove();
-            });
-          });
+      }
+      function findWikiPage(properties) {
+        var name = getProp(properties, NAME_KEYS);
+        if (name == null || String(name).trim() === '') return null;
+        var nameTrim = String(name).trim();
+        var state = getProp(properties, STATE_KEYS);
+        var stateTrim = state != null && state !== '' ? String(state).trim() : '';
+        var country = getProp(properties, COUNTRY_KEYS);
+        var countryTrim = country != null && country !== '' ? String(country).trim() : '';
+        for (var i = 0; i < wikiPages.length; i++) {
+          var p = wikiPages[i];
+          var pState = (p.state != null && p.state !== '') ? String(p.state).trim() : '';
+          var pCountry = (p.country != null && p.country !== '') ? String(p.country).trim() : '';
+          if (pCountry !== countryTrim || pState !== stateTrim) continue;
+          var pTitle = (p.title != null && p.title !== '') ? String(p.title).trim() : '';
+          var pEn = (p.englishName != null && p.englishName !== '') ? String(p.englishName).trim() : '';
+          if (pTitle === nameTrim || pEn === nameTrim) return p;
         }
+        return null;
+      }
+
+      var features = (geojson.features || []).filter(function (f) {
+        return f.geometry && f.geometry.type === 'Point';
+      });
+      var collection = {
+        type: 'FeatureCollection',
+        features: features.map(function (f) {
+          var tier = getSizeTier(f);
+          var color = getColorFor(f);
+          var name = getProp(f.properties, NAME_KEYS);
+          var country = getProp(f.properties, COUNTRY_KEYS);
+          var state = getProp(f.properties, STATE_KEYS);
+          var wikiPage = findWikiPage(f.properties);
+          var displayName = wikiPage ? wikiDisplayName(wikiPage) : (resortDisplayName(f.properties) || (name ? String(name).trim() : ''));
+          var pageId = wikiPage && wikiPage.pageId ? wikiPage.pageId : '';
+          return {
+            type: 'Feature',
+            geometry: f.geometry,
+            properties: {
+              name: name,
+              displayName: displayName,
+              pageId: pageId,
+              state: state,
+              country: country,
+              trails: getProp(f.properties, COLOR_BY_KEYS),
+              tier: tier,
+              color: color,
+              icon: getIconId(tier, color)
+            }
+          };
+        })
+      };
+      map.addSource('ski-resorts', { type: 'geojson', data: collection });
+      skiResortFeatures = collection.features;
+
+      function addResortLayerEvents(layerIds) {
+        var resortDetailsUrl = new URL('wiki/resort.html', window.location.href).href;
+        var browseUrl = new URL('wiki/browse.html', window.location.href).href;
+        layerIds.forEach(function (layerId) {
+          map.on('click', layerId, function (e) {
+            var props = e.features[0].properties;
+            var name = (props.displayName != null && props.displayName !== '') ? String(props.displayName).trim() : (props.name != null ? String(props.name).trim() : 'Resort');
+            var country = props.country != null ? String(props.country).trim() : '';
+            if (country && /^united states/i.test(country)) country = 'USA';
+            var trails = props.trails;
+            var trailsStr = trails != null && trails !== '' && !Number.isNaN(Number(trails)) ? Number(trails).toLocaleString() + ' slopes' : '';
+            var html = '<p style="margin:0 0 4px 0;font-weight:600">' + escapeHtmlAttr(name) + '</p>';
+            if (trailsStr || country) html += '<p style="margin:0;font-size:13px;color:#6b7280">' + [trailsStr, country].filter(Boolean).join(' · ') + '</p>';
+            if (props.pageId) {
+              html += '<p style="margin:6px 0 0 0;"><a href="' + escapeHtmlAttr(resortDetailsUrl + '?page=' + encodeURIComponent(props.pageId)) + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:4px;border-radius:8px;background:#2563eb;color:#fff;padding:8px 12px;font-size:13px;font-weight:500;text-decoration:none;">View details <i class="bi bi-arrow-up-right" style="font-size:12px"></i></a></p>';
+            }
+            popup.setLngLat(e.lngLat).setHTML(html).addTo(map);
+          });
+          map.on('mouseenter', layerId, function (e) {
+            map.getCanvas().style.cursor = 'pointer';
+            var props = e.features[0].properties;
+            var name = (props.displayName != null && props.displayName !== '') ? String(props.displayName).trim() : (props.name != null ? String(props.name).trim() : 'Resort');
+            hoverPopup.setLngLat(e.lngLat).setHTML('<div class="tt-name">' + escapeHtmlAttr(name) + '</div><div class="tt-hint" style="color:#7dd3fc">🖱 Click for resort details</div>').addTo(map);
+          });
+          map.on('mouseleave', layerId, function () {
+            map.getCanvas().style.cursor = '';
+            hoverPopup.remove();
+          });
+        });
+      }
 
         var popup = new maptilersdk.Popup({ closeButton: true, closeOnClick: false });
         var hoverPopup = new maptilersdk.Popup({ closeButton: false, closeOnClick: false, className: 'ski-resort-hover-popup' });

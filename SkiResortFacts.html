@@ -262,6 +262,7 @@
                 const PISTES_URL = 'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/pistes.parquet';
                 const MAPTILER_KEY = '0P06ORgY8WvmMOnPr0p2';
                 const NAME_KEYS = ['name', 'resort_name', 'title', 'area_name', 'Name'];
+                const ENGLISH_NAME_KEYS = ['english_name', 'englishName'];
                 const ID_KEYS = ['id', 'ref', 'area_id', 'resort_id', 'skiresort_id'];
                 const COUNTRY_KEYS = ['country', 'Country', 'country_name', 'addr:country'];
                 const AREA_KEYS = ['total_area_acres', 'Total Area Acres', 'area_acres', 'skiable_terrain_acres', 'skiable_area_acres'];
@@ -392,7 +393,15 @@
 
                     const downhillAll = dataAnalyzed.filter((r) => !isNotDownhill(r));
                     console.log('[SkiResortFacts] downhillAll.length =', downhillAll.length);
-                    const getName = (r) => getProp(r, NAME_KEYS) || 'Unknown';
+                    // Same format as wiki resort/browse: "English (local)" when both exist
+                    const getName = (r) => {
+                        const en = getProp(r, ENGLISH_NAME_KEYS);
+                        const local = getProp(r, NAME_KEYS);
+                        const enStr = (en != null && en !== '') ? String(en).trim() : '';
+                        const localStr = (local != null && local !== '') ? String(local).trim() : '';
+                        if (enStr && localStr && enStr !== localStr) return enStr + ' (' + localStr + ')';
+                        return enStr || localStr || 'Unknown';
+                    };
                     const getCountry = (r) => getProp(r, COUNTRY_KEYS) || 'Unknown';
 
                     const countrySelect = document.getElementById('country-filter');
@@ -415,13 +424,13 @@
                     function findResortMapData(row, outlineFeatures, liftFeatures, pisteFeatures) {
                         const resortLat = getLat(row);
                         const resortLon = getLon(row);
-                        const resortName = getName(row);
+                        const resortNameForMatch = getProp(row, NAME_KEYS);
                         const resortRef = getProp(row, ID_KEYS);
                         let outlineFeature = outlineFeatures.find((f) => {
                             const name = getProp(f.properties, NAME_KEYS);
                             const ref = getProp(f.properties, ['ref', 'id']);
                             if (resortRef != null && ref != null && String(ref) === String(resortRef)) return true;
-                            if (name && resortName && String(name).trim().toLowerCase() === String(resortName).trim().toLowerCase()) return true;
+                            if (name && resortNameForMatch && String(name).trim().toLowerCase() === String(resortNameForMatch).trim().toLowerCase()) return true;
                             if (resortLon != null && resortLat != null) return pointInPolygon(resortLon, resortLat, f.geometry);
                             return false;
                         });

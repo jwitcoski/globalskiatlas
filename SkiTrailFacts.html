@@ -272,6 +272,7 @@
 
                 const NAME_KEYS = ['name', 'Name', 'trail_name', 'piste_name'];
                 const RESORT_KEYS = ['Ski Area', 'ski_area', 'resort_name', 'area_name', 'resort', 'ski_area_name', 'skiarea_name'];
+                const RESORT_ENGLISH_NAME_KEYS = ['resort_english_name', 'ski_area_english_name', 'english_name', 'englishName'];
                 const COUNTRY_KEYS = ['Country', 'country', 'country_name', 'addr:country'];
                 const DIFF_KEYS = ['piste:difficulty', 'piste_difficulty', 'difficulty'];
                 const PISTE_TYPE_KEYS = ['piste:type', 'piste_type'];
@@ -296,11 +297,12 @@
                     return null;
                 }
                 function getResortName(row) {
-                    const v = getProp(row, RESORT_KEYS);
-                    if (v && String(v).trim()) return String(v).trim();
-                    const ot = getFromOtherTags(row, 'resort_name') || getFromOtherTags(row, 'area_name');
-                    if (ot) return ot;
-                    return '—';
+                    const local = getProp(row, RESORT_KEYS);
+                    const localStr = (local != null && String(local).trim() !== '') ? String(local).trim() : (getFromOtherTags(row, 'resort_name') || getFromOtherTags(row, 'area_name') || '');
+                    const en = getProp(row, RESORT_ENGLISH_NAME_KEYS);
+                    const enStr = (en != null && en !== '') ? String(en).trim() : '';
+                    if (enStr && localStr && enStr !== localStr) return enStr + ' (' + localStr + ')';
+                    return enStr || localStr || '—';
                 }
                 function getCountry(row) {
                     const v = getProp(row, COUNTRY_KEYS);

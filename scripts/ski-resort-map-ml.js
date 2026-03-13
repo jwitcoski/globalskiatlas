@@ -8,7 +8,7 @@
 import { config } from './map-config.js';
 import { loadParquetAsRows } from './parquet-wasm-loader.js';
 import {
-  getProp, escapeHtml,
+  getProp, escapeHtml, resortDisplayName, ENGLISH_NAME_KEYS,
   RESORT_TYPE_KEYS, NOT_DOWNHILL,
   SIZE_BY_KEYS, COLOR_BY_KEYS,
   NAME_KEYS, ID_KEYS, COUNTRY_KEYS, STATE_KEYS, LIFTS_KEYS,
@@ -84,11 +84,21 @@ function makeMountainMarkerEl(props) {
   return { el, w, h };
 }
 
+/** Same format as wiki resort/browse: "English (local)" from a wiki page object. */
+function wikiDisplayName(p) {
+  if (!p) return '';
+  const en = (p.englishName != null && p.englishName !== '') ? String(p.englishName).trim() : '';
+  const ti = (p.title != null && p.title !== '') ? String(p.title).trim() : '';
+  if (en && ti && en !== ti) return en + ' (' + ti + ')';
+  return en || ti || '';
+}
+
 // ── Popup HTML ─────────────────────────────────────────────────────────────
-function buildPopupHtml(properties, latlng, options = {}) {
+function buildPopupHtml(properties, latlng, options = {}, wikiPage = null) {
   if (!properties || !Object.keys(properties).length) return '<em>No data</em>';
   const name        = getProp(properties, NAME_KEYS);
-  const displayName = name ? escapeHtml(String(name)) : 'Resort';
+  const displayStr  = wikiPage ? wikiDisplayName(wikiPage) : (resortDisplayName(properties) || (name ? String(name).trim() : ''));
+  const displayName = displayStr ? escapeHtml(displayStr) : 'Resort';
   const id          = getProp(properties, ID_KEYS);
   const trails      = getProp(properties, COLOR_BY_KEYS);
   const lifts       = getProp(properties, LIFTS_KEYS);
@@ -107,18 +117,25 @@ function buildPopupHtml(properties, latlng, options = {}) {
     : '';
   const lat = latlng?.lat ?? null;
   const lon = latlng?.lng ?? null;
-  const nameSlug   = slug(name);
-  const stateSlug  = state != null && String(state).trim() !== '' ? slug(String(state).trim()) : '';
-  const countrySlug = country != null && String(country).trim() !== '' ? slug(String(country).trim()) : '';
-  const pageParam  = nameSlug ? (stateSlug ? nameSlug + '-' + stateSlug : countrySlug ? nameSlug + '-' + countrySlug : nameSlug) : '';
+  let pageParam = '';
+  if (wikiPage && wikiPage.pageId) {
+    pageParam = wikiPage.pageId;
+  } else {
+    const englishName = getProp(properties, ENGLISH_NAME_KEYS);
+    const nameForSlug = (englishName != null && englishName !== '') ? String(englishName).trim() : (name != null ? String(name).trim() : '');
+    const nameSlug    = slug(nameForSlug);
+    const stateSlug  = state != null && String(state).trim() !== '' ? slug(String(state).trim()) : '';
+    const countrySlug = country != null && String(country).trim() !== '' ? slug(String(country).trim()) : '';
+    pageParam = nameSlug ? (stateSlug ? nameSlug + '-' + stateSlug : countrySlug ? nameSlug + '-' + countrySlug : nameSlug) : '';
+  }
   const popupUrl   = pageParam
     ? new URL('wiki/resort.html', location.href).href + '?page=' + encodeURIComponent(pageParam)
     : new URL('wiki/browse.html', location.href).href;
-  const stored    = JSON.stringify({ name: name || null, id: id != null ? String(id) : null, lat, lon });
+  const stored    = JSON.stringify({ name: displayStr || name || null, id: id != null ? String(id) : null, lat, lon });
   const storedAttr = stored.replace(/"/g, '&quot;');
   let extraButtons = '';
   if (options.includeRoadTripButton) {
-    const rn = escapeHtml(String(name || 'Resort'));
+    const rn = escapeHtml(String(displayStr || name || 'Resort'));
     const rc = country != null && String(country).trim() ? escapeHtml(String(country).trim()) : '';
     extraButtons = `<button class="rtp-add-btn" data-resort-name="${rn}" data-resort-lat="${lat ?? 0}" data-resort-lon="${lon ?? 0}" data-resort-country="${rc}"><i class="bi bi-plus-circle"></i> Road Trip</button>`;
   }
@@ -199,6 +216,40 @@ export async function initSkiResortMap(options = {}) {
   // ── Load ski areas from parquet ──────────────────────────────────────────
   const rows = await loadParquetAsRows(SKI_AREAS_PARQUET_URL);
 
+  let wikiPages = [];
+  try {
+    const wikiResp = await fetch('/api/wiki/index', { cache: 'no-store' });
+    if (wikiResp.ok) {
+      const wikiData = await wikiResp.json();
+      const raw = wikiData.pages || [];
+      wikiPages = raw.filter((p) => {
+        const pt = p.pageType || '';
+        return pt !== 'country' && pt !== 'state' && pt !== 'continent';
+      });
+    }
+  } catch (e) {
+    // Wiki index optional (e.g. static hosting); fall back to parquet names only
+  }
+
+  function findWikiPage(properties) {
+    const name = getProp(properties, NAME_KEYS);
+    if (name == null || String(name).trim() === '') return null;
+    const nameTrim = String(name).trim();
+    const state = getProp(properties, STATE_KEYS);
+    const stateTrim = state != null && state !== '' ? String(state).trim() : '';
+    const country = getProp(properties, COUNTRY_KEYS);
+    const countryTrim = country != null && country !== '' ? String(country).trim() : '';
+    for (const p of wikiPages) {
+      const pState = (p.state != null && p.state !== '') ? String(p.state).trim() : '';
+      const pCountry = (p.country != null && p.country !== '') ? String(p.country).trim() : '';
+      if (pCountry !== countryTrim || pState !== stateTrim) continue;
+      const pTitle = (p.title != null && p.title !== '') ? String(p.title).trim() : '';
+      const pEn = (p.englishName != null && p.englishName !== '') ? String(p.englishName).trim() : '';
+      if (pTitle === nameTrim || pEn === nameTrim) return p;
+    }
+    return null;
+  }
+
   const searchResorts = [];
   const markerPool    = []; // { marker, latlng: {lat,lng}, tier, inMap }
   const circleFeatures = [];
@@ -216,6 +267,11 @@ export async function initSkiResortMap(options = {}) {
     const terrainStr = formatSkiableTerrain(getProp(properties, SKIABLE_TERRAIN_ACRES_KEYS), getProp(properties, SKIABLE_TERRAIN_HA_KEYS));
     const terrainDisp = terrainStr ? 'Skiable Terrain ' + terrainStr : null;
 
+    const wikiPage   = findWikiPage(properties);
+    const displayStr = wikiPage ? wikiDisplayName(wikiPage) : (resortDisplayName(properties) || (name ? String(name).trim() : ''));
+    const en         = wikiPage ? (wikiPage.englishName || '') : (getProp(properties, ENGLISH_NAME_KEYS) || '');
+    const searchText = [displayStr, en, wikiPage ? wikiPage.title : ''].filter(Boolean).join(' ').trim() || displayStr;
+
     // Circle layer feature (medium + small only; large always use icon markers)
     if (tier !== 'large') {
       circleFeatures.push({
@@ -224,7 +280,7 @@ export async function initSkiResortMap(options = {}) {
         properties: {
           _tier:    tier,
           _color:   color,
-          _name:    name ? String(name).trim() : '',
+          _name:    displayStr || (name ? String(name).trim() : ''),
           _country: countryDisp,
           _trails:  Number.isNaN(trailsNum) ? 0 : trailsNum,
           _terrain: terrainDisp || ''
@@ -236,7 +292,7 @@ export async function initSkiResortMap(options = {}) {
     const { el } = makeMountainMarkerEl(properties);
     const latlng  = { lat, lng: lon };
     const popup   = new maplibregl.Popup({ maxWidth: '340px', closeButton: true })
-      .setHTML(buildPopupHtml(properties, latlng, { includeRoadTripButton }));
+      .setHTML(buildPopupHtml(properties, latlng, { includeRoadTripButton }, wikiPage));
     const marker  = new maplibregl.Marker({ element: el, anchor: 'bottom' })
       .setLngLat([lon, lat])
       .setPopup(popup);
@@ -246,9 +302,10 @@ export async function initSkiResortMap(options = {}) {
 
     if (name) {
       searchResorts.push({
-        name:     String(name).trim(),
+        name:       displayStr,
+        searchText: searchText,
         latlng,
-        country:  country ? String(country).trim() : '',
+        country:    country ? String(country).trim() : '',
         poolItem
       });
     }
@@ -419,13 +476,14 @@ export async function initSkiResortMap(options = {}) {
     });
   }
 
+  const searchable = (r) => foldDiacritics(r.searchText || r.name).toLowerCase();
   if (searchInput) {
     searchInput.addEventListener('input', () =>
-      renderDropdown(searchResorts.filter(r => foldDiacritics(r.name).toLowerCase().includes(foldDiacritics(searchInput.value).toLowerCase().trim())).slice(0, maxSuggestions))
+      renderDropdown(searchResorts.filter(r => searchable(r).includes(foldDiacritics(searchInput.value).toLowerCase().trim())).slice(0, maxSuggestions))
     );
     searchInput.addEventListener('focus', () => {
       const q = foldDiacritics(searchInput.value).toLowerCase().trim();
-      renderDropdown(q ? searchResorts.filter(r => foldDiacritics(r.name).toLowerCase().includes(q)).slice(0, maxSuggestions) : []);
+      renderDropdown(q ? searchResorts.filter(r => searchable(r).includes(q)).slice(0, maxSuggestions) : []);
     });
     searchInput.addEventListener('keydown', (e) => {
       if (!searchDropdown.classList.contains('visible') || !currentMatches.length) return;
