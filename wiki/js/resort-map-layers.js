@@ -5,10 +5,6 @@
  */
 
 const MAPTILER_KEY = '0P06ORgY8WvmMOnPr0p2';
-const SKI_AREAS_PARQUET_URL = 'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/ski_areas_analyzed.parquet';
-const SKI_AREAS_OUTLINES_PARQUET_URL = 'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/ski_areas.parquet';
-const LIFTS_PARQUET_URL = 'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/lifts.parquet';
-const PISTES_PARQUET_URL = 'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/pistes.parquet';
 
 const NAME_KEYS = ['name', 'resort_name', 'title', 'area_name', 'Name'];
 const PISTE_DIFFICULTY_KEYS = ['piste:difficulty', 'piste_difficulty', 'difficulty'];
@@ -90,12 +86,6 @@ async function enhanceResortMap(params) {
 
   const worker = new Worker(new URL('resort-map-worker.js', import.meta.url), { type: 'module' });
   worker.postMessage({
-    urls: {
-      analyzed: SKI_AREAS_PARQUET_URL,
-      outlines: SKI_AREAS_OUTLINES_PARQUET_URL,
-      lifts: LIFTS_PARQUET_URL,
-      pistes: PISTES_PARQUET_URL
-    },
     resort: { title: resortName, lat: resortLat, lon: resortLon }
   });
 
@@ -175,8 +165,8 @@ async function enhanceResortMap(params) {
         map.on('mouseenter', 'lifts', (e) => {
           map.getCanvas().style.cursor = 'pointer';
           const p = e.features[0].properties;
-          const name = getProp(p, NAME_KEYS) || p.name || 'Lift';
-          const aerialway = getProp(p, ['aerialway', 'Aerialway']);
+          const name = p._name || getProp(p, NAME_KEYS) || p.name || 'Lift';
+          const aerialway = p._aerialway || getProp(p, ['aerialway', 'Aerialway']);
           const line = aerialway ? '<br/><span style="color:#94a3b8">' + String(aerialway).replace(/_/g, ' ') + '</span>' : '';
           setTooltip('<strong>' + String(name) + '</strong>' + line);
         });
@@ -188,8 +178,8 @@ async function enhanceResortMap(params) {
           map.getCanvas().style.cursor = 'pointer';
           const f = e.features[0];
           const p = f.properties;
-          const name = getProp(p, NAME_KEYS) || p.name || 'Trail';
-          const diff = (p._difficulty || getPisteDifficulty(p) || '').toLowerCase();
+          const name = p._name || getProp(p, NAME_KEYS) || p.name || 'Trail';
+          const diff = (p._difficulty != null ? p._difficulty : getPisteDifficulty(p) || '').toLowerCase();
           const diffLabel = diff ? diff.replace(/^./, (c) => c.toUpperCase()) : '';
           let lengthM = getPisteLengthFromProps(p);
           if (lengthM == null && f.geometry) lengthM = lineLengthMeters(f.geometry);

@@ -8,6 +8,7 @@ export const config = {
 
   // ── Parquet / GeoJSON data sources (used by MapLibre / TravelMap) ──────
   SKI_AREAS_PARQUET_URL: 'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/ski_areas_analyzed.parquet',
+  SKI_AREAS_OUTLINES_PARQUET_URL: 'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/ski_areas.parquet',
   SKI_AREAS_GEOJSON_URL: 'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/ski_areas.geojson',
   LIFTS_PARQUET_URL:     'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/lifts.parquet',
   PISTES_PARQUET_URL:    'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/pistes.parquet',
@@ -20,6 +21,7 @@ export const config = {
 
   // ── Base map style URLs ──────────────────────────────────────────────────
   MAP_STYLE_URL:   `https://api.maptiler.com/maps/winter-v4/style.json?key=${MAPTILER_KEY}`,
+  MAP_BACKDROP_STYLE_URL: `https://api.maptiler.com/maps/backdrop/style.json?key=${MAPTILER_KEY}`,
   TILE_LAYER_URL:  `https://api.maptiler.com/maps/winter-v4/256/{z}/{x}/{y}.png?key=${MAPTILER_KEY}`,
 
   // ── Drive-time isochrones (DriveTimeMap.html) ─────────────────────────────
@@ -34,7 +36,11 @@ export const config = {
   // ── Zoom thresholds ──────────────────────────────────────────────────────
   OUTLINES_MIN_ZOOM: 10,
   LIFTS_MIN_ZOOM:    10,
-  PISTES_MIN_ZOOM:   10
+  PISTES_MIN_ZOOM:   10,
+
+  // ── Load limits (cap features per layer / total to keep rendering safe) ───
+  MAX_FEATURES_PER_LAYER: 10000,
+  MAX_TOTAL_HEAVY_FEATURES: 100000
 };
 
 export default config;

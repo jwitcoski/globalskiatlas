@@ -6,7 +6,10 @@
  * Export: initSkiResortMap(options) → { map, searchResorts, escapeHtml, updateResortVisibility }
  */
 import { config } from './map-config.js';
-import { loadParquetAsRows } from './parquet-wasm-loader.js';
+import { createMapLibre } from './map-core.js';
+import { loadSkiAreas } from './map-loaders/ski-areas.js';
+import { loadLifts } from './map-loaders/lifts.js';
+import { loadPistes } from './map-loaders/pistes.js';
 import {
   getProp, escapeHtml, resortDisplayName, ENGLISH_NAME_KEYS,
   RESORT_TYPE_KEYS, NOT_DOWNHILL,
@@ -20,10 +23,6 @@ import {
 } from './utils.js';
 
 const {
-  SKI_AREAS_PARQUET_URL,
-  LIFTS_PARQUET_URL,
-  PISTES_PARQUET_URL,
-  MAP_STYLE_URL,
   LIFTS_MIN_ZOOM,
   PISTES_MIN_ZOOM
 } = config;
@@ -145,25 +144,7 @@ function buildPopupHtml(properties, latlng, options = {}, wikiPage = null) {
     extraButtons + `</div>`;
 }
 
-// ── Piste / lift helpers ───────────────────────────────────────────────────
-const PISTE_DIFF_KEYS = ['piste:difficulty', 'piste_difficulty', 'difficulty'];
-function getPisteDifficulty(props) {
-  for (const k of PISTE_DIFF_KEYS) {
-    if (props[k] != null) return String(props[k]).toLowerCase().trim();
-  }
-  if (typeof props.other_tags === 'string') {
-    const m = props.other_tags.match(/"piste:difficulty"=>"([^"]+)"/);
-    if (m) return m[1].toLowerCase().trim();
-  }
-  return '';
-}
-function pisteDiffColor(d) {
-  if (d === 'easy'   || d === 'novice')                    return '#22c55e';
-  if (d === 'intermediate' || d === 'medium')              return '#2563eb';
-  if (d === 'advanced'     || d === 'hard')                return '#1a1a1a';
-  if (d === 'expert' || d === 'freeride' || d === 'extreme') return '#991b1b';
-  return '#64748b';
-}
+// ── Tooltip labels for lifts/pistes (data comes from loaders) ──────────────
 function aerialwayLabel(type) {
   const L = { gondola: 'Gondola', cable_car: 'Cable car', chair_lift: 'Chairlift', mixed_lift: 'Mixed lift', drag_lift: 'Drag lift', 't-bar': 'T-bar', j_bar: 'J-bar', platter: 'Platter', rope_tow: 'Rope tow', magic_carpet: 'Magic carpet' };
   return L[type] || (type ? type.replace(/_/g, ' ') : 'Lift');
@@ -174,8 +155,6 @@ function difficultyBadge(d) {
   return `<span class="tt-diff" style="background:${color}"></span>${label}`;
 }
 
-const LIFT_LINE_TYPES = new Set(['gondola', 'cable_car', 'chair_lift', 'mixed_lift', 'drag_lift', 't-bar', 'j_bar', 'platter', 'rope_tow', 'magic_carpet', 'zip_line', 'goods', 'canopy']);
-
 const OLYMPIC_HOSTS = [
   { name: 'Milan',              lat: 45.4642, lon: 9.19   },
   { name: "Cortina d'Ampezzo", lat: 46.5369, lon: 12.1356 }
@@ -185,20 +164,8 @@ const OLYMPIC_HOSTS = [
 export async function initSkiResortMap(options = {}) {
   const includeRoadTripButton = !!options.includeRoadTripButton;
 
-  // ── Initialise MapLibre map ──────────────────────────────────────────────
-  const map = new maplibregl.Map({
-    container: 'map',
-    style: MAP_STYLE_URL,
-    center: [0, 30],
-    zoom: 2.5,
-    minZoom: 2,
-    maxZoom: 18
-  });
-
-  map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
-
-  // Wait for style to load before adding sources / layers
-  await new Promise(resolve => map.on('load', resolve));
+  // ── Initialise MapLibre map (map-core) ──────────────────────────────────
+  const { map } = await createMapLibre({ containerId: 'map' });
 
   // ── Olympic host markers ─────────────────────────────────────────────────
   const olympicRingsSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 30" width="36" height="18" style="display:block"><circle cx="12" cy="15" r="6" fill="none" stroke="#0081C8" stroke-width="2"/><circle cx="30" cy="15" r="6" fill="none" stroke="#000" stroke-width="2"/><circle cx="48" cy="15" r="6" fill="none" stroke="#EE334E" stroke-width="2"/><circle cx="21" cy="21" r="6" fill="none" stroke="#FCB131" stroke-width="2"/><circle cx="39" cy="21" r="6" fill="none" stroke="#00A651" stroke-width="2"/></svg>';
@@ -213,8 +180,8 @@ export async function initSkiResortMap(options = {}) {
       .addTo(map);
   });
 
-  // ── Load ski areas from parquet ──────────────────────────────────────────
-  const rows = await loadParquetAsRows(SKI_AREAS_PARQUET_URL);
+  // ── Load ski areas (map-loaders) ────────────────────────────────────────
+  const { rows } = await loadSkiAreas();
 
   let wikiPages = [];
   try {
@@ -562,69 +529,24 @@ export async function initSkiResortMap(options = {}) {
       map.getSource('pistes').setData({ type: 'FeatureCollection', features: bboxFilter(allPisteFeatures) });
   }
 
-  // Process a large row array in chunks, yielding to the browser between each
-  // chunk so the map stays interactive throughout.
-  async function buildFeaturesAsync(rows, filterFn, mapFn, chunkSize = 20000) {
-    const features = [];
-    for (let i = 0; i < rows.length; i += chunkSize) {
-      const end = Math.min(i + chunkSize, rows.length);
-      for (let j = i; j < end; j++) {
-        if (filterFn(rows[j])) features.push(mapFn(rows[j]));
-      }
-      if (end < rows.length) await new Promise(resolve => setTimeout(resolve, 0));
-    }
-    return features;
-  }
-
   async function initHeavyLayers() {
     if (heavyLayersReady || heavyLayersLoading) return;
     heavyLayersLoading = true;
     if (heavyLoadEl) { heavyLoadEl.style.display = 'block'; heavyLoadEl.textContent = 'Loading trail & lift data…'; }
 
     try {
-      const [liftsRows, pistesRows] = await Promise.all([
-        loadParquetAsRows(LIFTS_PARQUET_URL),
-        loadParquetAsRows(PISTES_PARQUET_URL)
+      const [liftsResult, pistesResult] = await Promise.all([
+        loadLifts(),
+        loadPistes()
       ]);
 
-      // ── Build full in-memory feature arrays (chunked to stay non-blocking) ─
-      allLiftFeatures = await buildFeaturesAsync(
-        liftsRows,
-        ({ geometry, properties }) =>
-          geometry &&
-          (geometry.type === 'LineString' || geometry.type === 'MultiLineString') &&
-          LIFT_LINE_TYPES.has(String(properties.aerialway || properties.Aerialway || '')),
-        ({ geometry, properties }) => ({
-          type: 'Feature',
-          geometry,
-          properties: {
-            _aerialway: String(properties.aerialway || properties.Aerialway || ''),
-            _name:      String(properties.name      || properties.Name      || ''),
-            _ski_area:  String(properties['Ski Area'] || properties.ski_area || '')
-          }
-        })
-      );
+      allLiftFeatures = liftsResult.features || [];
+      allPisteFeatures = pistesResult.features || [];
 
-      allPisteFeatures = await buildFeaturesAsync(
-        pistesRows,
-        ({ geometry, properties }) =>
-          geometry &&
-          (geometry.type === 'LineString' || geometry.type === 'MultiLineString' || geometry.type === 'Polygon') &&
-          !!(properties.osm_way_id || properties.osm_id),
-        ({ geometry, properties }) => {
-          const diff = getPisteDifficulty(properties);
-          return {
-            type: 'Feature',
-            geometry,
-            properties: {
-              _difficulty: diff,
-              _color:      pisteDiffColor(diff),
-              _name:       String(properties.name || properties.Name || ''),
-              _ski_area:   String(properties['Ski Area'] || properties.ski_area || '')
-            }
-          };
-        }
-      );
+      if (liftsResult.truncated || pistesResult.truncated) {
+        if (heavyLoadEl) heavyLoadEl.textContent = 'Too many features in view; zoom in or try again.';
+        if (heavyLoadEl) heavyLoadEl.style.display = 'block';
+      }
 
       // ── Add sources with viewport-filtered data only ───────────────────
       map.addSource('lifts',  { type: 'geojson', data: { type: 'FeatureCollection', features: bboxFilter(allLiftFeatures)  } });
@@ -685,6 +607,10 @@ export async function initSkiResortMap(options = {}) {
       map.on('zoomend', updateHeavyLayerData);
     } catch (err) {
       console.warn('[ski-resort-map-ml] heavy layers failed:', err);
+      if (heavyLoadEl) {
+        heavyLoadEl.textContent = 'Could not load trails/lifts. Try again.';
+        heavyLoadEl.style.display = 'block';
+      }
     } finally {
       heavyLayersLoading = false;
       if (heavyLoadEl) heavyLoadEl.style.display = 'none';

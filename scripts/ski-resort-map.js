@@ -1,5 +1,6 @@
 /**
- * Ski resort map: base map, GeoJSON load, markers, search, vector layers.
+ * Ski resort map (Leaflet): base map, GeoJSON load, markers, search, vector layers.
+ * DEPRECATED: mainmap.html now uses MapLibre (roadtripskimap-ml-main.js). Kept for reference or rollback.
  * Export initSkiResortMap(options) -> { map, searchResorts, escapeHtml, updateResortVisibility }.
  */
 import { config } from './map-config.js';

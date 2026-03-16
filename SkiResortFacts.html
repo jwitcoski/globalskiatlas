@@ -253,14 +253,15 @@
             }
         </script>
         <script type="module">
-            import { loadParquetAsRows } from './scripts/parquet-wasm-loader.js';
+            import { createMapLibre } from './scripts/map-core.js';
+            import { loadSkiAreas } from './scripts/map-loaders/ski-areas.js';
+            import { loadSkiAreaOutlines } from './scripts/map-loaders/ski-area-outlines.js';
+            import { loadLifts } from './scripts/map-loaders/lifts.js';
+            import { loadPistes } from './scripts/map-loaders/pistes.js';
+            import { config } from './scripts/map-config.js';
             console.log('[SkiResortFacts] Module started');
             (async function () {
-                const GEOPARQUET_URL = 'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/ski_areas_analyzed.parquet';
-                const SKI_AREAS_OUTLINES_URL = 'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/ski_areas.parquet';
-                const LIFTS_URL = 'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/lifts.parquet';
-                const PISTES_URL = 'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/pistes.parquet';
-                const MAPTILER_KEY = '0P06ORgY8WvmMOnPr0p2';
+                const MAPTILER_KEY = config.MAPTILER_KEY || '0P06ORgY8WvmMOnPr0p2';
                 const NAME_KEYS = ['name', 'resort_name', 'title', 'area_name', 'Name'];
                 const ENGLISH_NAME_KEYS = ['english_name', 'englishName'];
                 const ID_KEYS = ['id', 'ref', 'area_id', 'resort_id', 'skiresort_id'];
@@ -309,7 +310,7 @@
                     return v != null ? String(v).toLowerCase().trim() : '';
                 }
                 function isLift(props) {
-                    const aerialway = getProp(props, ['aerialway', 'Aerialway']);
+                    const aerialway = getProp(props, ['aerialway', 'Aerialway']) || (props && props._aerialway);
                     return aerialway != null && String(aerialway).trim() !== '';
                 }
                 function getRings(geom) {
@@ -375,21 +376,19 @@
                 };
 
                 try {
-                    console.log('[SkiResortFacts] Loading 4 parquets...');
-                    const [analyzedRows, outlineRows, liftRows, pisteRows] = await Promise.all([
-                        loadParquetAsRows(GEOPARQUET_URL),
-                        loadParquetAsRows(SKI_AREAS_OUTLINES_URL),
-                        loadParquetAsRows(LIFTS_URL),
-                        loadParquetAsRows(PISTES_URL)
+                    console.log('[SkiResortFacts] Loading via map-loaders...');
+                    const [skiAreasResult, outlineResult, liftResult, pisteResult] = await Promise.all([
+                        loadSkiAreas(),
+                        loadSkiAreaOutlines(),
+                        loadLifts(),
+                        loadPistes()
                     ]);
-                    console.log('[SkiResortFacts] Parquet row counts:', { analyzed: analyzedRows.length, outline: outlineRows.length, lifts: liftRows.length, pistes: pisteRows.length });
-                    const dataAnalyzed = analyzedRows.map((r) => ({ ...r.properties, geometry: r.geometry }));
-                    const isPolygon = (t) => t === 'Polygon' || t === 'MultiPolygon';
-                    const isLine = (t) => t === 'LineString' || t === 'MultiLineString';
-                    let outlineFeatures = outlineRows.filter((r) => r.geometry && isPolygon(r.geometry.type)).map((r) => ({ type: 'Feature', geometry: r.geometry, properties: r.properties }));
-                    let liftFeatures = liftRows.filter((r) => r.geometry && isLine(r.geometry.type)).map((r) => ({ type: 'Feature', geometry: r.geometry, properties: r.properties }));
-                    let pisteFeatures = pisteRows.filter((r) => r.geometry && isLine(r.geometry.type)).map((r) => ({ type: 'Feature', geometry: r.geometry, properties: r.properties }));
-                    console.log('[SkiResortFacts] Feature counts:', { outline: outlineFeatures.length, lifts: liftFeatures.length, pistes: pisteFeatures.length });
+                    const analyzedRows = skiAreasResult.rows || [];
+                    const dataAnalyzed = analyzedRows.map((r) => ({ ...(r.properties || {}), geometry: r.geometry }));
+                    let outlineFeatures = outlineResult.features || [];
+                    let liftFeatures = liftResult.features || [];
+                    let pisteFeatures = pisteResult.features || [];
+                    console.log('[SkiResortFacts] Feature counts:', { analyzed: analyzedRows.length, outline: outlineFeatures.length, lifts: liftFeatures.length, pistes: pisteFeatures.length });
 
                     const downhillAll = dataAnalyzed.filter((r) => !isNotDownhill(r));
                     console.log('[SkiResortFacts] downhillAll.length =', downhillAll.length);
@@ -547,7 +546,7 @@
                     })).filter((d) => d.trails != null && d.trails > 0 && d.area != null && d.area > 0);
 
                     const factMapInstances = {};
-                    function initFactMap(containerId, row, outlineFeatures, liftFeatures, pisteFeatures) {
+                    async function initFactMap(containerId, row, outlineFeatures, liftFeatures, pisteFeatures) {
                         const mapData = findResortMapData(row, outlineFeatures, liftFeatures, pisteFeatures);
                         const el = document.getElementById(containerId);
                         if (!el || typeof maplibregl === 'undefined') return;
@@ -560,8 +559,8 @@
                         }
                         el.classList.remove('placeholder');
                         el.innerHTML = '';
-                        const m = new maplibregl.Map({
-                            container: containerId,
+                        const { map: m } = await createMapLibre({
+                            containerId,
                             style: {
                                 version: 8,
                                 sources: { raster: { type: 'raster', tiles: ['https://api.maptiler.com/maps/winter-v4/256/{z}/{x}/{y}.png?key=' + MAPTILER_KEY], tileSize: 256 } },
@@ -569,29 +568,27 @@
                             },
                             center: [lon, lat],
                             zoom: 11,
-                            attributionControl: false
+                            noControl: true
                         });
                         factMapInstances[containerId] = m;
-                        m.on('load', () => {
-                            if (mapData.outlineFeature) {
-                                m.addSource('outline', { type: 'geojson', data: mapData.outlineFeature });
-                                m.addLayer({ id: 'outline', type: 'line', source: 'outline', paint: { 'line-color': '#000', 'line-width': 2, 'line-dasharray': [3, 6] } });
-                            }
-                            const liftFeats = mapData.resortMapFeatures.filter((f) => isLift(f.properties));
-                            const pisteFeats = mapData.resortMapFeatures.filter((f) => !isLift(f.properties)).map((f) => ({ ...f, properties: { ...f.properties, _difficulty: getPisteDifficulty(f.properties) } }));
-                            if (liftFeats.length) {
-                                m.addSource('lifts', { type: 'geojson', data: { type: 'FeatureCollection', features: liftFeats } });
-                                m.addLayer({ id: 'lifts', type: 'line', source: 'lifts', paint: { 'line-color': '#f87171', 'line-width': 2 } });
-                            }
-                            if (pisteFeats.length) {
-                                m.addSource('pistes', { type: 'geojson', data: { type: 'FeatureCollection', features: pisteFeats } });
-                                m.addLayer({
-                                    id: 'pistes', type: 'line', source: 'pistes',
-                                    paint: { 'line-color': ['match', ['get', '_difficulty'], 'easy', '#22c55e', 'novice', '#22c55e', 'intermediate', '#2563eb', 'medium', '#2563eb', 'advanced', '#1a1a1a', 'hard', '#1a1a1a', 'expert', '#991b1b', 'freeride', '#991b1b', 'extreme', '#991b1b', '#64748b'], 'line-width': 3 }
-                                });
-                            }
-                            if (mapData.extentBounds) m.fitBounds(mapData.extentBounds, { padding: 8, maxZoom: 15 });
-                        });
+                        if (mapData.outlineFeature) {
+                            m.addSource('outline', { type: 'geojson', data: mapData.outlineFeature });
+                            m.addLayer({ id: 'outline', type: 'line', source: 'outline', paint: { 'line-color': '#000', 'line-width': 2, 'line-dasharray': [3, 6] } });
+                        }
+                        const liftFeats = mapData.resortMapFeatures.filter((f) => isLift(f.properties));
+                        const pisteFeats = mapData.resortMapFeatures.filter((f) => !isLift(f.properties));
+                        if (liftFeats.length) {
+                            m.addSource('lifts', { type: 'geojson', data: { type: 'FeatureCollection', features: liftFeats } });
+                            m.addLayer({ id: 'lifts', type: 'line', source: 'lifts', paint: { 'line-color': '#f87171', 'line-width': 2 } });
+                        }
+                        if (pisteFeats.length) {
+                            m.addSource('pistes', { type: 'geojson', data: { type: 'FeatureCollection', features: pisteFeats } });
+                            m.addLayer({
+                                id: 'pistes', type: 'line', source: 'pistes',
+                                paint: { 'line-color': ['match', ['get', '_difficulty'], 'easy', '#22c55e', 'novice', '#22c55e', 'intermediate', '#2563eb', 'medium', '#2563eb', 'advanced', '#1a1a1a', 'hard', '#1a1a1a', 'expert', '#991b1b', 'freeride', '#991b1b', 'extreme', '#991b1b', '#64748b'], 'line-width': 3 }
+                            });
+                        }
+                        if (mapData.extentBounds) m.fitBounds(mapData.extentBounds, { padding: 8, maxZoom: 15 });
                     }
 
                     const COUNTRY_ALIAS = {
@@ -674,8 +671,8 @@
                             const worldGeo = await resp.json();
                             el.classList.remove('placeholder', 'loading');
                             el.innerHTML = '';
-                            const m = new maplibregl.Map({
-                                container: 'map-world',
+                            const { map: m } = await createMapLibre({
+                                containerId: 'map-world',
                                 style: {
                                     version: 8,
                                     glyphs: 'https://api.maptiler.com/fonts/{fontstack}/{range}.pbf?key=' + MAPTILER_KEY,
@@ -690,7 +687,7 @@
                                 },
                                 center: [0, 30],
                                 zoom: 2,
-                                attributionControl: false
+                                noControl: true
                             });
                             worldMapInstance = m;
                             const mapTooltip = document.createElement('div');
@@ -698,7 +695,7 @@
                             mapTooltip.style.display = 'none';
                             document.body.appendChild(mapTooltip);
                             const features = Array.isArray(worldGeo.features) ? worldGeo.features : [];
-                            m.on('load', () => {
+                            (function attachHandlers() {
                                 m.on('mouseenter', 'countries-fill', (e) => {
                                     m.getCanvas().style.cursor = 'pointer';
                                     const admin = e.features[0].properties.ADMIN || e.features[0].properties.NAME || e.features[0].properties.NAME_LONG || e.features[0].properties.SOVEREIGNT || '';
@@ -741,7 +738,7 @@
                                     m.addLayer({ id: 'country-labels', type: 'symbol', source: 'country-labels', layout: { 'text-field': ['get', 'count'], 'text-size': 14, 'text-allow-overlap': false }, paint: { 'text-color': '#0a0a0a', 'text-halo-color': '#fff', 'text-halo-width': 2 } });
                                 }
                                 console.log('[SkiResortFacts] initWorldMap: done');
-                            });
+                            })();
                         } catch (e) {
                             console.warn('[SkiResortFacts] initWorldMap failed', e);
                             el.textContent = 'Could not load world map.';

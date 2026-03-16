@@ -1,13 +1,11 @@
 /**
- * Web Worker: fetch + parse parquet files and find resort outline + filter lifts/pistes.
- * Runs off the main thread so the map stays responsive.
- * Message in: { urls: { analyzed, outlines, lifts, pistes }, resort: { title, lat, lon } }
+ * Web Worker: load ski areas, outlines, lifts, pistes via map-loaders; find resort outline and filter lifts/pistes to resort.
+ * Message in: { resort: { title, lat, lon } } (URLs come from map-config via loaders)
  * Message out: { outlineFeature, liftFeats, pisteFeats, extentBounds, southToNorthBearing } or { error: string }
  */
 
 const NAME_KEYS = ['name', 'resort_name', 'title', 'area_name', 'Name'];
 const ID_KEYS = ['id', 'ref', 'area_id', 'resort_id', 'skiresort_id'];
-const PISTE_DIFFICULTY_KEYS = ['piste:difficulty', 'piste_difficulty', 'difficulty'];
 
 function getProp(obj, keyList) {
   if (!obj) return undefined;
@@ -15,20 +13,6 @@ function getProp(obj, keyList) {
     if (Object.prototype.hasOwnProperty.call(obj, k)) return obj[k];
   }
   return undefined;
-}
-
-function getPisteDifficulty(props) {
-  let v = getProp(props, PISTE_DIFFICULTY_KEYS);
-  if (v == null && props && typeof props.other_tags === 'string') {
-    const m = props.other_tags.match(/"piste:difficulty"=>"([^"]+)"/);
-    if (m) v = m[1];
-  }
-  return v != null ? String(v).toLowerCase().trim() : '';
-}
-
-function isLift(props) {
-  const aerialway = getProp(props, ['aerialway', 'Aerialway']);
-  return aerialway != null && String(aerialway).trim() !== '';
 }
 
 function getRings(geom) {
@@ -123,17 +107,10 @@ function getResortLatLon(row) {
   return [null, null];
 }
 
-async function loadFeaturesFromParquet(loadParquetAsRows, parquetUrl, geomFilter) {
-  const rows = await loadParquetAsRows(parquetUrl);
-  return rows
-    .filter((r) => r.geometry && geomFilter(r.geometry.type))
-    .map((r) => ({ type: 'Feature', geometry: r.geometry, properties: r.properties || {} }));
-}
-
 self.onmessage = async function (e) {
-  const { urls, resort } = e.data || {};
-  if (!urls || !resort || resort.lat == null || resort.lon == null || !resort.title) {
-    self.postMessage({ error: 'Missing urls or resort (title, lat, lon)' });
+  const { resort } = e.data || {};
+  if (!resort || resort.lat == null || resort.lon == null || !resort.title) {
+    self.postMessage({ error: 'Missing resort (title, lat, lon)' });
     return;
   }
   const resortName = String(resort.title).trim();
@@ -141,20 +118,28 @@ self.onmessage = async function (e) {
   const resortLon = Number(resort.lon);
 
   try {
-    const loaderUrl = new URL('../../scripts/parquet-wasm-loader.js', import.meta.url).href;
-    const { loadParquetAsRows } = await import(loaderUrl);
+    const scriptsBase = new URL('../../scripts/', import.meta.url).href;
+    const [skiAreasMod, outlinesMod, liftsMod, pistesMod] = await Promise.all([
+      import(scriptsBase + 'map-loaders/ski-areas.js'),
+      import(scriptsBase + 'map-loaders/ski-area-outlines.js'),
+      import(scriptsBase + 'map-loaders/lifts.js'),
+      import(scriptsBase + 'map-loaders/pistes.js')
+    ]);
+    const [{ loadSkiAreas }, { loadSkiAreaOutlines }, { loadLifts }, { loadPistes }] = [skiAreasMod, outlinesMod, liftsMod, pistesMod];
 
-    const isPolygon = (t) => t === 'Polygon' || t === 'MultiPolygon';
-    const isLine = (t) => t === 'LineString' || t === 'MultiLineString';
-
-    const [analyzedRows, outlineFeatures, liftFeatures, pisteFeatures] = await Promise.all([
-      loadFeaturesFromParquet(loadParquetAsRows, urls.analyzed, () => true),
-      loadFeaturesFromParquet(loadParquetAsRows, urls.outlines, isPolygon),
-      loadFeaturesFromParquet(loadParquetAsRows, urls.lifts, isLine),
-      loadFeaturesFromParquet(loadParquetAsRows, urls.pistes, isLine)
+    const [skiAreasResult, outlineResult, liftResult, pisteResult] = await Promise.all([
+      loadSkiAreas(),
+      loadSkiAreaOutlines(),
+      loadLifts(),
+      loadPistes()
     ]);
 
-    const dataAnalyzed = analyzedRows.map((r) => ({ ...r.properties, geometry: r.geometry }));
+    const analyzedRows = skiAreasResult.rows || [];
+    const outlineFeatures = outlineResult.features || [];
+    const liftFeatures = liftResult.features || [];
+    const pisteFeatures = pisteResult.features || [];
+
+    const dataAnalyzed = analyzedRows.map((r) => ({ ...(r.properties || {}), geometry: r.geometry }));
     const resortRow = dataAnalyzed.find((row) => {
       const name = getProp(row, NAME_KEYS);
       const [rowLat, rowLon] = getResortLatLon(row);
@@ -178,24 +163,20 @@ self.onmessage = async function (e) {
       return pointInPolygon(resortLon, resortLat, f.geometry);
     });
 
-    const features = [];
+    const liftFeats = [];
+    const pisteFeats = [];
     if (outlineFeature) {
       const outlineGeom = outlineFeature.geometry;
       liftFeatures.forEach((f) => {
         const c = lineCentroid(f.geometry);
-        if (c && pointInPolygon(c[0], c[1], outlineGeom)) features.push(f);
+        if (c && pointInPolygon(c[0], c[1], outlineGeom)) liftFeats.push(f);
       });
       pisteFeatures.forEach((f) => {
         const c = lineCentroid(f.geometry);
-        if (c && pointInPolygon(c[0], c[1], outlineGeom)) features.push(f);
+        if (c && pointInPolygon(c[0], c[1], outlineGeom)) pisteFeats.push(f);
       });
     }
-
-    const liftFeats = features.filter((f) => isLift(f.properties));
-    const pisteFeats = features.filter((f) => !isLift(f.properties)).map((f) => ({
-      ...f,
-      properties: { ...f.properties, _difficulty: getPisteDifficulty(f.properties) }
-    }));
+    const features = [...liftFeats, ...pisteFeats];
 
     let extentBounds = outlineFeature ? boundsFromGeoJSONFeature(outlineFeature) : null;
     features.forEach((f) => { extentBounds = extendBbox(extentBounds, f); });

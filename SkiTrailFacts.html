@@ -265,10 +265,11 @@
             }
         </script>
         <script type="module">
-            import { loadParquetAsRows } from './scripts/parquet-wasm-loader.js';
+            import { createMapLibre } from './scripts/map-core.js';
+            import { loadPistes } from './scripts/map-loaders/pistes.js';
+            import { config } from './scripts/map-config.js';
             (async function () {
-                const PISTES_URL = 'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/pistes.parquet';
-                const MAPTILER_KEY = '0P06ORgY8WvmMOnPr0p2';
+                const MAPTILER_KEY = config.MAPTILER_KEY || '0P06ORgY8WvmMOnPr0p2';
 
                 const NAME_KEYS = ['name', 'Name', 'trail_name', 'piste_name'];
                 const RESORT_KEYS = ['Ski Area', 'ski_area', 'resort_name', 'area_name', 'resort', 'ski_area_name', 'skiarea_name'];
@@ -403,7 +404,7 @@
                 }
 
                 const factMapInstances = {};
-                function initTrailMap(containerId, row) {
+                async function initTrailMap(containerId, row) {
                     const el = document.getElementById(containerId);
                     if (!el || typeof maplibregl === 'undefined') return;
                     const geom = row.geometry;
@@ -422,8 +423,8 @@
                     else if (diff === 'intermediate' || diff === 'medium') color = '#2563eb';
                     else if (diff === 'advanced' || diff === 'hard') color = '#1a1a1a';
                     else if (diff === 'expert' || diff === 'freeride' || diff === 'extreme') color = '#991b1b';
-                    const m = new maplibregl.Map({
-                        container: containerId,
+                    const { map: m } = await createMapLibre({
+                        containerId,
                         style: {
                             version: 8,
                             sources: {
@@ -433,15 +434,13 @@
                         },
                         center: [centroid[0], centroid[1]],
                         zoom: 12,
-                        attributionControl: false
+                        noControl: true
                     });
                     factMapInstances[containerId] = m;
-                    m.on('load', () => {
-                        m.addSource('line', { type: 'geojson', data: { type: 'Feature', geometry: geom, properties: {} } });
-                        m.addLayer({ id: 'line', type: 'line', source: 'line', paint: { 'line-color': color, 'line-width': 4 } });
-                        const bbox = boundsFromGeom(geom);
-                        if (bbox) m.fitBounds(bbox, { padding: 20, maxZoom: 15 });
-                    });
+                    m.addSource('line', { type: 'geojson', data: { type: 'Feature', geometry: geom, properties: {} } });
+                    m.addLayer({ id: 'line', type: 'line', source: 'line', paint: { 'line-color': color, 'line-width': 4 } });
+                    const bbox = boundsFromGeom(geom);
+                    if (bbox) m.fitBounds(bbox, { padding: 20, maxZoom: 15 });
                 }
 
                 function setFact(nameId, descId, name, desc) {
@@ -585,10 +584,10 @@
                     return String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
                 }
 
-                // Main data load
+                // Main data load (map-loaders)
                 try {
-                    const rows = await loadParquetAsRows(PISTES_URL);
-                    const data = rows.map((r) => ({ ...r.properties, geometry: r.geometry }));
+                    const pisteResult = await loadPistes();
+                    const data = (pisteResult.features || []).map((f) => ({ ...f.properties, geometry: f.geometry }));
 
                     const excludeUntypedCb = document.getElementById('exclude-untyped');
                     const allTrails = data.filter((r) =>

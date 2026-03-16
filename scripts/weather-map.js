@@ -1,5 +1,7 @@
 /**
- * MapTiler Weather map – uses official MapTiler SDK JS + MapTiler Weather SDK.
+ * Weather map – MapTiler SDK + MapTiler Weather SDK.
+ * The Weather SDK requires a MapTiler Map (calls getSdkConfig() etc.), so this page stays on
+ * MapTiler SDK rather than MapLibre; other map pages use map-core + MapLibre.
  * Expects globals: maptilersdk, maptilerweather, and window.MAPTILER_API_KEY.
  * @see https://docs.maptiler.com/sdk-js/examples/weather-layer-switcher/
  */
