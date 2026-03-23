@@ -586,7 +586,8 @@
 
                 // Main data load (map-loaders)
                 try {
-                    const pisteResult = await loadPistes();
+                    // Override loader feature cap so facts reflect the full dataset
+                    const pisteResult = await loadPistes({ maxFeatures: 200000 });
                     const data = (pisteResult.features || []).map((f) => ({ ...f.properties, geometry: f.geometry }));
 
                     const excludeUntypedCb = document.getElementById('exclude-untyped');

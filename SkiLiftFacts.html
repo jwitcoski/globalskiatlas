@@ -575,7 +575,8 @@
 
                 // Main load (map-loaders)
                 try {
-                    const liftResult = await loadLifts();
+                    // Override loader feature cap so facts reflect the full dataset
+                    const liftResult = await loadLifts({ maxFeatures: 250000 });
                     const data = (liftResult.features || []).map((f) => ({ ...f.properties, geometry: f.geometry }));
 
                     const lifts = data.filter((r) => r.geometry && (r.geometry.type === 'LineString' || r.geometry.type === 'MultiLineString'));
