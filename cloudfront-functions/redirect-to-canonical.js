@@ -4,6 +4,7 @@
  * 301 redirects:
  * 1. www.globalskiatlas.com → globalskiatlas.com (same path and query)
  * 2. /index.html → / (and /foo/index.html → /foo/) so the bare path is canonical
+ * 3. Legacy HTML redirector pages → final canonical destinations
  *
  * Attach to your CloudFront distribution's default cache behavior as "Viewer request".
  * Publish the function in the console, then associate it with the behavior.
@@ -15,6 +16,10 @@ function handler(event) {
   var uri = request.uri || '/';
   var qs = request.querystring || {};
   var canonicalHost = 'globalskiatlas.com';
+  var directRedirects = {
+    '/atlas.html': '/wiki/browse.html',
+    '/roadtripskimap.html': '/mainmap.html'
+  };
 
   function queryString() {
     var parts = [];
@@ -35,7 +40,13 @@ function handler(event) {
     needRedirect = true;
   }
 
-  // 2. /index.html → / (or /foo/index.html → /foo/)
+  // 2. Legacy HTML redirector pages -> final canonical destinations
+  if (Object.prototype.hasOwnProperty.call(directRedirects, uri)) {
+    needRedirect = true;
+    newPath = directRedirects[uri];
+  }
+
+  // 3. /index.html → / (or /foo/index.html → /foo/)
   if (uri === '/index.html' || (uri.length >= 11 && uri.slice(-11) === 'index.html')) {
     needRedirect = true;
     if (uri === '/index.html') {
