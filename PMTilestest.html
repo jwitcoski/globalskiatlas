@@ -47,6 +47,18 @@
     #panel .steps li { margin: 0.5em 0; }
     .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 8px; }
     label { font-weight: 600; }
+    .row-basemap label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .row-basemap input[type="checkbox"] {
+      width: auto;
+      margin: 0;
+      cursor: pointer;
+    }
     input[type="url"] {
       flex: 1 1 220px;
       min-width: 0;
@@ -150,6 +162,12 @@
       />
       <button type="button" id="reload">Reload map</button>
     </div>
+    <div class="row row-basemap">
+      <label for="showBasemap">
+        <input type="checkbox" id="showBasemap" />
+        Background map (OpenStreetMap)
+      </label>
+    </div>
   </div>
   <div id="map" role="application" aria-label="Map"></div>
 
@@ -169,9 +187,14 @@
     const input = document.getElementById("pmtilesUrl");
     input.value = DEFAULT_PMTILES;
 
+    const showBasemapEl = document.getElementById("showBasemap");
+    const basemapOn =
+      params.get("basemap") === "1" || params.get("basemap") === "true";
+    showBasemapEl.checked = basemapOn;
+
     const log = (...args) => console.log("[PMTilestest]", ...args);
 
-    function buildStyle(pmtilesHttpUrl) {
+    function buildStyle(pmtilesHttpUrl, showBasemap = false) {
       return {
         version: 8,
         name: "ski-preview",
@@ -192,7 +215,12 @@
           },
         },
         layers: [
-          { id: "basemap", type: "raster", source: "basemap" },
+          {
+            id: "basemap",
+            type: "raster",
+            source: "basemap",
+            layout: { visibility: showBasemap ? "visible" : "none" },
+          },
           {
             id: "ski-areas-fill",
             type: "fill",
@@ -300,9 +328,23 @@
       };
     }
 
+    function syncBasemapSearchParam() {
+      const next = new URL(location.href);
+      if (showBasemapEl.checked) next.searchParams.set("basemap", "1");
+      else next.searchParams.delete("basemap");
+      history.replaceState({}, "", next);
+    }
+
+    function applyBasemapVisibility() {
+      const vis = showBasemapEl.checked ? "visible" : "none";
+      if (map.getLayer("basemap")) {
+        map.setLayoutProperty("basemap", "visibility", vis);
+      }
+    }
+
     let map = new maplibregl.Map({
       container: "map",
-      style: buildStyle(input.value.trim()),
+      style: buildStyle(input.value.trim(), showBasemapEl.checked),
       center: [-105.2, 39.5],
       zoom: 5,
       maxPitch: 0,
@@ -313,6 +355,11 @@
       new maplibregl.ScaleControl({ maxWidth: 140, unit: "metric" }),
       "bottom-left",
     );
+
+    showBasemapEl.addEventListener("change", () => {
+      applyBasemapVisibility();
+      syncBasemapSearchParam();
+    });
 
     const pistePopup = new maplibregl.Popup({
       closeButton: true,
@@ -454,8 +501,10 @@
       if (!u) return;
       const next = new URL(location.href);
       next.searchParams.set("url", u);
+      if (showBasemapEl.checked) next.searchParams.set("basemap", "1");
+      else next.searchParams.delete("basemap");
       history.replaceState({}, "", next);
-      map.setStyle(buildStyle(u));
+      map.setStyle(buildStyle(u, showBasemapEl.checked));
       map.once("idle", () => {
         try {
           map.fitBounds(
