@@ -6,13 +6,15 @@ The wiki **Resort Map** tab ([wiki/resort.html](wiki/resort.html)) shows a stati
 
 - **Bucket name**: `globalskiatlas-resort-maps`
 - **Region**: `us-east-1` (Northern Virginia), same as the rest of the project.
-- **Object key**: One PNG per wiki page: `{pageId}.png`  
-  Examples: `abenaki-ski-area-maine.png`, `country-united-states.png`.
+- **Object keys** (per wiki `pageId`, e.g. `eldora-colorado`):
+  - `{pageId}-landscape.png` — wide layout (default on desktop side-by-side map)
+  - `{pageId}-portrait.png` — tall layout (mobile / narrow column)
+  - Optional legacy: `{pageId}.png` (single map for both orientations)
 - **Base URL**:  
   `https://globalskiatlas-resort-maps.s3.us-east-1.amazonaws.com/`  
-  Full image URL: `{baseURL}{encodeURIComponent(pageId)}.png`
+  Example: `https://globalskiatlas-resort-maps.s3.us-east-1.amazonaws.com/eldora-colorado-landscape.png`
 
-The wiki script builds the URL in [wiki/js/script.js](wiki/js/script.js) via `RESORT_STATIC_MAP_BASE + encodeURIComponent(pageId) + '.png'`. If the object is missing, the `<img>` `onerror` falls back to `/wiki/assets/resort-map-placeholder.png`.
+The **Resort Map** tab shows **both** images when they exist (stacked: landscape, then portrait). Missing keys hide that figure; if neither loads, landscape tries legacy `{pageId}.png`, then the placeholder. See [wiki/js/script.js](wiki/js/script.js) (`setResortStaticMaps`).
 
 ## 2. CORS
 
@@ -68,11 +70,18 @@ Optionally make this configurable via a small config or build-time env so dev/st
 
 ## 5. Uploading maps
 
-- **Key**: `{pageId}.png` (e.g. from wiki ingest `pageId`: `abenaki-ski-area-maine`).
+- **Keys**: `{pageId}-landscape.png` and/or `{pageId}-portrait.png` (match wiki `pageId`, e.g. `eldora-colorado`, `loveland-basin-ski-area-colorado`).
 - **Content type**: `image/png`.
-- Upload via AWS Console, CLI (`aws s3 cp`), or a pipeline that generates the images and writes to this bucket. Missing objects are handled by the placeholder image in the UI.
+- Upload via AWS Console, CLI (`aws s3 cp`), or a pipeline. One orientation is enough; the UI tries the other, then legacy `{pageId}.png`, then the placeholder.
+
+Example (Colorado test set):
+
+```bash
+aws s3 cp eldora-colorado-landscape.png s3://globalskiatlas-resort-maps/eldora-colorado-landscape.png --content-type image/png
+aws s3 cp eldora-colorado-portrait.png  s3://globalskiatlas-resort-maps/eldora-colorado-portrait.png  --content-type image/png
+```
 
 ## 6. Troubleshooting
 
-- **Broken image / placeholder always shows**: Check (1) object exists at `https://globalskiatlas-resort-maps.s3.us-east-1.amazonaws.com/<pageId>.png`, (2) bucket policy allows `GetObject`, (3) CORS allows your origin if you ever load the URL via `fetch` (for `<img>` same-origin or CORS may still be needed depending on browser).
+- **Broken image / placeholder always shows**: Check (1) object exists at `{base}<pageId>-landscape.png` or `-portrait.png`, (2) S3 key matches wiki `pageId` exactly (open resort URL `?page=...`), (3) bucket policy allows `GetObject`, (4) CORS if needed.
 - **403 Access Denied**: Add or fix the bucket policy and ensure block public access settings allow public read for this bucket.

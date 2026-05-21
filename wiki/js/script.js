@@ -83,6 +83,51 @@ function toggleMapExpanded() {
   }
 }
 
+/** Load landscape + portrait PNGs from S3; show each figure only when that object exists. */
+function setResortStaticMaps(pageId) {
+  if (!pageId) return;
+  var enc = encodeURIComponent(pageId);
+  var placeholderWrap = document.getElementById('resort-static-map-placeholder-wrap');
+  if (placeholderWrap) placeholderWrap.hidden = true;
+
+  var specs = [
+    { imgId: 'resort-map-static-landscape', wrapId: 'resort-static-map-landscape-wrap', suffix: 'landscape', allowLegacy: true },
+    { imgId: 'resort-map-static-portrait', wrapId: 'resort-static-map-portrait-wrap', suffix: 'portrait', allowLegacy: false }
+  ];
+  var pending = specs.length;
+  var anyLoaded = false;
+
+  function finishSlot(ok) {
+    if (ok) anyLoaded = true;
+    pending -= 1;
+    if (pending <= 0 && placeholderWrap) placeholderWrap.hidden = !!anyLoaded;
+  }
+
+  specs.forEach(function (spec) {
+    var img = document.getElementById(spec.imgId);
+    var wrap = document.getElementById(spec.wrapId);
+    if (!img || !wrap) {
+      finishSlot(false);
+      return;
+    }
+    wrap.hidden = true;
+    img.onload = function () {
+      wrap.hidden = false;
+      finishSlot(true);
+    };
+    img.onerror = function () {
+      if (spec.allowLegacy && !img._legacyTried) {
+        img._legacyTried = true;
+        img.src = RESORT_STATIC_MAP_BASE + enc + '.png';
+        return;
+      }
+      wrap.hidden = true;
+      finishSlot(false);
+    };
+    img.src = RESORT_STATIC_MAP_BASE + enc + '-' + spec.suffix + '.png';
+  });
+}
+
 function initResortMap(lat, lon, pageId, zoom) {
   var aside = document.getElementById('resort-map-aside');
   var container = document.getElementById('resort-map-gl');
@@ -90,11 +135,7 @@ function initResortMap(lat, lon, pageId, zoom) {
 
   aside.style.display = '';
 
-  // Static map: point at S3, fall back to placeholder on error
-  var staticImg = document.getElementById('resort-map-static-img');
-  if (staticImg && pageId) {
-    staticImg.src = RESORT_STATIC_MAP_BASE + encodeURIComponent(pageId) + '.png';
-  }
+  if (pageId) setResortStaticMaps(pageId);
 
   var useZoom = zoom != null && !isNaN(Number(zoom)) ? Number(zoom) : 11;
 

@@ -142,19 +142,15 @@ body {
   min-height: 400px;
   align-items: stretch;
 }
+.resort-layout.resort-map-expanded .resort-map-static {
+  max-height: none;
+}
 .resort-layout.resort-map-expanded .resort-map-static .resort-map-static-img {
-  flex: 1;
-  min-height: 0;
+  max-height: min(70vh, 900px);
 }
 .resort-layout.resort-map-expanded .resort-map-gl {
   height: 70vh;
   min-height: 400px;
-}
-.resort-layout.resort-map-expanded .resort-map-static-img {
-  width: 100%;
-  height: 100%;
-  max-height: none;
-  object-fit: contain;
 }
 @media (max-width: 720px) {
   .resort-layout {
@@ -352,17 +348,36 @@ body {
 
 .resort-map-static {
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 1rem;
   background: #f1f5f9;
+  overflow-y: auto;
+  max-height: min(80vh, 720px);
+  padding: 0.25rem;
+}
+
+.resort-static-map-figure {
+  margin: 0;
+  flex: 0 0 auto;
+}
+
+.resort-static-map-caption {
+  font-size: 0.72rem;
+  color: var(--resort-footer-color);
+  margin-top: 0.35rem;
+  text-align: center;
 }
 
 .resort-map-static-img {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  height: auto;
+  max-height: 360px;
+  object-fit: contain;
   border-radius: 10px;
   display: block;
+  background: #fff;
 }
 
 .resort-osm-note {
