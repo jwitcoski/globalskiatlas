@@ -55,4 +55,10 @@ jobs:
 
       - name: Invalidate CloudFront cache
         run: |
-          aws cloudfront create-invalidation --distribution-id E38F9PVDPMHRQK --paths "/*"
+          DIST=$(aws cloudfront list-distributions --query "DistributionList.Items[?contains(Aliases.Items, 'globalskiatlas.com')].Id | [0]" --output text)
+          if [ -z "$DIST" ] || [ "$DIST" = "None" ]; then
+            echo "Could not resolve distribution by alias; using E38F9PVDPMHRQK"
+            DIST=E38F9PVDPMHRQK
+          fi
+          echo "Invalidating CloudFront distribution $DIST"
+          aws cloudfront create-invalidation --distribution-id "$DIST" --paths "/*"
