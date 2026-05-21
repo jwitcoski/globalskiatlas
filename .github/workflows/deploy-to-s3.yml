@@ -48,6 +48,11 @@ jobs:
             --exclude "tailwind.config.js" \
             --exclude "docs/*"
 
+      - name: Verify wiki assets on S3
+        run: |
+          aws s3api head-object --bucket globalskiatlas.com --key wiki/resort.html
+          aws s3 cp s3://globalskiatlas.com/wiki/resort.html - | grep -q 'script.js?v=4' || (echo "S3 wiki/resort.html missing expected script version" && exit 1)
+
       - name: Invalidate CloudFront cache
         run: |
           aws cloudfront create-invalidation --distribution-id E38F9PVDPMHRQK --paths "/*"
