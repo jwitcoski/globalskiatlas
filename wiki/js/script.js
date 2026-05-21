@@ -60,6 +60,9 @@ function switchMapTab(tab) {
     if (tabLive) { tabLive.classList.remove('resort-map-tab--active'); }
     if (tabStatic) { tabStatic.classList.add('resort-map-tab--active'); }
     if (legendEl) { legendEl.style.display = 'none'; }
+    if (window._resortStaticMapPageId) {
+      setTimeout(function () { setResortStaticMaps(window._resortStaticMapPageId); }, 0);
+    }
   }
 }
 
@@ -103,28 +106,46 @@ function setResortStaticMaps(pageId) {
     if (pending <= 0 && placeholderWrap) placeholderWrap.hidden = !!anyLoaded;
   }
 
-  specs.forEach(function (spec) {
+  function showLoaded(spec, url) {
     var img = document.getElementById(spec.imgId);
     var wrap = document.getElementById(spec.wrapId);
     if (!img || !wrap) {
       finishSlot(false);
       return;
     }
+    img.src = url;
+    wrap.hidden = false;
+    finishSlot(true);
+  }
+
+  function tryLoad(spec, url, allowLegacy) {
+    var wrap = document.getElementById(spec.wrapId);
+    if (!wrap) {
+      finishSlot(false);
+      return;
+    }
     wrap.hidden = true;
-    img.onload = function () {
-      wrap.hidden = false;
-      finishSlot(true);
-    };
-    img.onerror = function () {
-      if (spec.allowLegacy && !img._legacyTried) {
-        img._legacyTried = true;
-        img.src = RESORT_STATIC_MAP_BASE + enc + '.png';
+    var loader = new Image();
+    loader.onload = function () { showLoaded(spec, url); };
+    loader.onerror = function () {
+      if (allowLegacy && !spec._legacyTried) {
+        spec._legacyTried = true;
+        tryLoad(spec, RESORT_STATIC_MAP_BASE + enc + '.png', false);
         return;
       }
       wrap.hidden = true;
       finishSlot(false);
     };
-    img.src = RESORT_STATIC_MAP_BASE + enc + '-' + spec.suffix + '.png';
+    loader.src = url;
+  }
+
+  specs.forEach(function (spec) {
+    spec._legacyTried = false;
+    if (!document.getElementById(spec.imgId) || !document.getElementById(spec.wrapId)) {
+      finishSlot(false);
+      return;
+    }
+    tryLoad(spec, RESORT_STATIC_MAP_BASE + enc + '-' + spec.suffix + '.png', spec.allowLegacy);
   });
 }
 
@@ -135,7 +156,10 @@ function initResortMap(lat, lon, pageId, zoom) {
 
   aside.style.display = '';
 
-  if (pageId) setResortStaticMaps(pageId);
+  if (pageId) {
+    window._resortStaticMapPageId = pageId;
+    setResortStaticMaps(pageId);
+  }
 
   var useZoom = zoom != null && !isNaN(Number(zoom)) ? Number(zoom) : 11;
 
