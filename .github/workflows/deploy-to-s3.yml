@@ -53,12 +53,48 @@ jobs:
           aws s3api head-object --bucket globalskiatlas.com --key wiki/resort.html
           aws s3 cp s3://globalskiatlas.com/wiki/resort.html - | grep -q 'script.js?v=4' || (echo "S3 wiki/resort.html missing expected script version" && exit 1)
 
+      - name: Refresh wiki cache headers on S3
+        run: |
+          aws s3 cp wiki/resort.html s3://globalskiatlas.com/wiki/resort.html \
+            --content-type text/html \
+            --cache-control "public, max-age=300, must-revalidate"
+          aws s3 cp wiki/js/script.js s3://globalskiatlas.com/wiki/js/script.js \
+            --content-type application/javascript \
+            --cache-control "public, max-age=300, must-revalidate"
+          aws s3 cp wiki/css/style.css s3://globalskiatlas.com/wiki/css/style.css \
+            --content-type text/css \
+            --cache-control "public, max-age=300, must-revalidate"
+
       - name: Invalidate CloudFront cache
         run: |
-          DIST=$(aws cloudfront list-distributions --query "DistributionList.Items[?contains(Aliases.Items, 'globalskiatlas.com')].Id | [0]" --output text)
-          if [ -z "$DIST" ] || [ "$DIST" = "None" ]; then
-            echo "Could not resolve distribution by alias; using E38F9PVDPMHRQK"
-            DIST=E38F9PVDPMHRQK
-          fi
-          echo "Invalidating CloudFront distribution $DIST"
-          aws cloudfront create-invalidation --distribution-id "$DIST" --paths "/*"
+          echo "CloudFront distributions:"
+          aws cloudfront list-distributions \
+            --query 'DistributionList.Items[*].{Id:Id,Aliases:Aliases.Items}' \
+            --output table
+          aws cloudfront create-invalidation --distribution-id E38F9PVDPMHRQK --paths "/*"
+          aws cloudfront create-invalidation --distribution-id E38F9PVDPMHRQK --paths "/wiki/*"
+          python3 <<'PY'
+          import json, subprocess
+          out = subprocess.check_output(
+              ["aws", "cloudfront", "list-distributions", "--output", "json"],
+              text=True,
+          )
+          data = json.loads(out)
+          seen = {"E38F9PVDPMHRQK"}
+          for item in (data.get("DistributionList") or {}).get("Items") or []:
+              dist_id = item.get("Id")
+              aliases = (item.get("Aliases") or {}).get("Items") or []
+              if not dist_id or dist_id in seen:
+                  continue
+              if any("globalskiatlas" in (a or "") for a in aliases):
+                  seen.add(dist_id)
+                  print(f"Invalidating {dist_id} aliases={aliases}")
+                  subprocess.run(
+                      [
+                          "aws", "cloudfront", "create-invalidation",
+                          "--distribution-id", dist_id,
+                          "--paths", "/*", "/wiki/*",
+                      ],
+                      check=True,
+                  )
+          PY
