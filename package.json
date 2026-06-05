@@ -10,6 +10,7 @@
         "build:tailwind": "cross-env NODE_ENV=production tailwindcss --postcss -i css/tailwind.css -o css/tailwind-build.css --minify",
         "wiki:create-tables": "node scripts/wiki-create-tables.js",
         "wiki:ingest": "node scripts/wiki-ingest-parquet.js",
+        "wiki:bulk-content": "node scripts/wiki-bulk-update-resort-content.js",
         "serve:static": "serve -l tcp://localhost:3010",
         "test": "echo \"Error: no test specified\" && exit 1"
     },

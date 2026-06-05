@@ -31,6 +31,7 @@
         <link rel="shortcut icon" href="./assets/logo.png?v=2" type="image/x-icon" />
         <link rel="stylesheet" href="./css/tailwind-build.css" />
         <link rel="stylesheet" href="css/index.css" />
+        <link rel="stylesheet" href="css/book-preview.css" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" integrity="sha512-dPXYcDub/aeb08c63jRq/k6GaKccl256JQy/AnOq7CAnEZ9FzSL9wSbcZkMp4R26vBsMLFYH4kQ67/bbV8XaCQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     </head>
     <body class="tw-flex tw-min-h-[100vh] tw-flex-col tw-bg-[#fff] tw-overflow-x-hidden">
@@ -131,8 +132,16 @@
                         <p class="tw-mt-4 tw-text-base tw-text-gray-600">For publishers and media: audience, comparables, platform, and production pipeline.</p>
                         <div class="tw-mt-3 tw-flex tw-flex-wrap tw-gap-3">
                             <a
+                                href="#preview-chapter"
+                                class="coffee-book-cta coffee-book-cta--primary"
+                                aria-label="Flip through sample book chapters"
+                            >
+                                <i class="bi bi-book-half" aria-hidden="true"></i>
+                                Preview sample chapters
+                            </a>
+                            <a
                                 href="bookpitch.html"
-                                class="tw-inline-flex tw-items-center tw-gap-2 tw-rounded-lg tw-border-2 tw-border-black tw-bg-white tw-px-6 tw-py-3 tw-text-base tw-font-semibold tw-text-black tw-no-underline hover:tw-bg-gray-50"
+                                class="coffee-book-cta coffee-book-cta--secondary"
                                 aria-label="Open full book pitch"
                             >
                                 <i class="bi bi-file-earmark-text" aria-hidden="true"></i>
@@ -153,7 +162,86 @@
                 </div>
             </section>
 
-            <!-- Section 2: Explore online — image left, text right -->
+            <!-- Section 2: Sample chapter flipbook -->
+            <section
+                id="preview-chapter"
+                class="book-preview-section tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6 tw-py-10"
+            >
+                <div class="reveal-up tw-mx-auto tw-flex tw-w-full tw-max-w-[980px] tw-flex-col tw-gap-6">
+                    <div class="tw-flex tw-max-w-[720px] tw-flex-col tw-gap-3">
+                        <h2 class="tw-text-4xl tw-font-medium max-md:tw-text-3xl">Flip through sample chapters</h2>
+                        <p id="book-preview-subtitle" class="tw-text-xl tw-font-medium tw-text-gray-700">Volume 1 (North America) — choose a state chapter below</p>
+                        <p class="tw-text-lg tw-leading-relaxed tw-text-gray-600">Drag the page corners, click the edges, or use the arrows to browse like a printed atlas. Each sample is an early layout export from the same pipeline that will produce the final book.</p>
+                    </div>
+
+                    <div id="book-preview-viewer" class="book-preview-viewer">
+                    <div class="book-preview-chapters" role="tablist" aria-label="Sample chapters">
+                        <button
+                            type="button"
+                            id="book-preview-chapter-vermont"
+                            class="book-preview-chapter-btn is-active"
+                            role="tab"
+                            aria-selected="true"
+                            aria-controls="book-preview"
+                            data-chapter="vermont"
+                        >
+                            Vermont
+                        </button>
+                        <button
+                            type="button"
+                            id="book-preview-chapter-colorado"
+                            class="book-preview-chapter-btn"
+                            role="tab"
+                            aria-selected="false"
+                            aria-controls="book-preview"
+                            data-chapter="colorado"
+                        >
+                            Colorado
+                        </button>
+                    </div>
+
+                    <div class="book-preview-stage" aria-label="Interactive book preview">
+                        <div id="book-preview-loading" class="book-preview-loading" aria-live="polite">
+                            <div class="book-preview-spinner" aria-hidden="true"></div>
+                            <p id="book-preview-loading-text">Preparing sample chapter…</p>
+                        </div>
+                        <div id="book-preview-mount" class="book-preview-mount">
+                            <div id="book-preview-zoom-viewport" class="book-preview-zoom-viewport">
+                                <div id="book-preview-zoom-inner" class="book-preview-zoom-inner">
+                                    <div id="book-preview" class="book-preview" hidden></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="book-preview-controls">
+                            <button type="button" id="book-preview-prev" class="book-preview-btn" aria-label="Previous page">
+                                <i class="bi bi-chevron-left" aria-hidden="true"></i>
+                                Previous
+                            </button>
+                            <span id="book-preview-indicator" class="book-preview-indicator" aria-live="polite">—</span>
+                            <button type="button" id="book-preview-next" class="book-preview-btn" aria-label="Next page">
+                                Next
+                                <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                            </button>
+                            <div class="book-preview-zoom-controls" role="group" aria-label="Zoom">
+                                <button type="button" id="book-preview-zoom-standard" class="book-preview-btn is-active-zoom" aria-pressed="true">
+                                    100%
+                                </button>
+                                <button type="button" id="book-preview-zoom-page-width" class="book-preview-btn" aria-pressed="false">
+                                    Page width
+                                </button>
+                            </div>
+                            <button type="button" id="book-preview-fullscreen" class="book-preview-btn" aria-label="Open fullscreen preview" aria-pressed="false">
+                                <i class="bi bi-arrows-fullscreen" aria-hidden="true"></i>
+                                Fullscreen
+                            </button>
+                        </div>
+                        <p class="book-preview-hint">Tip: use ← → or the page buttons to turn. Scroll or click-drag to pan. Esc exits fullscreen.</p>
+                    </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 3: Explore online — image left, text right -->
             <section
                 id="explore-online"
                 class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6"
@@ -186,7 +274,7 @@
                 </div>
             </section>
 
-            <!-- Section 3: Pipeline — text left, image right -->
+            <!-- Section 4: Pipeline — text left, image right -->
             <section
                 id="pipeline"
                 class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6"
@@ -222,7 +310,7 @@
                 </div>
             </section>
 
-            <!-- Section 4: Scope & economics — image left, text right -->
+            <!-- Section 5: Scope & economics — image left, text right -->
             <section
                 id="scope"
                 class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6"
@@ -319,5 +407,7 @@
         </footer>
 
         <script src="./index.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.js"></script>
+        <script type="module" src="./js/book-preview.js"></script>
     </body>
 </html>
