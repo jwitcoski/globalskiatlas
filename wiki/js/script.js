@@ -1,11 +1,10 @@
 var RESORT_MAP_INSTANCE = null;
-var MAPTILER_KEY = '0P06ORgY8WvmMOnPr0p2';
 var RESORT_STATIC_MAP_BASE = 'https://globalskiatlas-resort-maps.s3.us-east-1.amazonaws.com/';
 
 // Plan section 2.3: max main-stat rank per category (facts 12-14 yes/no; 15 = vertical drop)
 var RESORT_FACT_MAX_RANK = { small_hill: 4, ski_mountain: 10, multiple_mountains: 11, mega_resort: 14, unknown: 4 };
 var RESORT_TEXT_LIMIT = { small_hill: 1500, ski_mountain: 3000, multiple_mountains: 5500, mega_resort: 11000, unknown: 1500 };
-var RESORT_CATEGORY_LABEL = { small_hill: 'Small hill', ski_mountain: 'Ski mountain', multiple_mountains: 'Multiple mountains', mega_resort: 'Mega resort', unknown: 'Not a downhill ski hill' };
+var RESORT_CATEGORY_LABEL = { small_hill: 'Small hill', ski_mountain: 'Medium', multiple_mountains: 'Large', mega_resort: 'Mega resort', unknown: 'Not a downhill ski hill' };
 // Plan section 2.3 / 9.1: fact rank -> label for Customize facts checkboxes
 var RESORT_FACT_LABELS = {
   1: 'Location', 2: 'Skiable terrain', 3: 'Trails count', 4: 'Lifts count', 5: 'Longest trail', 6: 'Longest lift',
@@ -147,58 +146,6 @@ function setResortStaticMaps(pageId) {
     }
     tryLoad(spec, RESORT_STATIC_MAP_BASE + enc + '-' + spec.suffix + '.png', spec.allowLegacy);
   });
-}
-
-function initResortMap(lat, lon, pageId, zoom) {
-  var aside = document.getElementById('resort-map-aside');
-  var container = document.getElementById('resort-map-gl');
-  if (!aside || !container) return;
-
-  aside.style.display = '';
-
-  if (pageId) {
-    window._resortStaticMapPageId = pageId;
-    setResortStaticMaps(pageId);
-  }
-
-  var useZoom = zoom != null && !isNaN(Number(zoom)) ? Number(zoom) : 11;
-
-  if (lat == null || lon == null || typeof maplibregl === 'undefined') {
-    // No coords: show only the static/placeholder tab
-    var tabLive = document.getElementById('tab-live');
-    if (tabLive) tabLive.style.display = 'none';
-    switchMapTab('static');
-    return;
-  }
-  if (RESORT_MAP_INSTANCE) {
-    RESORT_MAP_INSTANCE.remove();
-    RESORT_MAP_INSTANCE = null;
-    window.RESORT_MAP_INSTANCE = null;
-    container.innerHTML = '';
-  }
-  var m = new maplibregl.Map({
-    container: 'resort-map-gl',
-    style: {
-      version: 8,
-      sources: {
-        raster: {
-          type: 'raster',
-          tiles: ['https://api.maptiler.com/maps/winter-v4/256/{z}/{x}/{y}.png?key=' + MAPTILER_KEY],
-          tileSize: 256,
-        },
-      },
-      layers: [{ id: 'raster', type: 'raster', source: 'raster', minzoom: 3, maxzoom: 18 }],
-    },
-    center: [lon, lat],
-    zoom: useZoom,
-    attributionControl: false,
-  });
-  RESORT_MAP_INSTANCE = m;
-  window.RESORT_MAP_INSTANCE = m;
-  // Single marker only for resort-level zoom (e.g. zoom >= 10); region pages use lower zoom
-  if (useZoom >= 10) {
-    new maplibregl.Marker({ color: '#1a365d' }).setLngLat([lon, lat]).addTo(m);
-  }
 }
 
 var YWIKI_PATH = (function () {

@@ -34,27 +34,8 @@ function num(v) {
 }
 
 function resortSizeCategory(row) {
-  // Excluded from "downhill" count: no lift or slope in OSM (index.html shows "462 areas excluded")
-  if (isNotDownhill(row)) return 'unknown';
-  const trails = num(row.downhill_trails);
-  const lifts = num(row.total_lifts);
-  let acres = num(row.skiable_terrain_acres);
-  if (acres == null && row.skiable_terrain_ha != null) {
-    const ha = num(row.skiable_terrain_ha);
-    if (ha != null) acres = ha * 2.471; // ha to acres
-  }
-  const hasTrails = trails != null && trails >= 0;
-  const hasLifts = lifts != null && lifts >= 0;
-  // Unknown if missing trails OR lifts (no matter acres)
-  if (!hasTrails || !hasLifts) return 'unknown';
-  const hasAcres = acres != null && acres >= 0;
-  const t = trails;
-  const a = hasAcres ? acres : 0;
-  // Mega = OR (catch large resorts with no trails marked)
-  if (t >= 200 || a >= 10000) return 'mega_resort';
-  if (t >= 100 || a >= 5000) return 'multiple_mountains';
-  if (t >= 50 || a >= 1000) return 'ski_mountain';
-  return 'small_hill';
+  const { categorizeResortFromRow } = require('./resort-categories.cjs');
+  return categorizeResortFromRow(row);
 }
 
 async function downloadParquet(url) {
@@ -120,7 +101,7 @@ async function main() {
   }
   console.log('----------------------');
   console.log('  Total resort pages (estimate): ' + totalPages.toFixed(1));
-  console.log('\nPage allocation: small_hill=1/4, ski_mountain=1/2, multiple=1, mega=2, unknown=0 (no book page)');
+  console.log('\nPage allocation (atlas): small_hill=1/4 (<10 trails), ski_mountain=1/2 (10–29), multiple_mountains=1 (30–99), mega_resort=2 (100+), unknown=0');
 
   if (input.startsWith('http') && fs.existsSync(filePath)) {
     try { fs.unlinkSync(filePath); } catch (_) {}

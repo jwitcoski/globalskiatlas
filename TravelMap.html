@@ -29,14 +29,14 @@
   <meta name="twitter:image" content="https://globalskiatlas.com/assets/og-banner.png" />
   <!-- Canonical -->
   <link rel="canonical" href="https://globalskiatlas.com/mainmap.html" />
-  <!-- Preconnect to critical origins for faster tile and parquet fetches -->
+  <!-- Preconnect to critical origins for faster tile and PMTiles fetches -->
   <link rel="preconnect" href="https://api.maptiler.com" crossorigin />
   <link rel="preconnect" href="https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com" crossorigin />
   <link rel="shortcut icon" href="./assets/logo.png?v=2" type="image/x-icon" />
   <link rel="stylesheet" href="./css/tailwind-build.css" />
   <link rel="stylesheet" href="css/index.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" integrity="sha512-dPXYcDub/aeb08c63jRq/k6GaKccl256JQy/AnOq7CAnEZ9FzSL9wSbcZkMp4R26vBsMLFYH4kQ67/bbV8XaCQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.css" crossorigin="" />
+  <link rel="stylesheet" href="https://cdn.maptiler.com/maptiler-sdk-js/v3.10.2/maptiler-sdk.css" crossorigin="" />
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { height: 100%; font-family: system-ui, -apple-system, sans-serif; }
@@ -534,7 +534,7 @@
   </footer>
 
   <script src="scripts/header-toggle.js"></script>
-  <script defer src="https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.js" crossorigin=""></script>
+  <script defer src="https://cdn.maptiler.com/maptiler-sdk-js/v3.10.2/maptiler-sdk.umd.min.js"></script>
   <script type="module" src="scripts/roadtripskimap-ml-main.js"></script>
 </body>
 </html>

@@ -28,7 +28,7 @@ export function initRoadTripPlanner({ map, searchResorts, escapeHtml }) {
   let rtpResortWaypoints = [];
   let rtpEndMode         = 'last';
   let rtpEndWaypoint     = null;
-  let waypointMarkers    = []; // maplibregl.Marker instances drawn on the map
+  let waypointMarkers    = []; // maptilersdk.Marker instances drawn on the map
 
   // ── DOM refs ───────────────────────────────────────────────────────────
   const rtpPanel          = document.getElementById('roadTripPanel');
@@ -287,8 +287,8 @@ export function initRoadTripPlanner({ map, searchResorts, escapeHtml }) {
   function makeWaypointMarker(lng, lat, html, popupHtml) {
     const el = document.createElement('div');
     el.innerHTML = html;
-    const popup = new maplibregl.Popup({ closeButton: false, offset: [0, -18] }).setHTML(popupHtml);
-    const marker = new maplibregl.Marker({ element: el, anchor: 'bottom' })
+    const popup = new maptilersdk.Popup({ closeButton: false, offset: [0, -18] }).setHTML(popupHtml);
+    const marker = new maptilersdk.Marker({ element: el, anchor: 'bottom' })
       .setLngLat([lng, lat])
       .setPopup(popup)
       .addTo(map);
@@ -348,7 +348,7 @@ export function initRoadTripPlanner({ map, searchResorts, escapeHtml }) {
       const coords = route.geometry.coordinates;
       const bounds = coords.reduce(
         (b, c) => b.extend(c),
-        new maplibregl.LngLatBounds(coords[0], coords[0])
+        new maptilersdk.LngLatBounds(coords[0], coords[0])
       );
       map.fitBounds(bounds, { padding: 80, duration: 1000 });
 

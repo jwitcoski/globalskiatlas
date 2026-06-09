@@ -87,7 +87,7 @@ function circleLabelPoint(lon, lat, radiusKm) {
       if (originMarker) originMarker.remove();
       const el = document.createElement('div');
       el.innerHTML = '<div style="background:#0d9488;color:#fff;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 2px 6px rgba(0,0,0,0.35)">🚗</div>';
-      originMarker = new maplibregl.Marker({ element: el.firstElementChild, anchor: 'bottom' })
+      originMarker = new maptilersdk.Marker({ element: el.firstElementChild, anchor: 'bottom' })
         .setLngLat(originLngLat)
         .addTo(map);
     }

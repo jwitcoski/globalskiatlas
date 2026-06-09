@@ -1,87 +1,69 @@
 /**
- * Ski resort map – MapLibre GL JS edition.
- * Replaces ski-resort-map.js (Leaflet) for TravelMap.html.
- * Data: ski areas from parquet-wasm; lifts + pistes lazily from parquet on zoom ≥ 10.
- *
- * Export: initSkiResortMap(options) → { map, searchResorts, escapeHtml, updateResortVisibility }
+ * Ski resort map – MapTiler SDK + Planetiler PMTiles.
+ * Data: ski_areas_analyzed / ski_areas / pistes / lifts from PMTiles; resort detail at z12+.
  */
 import { config } from './map-config.js';
 import { createMapLibre } from './map-core.js';
-import { loadSkiAreas } from './map-loaders/ski-areas.js';
-import { loadLifts } from './map-loaders/lifts.js';
-import { loadPistes } from './map-loaders/pistes.js';
+import {
+  addSkiPmtilesToMap,
+  fetchSkiAreaCatalog,
+  SKI_PMTILES_LAYERS
+} from './pmtiles-core.js';
 import {
   getProp, escapeHtml, resortDisplayName, ENGLISH_NAME_KEYS,
-  RESORT_TYPE_KEYS, NOT_DOWNHILL,
-  SIZE_BY_KEYS, COLOR_BY_KEYS,
   NAME_KEYS, ID_KEYS, COUNTRY_KEYS, STATE_KEYS, LIFTS_KEYS,
   slug,
   foldDiacritics,
   SKIABLE_TERRAIN_ACRES_KEYS,
   SKIABLE_TERRAIN_HA_KEYS,
-  formatSkiableTerrain
+  formatSkiableTerrain,
+  COLOR_BY_KEYS
 } from './utils.js';
+import {
+  getMapSizeTier,
+  getMapTierColorForProps,
+  MAP_TIER_LEGEND,
+  MAP_TIER_COLORS,
+  isNotDownhill,
+  getTrailCount
+} from './resort-categories.js';
+import {
+  hillSvg,
+  mountainSvg,
+  largeMountainsSvg,
+  megaMountainsSvg,
+  getIconId,
+  addResortIconImages
+} from './resort-tier-icons.js';
 
 const {
   LIFTS_MIN_ZOOM,
   PISTES_MIN_ZOOM
 } = config;
 
-// ── Zoom thresholds (mirrors Leaflet version) ─────────────────────────────
-const MEDIUM_ICON_MIN = 9;
-const SMALL_ICON_MIN  = 11;
-
-// ── Size / colour tier helpers ─────────────────────────────────────────────
-const TRAILS_SMALL = 50, TRAILS_MEDIUM = 100;
-const ACRES_SMALL  = 1000, ACRES_MEDIUM = 5000;
-
-function isNotDownhill(props) {
-  const v = getProp(props, RESORT_TYPE_KEYS);
-  return v != null && String(v).toLowerCase().trim() === NOT_DOWNHILL.toLowerCase();
-}
-function getTrailCount(props) {
-  const v = getProp(props, COLOR_BY_KEYS);
-  const n = typeof v === 'number' ? v : Number(v);
-  return (!v || Number.isNaN(n)) ? 0 : n;
-}
-function getAcres(props) {
-  const v = getProp(props, SIZE_BY_KEYS);
-  const n = typeof v === 'number' ? v : Number(v);
-  return (!v || Number.isNaN(n)) ? 0 : n;
-}
-function getSizeTier(props) {
-  if (isNotDownhill(props)) return 'small';
-  const t = getTrailCount(props), a = getAcres(props);
-  if (t > TRAILS_MEDIUM || a > ACRES_MEDIUM) return 'large';
-  if (t >= TRAILS_SMALL  || a >= ACRES_SMALL)  return 'medium';
-  return 'small';
-}
-function getColorFor(props) {
-  if (isNotDownhill(props)) return '#999999';
-  const tier = getSizeTier(props);
-  if (tier === 'large')  return '#2d8a3e';
-  if (tier === 'medium') return '#e6c229';
-  return '#c44d34';
+function getPisteDifficultyFromProps(p) {
+  if (!p) return '';
+  let v = getProp(p, ['piste:difficulty', 'piste_difficulty', 'difficulty']);
+  if (v == null && typeof p.other_tags === 'string') {
+    const m = p.other_tags.match(/"piste:difficulty"=>"([^"]+)"/);
+    if (m) v = m[1];
+  }
+  return v != null ? String(v).toLowerCase().trim() : '';
 }
 
-// ── SVG mountain icons ─────────────────────────────────────────────────────
-const hillSvg      = (c, w, h) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 16" width="${w}" height="${h}" style="display:block"><path d="M0 16 L0 11 Q6 6 12 11 Q18 6 24 11 L24 16 Z" fill="${c}" stroke="#1a1a1a" stroke-width="0.8"/></svg>`;
-const mountainSvg  = (c, w, h) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 16" width="${w}" height="${h}" style="display:block"><path d="M0 16 L8 5 L16 10 L24 16 Z" fill="${c}" stroke="#1a1a1a" stroke-width="0.8"/></svg>`;
-const mountainsSvg = (c, w, h) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 16" width="${w}" height="${h}" style="display:block"><path d="M0 16 L4 10 L8 14 L10 9 L14 5 L18 10 L20 7 L24 16 Z" fill="${c}" stroke="#1a1a1a" stroke-width="0.8"/></svg>`;
-
-function makeMountainMarkerEl(props) {
-  const tier  = getSizeTier(props);
-  const color = getColorFor(props);
-  let w = 20, h = 14;
-  if (tier === 'medium') { w = 26; h = 18; }
-  else if (tier === 'large')  { w = 32; h = 20; }
-  const svg = tier === 'small' ? hillSvg(color, w, h) : tier === 'medium' ? mountainSvg(color, w, h) : mountainsSvg(color, w, h);
-  const el = document.createElement('div');
-  el.className = 'mountain-marker';
-  el.style.cssText = `width:${w}px;height:${h}px;cursor:pointer;`;
-  el.innerHTML = `<div style="line-height:0;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.3))">${svg}</div>`;
-  return { el, w, h };
+function getAerialwayFromProps(p) {
+  return getProp(p, ['aerialway', 'Aerialway']) || '';
 }
+
+// ── Zoom thresholds: circles when zoomed out, shaped icons when zoomed in ──
+const RESORT_ICON_MIN_ZOOM = 9;
+
+const circlePaint = {
+  'circle-color':        ['get', '_color'],
+  'circle-stroke-color': 'rgba(255,255,255,0.65)',
+  'circle-stroke-width': 1.2,
+  'circle-opacity':      0.85
+};
 
 /** Same format as wiki resort/browse: "English (local)" from a wiki page object. */
 function wikiDisplayName(p) {
@@ -166,22 +148,31 @@ export async function initSkiResortMap(options = {}) {
 
   // ── Initialise MapLibre map (map-core) ──────────────────────────────────
   const { map } = await createMapLibre({ containerId: 'map' });
+  await addSkiPmtilesToMap(map, {
+    liftsColor: '#f87171',
+    liftsWidth: 2,
+    pistesWidth: 3,
+    includeAnalyzedPoints: false
+  });
 
-  // ── Olympic host markers ─────────────────────────────────────────────────
+  // MapTiler Data API has correct WGS84 coordinates (querySourceFeatures geometry is unreliable).
+  let rows = [];
+  try {
+    rows = await fetchSkiAreaCatalog();
+  } catch (e) {
+    console.warn('[ski-resort-map-ml] catalog load failed:', e);
+  }
   const olympicRingsSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 30" width="36" height="18" style="display:block"><circle cx="12" cy="15" r="6" fill="none" stroke="#0081C8" stroke-width="2"/><circle cx="30" cy="15" r="6" fill="none" stroke="#000" stroke-width="2"/><circle cx="48" cy="15" r="6" fill="none" stroke="#EE334E" stroke-width="2"/><circle cx="21" cy="21" r="6" fill="none" stroke="#FCB131" stroke-width="2"/><circle cx="39" cy="21" r="6" fill="none" stroke="#00A651" stroke-width="2"/></svg>';
   OLYMPIC_HOSTS.forEach((host) => {
     const el = document.createElement('div');
     el.className = 'olympic-rings-marker';
     el.style.cssText = 'background:#fff;border-radius:50%;padding:2px;box-shadow:0 1px 4px rgba(0,0,0,0.3);line-height:0;cursor:default;';
     el.innerHTML = olympicRingsSvg;
-    new maplibregl.Marker({ element: el })
+    new maptilersdk.Marker({ element: el })
       .setLngLat([host.lon, host.lat])
-      .setPopup(new maplibregl.Popup({ closeButton: false, offset: [0, -12] }).setHTML(`${host.name} – Milan–Cortina 2026`))
+      .setPopup(new maptilersdk.Popup({ closeButton: false, offset: [0, -12] }).setHTML(`${host.name} – Milan–Cortina 2026`))
       .addTo(map);
   });
-
-  // ── Load ski areas (map-loaders) ────────────────────────────────────────
-  const { rows } = await loadSkiAreas();
 
   let wikiPages = [];
   try {
@@ -195,7 +186,7 @@ export async function initSkiResortMap(options = {}) {
       });
     }
   } catch (e) {
-    // Wiki index optional (e.g. static hosting); fall back to parquet names only
+    // Wiki index optional (e.g. static hosting)
   }
 
   function findWikiPage(properties) {
@@ -218,14 +209,13 @@ export async function initSkiResortMap(options = {}) {
   }
 
   const searchResorts = [];
-  const markerPool    = []; // { marker, latlng: {lat,lng}, tier, inMap }
-  const circleFeatures = [];
+  const resortFeatures = [];
 
   rows.forEach(({ geometry, properties }) => {
     if (!geometry || geometry.type !== 'Point') return;
     const [lon, lat] = geometry.coordinates;
-    const tier    = getSizeTier(properties);
-    const color   = getColorFor(properties);
+    const tier    = getMapSizeTier(properties);
+    const color   = getMapTierColorForProps(properties);
     const name    = getProp(properties, NAME_KEYS);
     const country = getProp(properties, COUNTRY_KEYS);
     const trails  = getProp(properties, COLOR_BY_KEYS);
@@ -238,42 +228,32 @@ export async function initSkiResortMap(options = {}) {
     const displayStr = wikiPage ? wikiDisplayName(wikiPage) : (resortDisplayName(properties) || (name ? String(name).trim() : ''));
     const en         = wikiPage ? (wikiPage.englishName || '') : (getProp(properties, ENGLISH_NAME_KEYS) || '');
     const searchText = [displayStr, en, wikiPage ? wikiPage.title : ''].filter(Boolean).join(' ').trim() || displayStr;
+    const latlng = { lat, lng: lon };
 
-    // Circle layer feature (medium + small only; large always use icon markers)
-    if (tier !== 'large') {
-      circleFeatures.push({
-        type: 'Feature',
-        geometry,
-        properties: {
-          _tier:    tier,
-          _color:   color,
-          _name:    displayStr || (name ? String(name).trim() : ''),
-          _country: countryDisp,
-          _trails:  Number.isNaN(trailsNum) ? 0 : trailsNum,
-          _terrain: terrainDisp || ''
-        }
-      });
-    }
-
-    // HTML marker for icon display (all tiers, viewport-culled)
-    const { el } = makeMountainMarkerEl(properties);
-    const latlng  = { lat, lng: lon };
-    const popup   = new maplibregl.Popup({ maxWidth: '340px', closeButton: true })
-      .setHTML(buildPopupHtml(properties, latlng, { includeRoadTripButton }, wikiPage));
-    const marker  = new maplibregl.Marker({ element: el, anchor: 'bottom' })
-      .setLngLat([lon, lat])
-      .setPopup(popup);
-
-    const poolItem = { marker, latlng, tier, inMap: false };
-    markerPool.push(poolItem);
+    resortFeatures.push({
+      type: 'Feature',
+      geometry,
+      properties: {
+        _tier: tier,
+        _color: color,
+        _icon: getIconId(tier, color),
+        _name: displayStr || (name ? String(name).trim() : ''),
+        _country: countryDisp,
+        _trails: Number.isNaN(trailsNum) ? 0 : trailsNum,
+        _terrain: terrainDisp || '',
+        _propsJson: JSON.stringify(properties)
+      }
+    });
 
     if (name) {
       searchResorts.push({
-        name:       displayStr,
-        searchText: searchText,
+        name: displayStr,
+        searchText,
         latlng,
-        country:    country ? String(country).trim() : '',
-        poolItem
+        country: country ? String(country).trim() : '',
+        properties,
+        wikiPage,
+        popupHtml: buildPopupHtml(properties, latlng, { includeRoadTripButton }, wikiPage)
       });
     }
   });
@@ -284,10 +264,12 @@ export async function initSkiResortMap(options = {}) {
     legendEl.style.display = 'block';
     legendEl.innerHTML =
       '<h3>Resort size</h3>' +
-      `<div class="legend-row"><span class="legend-mountain-icon">${hillSvg('#c44d34', 20, 14)}</span> Small hill (&lt; 50 trails / 1,000 ac)</div>` +
-      `<div class="legend-row"><span class="legend-mountain-icon">${mountainSvg('#e6c229', 22, 15)}</span> Ski mountain (50–100 trails / 1,000–5,000 ac)</div>` +
-      `<div class="legend-row"><span class="legend-mountain-icon">${mountainsSvg('#2d8a3e', 24, 16)}</span> Multiple mountains (100+ trails / 5,000+ ac)</div>` +
+      `<div class="legend-row"><span class="legend-mountain-icon">${hillSvg(MAP_TIER_COLORS.small, 20, 14)}</span> ${MAP_TIER_LEGEND.small}</div>` +
+      `<div class="legend-row"><span class="legend-mountain-icon">${mountainSvg(MAP_TIER_COLORS.medium, 22, 15)}</span> ${MAP_TIER_LEGEND.medium}</div>` +
+      `<div class="legend-row"><span class="legend-mountain-icon">${largeMountainsSvg(MAP_TIER_COLORS.large, 24, 16)}</span> ${MAP_TIER_LEGEND.large}</div>` +
+      `<div class="legend-row"><span class="legend-mountain-icon">${megaMountainsSvg(MAP_TIER_COLORS.mega, 26, 16)}</span> ${MAP_TIER_LEGEND.mega}</div>` +
       `<div class="legend-row" style="margin-top:6px"><span class="legend-mountain-icon">${hillSvg('#999', 18, 12)}</span> Grey = not a downhill ski resort</div>` +
+      `<div class="legend-row" style="margin-top:8px;font-size:11px;color:#64748b">Colored dots at wide zoom; mountain icons from zoom ${RESORT_ICON_MIN_ZOOM}+</div>` +
       '<h3 style="margin-top:10px">Pistes (zoom 10+) – US colors</h3>' +
       '<div class="legend-row"><span class="legend-line" style="background:#22c55e"></span> Green = easy</div>' +
       '<div class="legend-row"><span class="legend-line" style="background:#2563eb"></span> Blue = intermediate</div>' +
@@ -295,54 +277,162 @@ export async function initSkiResortMap(options = {}) {
       '<div class="legend-row"><span class="legend-line" style="background:#991b1b"></span> Red = expert</div>';
   }
 
-  // ── Circle layers for medium + small (low zoom) ──────────────────────────
-  map.addSource('ski-circles', {
+  // ── Resort dots + icon symbols (single GeoJSON source, aligned coordinates) ─
+  map.addSource('ski-resorts', {
     type: 'geojson',
-    data: { type: 'FeatureCollection', features: circleFeatures }
+    data: { type: 'FeatureCollection', features: resortFeatures }
   });
 
-  map.addLayer({
-    id: 'ski-medium-circles',
-    type: 'circle',
-    source: 'ski-circles',
-    filter: ['==', ['get', '_tier'], 'medium'],
-    maxzoom: MEDIUM_ICON_MIN,
-    paint: {
-      'circle-radius':       ['interpolate', ['linear'], ['zoom'], 3, 3, 8, 6],
-      'circle-color':        ['get', '_color'],
-      'circle-stroke-color': 'rgba(255,255,255,0.65)',
-      'circle-stroke-width': 1.2,
-      'circle-opacity':      0.85
-    }
-  });
+  const resortPopup = new maptilersdk.Popup({ maxWidth: '340px', closeButton: true });
 
-  map.addLayer({
-    id: 'ski-small-circles',
-    type: 'circle',
-    source: 'ski-circles',
-    filter: ['==', ['get', '_tier'], 'small'],
-    maxzoom: SMALL_ICON_MIN,
-    paint: {
-      'circle-radius':       ['interpolate', ['linear'], ['zoom'], 3, 1.5, 8, 4],
-      'circle-color':        ['get', '_color'],
-      'circle-stroke-color': 'rgba(255,255,255,0.65)',
-      'circle-stroke-width': 1.2,
-      'circle-opacity':      0.85
-    }
-  });
-
-  // ── VT tooltip (fixed-position div) ──────────────────────────────────────
   const vtTipEl = document.createElement('div');
   vtTipEl.id = 'vt-tooltip';
   document.body.appendChild(vtTipEl);
 
   function showVtTip(point, html) {
     vtTipEl.innerHTML = html;
-    vtTipEl.style.display  = 'block';
+    vtTipEl.style.display = 'block';
     vtTipEl.style.left = (point.x + 14) + 'px';
     vtTipEl.style.top  = (point.y - 36) + 'px';
   }
   function hideVtTip() { vtTipEl.style.display = 'none'; }
+
+  function showResortPopup(lngLat, props) {
+    let properties = {};
+    try { properties = JSON.parse(props._propsJson || '{}'); } catch (_) { /* ignore */ }
+    const latlng = { lat: lngLat.lat, lng: lngLat.lng };
+    const wikiPage = findWikiPage(properties);
+    resortPopup
+      .setLngLat(lngLat)
+      .setHTML(buildPopupHtml(properties, latlng, { includeRoadTripButton }, wikiPage))
+      .addTo(map);
+  }
+
+  function attachResortLayerEvents(layerIds) {
+    layerIds.forEach((id) => {
+      map.on('mouseenter', id, () => { map.getCanvas().style.cursor = 'pointer'; });
+      map.on('mousemove', id, (e) => {
+        if (!e.features.length) return;
+        const p = e.features[0].properties;
+        const facts = [p._trails > 0 ? `${p._trails} slopes` : null, p._terrain || null, p._country || null].filter(Boolean).join(' · ');
+        showVtTip(e.point,
+          `<div class="tt-name">${escapeHtml(p._name || 'Resort')}</div>` +
+          (facts ? `<div class="tt-hint">${escapeHtml(facts)}</div>` : '') +
+          (id.includes('circles') ? `<div class="tt-hint" style="margin-top:3px;color:#7dd3fc">🔍 Click to zoom in</div>` : '')
+        );
+      });
+      map.on('mouseleave', id, () => { map.getCanvas().style.cursor = ''; hideVtTip(); });
+      map.on('click', id, (e) => {
+        if (!e.features.length) return;
+        const p = e.features[0].properties;
+        if (id.includes('circles')) {
+          map.flyTo({ center: e.lngLat, zoom: Math.max(map.getZoom() + 4, 11), duration: 500 });
+        } else {
+          showResortPopup(e.lngLat, p);
+        }
+      });
+    });
+  }
+
+  map.addLayer({
+    id: 'ski-small-circles',
+    type: 'circle',
+    source: 'ski-resorts',
+    filter: ['==', ['get', '_tier'], 'small'],
+    maxzoom: RESORT_ICON_MIN_ZOOM,
+    paint: {
+      ...circlePaint,
+      'circle-radius': ['interpolate', ['linear'], ['zoom'], 3, 1.5, 8, 4]
+    }
+  });
+
+  map.addLayer({
+    id: 'ski-medium-circles',
+    type: 'circle',
+    source: 'ski-resorts',
+    filter: ['==', ['get', '_tier'], 'medium'],
+    maxzoom: RESORT_ICON_MIN_ZOOM,
+    paint: {
+      ...circlePaint,
+      'circle-radius': ['interpolate', ['linear'], ['zoom'], 3, 3, 8, 6]
+    }
+  });
+
+  map.addLayer({
+    id: 'ski-large-circles',
+    type: 'circle',
+    source: 'ski-resorts',
+    filter: ['==', ['get', '_tier'], 'large'],
+    maxzoom: RESORT_ICON_MIN_ZOOM,
+    paint: {
+      ...circlePaint,
+      'circle-radius': ['interpolate', ['linear'], ['zoom'], 3, 3.5, 8, 7]
+    }
+  });
+
+  map.addLayer({
+    id: 'ski-mega-circles',
+    type: 'circle',
+    source: 'ski-resorts',
+    filter: ['==', ['get', '_tier'], 'mega'],
+    maxzoom: RESORT_ICON_MIN_ZOOM,
+    paint: {
+      ...circlePaint,
+      'circle-radius': ['interpolate', ['linear'], ['zoom'], 3, 4, 8, 8]
+    }
+  });
+
+  attachResortLayerEvents([
+    'ski-small-circles',
+    'ski-medium-circles',
+    'ski-large-circles',
+    'ski-mega-circles'
+  ]);
+
+  const symbolLayout = {
+    'icon-image': ['get', '_icon'],
+    'icon-size': 1,
+    'icon-allow-overlap': true,
+    'icon-ignore-placement': true,
+    'icon-anchor': 'center'
+  };
+
+  await addResortIconImages(map);
+
+  map.addLayer({
+    id: 'ski-icons-small',
+    type: 'symbol',
+    source: 'ski-resorts',
+    minzoom: RESORT_ICON_MIN_ZOOM,
+    filter: ['==', ['get', '_tier'], 'small'],
+    layout: symbolLayout
+  });
+  map.addLayer({
+    id: 'ski-icons-medium',
+    type: 'symbol',
+    source: 'ski-resorts',
+    minzoom: RESORT_ICON_MIN_ZOOM,
+    filter: ['==', ['get', '_tier'], 'medium'],
+    layout: symbolLayout
+  });
+  map.addLayer({
+    id: 'ski-icons-large',
+    type: 'symbol',
+    source: 'ski-resorts',
+    minzoom: RESORT_ICON_MIN_ZOOM,
+    filter: ['==', ['get', '_tier'], 'large'],
+    layout: symbolLayout
+  });
+  map.addLayer({
+    id: 'ski-icons-mega',
+    type: 'symbol',
+    source: 'ski-resorts',
+    minzoom: RESORT_ICON_MIN_ZOOM,
+    filter: ['==', ['get', '_tier'], 'mega'],
+    layout: symbolLayout
+  });
+
+  attachResortLayerEvents(['ski-icons-large', 'ski-icons-mega', 'ski-icons-medium', 'ski-icons-small']);
 
   document.addEventListener('mousemove', (ev) => {
     if (vtTipEl.style.display !== 'none') {
@@ -350,59 +440,6 @@ export async function initSkiResortMap(options = {}) {
       vtTipEl.style.top  = (ev.clientY - 36) + 'px';
     }
   });
-
-  // Tooltip + click → zoom-in on circle layers
-  ['ski-medium-circles', 'ski-small-circles'].forEach((id) => {
-    map.on('mouseenter', id, () => { map.getCanvas().style.cursor = 'pointer'; });
-    map.on('mousemove',  id, (e) => {
-      if (!e.features.length) return;
-      const p = e.features[0].properties;
-      const facts = [p._trails > 0 ? `${p._trails} slopes` : null, p._terrain || null, p._country || null].filter(Boolean).join(' · ');
-      showVtTip(e.point,
-        `<div class="tt-name">${escapeHtml(p._name || 'Resort')}</div>` +
-        (facts ? `<div class="tt-hint">${escapeHtml(facts)}</div>` : '') +
-        `<div class="tt-hint" style="margin-top:3px;color:#7dd3fc">🔍 Click to zoom in</div>`
-      );
-    });
-    map.on('mouseleave', id, () => { map.getCanvas().style.cursor = ''; hideVtTip(); });
-    map.on('click',      id, (e) => {
-      if (!e.features.length) return;
-      map.flyTo({ center: e.features[0].geometry.coordinates, zoom: Math.max(map.getZoom() + 4, 11), duration: 500 });
-    });
-  });
-
-  // ── HTML-marker viewport culling ─────────────────────────────────────────
-  // Large resorts: always visible (no bounds or zoom check – mirrors Leaflet behaviour)
-  // Medium:        show icon when zoom ≥ 9 and in viewport
-  // Small:         show icon when zoom ≥ 11 and in viewport
-
-  function updateResortVisibility() {
-    const z      = map.getZoom();
-    const bounds = map.getBounds();
-
-    markerPool.forEach((item) => {
-      const { marker, latlng, tier } = item;
-      let shouldShow;
-      if (tier === 'large') {
-        shouldShow = true; // always visible – initial zoom may be < 3 so never gate on zoom
-      } else {
-        const minZ   = tier === 'medium' ? MEDIUM_ICON_MIN : SMALL_ICON_MIN;
-        const inView = bounds.contains([latlng.lng, latlng.lat]);
-        shouldShow   = z >= minZ && inView;
-      }
-      if (shouldShow && !item.inMap) {
-        marker.addTo(map);
-        item.inMap = true;
-      } else if (!shouldShow && item.inMap) {
-        marker.remove();
-        item.inMap = false;
-      }
-    });
-  }
-
-  map.on('zoomend',  updateResortVisibility);
-  map.on('moveend',  updateResortVisibility);
-  updateResortVisibility();
 
   // ── Search box ────────────────────────────────────────────────────────────
   const searchBox      = document.getElementById('searchBox');
@@ -436,10 +473,7 @@ export async function initSkiResortMap(options = {}) {
     searchInput.blur();
     map.flyTo({ center: [r.latlng.lng, r.latlng.lat], zoom: 16, duration: 600 });
     map.once('moveend', () => {
-      updateResortVisibility();
-      const item = r.poolItem;
-      if (!item.inMap) { item.marker.addTo(map); item.inMap = true; }
-      if (!item.marker.getPopup().isOpen()) item.marker.togglePopup();
+      resortPopup.setLngLat([r.latlng.lng, r.latlng.lat]).setHTML(r.popupHtml).addTo(map);
     });
   }
 
@@ -497,132 +531,30 @@ export async function initSkiResortMap(options = {}) {
   if (typeof requestIdleCallback !== 'undefined') requestIdleCallback(loadAd, { timeout: 2000 });
   else setTimeout(loadAd, 1500);
 
-  // ── Heavy layers: lifts + pistes from parquet (lazy, first zoom ≥ 10) ────
-  // All features are stored in memory; only a viewport-bbox slice is ever pushed
-  // into the MapLibre GeoJSON source, keeping rendering fast and non-blocking.
-  const heavyLoadEl = document.getElementById('heavyLoadIndicator');
-  let heavyLayersReady = false, heavyLayersLoading = false;
-  let allLiftFeatures  = null; // full parsed lift feature array (kept in memory)
-  let allPisteFeatures = null; // full parsed piste feature array
+  // ── PMTiles lift / piste tooltips (vector tiles, z ≥ 10) ─────────────────
+  map.on('mouseenter', SKI_PMTILES_LAYERS.lifts, () => { map.getCanvas().style.cursor = 'pointer'; });
+  map.on('mousemove', SKI_PMTILES_LAYERS.lifts, (e) => {
+    if (!e.features.length) return;
+    const p = e.features[0].properties || {};
+    const aw = getAerialwayFromProps(p);
+    const name = getProp(p, NAME_KEYS) || p.name || '';
+    showVtTip(e.point,
+      `<div class="tt-name">${escapeHtml(aerialwayLabel(aw))}${name ? ' · ' + escapeHtml(String(name)) : ''}</div>`
+    );
+  });
+  map.on('mouseleave', SKI_PMTILES_LAYERS.lifts, () => { map.getCanvas().style.cursor = ''; hideVtTip(); });
 
-  // Return features whose geometry has at least one coordinate inside an
-  // expanded bounding box around the current viewport.
-  function bboxFilter(features, bufDeg = 0.5) {
-    const b      = map.getBounds();
-    const minLng = b.getWest()  - bufDeg, maxLng = b.getEast()  + bufDeg;
-    const minLat = b.getSouth() - bufDeg, maxLat = b.getNorth() + bufDeg;
-    function inBox(coords) {
-      if (typeof coords[0] === 'number')
-        return coords[0] >= minLng && coords[0] <= maxLng && coords[1] >= minLat && coords[1] <= maxLat;
-      for (let i = 0; i < coords.length; i++) { if (inBox(coords[i])) return true; }
-      return false;
-    }
-    return features.filter(f => f.geometry && inBox(f.geometry.coordinates));
-  }
+  map.on('mouseenter', SKI_PMTILES_LAYERS.pistes, () => { map.getCanvas().style.cursor = 'pointer'; });
+  map.on('mousemove', SKI_PMTILES_LAYERS.pistes, (e) => {
+    if (!e.features.length) return;
+    const p = e.features[0].properties || {};
+    const diff = getPisteDifficultyFromProps(p);
+    const name = getProp(p, NAME_KEYS) || p.name || '';
+    showVtTip(e.point,
+      `<div class="tt-name">${name ? escapeHtml(String(name)) + ' · ' : ''}${difficultyBadge(diff)}</div>`
+    );
+  });
+  map.on('mouseleave', SKI_PMTILES_LAYERS.pistes, () => { map.getCanvas().style.cursor = ''; hideVtTip(); });
 
-  // Push viewport-filtered slices into already-registered GeoJSON sources.
-  function updateHeavyLayerData() {
-    if (!heavyLayersReady) return;
-    if (allLiftFeatures  && map.getSource('lifts'))
-      map.getSource('lifts').setData({ type: 'FeatureCollection', features: bboxFilter(allLiftFeatures) });
-    if (allPisteFeatures && map.getSource('pistes'))
-      map.getSource('pistes').setData({ type: 'FeatureCollection', features: bboxFilter(allPisteFeatures) });
-  }
-
-  async function initHeavyLayers() {
-    if (heavyLayersReady || heavyLayersLoading) return;
-    heavyLayersLoading = true;
-    if (heavyLoadEl) { heavyLoadEl.style.display = 'block'; heavyLoadEl.textContent = 'Loading trail & lift data…'; }
-
-    try {
-      const [liftsResult, pistesResult] = await Promise.all([
-        loadLifts(),
-        loadPistes()
-      ]);
-
-      allLiftFeatures = liftsResult.features || [];
-      allPisteFeatures = pistesResult.features || [];
-
-      if (liftsResult.truncated || pistesResult.truncated) {
-        if (heavyLoadEl) heavyLoadEl.textContent = 'Too many features in view; zoom in or try again.';
-        if (heavyLoadEl) heavyLoadEl.style.display = 'block';
-      }
-
-      // ── Add sources with viewport-filtered data only ───────────────────
-      map.addSource('lifts',  { type: 'geojson', data: { type: 'FeatureCollection', features: bboxFilter(allLiftFeatures)  } });
-      map.addSource('pistes', { type: 'geojson', data: { type: 'FeatureCollection', features: bboxFilter(allPisteFeatures) } });
-
-      map.addLayer({
-        id: 'lifts-line',
-        type: 'line',
-        source: 'lifts',
-        minzoom: LIFTS_MIN_ZOOM,
-        paint: { 'line-color': '#f87171', 'line-width': 2, 'line-opacity': 0.9 },
-        layout: { 'line-cap': 'round', 'line-join': 'round' }
-      });
-      map.on('mouseenter', 'lifts-line', () => { map.getCanvas().style.cursor = 'pointer'; });
-      map.on('mousemove',  'lifts-line', (e) => {
-        if (!e.features.length) return;
-        const p = e.features[0].properties;
-        showVtTip(e.point,
-          `<div class="tt-name">${escapeHtml(aerialwayLabel(p._aerialway))}${p._name ? ' · ' + escapeHtml(p._name) : ''}</div>` +
-          (p._ski_area ? `<div class="tt-hint">${escapeHtml(p._ski_area)}</div>` : '')
-        );
-      });
-      map.on('mouseleave', 'lifts-line', () => { map.getCanvas().style.cursor = ''; hideVtTip(); });
-
-      map.addLayer({
-        id: 'pistes-fill',
-        type: 'fill',
-        source: 'pistes',
-        minzoom: PISTES_MIN_ZOOM,
-        filter: ['==', ['geometry-type'], 'Polygon'],
-        paint: { 'fill-color': ['get', '_color'], 'fill-opacity': 0.25 }
-      });
-      map.addLayer({
-        id: 'pistes-line',
-        type: 'line',
-        source: 'pistes',
-        minzoom: PISTES_MIN_ZOOM,
-        paint: { 'line-color': ['get', '_color'], 'line-width': 3, 'line-opacity': 0.5 },
-        layout: { 'line-cap': 'round', 'line-join': 'round' }
-      });
-      ['pistes-line', 'pistes-fill'].forEach((layerId) => {
-        map.on('mouseenter', layerId, () => { map.getCanvas().style.cursor = 'pointer'; });
-        map.on('mousemove',  layerId, (e) => {
-          if (!e.features.length) return;
-          const p = e.features[0].properties;
-          showVtTip(e.point,
-            `<div class="tt-name">${p._name ? escapeHtml(p._name) + ' · ' : ''}${difficultyBadge(p._difficulty)}</div>` +
-            (p._ski_area ? `<div class="tt-hint">${escapeHtml(p._ski_area)}</div>` : '')
-          );
-        });
-        map.on('mouseleave', layerId, () => { map.getCanvas().style.cursor = ''; hideVtTip(); });
-      });
-
-      heavyLayersReady = true;
-
-      // Keep sources in sync with the viewport as the user pans / zooms
-      map.on('moveend', updateHeavyLayerData);
-      map.on('zoomend', updateHeavyLayerData);
-    } catch (err) {
-      console.warn('[ski-resort-map-ml] heavy layers failed:', err);
-      if (heavyLoadEl) {
-        heavyLoadEl.textContent = 'Could not load trails/lifts. Try again.';
-        heavyLoadEl.style.display = 'block';
-      }
-    } finally {
-      heavyLayersLoading = false;
-      if (heavyLoadEl) heavyLoadEl.style.display = 'none';
-    }
-  }
-
-  function checkZoomForHeavyLayers() {
-    if (map.getZoom() >= Math.min(LIFTS_MIN_ZOOM, PISTES_MIN_ZOOM)) initHeavyLayers();
-  }
-
-  map.on('zoomend', checkZoomForHeavyLayers);
-  checkZoomForHeavyLayers();
-
-  return { map, searchResorts, escapeHtml, updateResortVisibility };
+  return { map, searchResorts, escapeHtml };
 }

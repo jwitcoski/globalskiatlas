@@ -19,7 +19,7 @@
       top: 10px;
       left: 10px;
       right: 10px;
-      max-width: 38rem;
+      max-width: 42rem;
       margin: 0 auto;
       padding: 12px 14px;
       border-radius: 10px;
@@ -46,6 +46,7 @@
     #panel .steps { margin: 8px 0 0; padding-left: 1.2rem; }
     #panel .steps li { margin: 0.5em 0; }
     .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 8px; }
+    .row-url label { font-weight: 600; flex: 0 0 100%; }
     label { font-weight: 600; }
     .row-basemap label {
       display: inline-flex;
@@ -62,6 +63,7 @@
     input[type="url"] {
       flex: 1 1 220px;
       min-width: 0;
+      width: 100%;
       padding: 6px 8px;
       border-radius: 6px;
       border: 1px solid color-mix(in srgb, CanvasText 18%, transparent);
@@ -108,60 +110,41 @@
 </head>
 <body>
   <div id="panel">
-    <strong>Vector preview (PMTiles + MapLibre)</strong>
-    A raw <code>.mbtiles</code> URL cannot be drawn in the browser like this. Host a
-    <code>.pmtiles</code> copy (same data, single-file + HTTP Range). Convert locally, then upload next to your mbtiles,
-    or paste a <code>.pmtiles</code> URL below. Your bucket must allow CORS with <code>GET</code> and
-    <code>Range</code>.
+    <strong>Vector preview (Planetiler PMTiles + MapLibre)</strong>
+    Two tilesets: <code>ski_overview.pmtiles</code> (world → z14) and
+    <code>ski_resort_detail.pmtiles</code> (z12–15 resort context). Requires CORS with
+    <code>GET</code> and <code>Range</code> on S3.
     <details style="margin-top:8px">
-      <summary style="cursor:pointer;font-weight:600">How this tileset was built (step-by-step)</summary>
-      <p style="margin:8px 0 0">
-        From the <code>globalskiatlas_data</code> repo root. Docker Desktop must be running for steps 2–3.
-      </p>
-      <ol class="steps">
-        <li>
-          <strong>Parquet → GeoJSON.</strong> Tippecanoe reads GeoJSON, not Parquet.
-          <pre><code>py -3 scripts/export_combined_to_geojson.py -i output/combined -o output/tippecanoe_geojson</code></pre>
-          Writes <code>lifts.geojson</code>, <code>pistes.geojson</code>, <code>ski_areas.geojson</code> (and optional others) into <code>output/tippecanoe_geojson/</code>.
-        </li>
-        <li>
-          <strong>GeoJSON → MBTiles (Tippecanoe in Docker).</strong>
-          The image <code>morlov/tippecanoe</code> is a <a href="https://hub.docker.com/r/morlov/tippecanoe" target="_blank" rel="noopener">public Docker Hub build</a> (Alpine + Tippecanoe; third-party community image). Tippecanoe itself is <a href="https://github.com/mapbox/tippecanoe" target="_blank" rel="noopener">mapbox/tippecanoe</a> on GitHub. The container exposes a Linux <code>tippecanoe</code> binary; <code>-v</code> mounts your host folder so inputs and <code>ski_combined.mbtiles</code> live on disk. Pull once: <code>docker pull morlov/tippecanoe:latest</code>
-          <pre><code>docker run --rm -v "C:/path/to/globalskiatlas_data/output/tippecanoe_geojson:/data" --entrypoint tippecanoe morlov/tippecanoe:latest -f -zg -o /data/ski_combined.mbtiles --drop-densest-as-needed --extend-zooms-if-still-dropping /data/lifts.geojson /data/pistes.geojson /data/ski_areas.geojson</code></pre>
-          Replace <code>C:/path/to/globalskiatlas_data</code> with your clone path. Layers in the MBTiles: <code>lifts</code>, <code>pistes</code>, <code>ski_areas</code>.
-        </li>
-        <li>
-          <strong>MBTiles → PMTiles (Protomaps go-pmtiles in Docker).</strong>
-          The <code>pmtiles</code> CLI is official Protomaps software: <a href="https://github.com/protomaps/go-pmtiles" target="_blank" rel="noopener">protomaps/go-pmtiles</a> on GitHub. Container images are published to the <a href="https://github.com/protomaps/go-pmtiles/pkgs/container/go-pmtiles" target="_blank" rel="noopener">GitHub Container Registry</a> (<code>ghcr.io/protomaps/go-pmtiles</code>) and mirrored on <a href="https://hub.docker.com/r/protomaps/go-pmtiles" target="_blank" rel="noopener">Docker Hub</a> as <code>protomaps/go-pmtiles</code>. See the <a href="https://docs.protomaps.com/pmtiles/cli" target="_blank" rel="noopener">PMTiles CLI documentation</a> (including <code>convert</code>). Same folder mount as above; this repackages the SQLite MBTiles archive into a single PMTiles file for HTTP Range requests in the browser. Pull once: <code>docker pull ghcr.io/protomaps/go-pmtiles:v1.30.1</code>
-          <pre><code>docker run --rm -v "C:/path/to/globalskiatlas_data/output/tippecanoe_geojson:/data" ghcr.io/protomaps/go-pmtiles:v1.30.1 convert /data/ski_combined.mbtiles /data/ski_combined.pmtiles</code></pre>
-          Produces <code>output/tippecanoe_geojson/ski_combined.pmtiles</code>. You do not need to keep both formats forever; MBTiles is the usual Tippecanoe output, PMTiles is for static hosting + this map.
-        </li>
-        <li>
-          <strong>Upload and permissions.</strong> Upload <code>ski_combined.pmtiles</code> to HTTPS storage (e.g. S3). The map preview needs a public <code>GetObject</code> (or CloudFront) on that object, plus CORS that allows <code>GET</code>/<code>HEAD</code> and exposes <code>Range</code>-related headers. Then paste that URL above or use the default.
-        </li>
-      </ol>
+      <summary style="cursor:pointer;font-weight:600">How this tileset was built</summary>
+      <p style="margin:8px 0 0">From the <code>globalskiatlas_data</code> repo root:</p>
+      <pre><code>python scripts/build_pmtiles.py</code></pre>
+      <p style="margin:8px 0 0">Produces:</p>
+      <ul class="steps">
+        <li><code>output/pmtiles/ski_overview.pmtiles</code> — ski_areas_analyzed (z0), ski_areas (z8), pistes + lifts (z10)</li>
+        <li><code>output/pmtiles/ski_resort_detail.pmtiles</code> — buffer + osm (z12), contours (z13)</li>
+      </ul>
+      <p style="margin:8px 0 0">Upload to <code>s3://globalskiatlas-backend-k8s-output/pmtiles/</code> (public read + CORS).</p>
     </details>
     <details style="margin-top:8px">
       <summary style="cursor:pointer;font-weight:600">403 Forbidden from S3?</summary>
       <p style="margin:8px 0 0">
-        The pipeline bucket is usually <strong>private</strong>, so anonymous browser requests get
-        <code>403</code>. Fix one of: (1) bucket policy allowing <code>s3:GetObject</code> on
-        <code>arn:aws:s3:::globalskiatlas-backend-k8s-output/tippecanoe_geojson/*</code> for
-        <code>"Principal":"*"</code>, after adjusting &ldquo;Block public access&rdquo; so that policy is allowed;
-        (2) a CloudFront distribution in front of the bucket with public read; or (3) for local dev only, run
-        <code>py -3 -m http.server</code> in the folder that contains <code>ski_combined.pmtiles</code> and set the
-        URL to <code>http://127.0.0.1:PORT/ski_combined.pmtiles</code>.
+        Allow <code>s3:GetObject</code> on
+        <code>arn:aws:s3:::globalskiatlas-backend-k8s-output/pmtiles/*</code>, or use CloudFront.
+        For local dev: <code>py -3 -m http.server</code> in the folder with the
+        <code>.pmtiles</code> files.
       </p>
     </details>
+    <div class="row row-url">
+      <label for="pmtilesOverviewUrl">Overview PMTiles URL</label>
+      <input id="pmtilesOverviewUrl" type="url" spellcheck="false" autocomplete="off"
+        placeholder="https://…/ski_overview.pmtiles" />
+    </div>
+    <div class="row row-url">
+      <label for="pmtilesDetailUrl">Resort detail PMTiles URL</label>
+      <input id="pmtilesDetailUrl" type="url" spellcheck="false" autocomplete="off"
+        placeholder="https://…/ski_resort_detail.pmtiles" />
+    </div>
     <div class="row">
-      <label for="pmtilesUrl">PMTiles URL</label>
-      <input
-        id="pmtilesUrl"
-        type="url"
-        spellcheck="false"
-        autocomplete="off"
-        placeholder="https://…/ski_combined.pmtiles"
-      />
       <button type="button" id="reload">Reload map</button>
     </div>
     <div class="row row-basemap">
@@ -175,163 +158,34 @@
 
   <script type="module">
     import maplibregl from "https://esm.sh/maplibre-gl@4.7.1";
-    import { Protocol } from "https://esm.sh/pmtiles@3.2.0";
+    import { config } from "./scripts/map-config.js";
+    import { buildSkiPmtilesStyle, initPmtilesProtocol, SKI_PMTILES_LAYERS } from "./scripts/pmtiles-core.js";
 
     const params = new URLSearchParams(location.search);
-    /** Default: same S3 prefix, .pmtiles — upload after converting from .mbtiles */
-    const DEFAULT_PMTILES =
-      params.get("url") ||
-      "https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/tippecanoe_geojson/ski_combined.pmtiles";
+    const DEFAULT_OVERVIEW = params.get("url") || config.PMTILES_OVERVIEW_URL;
+    const DEFAULT_DETAIL = params.get("detail") || config.PMTILES_RESORT_URL;
 
-    const protocol = new Protocol();
-    maplibregl.addProtocol("pmtiles", protocol.tile);
+    await initPmtilesProtocol(maplibregl);
 
-    const input = document.getElementById("pmtilesUrl");
-    input.value = DEFAULT_PMTILES;
+    const overviewInput = document.getElementById("pmtilesOverviewUrl");
+    const detailInput = document.getElementById("pmtilesDetailUrl");
+    overviewInput.value = DEFAULT_OVERVIEW;
+    detailInput.value = DEFAULT_DETAIL;
 
     const showBasemapEl = document.getElementById("showBasemap");
-    const basemapOn =
-      params.get("basemap") === "1" || params.get("basemap") === "true";
+    const basemapOn = params.get("basemap") === "1" || params.get("basemap") === "true";
     showBasemapEl.checked = basemapOn;
 
     const log = (...args) => console.log("[PMTilestest]", ...args);
 
-    function buildStyle(pmtilesHttpUrl, showBasemap = false) {
-      return {
-        version: 8,
-        name: "ski-preview",
-        // Must match text-font exactly; demotiles + Semibold is the stock MapLibre combo (reliable vs OpenMapTiles + Regular in some embeds).
-        glyphs: "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",
-        sources: {
-          basemap: {
-            type: "raster",
-            tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
-            tileSize: 256,
-            attribution: "© OpenStreetMap contributors",
-            maxzoom: 19,
-          },
-          ski: {
-            type: "vector",
-            url: "pmtiles://" + pmtilesHttpUrl.replace(/^pmtiles:\/\//, ""),
-            attribution: "Global Ski Atlas",
-          },
-        },
-        layers: [
-          {
-            id: "basemap",
-            type: "raster",
-            source: "basemap",
-            layout: { visibility: showBasemap ? "visible" : "none" },
-          },
-          {
-            id: "ski-areas-fill",
-            type: "fill",
-            source: "ski",
-            "source-layer": "ski_areas",
-            filter: [
-              "any",
-              ["==", ["geometry-type"], "Polygon"],
-              ["==", ["geometry-type"], "MultiPolygon"],
-            ],
-            paint: { "fill-color": "#2ecc71", "fill-opacity": 0.22 },
-          },
-          {
-            id: "ski-areas-outline",
-            type: "line",
-            source: "ski",
-            "source-layer": "ski_areas",
-            filter: [
-              "any",
-              ["==", ["geometry-type"], "Polygon"],
-              ["==", ["geometry-type"], "MultiPolygon"],
-            ],
-            paint: { "line-color": "#1e8449", "line-width": 1 },
-          },
-          {
-            id: "ski-areas-point",
-            type: "circle",
-            source: "ski",
-            "source-layer": "ski_areas",
-            filter: ["==", ["geometry-type"], "Point"],
-            paint: { "circle-radius": 4, "circle-color": "#27ae60" },
-          },
-          {
-            id: "pistes",
-            type: "line",
-            source: "ski",
-            "source-layer": "pistes",
-            paint: {
-              "line-width": 2,
-              // piste:difficulty is embedded in other_tags (OSM export)
-              "line-color": [
-                "case",
-                ["in", 'piste:difficulty"=>"extreme', ["coalesce", ["get", "other_tags"], ""]],
-                "#6c3483",
-                ["in", 'piste:difficulty"=>"freeride', ["coalesce", ["get", "other_tags"], ""]],
-                "#ca6f1e",
-                ["in", 'piste:difficulty"=>"expert', ["coalesce", ["get", "other_tags"], ""]],
-                "#1a1a1a",
-                ["in", 'piste:difficulty"=>"advanced', ["coalesce", ["get", "other_tags"], ""]],
-                "#c0392b",
-                ["in", 'piste:difficulty"=>"intermediate', ["coalesce", ["get", "other_tags"], ""]],
-                "#2980b9",
-                ["in", 'piste:difficulty"=>"easy', ["coalesce", ["get", "other_tags"], ""]],
-                "#27ae60",
-                ["in", 'piste:difficulty"=>"novice', ["coalesce", ["get", "other_tags"], ""]],
-                "#2ecc71",
-                "#95a5a6",
-              ],
-            },
-          },
-          {
-            id: "lifts",
-            type: "line",
-            source: "ski",
-            "source-layer": "lifts",
-            paint: { "line-color": "#2980b9", "line-width": 2 },
-          },
-          {
-            id: "ski-areas-labels",
-            type: "symbol",
-            source: "ski",
-            "source-layer": "ski_areas",
-            // Tileset maxzoom is ~11. Ski area names from z11 (~10 km across a typical viewport; varies by lat/screen). Use a higher minzoom for tighter (e.g. ~1 km) scale only.
-            minzoom: 11,
-            filter: [
-              "!=",
-              ["coalesce", ["get", "name"], ["get", "Ski Area"], ["get", "Ski_Area"], ""],
-              "",
-            ],
-            layout: {
-              "text-field": [
-                "coalesce",
-                ["get", "name"],
-                ["get", "Ski Area"],
-                ["get", "Ski_Area"],
-                "",
-              ],
-              "text-font": ["Open Sans Semibold"],
-              "text-size": 15,
-              "text-anchor": "center",
-              "symbol-placement": "point",
-              // Without this, pistes/lifts collision often drop every ski-area label.
-              "text-allow-overlap": true,
-              "text-ignore-placement": true,
-              "text-optional": false,
-            },
-            paint: {
-              "text-color": "#0b3d20",
-              "text-halo-color": "rgba(255,255,255,0.95)",
-              "text-halo-width": 2,
-              "text-opacity": 1,
-            },
-          },
-        ],
-      };
+    function buildStyle(overviewUrl, detailUrl, showBasemap = false) {
+      return buildSkiPmtilesStyle(overviewUrl, detailUrl, showBasemap);
     }
 
-    function syncBasemapSearchParam() {
+    function syncSearchParams() {
       const next = new URL(location.href);
+      next.searchParams.set("url", overviewInput.value.trim());
+      next.searchParams.set("detail", detailInput.value.trim());
       if (showBasemapEl.checked) next.searchParams.set("basemap", "1");
       else next.searchParams.delete("basemap");
       history.replaceState({}, "", next);
@@ -346,7 +200,7 @@
 
     let map = new maplibregl.Map({
       container: "map",
-      style: buildStyle(input.value.trim(), showBasemapEl.checked),
+      style: buildStyle(overviewInput.value.trim(), detailInput.value.trim(), showBasemapEl.checked),
       center: [-105.2, 39.5],
       zoom: 5,
       maxPitch: 0,
@@ -360,10 +214,10 @@
 
     showBasemapEl.addEventListener("change", () => {
       applyBasemapVisibility();
-      syncBasemapSearchParam();
+      syncSearchParams();
     });
 
-    const pistePopup = new maplibregl.Popup({
+    const featurePopup = new maplibregl.Popup({
       closeButton: true,
       closeOnClick: true,
       maxWidth: "min(92vw, 420px)",
@@ -393,25 +247,33 @@
       return `<table>${rows}</table>`;
     }
 
+    function featureTitle(props) {
+      return (
+        (typeof props.name === "string" && props.name.trim()) ||
+        (typeof props.ref === "string" && props.ref.trim()) ||
+        (typeof props.resort_name === "string" && props.resort_name.trim()) ||
+        "Feature"
+      );
+    }
+
+    const CLICK_LAYERS = [SKI_PMTILES_LAYERS.pistes, SKI_PMTILES_LAYERS.analyzed, SKI_PMTILES_LAYERS.lifts];
+
     map.on("click", (e) => {
       if (!map.isStyleLoaded()) return;
-      const features = map.queryRenderedFeatures(e.point, { layers: ["pistes"] });
+      const features = map.queryRenderedFeatures(e.point, { layers: CLICK_LAYERS });
       if (!features.length) {
-        pistePopup.remove();
+        featurePopup.remove();
         return;
       }
       const props = { ...(features[0].properties || {}) };
-      const title =
-        (typeof props.name === "string" && props.name.trim()) ||
-        (typeof props.ref === "string" && props.ref.trim()) ||
-        "Piste";
+      const title = featureTitle(props);
       const html = `<div class="piste-popup"><div class="piste-popup-title">${escapeHtml(title)}</div>${propertiesTableHtml(props)}</div>`;
-      pistePopup.setLngLat(e.lngLat).setHTML(html).addTo(map);
+      featurePopup.setLngLat(e.lngLat).setHTML(html).addTo(map);
     });
 
     map.on("mousemove", (e) => {
       if (!map.isStyleLoaded()) return;
-      const hit = map.queryRenderedFeatures(e.point, { layers: ["pistes"] });
+      const hit = map.queryRenderedFeatures(e.point, { layers: CLICK_LAYERS });
       map.getCanvas().style.cursor = hit.length ? "pointer" : "";
     });
 
@@ -426,55 +288,25 @@
     function logSkiAreaLabelsInView() {
       if (!map.isStyleLoaded()) return;
       try {
-        const labelFeats = map.queryRenderedFeatures({ layers: ["ski-areas-labels"] });
-        const fillFeats = map.queryRenderedFeatures({ layers: ["ski-areas-fill"] });
+        const labelFeats = map.queryRenderedFeatures({ layers: [SKI_PMTILES_LAYERS.areasLabels] });
+        const fillFeats = map.queryRenderedFeatures({ layers: [SKI_PMTILES_LAYERS.areasFill] });
+        const analyzedFeats = map.queryRenderedFeatures({ layers: [SKI_PMTILES_LAYERS.analyzed] });
         const namesOnMap = [
           ...new Set(labelFeats.map((f) => skiAreaLabelName(f.properties)).filter(Boolean)),
         ];
-        const namedPolygonsInView = fillFeats.filter((f) => skiAreaLabelName(f.properties)).length;
-        let sourceNamedInLoadedTiles = 0;
-        let samplePropsKeys = null;
-        try {
-          const srcFeats = map.querySourceFeatures("ski", { sourceLayer: "ski_areas" });
-          sourceNamedInLoadedTiles = srcFeats.filter((f) => skiAreaLabelName(f.properties)).length;
-          const named = srcFeats.find((f) => skiAreaLabelName(f.properties));
-          if (named?.properties) samplePropsKeys = Object.keys(named.properties).sort();
-        } catch (_) {
-          /* querySourceFeatures can throw if tiles not ready */
-        }
-        const firstNamedFill = fillFeats.find((f) => skiAreaLabelName(f.properties));
         const z = Number(map.getZoom().toFixed(1));
-        const dedupeKey = [z, labelFeats.length, namedPolygonsInView, [...namesOnMap].sort().join("|")].join(
-          ";",
-        );
+        const dedupeKey = [z, labelFeats.length, analyzedFeats.length, [...namesOnMap].sort().join("|")].join(";");
         if (dedupeKey === lastSkiLabelLogKey) return;
         lastSkiLabelLogKey = dedupeKey;
-
-        let hint = null;
-        if (labelFeats.length === 0 && namedPolygonsInView > 0) {
-          if (z < 11) {
-            hint = "Ski name labels start at zoom 11 (~10 km map scale). Zoom in one step.";
-          } else {
-            hint =
-              "Polygons visible but 0 label symbols: check Network for font .pbf (glyphs) failing, or tile reload.";
-          }
-        }
-
-        log("ski area labels (viewport)", {
+        log("viewport", {
           zoom: z,
-          labelSymbolsRendered: labelFeats.length,
-          namedSkiAreaPolygonsInView: namedPolygonsInView,
-          sourceFeaturesWithNameInLoadedTiles: sourceNamedInLoadedTiles,
-          distinctNamesFromLabelLayer: namesOnMap.length,
-          sampleNames: namesOnMap.slice(0, 12),
-          samplePropertyKeysFromSource: samplePropsKeys,
-          samplePropertyKeysFromRenderedFill: firstNamedFill
-            ? Object.keys(firstNamedFill.properties).sort()
-            : null,
-          hint,
+          analyzedPoints: analyzedFeats.length,
+          labelSymbols: labelFeats.length,
+          skiAreaPolygons: fillFeats.length,
+          sampleNames: namesOnMap.slice(0, 8),
         });
       } catch (err) {
-        console.warn("[PMTilestest] ski area label query failed", err);
+        console.warn("[PMTilestest] label query failed", err);
       }
     }
 
@@ -494,19 +326,16 @@
       const panel = document.getElementById("panel");
       panel.insertAdjacentHTML(
         "beforeend",
-        `<p style="margin:10px 0 0;color:#b00020;font-size:12px"><strong>Error:</strong> ${msg}</p>`,
+        `<p style="margin:10px 0 0;color:#b00020;font-size:12px"><strong>Error:</strong> ${escapeHtml(msg)}</p>`,
       );
     });
 
     document.getElementById("reload").addEventListener("click", () => {
-      const u = input.value.trim();
-      if (!u) return;
-      const next = new URL(location.href);
-      next.searchParams.set("url", u);
-      if (showBasemapEl.checked) next.searchParams.set("basemap", "1");
-      else next.searchParams.delete("basemap");
-      history.replaceState({}, "", next);
-      map.setStyle(buildStyle(u, showBasemapEl.checked));
+      const overview = overviewInput.value.trim();
+      const detail = detailInput.value.trim();
+      if (!overview || !detail) return;
+      syncSearchParams();
+      map.setStyle(buildStyle(overview, detail, showBasemapEl.checked));
       map.once("idle", () => {
         try {
           map.fitBounds(

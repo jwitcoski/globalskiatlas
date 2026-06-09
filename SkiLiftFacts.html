@@ -30,7 +30,7 @@
         <link rel="stylesheet" href="./css/tailwind-build.css" />
         <link rel="stylesheet" href="css/index.css" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" integrity="sha512-dPXYcDub/aeb08c63jRq/k6GaKccl256JQy/AnOq7CAnEZ9FzSL9wSbcZkMp4R26vBsMLFYH4kQ67/bbV8XaCQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-        <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.css" crossorigin="">
+        <link rel="stylesheet" href="https://cdn.maptiler.com/maptiler-sdk-js/v3.10.2/maptiler-sdk.css" crossorigin="">
         <style>
             .fact-map { width: 280px; height: 280px; border-radius: 12px; overflow: hidden; }
             .fact-map.placeholder { background: #e5e7eb; display: flex; align-items: center; justify-content: center; color: #6b7280; font-size: 14px; }
@@ -255,7 +255,7 @@
             </div>
         </footer>
 
-        <script src="https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.js" crossorigin=""></script>
+        <script defer src="https://cdn.maptiler.com/maptiler-sdk-js/v3.10.2/maptiler-sdk.umd.min.js"></script>
         <script>
             function toggleHeader() {
                 var el = document.getElementById('collapsed-header-items');
@@ -264,10 +264,8 @@
         </script>
         <script type="module">
             import { createMapLibre } from './scripts/map-core.js';
-            import { loadLifts } from './scripts/map-loaders/lifts.js';
-            import { config } from './scripts/map-config.js';
+            import { addSkiPmtilesToMap, createSkiPmtilesMap, loadPmtilesLayerFeatures } from './scripts/pmtiles-core.js';
             (async function () {
-                const MAPTILER_KEY = config.MAPTILER_KEY || '0P06ORgY8WvmMOnPr0p2';
 
                 const NAME_KEYS      = ['name', 'Name', 'lift_name'];
                 const RESORT_KEYS    = ['Ski Area', 'ski_area', 'resort_name', 'area_name', 'resort', 'ski_area_name', 'skiarea_name'];
@@ -424,7 +422,7 @@
                 const factMapInstances = {};
                 async function initLiftMap(containerId, row) {
                     const el = document.getElementById(containerId);
-                    if (!el || typeof maplibregl === 'undefined') return;
+                    if (!el || typeof maptilersdk === 'undefined') return;
                     const geom = row.geometry;
                     if (!geom) return;
                     const centroid = liftCentroid(geom);
@@ -437,24 +435,13 @@
                     el.innerHTML = '';
                     const { map: m } = await createMapLibre({
                         containerId,
-                        style: {
-                            version: 8,
-                            sources: {
-                                raster: { type: 'raster', tiles: ['https://api.maptiler.com/maps/winter-v4/256/{z}/{x}/{y}.png?key=' + MAPTILER_KEY], tileSize: 256 }
-                            },
-                            layers: [{ id: 'raster', type: 'raster', source: 'raster', minzoom: 3, maxzoom: 18 }]
-                        },
                         center: [centroid[0], centroid[1]],
                         zoom: 12,
                         noControl: true
                     });
+                    await addSkiPmtilesToMap(m, { liftsColor: '#f87171', pistesWidth: 3 });
                     factMapInstances[containerId] = m;
-                    const t = getAerialway(row);
-                    const color = liftColor(t);
-                    m.addSource('line', { type: 'geojson', data: { type: 'Feature', geometry: geom, properties: {} } });
-                    m.addLayer({ id: 'line', type: 'line', source: 'line', paint: { 'line-color': color, 'line-width': 4 } });
-                    const bbox = boundsFromGeom(geom);
-                    if (bbox) m.fitBounds(bbox, { padding: 20, maxZoom: 15 });
+                    m.flyTo({ center: [centroid[0], centroid[1]], zoom: 14, duration: 500 });
                 }
 
                 function setFact(nameId, descId, name, desc) {
@@ -575,11 +562,10 @@
                     sortNamed(); currentPage = 1; renderTable();
                 }
 
-                // Main load (map-loaders)
+                // Load lift features from PMTiles overview layer
                 try {
-                    // Override loader feature cap so facts reflect the full dataset
-                    const liftResult = await loadLifts({ maxFeatures: 250000 });
-                    const data = (liftResult.features || []).map((f) => ({ ...f.properties, geometry: f.geometry }));
+                    const liftFeats = await loadPmtilesLayerFeatures('lifts', 10);
+                    const data = liftFeats.map((f) => ({ ...f.properties, geometry: f.geometry }));
 
                     const lifts = data.filter((r) => r.geometry && (r.geometry.type === 'LineString' || r.geometry.type === 'MultiLineString'));
                     const EXCLUDED_TYPES = new Set(['zip_line', 'goods']);

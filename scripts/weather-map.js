@@ -1,52 +1,35 @@
 /**
  * Weather map – MapTiler SDK + MapTiler Weather SDK.
- * The Weather SDK requires a MapTiler Map (calls getSdkConfig() etc.), so this page stays on
- * MapTiler SDK rather than MapLibre; other map pages use map-core + MapLibre.
- * Expects globals: maptilersdk, maptilerweather, and window.MAPTILER_API_KEY.
+ * Expects globals: maptilersdk, maptilerweather (loaded by weather-map.html).
  * @see https://docs.maptiler.com/sdk-js/examples/weather-layer-switcher/
  */
-(function () {
-  'use strict';
+import { config } from './map-config.js';
+import {
+  getMapSizeTier,
+  getMapTierColorForProps
+} from './resort-categories.js';
+import {
+  getIconId,
+  addResortIconImages
+} from './resort-tier-icons.js';
+import {
+  getProp,
+  resortDisplayName,
+  ENGLISH_NAME_KEYS,
+  NAME_KEYS,
+  COUNTRY_KEYS,
+  STATE_KEYS
+} from './utils.js';
 
-  if (typeof maptilersdk === 'undefined' || typeof maptilerweather === 'undefined') {
-    console.error('weather-map: maptilersdk and maptilerweather must be loaded first.');
-    return;
-  }
+if (typeof maptilersdk === 'undefined' || typeof maptilerweather === 'undefined') {
+  console.error('weather-map: maptilersdk and maptilerweather must be loaded first.');
+} else {
 
-  const apiKey = window.MAPTILER_API_KEY || '';
-  if (!apiKey) {
-    console.warn('weather-map: Set window.MAPTILER_API_KEY for the weather map.');
-  }
+  const apiKey = config.MAPTILER_KEY;
   maptilersdk.config.apiKey = apiKey;
 
-  const SKI_AREAS_URL = 'https://api.maptiler.com/data/019c9294-30cd-7aa0-96a0-e552ef79eee8/features.json?key=' + encodeURIComponent(apiKey);
+  const SKI_AREAS_URL = config.SKI_AREAS_MAPTILER_URL;
 
-  function getProp(props, keys) {
-    if (!props) return undefined;
-    for (let i = 0; i < keys.length; i++) {
-      if (Object.prototype.hasOwnProperty.call(props, keys[i])) return props[keys[i]];
-    }
-    return undefined;
-  }
-  const RESORT_TYPE_KEYS = ['resort_type', 'Resort Type'];
-  const NOT_DOWNHILL = 'not a downhill ski resort';
-  const SIZE_BY_KEYS = ['total_area_acres', 'Total Area Acres', 'area_acres'];
-  const COLOR_BY_KEYS = ['downhill_trails', 'number_of_downhill_trails', 'Downhill Trails', 'trails'];
-  const NAME_KEYS = ['name', 'resort_name', 'title', 'area_name', 'Name'];
-  const ENGLISH_NAME_KEYS = ['english_name', 'englishName'];
-  const COUNTRY_KEYS = ['country', 'Country', 'country_name', 'addr:country'];
-  const STATE_KEYS = ['state', 'State', 'addr:state', 'province', 'addr:province', 'state_province', 'region'];
-  const TRAILS_SMALL = 50;
-
-  function resortDisplayName(props) {
-    if (!props) return '';
-    var en = getProp(props, ENGLISH_NAME_KEYS);
-    var local = getProp(props, NAME_KEYS);
-    var enStr = (en != null && en !== '') ? String(en).trim() : '';
-    var localStr = (local != null && local !== '') ? String(local).trim() : '';
-    if (enStr && localStr && enStr !== localStr) return enStr + ' (' + localStr + ')';
-    return enStr || localStr || '';
-  }
   function wikiDisplayName(p) {
     if (!p) return '';
     var en = (p.englishName != null && p.englishName !== '') ? String(p.englishName).trim() : '';
@@ -54,110 +37,13 @@
     if (en && ti && en !== ti) return en + ' (' + ti + ')';
     return en || ti || '';
   }
-  const TRAILS_MEDIUM = 100;
-  const ACRES_SMALL = 1000;
-  const ACRES_MEDIUM = 5000;
-  const MEDIUM_ICON_MIN = 9;
-  const SMALL_ICON_MIN = 11;
+  const RESORT_ICON_MIN_ZOOM = 9;
 
-  var hillSvg = function (color, w, h) {
-    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 16" width="' + w + '" height="' + h + '"><path d="M0 16 L0 11 Q6 6 12 11 Q18 6 24 11 L24 16 Z" fill="' + color + '" stroke="#1a1a1a" stroke-width="0.8"/></svg>';
-  };
-  var mountainSvg = function (color, w, h) {
-    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 16" width="' + w + '" height="' + h + '"><path d="M0 16 L8 5 L16 10 L24 16 Z" fill="' + color + '" stroke="#1a1a1a" stroke-width="0.8"/></svg>';
-  };
-  var mountainsSvg = function (color, w, h) {
-    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 16" width="' + w + '" height="' + h + '"><path d="M0 16 L4 10 L8 14 L10 9 L14 5 L18 10 L20 7 L24 16 Z" fill="' + color + '" stroke="#1a1a1a" stroke-width="0.8"/></svg>';
-  };
-
-  var COLOR_TO_KEY = { '#c44d34': 'red', '#e6c229': 'yellow', '#2d8a3e': 'green', '#999999': 'grey' };
-  function getIconId(tier, color) {
-    var key = COLOR_TO_KEY[color] || 'red';
-    if (tier === 'large') return 'mountains-' + key;
-    if (tier === 'medium') return 'mountain-' + key;
-    return 'hill-' + key;
-  }
-
-  function svgToImageData(svgString, pixelRatio) {
-    pixelRatio = pixelRatio || 2;
-    var parser = new DOMParser();
-    var doc = parser.parseFromString(svgString, 'image/svg+xml');
-    var svg = doc.documentElement;
-    var w = parseInt(svg.getAttribute('width'), 10) || 24;
-    var h = parseInt(svg.getAttribute('height'), 10) || 16;
-    var width = w * pixelRatio;
-    var height = h * pixelRatio;
-    var canvas = document.createElement('canvas');
-    canvas.width = width;
-    canvas.height = height;
-    var ctx = canvas.getContext('2d');
-    var img = new Image();
-    var dataUrl = 'data:image/svg+xml,' + encodeURIComponent(svgString.replace(/width="[^"]+"/, 'width="' + width + '"').replace(/height="[^"]+"/, 'height="' + height + '"'));
-    return new Promise(function (resolve, reject) {
-      img.onload = function () {
-        ctx.drawImage(img, 0, 0);
-        try {
-          var imageData = ctx.getImageData(0, 0, width, height);
-          resolve({ width: width, height: height, data: imageData.data });
-        } catch (e) {
-          reject(e);
-        }
-      };
-      img.onerror = reject;
-      img.src = dataUrl;
-    });
-  }
-
-  function addResortIconImages(map) {
-    var colors = [
-      { key: 'red', hex: '#c44d34' },
-      { key: 'yellow', hex: '#e6c229' },
-      { key: 'green', hex: '#2d8a3e' },
-      { key: 'grey', hex: '#999999' }
-    ];
-    var promises = [];
-    colors.forEach(function (c) {
-      promises.push(
-        svgToImageData(hillSvg(c.hex, 20, 14)).then(function (d) { map.addImage('hill-' + c.key, d); }),
-        svgToImageData(mountainSvg(c.hex, 26, 18)).then(function (d) { map.addImage('mountain-' + c.key, d); }),
-        svgToImageData(mountainsSvg(c.hex, 32, 20)).then(function (d) { map.addImage('mountains-' + c.key, d); })
-      );
-    });
-    return Promise.all(promises);
-  }
-
-  function getTrailCount(props) {
-    const v = getProp(props, COLOR_BY_KEYS);
-    if (v == null || v === '') return 0;
-    const n = typeof v === 'number' ? v : Number(v);
-    return Number.isNaN(n) ? 0 : n;
-  }
-  function getAcres(props) {
-    const v = getProp(props, SIZE_BY_KEYS);
-    if (v == null || v === '') return 0;
-    const n = typeof v === 'number' ? v : Number(v);
-    return Number.isNaN(n) ? 0 : n;
-  }
-  function isNotDownhill(props) {
-    const v = getProp(props, RESORT_TYPE_KEYS);
-    return v != null && String(v).toLowerCase().trim() === NOT_DOWNHILL.toLowerCase();
-  }
   function getSizeTier(feature) {
-    const props = feature.properties || {};
-    if (isNotDownhill(props)) return 'small';
-    const trails = getTrailCount(props);
-    const acres = getAcres(props);
-    if (trails > TRAILS_MEDIUM || acres > ACRES_MEDIUM) return 'large';
-    if (trails >= TRAILS_SMALL || acres >= ACRES_SMALL) return 'medium';
-    return 'small';
+    return getMapSizeTier(feature.properties || {});
   }
   function getColorFor(feature) {
-    const props = feature.properties || {};
-    if (isNotDownhill(props)) return '#999999';
-    const tier = getSizeTier(feature);
-    if (tier === 'large') return '#2d8a3e';
-    if (tier === 'medium') return '#e6c229';
-    return '#c44d34';
+    return getMapTierColorForProps(feature.properties || {});
   }
 
   const weatherLayers = {
@@ -470,85 +356,101 @@
         var popup = new maptilersdk.Popup({ closeButton: true, closeOnClick: false });
         var hoverPopup = new maptilersdk.Popup({ closeButton: false, closeOnClick: false, className: 'ski-resort-hover-popup' });
 
-        map.addLayer({
-          id: 'ski-resorts-dots-medium',
-          type: 'circle',
-          source: 'ski-resorts',
-          minzoom: 2,
-          maxzoom: MEDIUM_ICON_MIN,
-          filter: ['==', ['get', 'tier'], 'medium'],
-          paint: {
-            'circle-radius': 5,
-            'circle-color': ['get', 'color'],
-            'circle-stroke-width': 1.5,
-            'circle-stroke-color': 'rgba(255,255,255,0.65)',
-            'circle-opacity': 0.85
-          }
-        });
+        var dotPaint = {
+          'circle-color': ['get', 'color'],
+          'circle-stroke-width': 1.5,
+          'circle-stroke-color': 'rgba(255,255,255,0.65)',
+          'circle-opacity': 0.85
+        };
+
         map.addLayer({
           id: 'ski-resorts-dots-small',
           type: 'circle',
           source: 'ski-resorts',
           minzoom: 2,
-          maxzoom: SMALL_ICON_MIN,
+          maxzoom: RESORT_ICON_MIN_ZOOM,
           filter: ['==', ['get', 'tier'], 'small'],
-          paint: {
-            'circle-radius': 3.5,
-            'circle-color': ['get', 'color'],
-            'circle-stroke-width': 1.5,
-            'circle-stroke-color': 'rgba(255,255,255,0.65)',
-            'circle-opacity': 0.85
-          }
+          paint: Object.assign({ 'circle-radius': 3.5 }, dotPaint)
         });
-        addResortLayerEvents(['ski-resorts-dots-medium', 'ski-resorts-dots-small']);
+        map.addLayer({
+          id: 'ski-resorts-dots-medium',
+          type: 'circle',
+          source: 'ski-resorts',
+          minzoom: 2,
+          maxzoom: RESORT_ICON_MIN_ZOOM,
+          filter: ['==', ['get', 'tier'], 'medium'],
+          paint: Object.assign({ 'circle-radius': 5 }, dotPaint)
+        });
+        map.addLayer({
+          id: 'ski-resorts-dots-large',
+          type: 'circle',
+          source: 'ski-resorts',
+          minzoom: 2,
+          maxzoom: RESORT_ICON_MIN_ZOOM,
+          filter: ['==', ['get', 'tier'], 'large'],
+          paint: Object.assign({ 'circle-radius': 6 }, dotPaint)
+        });
+        map.addLayer({
+          id: 'ski-resorts-dots-mega',
+          type: 'circle',
+          source: 'ski-resorts',
+          minzoom: 2,
+          maxzoom: RESORT_ICON_MIN_ZOOM,
+          filter: ['==', ['get', 'tier'], 'mega'],
+          paint: Object.assign({ 'circle-radius': 7 }, dotPaint)
+        });
+        addResortLayerEvents([
+          'ski-resorts-dots-small',
+          'ski-resorts-dots-medium',
+          'ski-resorts-dots-large',
+          'ski-resorts-dots-mega'
+        ]);
 
         addResortIconImages(map).then(function () {
+          var iconLayout = {
+            'icon-image': ['get', 'icon'],
+            'icon-size': 1,
+            'icon-allow-overlap': true,
+            'icon-ignore-placement': true,
+            'icon-anchor': 'center'
+          };
           map.addLayer({
-            id: 'ski-resorts-icons-large',
+            id: 'ski-resorts-icons-small',
             type: 'symbol',
             source: 'ski-resorts',
-            minzoom: 2,
-            filter: ['==', ['get', 'tier'], 'large'],
-            layout: {
-              'icon-image': ['get', 'icon'],
-              'icon-size': 1,
-              'icon-allow-overlap': true,
-              'icon-ignore-placement': true,
-              'icon-anchor': 'bottom'
-            }
+            minzoom: RESORT_ICON_MIN_ZOOM,
+            filter: ['==', ['get', 'tier'], 'small'],
+            layout: iconLayout
           });
           map.addLayer({
             id: 'ski-resorts-icons-medium',
             type: 'symbol',
             source: 'ski-resorts',
-            minzoom: MEDIUM_ICON_MIN,
+            minzoom: RESORT_ICON_MIN_ZOOM,
             filter: ['==', ['get', 'tier'], 'medium'],
-            layout: {
-              'icon-image': ['get', 'icon'],
-              'icon-size': 1,
-              'icon-allow-overlap': true,
-              'icon-ignore-placement': true,
-              'icon-anchor': 'bottom'
-            }
+            layout: iconLayout
           });
           map.addLayer({
-            id: 'ski-resorts-icons-small',
+            id: 'ski-resorts-icons-large',
             type: 'symbol',
             source: 'ski-resorts',
-            minzoom: SMALL_ICON_MIN,
-            filter: ['==', ['get', 'tier'], 'small'],
-            layout: {
-              'icon-image': ['get', 'icon'],
-              'icon-size': 1,
-              'icon-allow-overlap': true,
-              'icon-ignore-placement': true,
-              'icon-anchor': 'bottom'
-            }
+            minzoom: RESORT_ICON_MIN_ZOOM,
+            filter: ['==', ['get', 'tier'], 'large'],
+            layout: iconLayout
+          });
+          map.addLayer({
+            id: 'ski-resorts-icons-mega',
+            type: 'symbol',
+            source: 'ski-resorts',
+            minzoom: RESORT_ICON_MIN_ZOOM,
+            filter: ['==', ['get', 'tier'], 'mega'],
+            layout: iconLayout
           });
           addResortLayerEvents([
-            'ski-resorts-icons-large',
+            'ski-resorts-icons-small',
             'ski-resorts-icons-medium',
-            'ski-resorts-icons-small'
+            'ski-resorts-icons-large',
+            'ski-resorts-icons-mega'
           ]);
         }).catch(function (err) { console.warn('weather-map: resort icons load failed', err); });
       })
@@ -711,4 +613,4 @@
   function initWeatherMap(type) {
     return changeWeatherLayer(type);
   }
-})();
+}

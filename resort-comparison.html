@@ -383,7 +383,7 @@
   <div class="map-wrapper tw-flex-1 tw-min-h-0 tw-px-[5%] tw-pt-2 tw-pb-6 max-lg:tw-px-4">
     <div class="page">
     <h1 class="tw-text-4xl tw-font-medium tw-text-gray-900 tw-mb-2">Ski Resort Size Comparison</h1>
-    <p class="tw-text-xl tw-font-medium tw-text-gray-700 tw-mb-3 tw-max-w-2xl">Compare ski resort outlines and trail layouts from the Global Ski Atlas parquet data. Select resorts to view side by side.</p>
+    <p class="tw-text-xl tw-font-medium tw-text-gray-700 tw-mb-3 tw-max-w-2xl">Compare ski resort outlines and trail layouts from Global Ski Atlas PMTiles data. Select resorts to view side by side.</p>
 
     <div class="content-wrapper">
       <div class="map-chart-wrapper">
@@ -536,10 +536,23 @@
       window.addEventListener('resize', responsive);
     })();
   </script>
+  <script defer src="https://cdn.maptiler.com/maptiler-sdk-js/v3.10.2/maptiler-sdk.umd.min.js"></script>
   <script type="module">
-    const GEOPARQUET_URL = 'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/ski_areas_analyzed.parquet';
-    const SKI_AREAS_OUTLINES_URL = 'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/ski_areas.parquet';
-    const PISTES_URL = 'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/pistes.parquet';
+    import { fetchSkiAreaCatalog, loadPmtilesLayerFeatures } from './scripts/pmtiles-core.js';
+    import {
+      getMapSizeTier,
+      getMapTierColorForProps,
+      MAP_TIER_LEGEND,
+      MAP_TIER_COLORS,
+      isNotDownhill
+    } from './scripts/resort-categories.js';
+    import {
+      hillSvg,
+      mountainSvg,
+      largeMountainsSvg,
+      megaMountainsSvg,
+      tierSvg
+    } from './scripts/resort-tier-icons.js';
 
     const NAME_KEYS = ['name', 'resort_name', 'title', 'area_name', 'Name'];
     /** Display english_name (name) when both exist; else english_name or name. */
@@ -575,56 +588,17 @@
       return undefined;
     }
 
-    function isNotDownhill(props) {
-      const v = getProp(props, RESORT_TYPE_KEYS);
-      return v != null && String(v).toLowerCase().trim() === NOT_DOWNHILL.toLowerCase();
-    }
-    const TRAILS_SMALL  = 50;
-    const TRAILS_MEDIUM = 100;
-    const ACRES_SMALL   = 1000;
-    const ACRES_MEDIUM  = 5000;
-    function getTrailCount(props) {
-      const v = getProp(props, COLOR_BY_KEYS);
-      if (v == null || v === '') return 0;
-      const n = typeof v === 'number' ? v : Number(v);
-      return Number.isNaN(n) ? 0 : n;
-    }
-    function getAcres(props) {
-      const v = getProp(props, SIZE_BY_KEYS);
-      if (v == null || v === '') return 0;
-      const n = typeof v === 'number' ? v : Number(v);
-      return Number.isNaN(n) ? 0 : n;
-    }
-    function getSizeTier(props) {
-      if (isNotDownhill(props)) return 'small';
-      const trails = getTrailCount(props);
-      const acres  = getAcres(props);
-      if (trails >= TRAILS_MEDIUM || acres >= ACRES_MEDIUM) return 'large';
-      if (trails >= TRAILS_SMALL  || acres >= ACRES_SMALL)  return 'medium';
-      return 'small';
-    }
-    function getColorForSize(props) {
-      if (isNotDownhill(props)) return '#999999';
-      const tier = getSizeTier(props);
-      if (tier === 'large')  return '#2d8a3e';
-      if (tier === 'medium') return '#e6c229';
-      return '#c44d34';
-    }
-    const hillSvg = (color, w, h) => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 16" width="' + w + '" height="' + h + '" style="display:block"><path d="M0 16 L0 11 Q6 6 12 11 Q18 6 24 11 L24 16 Z" fill="' + color + '" stroke="#1a1a1a" stroke-width="0.8"/></svg>';
-    const mountainSvg = (color, w, h) => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 16" width="' + w + '" height="' + h + '" style="display:block"><path d="M0 16 L8 5 L16 10 L24 16 Z" fill="' + color + '" stroke="#1a1a1a" stroke-width="0.8"/></svg>';
-    const mountainsSvg = (color, w, h) => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 16" width="' + w + '" height="' + h + '" style="display:block"><path d="M0 16 L4 10 L8 14 L10 9 L14 5 L18 10 L20 7 L24 16 Z" fill="' + color + '" stroke="#1a1a1a" stroke-width="0.8"/></svg>';
     function getSizeIconHtml(resort) {
       const props = resort.analyzedRow || (resort.outlineFeature && resort.outlineFeature.properties) || {};
-      const tier = getSizeTier(props);
-      const color = getColorForSize(props);
+      const tier = getMapSizeTier(props);
+      const color = getMapTierColorForProps(props);
       let w = 20, h = 14;
-      if (tier === 'medium') { w = 26; h = 18; }
-      else if (tier === 'large') { w = 32; h = 20; }
-      let svg;
-      if (tier === 'small') svg = hillSvg(color, w, h);
-      else if (tier === 'medium') svg = mountainSvg(color, w, h);
-      else svg = mountainsSvg(color, w, h);
-      return '<span class="resort-size-icon" title="' + (tier === 'small' && isNotDownhill(props) ? 'Not a downhill ski resort' : tier === 'small' ? 'Small hill (< 50 trails / 1,000 ac)' : tier === 'medium' ? 'Ski mountain (50–100 trails / 1,000–5,000 ac)' : 'Multiple mountains (100+ trails / 5,000+ ac)') + '">' + svg + '</span>';
+      if (tier === 'mega') { w = 36; h = 22; }
+      else if (tier === 'large') { w = 30; h = 19; }
+      else if (tier === 'medium') { w = 26; h = 18; }
+      const svg = tierSvg(tier, color, w, h);
+      const legend = tier === 'small' && isNotDownhill(props) ? 'Not a downhill ski resort' : MAP_TIER_LEGEND[tier];
+      return '<span class="resort-size-icon" title="' + legend + '">' + svg + '</span>';
     }
 
     function getPisteDifficulty(props) {
@@ -737,34 +711,26 @@
 
     /** Load outlines + analyzed only (fast). Pistes load lazily when user selects resorts. */
     async function loadData() {
-      const { asyncBufferFromUrl, parquetReadObjects } = await import('https://esm.sh/hyparquet@1');
-
-      const [fileOutlines, fileAnalyzed] = await Promise.all([
-        asyncBufferFromUrl({ url: SKI_AREAS_OUTLINES_URL }),
-        asyncBufferFromUrl({ url: GEOPARQUET_URL })
+      const [catalog, outlineFeatsRaw] = await Promise.all([
+        fetchSkiAreaCatalog(),
+        loadPmtilesLayerFeatures('ski_areas', 8)
       ]);
 
-      const [dataOutlines, dataAnalyzed] = await Promise.all([
-        parquetReadObjects({ file: fileOutlines }),
-        parquetReadObjects({ file: fileAnalyzed })
-      ]);
-
+      const dataAnalyzed = catalog.map((f) => ({ ...(f.properties || {}), geometry: f.geometry }));
       const analyzedByName = new Map();
-      (dataAnalyzed || []).forEach((row) => {
+      dataAnalyzed.forEach((row) => {
         const name = getProp(row, NAME_KEYS);
         if (name != null && String(name).trim() !== '') {
           analyzedByName.set(normalizeResortName(name), row);
         }
       });
 
-      const outlineFeatures = dataOutlines
-        .filter((row) => {
-          const g = row.geometry;
-          if (!g || !g.type) return false;
-          return g.type === 'Polygon' || g.type === 'MultiPolygon';
+      const outlineFeatures = outlineFeatsRaw
+        .filter((f) => {
+          const g = f.geometry;
+          return g && (g.type === 'Polygon' || g.type === 'MultiPolygon');
         })
-        .map(rowToFeature)
-        .filter(Boolean);
+        .map((f) => ({ type: 'Feature', geometry: f.geometry, properties: f.properties || {} }));
 
       resortData = outlineFeatures
         .map((f) => {
@@ -806,17 +772,14 @@
     /** Load pistes and match only to selected outline indices. Avoids O(pistes × all_outlines). */
     async function loadPistesForSelected(selectedIndices) {
       if (selectedIndices.length === 0) return;
-      const { asyncBufferFromUrl, parquetReadObjects } = await import('https://esm.sh/hyparquet@1');
       if (!pisteFeaturesCache) {
-        const filePistes = await asyncBufferFromUrl({ url: PISTES_URL });
-        const dataPistes = await parquetReadObjects({ file: filePistes });
-        pisteFeaturesCache = (dataPistes || [])
-          .filter((row) => {
-            const g = row.geometry;
-            return g && g.type && (g.type === 'LineString' || g.type === 'MultiLineString');
+        const raw = await loadPmtilesLayerFeatures('pistes', 10);
+        pisteFeaturesCache = raw
+          .filter((f) => {
+            const g = f.geometry;
+            return g && (g.type === 'LineString' || g.type === 'MultiLineString');
           })
-          .map(rowToFeature)
-          .filter(Boolean);
+          .map((f) => ({ type: 'Feature', geometry: f.geometry, properties: f.properties || {} }));
       }
       const selectedOutlines = selectedIndices.map((i) => resortData[i].outlineFeature);
       const pistesByResort = new Map();
@@ -960,9 +923,10 @@
       const sizeLegendEl = document.getElementById('size-legend');
       if (sizeLegendEl) {
         sizeLegendEl.innerHTML =
-          '<div class="legend-row"><span class="legend-mountain-icon">' + hillSvg('#c44d34', 18, 12) + '</span> Small hill (&lt; 50 trails / 1,000 ac)</div>' +
-          '<div class="legend-row"><span class="legend-mountain-icon">' + mountainSvg('#e6c229', 18, 12) + '</span> Ski mountain (50–100 trails / 1,000–5,000 ac)</div>' +
-          '<div class="legend-row"><span class="legend-mountain-icon">' + mountainsSvg('#2d8a3e', 18, 12) + '</span> Multiple mountains (100+ trails / 5,000+ ac)</div>' +
+          '<div class="legend-row"><span class="legend-mountain-icon">' + hillSvg('#c44d34', 18, 12) + '</span> ' + MAP_TIER_LEGEND.small + '</div>' +
+          '<div class="legend-row"><span class="legend-mountain-icon">' + mountainSvg('#e6c229', 18, 12) + '</span> ' + MAP_TIER_LEGEND.medium + '</div>' +
+          '<div class="legend-row"><span class="legend-mountain-icon">' + largeMountainsSvg('#2d8a3e', 18, 12) + '</span> ' + MAP_TIER_LEGEND.large + '</div>' +
+          '<div class="legend-row"><span class="legend-mountain-icon">' + megaMountainsSvg(MAP_TIER_COLORS.mega, 20, 13) + '</span> ' + MAP_TIER_LEGEND.mega + '</div>' +
           '<div class="legend-row"><span class="legend-mountain-icon">' + hillSvg('#999', 16, 11) + '</span> Grey = not downhill</div>';
       }
 

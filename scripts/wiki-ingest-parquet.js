@@ -63,24 +63,8 @@ function isNotDownhill(row) {
 }
 
 function resortSizeCategory(row) {
-  if (isNotDownhill(row)) return 'unknown';
-  const trails = num(row.downhill_trails);
-  const lifts = num(row.total_lifts);
-  let acres = num(row.skiable_terrain_acres);
-  if (acres == null && row.skiable_terrain_ha != null) {
-    const ha = num(row.skiable_terrain_ha);
-    if (ha != null) acres = ha * 2.471;
-  }
-  const hasTrails = trails != null && trails >= 0;
-  const hasLifts = lifts != null && lifts >= 0;
-  if (!hasTrails || !hasLifts) return 'unknown';
-  const hasAcres = acres != null && acres >= 0;
-  const t = trails;
-  const a = hasAcres ? acres : 0;
-  if (t >= 200 || a >= 10000) return 'mega_resort';
-  if (t >= 100 || a >= 5000) return 'multiple_mountains';
-  if (t >= 50 || a >= 1000) return 'ski_mountain';
-  return 'small_hill';
+  const { categorizeResortFromRow } = require('./resort-categories.cjs');
+  return categorizeResortFromRow(row);
 }
 
 /** Returns Americas | Europe | Asia/Africa/Oceania | Other (plan section 3). */

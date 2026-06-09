@@ -849,13 +849,12 @@
         .stat-lifts-legend .lift-symbol-img { width: 100%; height: 100%; object-fit: contain; display: block; }
     </style>
 
+    <script defer src="https://cdn.maptiler.com/maptiler-sdk-js/v3.10.2/maptiler-sdk.umd.min.js"></script>
     <script type="module">
+        import { fetchSkiAreaCatalog, loadPmtilesLayerFeatures } from './scripts/pmtiles-core.js';
         (async function () {
             const CACHE_KEY = 'atlas-stats';
             const CACHE_HOURS = 24;
-            const GEOPARQUET_URL = 'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/ski_areas_analyzed.parquet';
-            const LIFTS_URL = 'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/lifts.parquet';
-            const PISTES_URL = 'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/pistes.parquet';
             function formatCount(n) {
                 if (typeof n !== 'number' || isNaN(n)) return '—';
                 return n.toLocaleString();
@@ -957,7 +956,6 @@
                 if (cached && cached.resorts != null && cached.lifts != null && cached.pistes != null) {
                     applyStats(cached);
                 }
-                const { asyncBufferFromUrl, parquetReadObjects } = await import('https://esm.sh/hyparquet@1');
                 const RESORT_TYPE_KEYS = ['resort_type', 'Resort Type'];
                 const NOT_DOWNHILL = 'not a downhill ski resort';
                 function getProp(obj, keys) {
@@ -971,8 +969,8 @@
                     const v = getProp(row, RESORT_TYPE_KEYS);
                     return v != null && String(v).toLowerCase().trim() === NOT_DOWNHILL.toLowerCase();
                 }
-                const areasFile = await asyncBufferFromUrl({ url: GEOPARQUET_URL });
-                const areasData = await parquetReadObjects({ file: areasFile });
+                const catalog = await fetchSkiAreaCatalog();
+                const areasData = catalog.map((f) => ({ ...(f.properties || {}), geometry: f.geometry }));
                 const downhillResorts = areasData.filter((r) => !isNotDownhill(r));
                 const resorts = downhillResorts.length;
                 const excludedCount = areasData.length - resorts;
@@ -984,14 +982,12 @@
                         noteEl.style.display = 'block';
                     }
                 }
-                const [liftsFile, pistesFile] = await Promise.all([
-                    asyncBufferFromUrl({ url: LIFTS_URL }),
-                    asyncBufferFromUrl({ url: PISTES_URL })
+                const [liftsRaw, pistesRaw] = await Promise.all([
+                    loadPmtilesLayerFeatures('lifts', 10),
+                    loadPmtilesLayerFeatures('pistes', 10)
                 ]);
-                const [liftsData, pistesData] = await Promise.all([
-                    parquetReadObjects({ file: liftsFile }),
-                    parquetReadObjects({ file: pistesFile })
-                ]);
+                const liftsData = liftsRaw.map((f) => ({ ...(f.properties || {}), geometry: f.geometry }));
+                const pistesData = pistesRaw.map((f) => ({ ...(f.properties || {}), geometry: f.geometry }));
                 const LIFT_TYPE_KEYS = ['aerialway', 'Aerialway', 'aerialway_type', 'type'];
                 const PISTE_DIFF_KEYS = ['piste:difficulty', 'piste_difficulty', 'difficulty'];
                 const LIFT_EXCLUDE = ['pylon', 'station'];
@@ -1052,7 +1048,7 @@
                 applyStats(data);
                 try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch (_) {}
             } catch (e) {
-                console.warn('Atlas stats: could not load parquet counts', e);
+                console.warn('Atlas stats: could not load PMTiles counts', e);
             }
         })();
     </script>

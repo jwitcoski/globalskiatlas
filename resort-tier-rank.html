@@ -700,10 +700,9 @@
       window.addEventListener('resize', responsive);
     })();
   </script>
+  <script defer src="https://cdn.maptiler.com/maptiler-sdk-js/v3.10.2/maptiler-sdk.umd.min.js"></script>
   <script type="module">
-    const GEOPARQUET_URL = 'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/ski_areas_analyzed.parquet';
-    const SKI_AREAS_OUTLINES_URL = 'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/ski_areas.parquet';
-    const PISTES_URL = 'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/pistes.parquet';
+    import { fetchSkiAreaCatalog, loadPmtilesLayerFeatures } from './scripts/pmtiles-core.js';
 
     const TIERS = ['S', 'A', 'B', 'C', 'D', 'E', 'F'];
     const AUTO_TIER_LABELS = { size: 'Size (acres)', runs: 'Number of runs', lifts: 'Number of lifts', difficult: 'Difficult/extreme runs', random: 'Random' };
@@ -805,21 +804,22 @@
     let pisteFeaturesCache = null;
 
     async function loadData() {
-      const { asyncBufferFromUrl, parquetReadObjects } = await import('https://esm.sh/hyparquet@1');
-      const [fileOutlines, fileAnalyzed] = await Promise.all([
-        asyncBufferFromUrl({ url: SKI_AREAS_OUTLINES_URL }),
-        asyncBufferFromUrl({ url: GEOPARQUET_URL })
+      const [catalog, outlineFeatsRaw] = await Promise.all([
+        fetchSkiAreaCatalog(),
+        loadPmtilesLayerFeatures('ski_areas', 8)
       ]);
-      const [dataOutlines, dataAnalyzed] = await Promise.all([
-        parquetReadObjects({ file: fileOutlines }),
-        parquetReadObjects({ file: fileAnalyzed })
-      ]);
+      const dataAnalyzed = catalog.map((f) => ({ ...(f.properties || {}), geometry: f.geometry }));
       const analyzedByName = new Map();
-      (dataAnalyzed || []).forEach((row) => {
+      dataAnalyzed.forEach((row) => {
         const name = getProp(row, NAME_KEYS);
         if (name != null && String(name).trim() !== '') analyzedByName.set(normalizeResortName(name), row);
       });
-      const outlineFeatures = (dataOutlines || []).filter((r) => r.geometry && (r.geometry.type === 'Polygon' || r.geometry.type === 'MultiPolygon')).map(rowToFeature).filter(Boolean);
+      const outlineFeatures = outlineFeatsRaw
+        .filter((f) => {
+          const g = f.geometry;
+          return g && (g.type === 'Polygon' || g.type === 'MultiPolygon');
+        })
+        .map((f) => ({ type: 'Feature', geometry: f.geometry, properties: f.properties || {} }));
       resortData = outlineFeatures.map((f) => {
         const name = getProp(f.properties, NAME_KEYS);
         if (name == null || String(name).trim() === '') return null;
@@ -847,11 +847,14 @@
 
     async function loadPistesForIndices(indices) {
       if (indices.length === 0) return;
-      const { asyncBufferFromUrl, parquetReadObjects } = await import('https://esm.sh/hyparquet@1');
       if (!pisteFeaturesCache) {
-        const filePistes = await asyncBufferFromUrl({ url: PISTES_URL });
-        const dataPistes = await parquetReadObjects({ file: filePistes });
-        pisteFeaturesCache = (dataPistes || []).filter((r) => r.geometry && (r.geometry.type === 'LineString' || r.geometry.type === 'MultiLineString')).map(rowToFeature).filter(Boolean);
+        const raw = await loadPmtilesLayerFeatures('pistes', 10);
+        pisteFeaturesCache = raw
+          .filter((f) => {
+            const g = f.geometry;
+            return g && (g.type === 'LineString' || g.type === 'MultiLineString');
+          })
+          .map((f) => ({ type: 'Feature', geometry: f.geometry, properties: f.properties || {} }));
       }
       const outlines = indices.map((i) => resortData[i].outlineFeature);
       const byKey = new Map();
