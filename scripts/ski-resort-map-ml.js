@@ -6,9 +6,11 @@ import { config } from './map-config.js';
 import { createMapLibre } from './map-core.js';
 import {
   addSkiPmtilesToMap,
+  attachPmtilesDebugLogging,
+  ensureBoundaryLayersOnTop,
   fetchSkiAreaCatalog,
   SKI_PMTILES_LAYERS
-} from './pmtiles-core.js';
+} from './pmtiles-core.js?v=7';
 import {
   getProp, escapeHtml, resortDisplayName, ENGLISH_NAME_KEYS,
   NAME_KEYS, ID_KEYS, COUNTRY_KEYS, STATE_KEYS, LIFTS_KEYS,
@@ -148,12 +150,14 @@ export async function initSkiResortMap(options = {}) {
 
   // ── Initialise MapLibre map (map-core) ──────────────────────────────────
   const { map } = await createMapLibre({ containerId: 'map' });
+  console.log('[ski-resort-map-ml] map ready, adding PMTiles…');
   await addSkiPmtilesToMap(map, {
     liftsColor: '#f87171',
     liftsWidth: 2,
     pistesWidth: 3,
     includeAnalyzedPoints: false
   });
+  attachPmtilesDebugLogging(map);
 
   // MapTiler Data API has correct WGS84 coordinates (querySourceFeatures geometry is unreliable).
   let rows = [];
@@ -270,6 +274,10 @@ export async function initSkiResortMap(options = {}) {
       `<div class="legend-row"><span class="legend-mountain-icon">${megaMountainsSvg(MAP_TIER_COLORS.mega, 26, 16)}</span> ${MAP_TIER_LEGEND.mega}</div>` +
       `<div class="legend-row" style="margin-top:6px"><span class="legend-mountain-icon">${hillSvg('#999', 18, 12)}</span> Grey = not a downhill ski resort</div>` +
       `<div class="legend-row" style="margin-top:8px;font-size:11px;color:#64748b">Colored dots at wide zoom; mountain icons from zoom ${RESORT_ICON_MIN_ZOOM}+</div>` +
+      '<h3 style="margin-top:10px">Resort boundary (zoom 8+)</h3>' +
+      '<div class="legend-row"><span class="legend-line" style="background:#145a32;height:3px"></span> Green outline = ski area boundary</div>' +
+      '<div class="legend-row" style="font-size:11px;color:#64748b">Blue outline at zoom 12+ = 1,000 ft resort buffer</div>' +
+      '<div class="legend-row" style="font-size:11px;color:#64748b">Brown lines at zoom 12+ = elevation contours (where available)</div>' +
       '<h3 style="margin-top:10px">Pistes (zoom 10+) – US colors</h3>' +
       '<div class="legend-row"><span class="legend-line" style="background:#22c55e"></span> Green = easy</div>' +
       '<div class="legend-row"><span class="legend-line" style="background:#2563eb"></span> Blue = intermediate</div>' +
@@ -433,6 +441,15 @@ export async function initSkiResortMap(options = {}) {
   });
 
   attachResortLayerEvents(['ski-icons-large', 'ski-icons-mega', 'ski-icons-medium', 'ski-icons-small']);
+
+  // Keep resort boundary rings above trail/lift linework (still below resort markers).
+  ensureBoundaryLayersOnTop(map, 'ski-icons-small');
+  console.log('[ski-resort-map-ml] init complete', {
+    resortMarkers: resortFeatures.length,
+    zoom: map.getZoom(),
+    boundaryLayers: ['ski-boundary-fill', 'ski-boundary-line', 'ski-buffer-line']
+      .map((id) => ({ id, present: !!map.getLayer(id) }))
+  });
 
   document.addEventListener('mousemove', (ev) => {
     if (vtTipEl.style.display !== 'none') {

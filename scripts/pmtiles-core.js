@@ -3,12 +3,31 @@
  */
 import { config } from './map-config.js';
 
+export const PMTILES_CORE_VERSION = 'v7';
+
 let protocolReady = null;
+let pmtilesProtocol = null;
+let overviewPm = null;
+let resortPm = null;
+let mvtLibs = null;
+let turfUnionLib = null;
+
+const LOG = '[PMTiles]';
+
+function pmtilesLog(...args) {
+  console.log(LOG, ...args);
+}
+
+function pmtilesWarn(...args) {
+  console.warn(LOG, ...args);
+}
 
 export const SKI_PMTILES_SOURCES = {
   overview: 'ski-overview',
   resort: 'ski-resort'
 };
+
+export const SKI_BOUNDARY_OVERLAY_SOURCE = 'ski-boundaries-overlay';
 
 export const SKI_PMTILES_LAYERS = {
   analyzed: 'ski-areas-analyzed',
@@ -19,9 +38,13 @@ export const SKI_PMTILES_LAYERS = {
   pistes: 'pistes',
   lifts: 'lifts',
   resortBuffer: 'resort-buffer',
+  resortBufferOutline: 'resort-buffer-outline',
   resortOsmFill: 'resort-osm-fill',
   resortOsmLine: 'resort-osm-line',
-  resortContours: 'resort-contours'
+  resortContours: 'resort-contours',
+  boundaryFill: 'ski-boundary-fill',
+  boundaryLine: 'ski-boundary-line',
+  bufferLine: 'ski-buffer-line'
 };
 
 export const PISTE_LINE_COLOR = [
@@ -47,31 +70,398 @@ export function toPmtilesUrl(httpUrl) {
   return 'pmtiles://' + String(httpUrl).replace(/^pmtiles:\/\//, '');
 }
 
+/** MapLibre strips ':' from nested http(s) inside pmtiles:// URLs — restore before fetch. */
+export function fixPmtilesProtocolUrl(url) {
+  return String(url)
+    .replace(/^pmtiles:\/\/(https?)\/\//, 'pmtiles://$1://')
+    .replace(/^(https?)\/\//, '$1://');
+}
+
+async function loadPmtilesLib() {
+  return import('./vendor/pmtiles.esm.js');
+}
+
 /** Register pmtiles:// protocol once (MapTiler SDK extends MapLibre). */
-export async function initPmtilesProtocol(sdk = maptilersdk) {
+export async function initPmtilesProtocol(sdk) {
   if (protocolReady) return protocolReady;
   protocolReady = (async () => {
-    const { Protocol } = await import('https://esm.sh/pmtiles@3.2.0');
-    const protocol = new Protocol();
-    sdk.addProtocol('pmtiles', protocol.tile);
+    const lib = sdk ?? (typeof maptilersdk !== 'undefined' ? maptilersdk : null);
+    if (!lib?.addProtocol) {
+      throw new Error('[PMTiles] addProtocol missing — load maptiler-sdk.umd.min.js first');
+    }
+
+    const { Protocol, PMTiles } = await loadPmtilesLib();
+    pmtilesProtocol = new Protocol();
+    let protocolCalls = 0;
+    const handler = (req, arg2) => {
+      protocolCalls++;
+      const fixedUrl = fixPmtilesProtocolUrl(req?.url || '');
+      if (req?.url && fixedUrl !== req.url) {
+        req = { ...req, url: fixedUrl };
+      }
+      if (protocolCalls <= 8 || req?.type === 'json') {
+        pmtilesLog('protocol call', protocolCalls, req?.type, String(req?.url || '').slice(0, 120));
+      }
+      return pmtilesProtocol.tile(req, arg2);
+    };
+
+    lib.addProtocol('pmtiles', handler);
+    pmtilesProtocol.add(new PMTiles(config.PMTILES_OVERVIEW_URL));
+    pmtilesProtocol.add(new PMTiles(config.PMTILES_RESORT_URL));
+    overviewPm = new PMTiles(config.PMTILES_OVERVIEW_URL);
+    resortPm = new PMTiles(config.PMTILES_RESORT_URL);
+
+    pmtilesLog('protocol registered', PMTILES_CORE_VERSION, {
+      overview: config.PMTILES_OVERVIEW_URL,
+      resort: config.PMTILES_RESORT_URL,
+      addProtocol: true
+    });
   })();
   return protocolReady;
 }
 
-function skiOverviewSource(overviewUrl = config.PMTILES_OVERVIEW_URL) {
+function buildPmtilesVectorSource(httpUrl) {
   return {
     type: 'vector',
-    url: toPmtilesUrl(overviewUrl),
+    url: toPmtilesUrl(httpUrl),
     attribution: 'Global Ski Atlas'
   };
 }
 
-function skiResortSource(detailUrl = config.PMTILES_RESORT_URL) {
-  return {
-    type: 'vector',
-    url: toPmtilesUrl(detailUrl),
-    attribution: 'Global Ski Atlas'
+async function getMvtLibs() {
+  if (!mvtLibs) {
+    const [{ VectorTile }, pbfMod] = await Promise.all([
+      import('https://esm.sh/@mapbox/vector-tile@2.0.4'),
+      import('https://esm.sh/pbf@3.2.1')
+    ]);
+    mvtLibs = { VectorTile, Pbf: pbfMod.default };
+  }
+  return mvtLibs;
+}
+
+function lngLatToTileXY(lng, lat, z) {
+  const scale = 2 ** z;
+  const x = Math.floor(((lng + 180) / 360) * scale);
+  const sin = Math.sin((lat * Math.PI) / 180);
+  const y = Math.floor((0.5 - Math.log((1 + sin) / (1 - sin)) / (4 * Math.PI)) * scale);
+  return [x, y];
+}
+
+/** MVT polygons are clipped per tile — key must include geometry, not just resort id. */
+function boundaryFragmentKey(f, kind, tileX, tileY) {
+  const base = boundaryFeatureKey(f, kind);
+  const ring = f.geometry?.type === 'Polygon'
+    ? f.geometry.coordinates[0]
+    : f.geometry?.coordinates?.[0]?.[0];
+  const sig = ring?.length
+    ? `${ring[0][0].toFixed(5)},${ring[0][1].toFixed(5)}|${ring.length}`
+    : 'empty';
+  const tile = tileX != null ? `|${tileX},${tileY}` : '';
+  return `${base}|${sig}${tile}`;
+}
+
+/** All tiles overlapping the current viewport (+1 tile padding). */
+function tilesForViewport(map, tileZ, maxTiles = 36) {
+  const b = map.getBounds();
+  const sw = b.getSouthWest();
+  const ne = b.getNorthEast();
+  const [xMin, yMin] = lngLatToTileXY(sw.lng, ne.lat, tileZ);
+  const [xMax, yMax] = lngLatToTileXY(ne.lng, sw.lat, tileZ);
+  const tiles = [];
+  const pad = 1;
+  for (let x = xMin - pad; x <= xMax + pad; x++) {
+    for (let y = yMin - pad; y <= yMax + pad; y++) {
+      tiles.push([x, y]);
+    }
+  }
+  if (tiles.length > maxTiles) {
+    const c = map.getCenter();
+    const [cx, cy] = lngLatToTileXY(c.lng, c.lat, tileZ);
+    const half = Math.ceil(Math.sqrt(maxTiles) / 2);
+    const capped = [];
+    for (let dx = -half; dx <= half; dx++) {
+      for (let dy = -half; dy <= half; dy++) {
+        capped.push([cx + dx, cy + dy]);
+      }
+    }
+    return capped;
+  }
+  return tiles;
+}
+
+async function fetchLayerPolygons(pm, layerName, z, x, y, kind) {
+  const { VectorTile, Pbf } = await getMvtLibs();
+  const resp = await pm.getZxy(z, x, y);
+  if (!resp?.data?.byteLength) return [];
+  const tile = new VectorTile(new Pbf(resp.data));
+  const layer = tile.layers[layerName];
+  if (!layer) return [];
+  const out = [];
+  for (let i = 0; i < layer.length; i++) {
+    const gj = layer.feature(i).toGeoJSON(x, y, z);
+    if (!isPolygonGeometry(gj.geometry)) continue;
+    gj.properties = { ...(gj.properties || {}), _kind: kind };
+    out.push(gj);
+  }
+  return out;
+}
+
+/** Fetch resort boundaries directly from PMTiles (works even when MapLibre protocol fails). */
+export async function syncBoundaryOverlayDirect(map) {
+  const src = map.getSource(SKI_BOUNDARY_OVERLAY_SOURCE);
+  if (!src) return 0;
+
+  const z = map.getZoom();
+  if (z < config.OUTLINES_MIN_ZOOM) {
+    src.setData({ type: 'FeatureCollection', features: [] });
+    map.__lastBoundaryFeatureCount = 0;
+    return 0;
+  }
+
+  const tileZ = Math.min(14, Math.max(config.OUTLINES_MIN_ZOOM, Math.round(z)));
+  const tiles = tilesForViewport(map, tileZ);
+
+  if (!overviewPm) {
+    const { PMTiles } = await loadPmtilesLib();
+    overviewPm = new PMTiles(config.PMTILES_OVERVIEW_URL);
+    resortPm = new PMTiles(config.PMTILES_RESORT_URL);
+  }
+
+  const seen = new Map();
+  const push = (f, kind, tileX, tileY) => {
+    const key = boundaryFragmentKey(f, kind, tileX, tileY);
+    if (!seen.has(key)) seen.set(key, f);
   };
+
+  try {
+    for (const [x, y] of tiles) {
+      for (const f of await fetchLayerPolygons(overviewPm, 'ski_areas', tileZ, x, y, 'area')) {
+        push(f, 'area', x, y);
+      }
+    }
+    if (tileZ >= 12) {
+      for (const [x, y] of tiles) {
+        for (const f of await fetchLayerPolygons(resortPm, 'buffer', tileZ, x, y, 'buffer')) {
+          push(f, 'buffer', x, y);
+        }
+      }
+    }
+  } catch (err) {
+    pmtilesWarn('syncBoundaryOverlayDirect failed', err?.message || err);
+    return map.__lastBoundaryFeatureCount ?? 0;
+  }
+
+  const fragments = [...seen.values()];
+  const features = await mergeTileFragments(fragments);
+  src.setData({ type: 'FeatureCollection', features });
+  map.__lastBoundaryFeatureCount = features.length;
+  return features.length;
+}
+
+function isPolygonGeometry(geom) {
+  return geom?.type === 'Polygon' || geom?.type === 'MultiPolygon';
+}
+
+function boundaryFeatureKey(f, kind) {
+  const p = f.properties || {};
+  const name = p.name ?? p['Ski Area'] ?? p.Ski_Area ?? '';
+  const id = p.osm_id ?? p.osm_way_id ?? p.ref ?? '';
+  return `${kind}|${String(id)}|${String(name).toLowerCase()}`;
+}
+
+async function getTurfUnionLib() {
+  if (!turfUnionLib) {
+    const [unionMod, helpersMod] = await Promise.all([
+      import('https://esm.sh/@turf/union@7.2.0'),
+      import('https://esm.sh/@turf/helpers@7.2.0')
+    ]);
+    turfUnionLib = {
+      union: unionMod.default ?? unionMod.union,
+      featureCollection: helpersMod.featureCollection
+    };
+  }
+  return turfUnionLib;
+}
+
+/** Merge MVT tile clips into one polygon per resort (removes internal tile-edge strokes). */
+async function mergeTileFragments(features) {
+  if (!features.length) return features;
+
+  const groups = new Map();
+  for (const f of features) {
+    const kind = f.properties?._kind || 'area';
+    const key = boundaryFeatureKey(f, kind);
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(f);
+  }
+
+  const single = [];
+  const toMerge = [];
+  for (const frags of groups.values()) {
+    if (frags.length === 1) single.push(frags[0]);
+    else toMerge.push(frags);
+  }
+  if (!toMerge.length) return single;
+
+  const { union, featureCollection } = await getTurfUnionLib();
+  const merged = [...single];
+
+  for (const frags of toMerge) {
+    try {
+      let result = frags[0];
+      for (let i = 1; i < frags.length; i++) {
+        const u = union(featureCollection([result, frags[i]]));
+        if (u) result = { type: 'Feature', geometry: u.geometry, properties: { ...result.properties } };
+      }
+      merged.push(result);
+    } catch (err) {
+      pmtilesWarn('fragment union failed', err?.message || err);
+      merged.push(...frags);
+    }
+  }
+  return merged;
+}
+
+/** Pull polygon boundaries from loaded vector tiles into a GeoJSON overlay (reliable vs MVT fill). */
+export async function syncBoundaryOverlay(map) {
+  const src = map.getSource(SKI_BOUNDARY_OVERLAY_SOURCE);
+  if (!src) return;
+
+  const z = map.getZoom();
+  if (z < config.OUTLINES_MIN_ZOOM) {
+    src.setData({ type: 'FeatureCollection', features: [] });
+    map.__lastBoundaryFeatureCount = 0;
+    return 0;
+  }
+
+  if (!map.isSourceLoaded(SKI_PMTILES_SOURCES.overview)) {
+    return map.__lastBoundaryFeatureCount ?? 0;
+  }
+
+  const seen = new Map();
+  const push = (f, kind) => {
+    if (!isPolygonGeometry(f.geometry)) return;
+    const feat = {
+      type: 'Feature',
+      geometry: f.geometry,
+      properties: { ...(f.properties || {}), _kind: kind }
+    };
+    const key = boundaryFragmentKey(feat, kind);
+    if (seen.has(key)) return;
+    seen.set(key, feat);
+  };
+
+  try {
+    for (const f of map.querySourceFeatures(SKI_PMTILES_SOURCES.overview, { sourceLayer: 'ski_areas' })) {
+      push(f, 'area');
+    }
+    if (z >= 12 && map.isSourceLoaded(SKI_PMTILES_SOURCES.resort)) {
+      for (const f of map.querySourceFeatures(SKI_PMTILES_SOURCES.resort, { sourceLayer: 'buffer' })) {
+        push(f, 'buffer');
+      }
+    }
+  } catch (err) {
+    pmtilesWarn('syncBoundaryOverlay query failed', err?.message || err);
+  }
+
+  const fragments = [...seen.values()];
+  const features = await mergeTileFragments(fragments);
+  src.setData({ type: 'FeatureCollection', features });
+  map.__lastBoundaryFeatureCount = features.length;
+  return features.length;
+}
+
+export function attachBoundaryOverlay(map) {
+  if (map.__boundaryOverlayAttached) return;
+  map.__boundaryOverlayAttached = true;
+
+  if (!map.getSource(SKI_BOUNDARY_OVERLAY_SOURCE)) {
+    map.addSource(SKI_BOUNDARY_OVERLAY_SOURCE, {
+      type: 'geojson',
+      data: { type: 'FeatureCollection', features: [] }
+    });
+  }
+
+  const addBoundaryLayer = (layer) => {
+    if (map.getLayer(layer.id)) return;
+    try {
+      map.addLayer(layer);
+    } catch (err) {
+      pmtilesWarn('boundary overlay addLayer failed', layer.id, err?.message || err);
+    }
+  };
+
+  addBoundaryLayer({
+    id: SKI_PMTILES_LAYERS.boundaryFill,
+    type: 'fill',
+    source: SKI_BOUNDARY_OVERLAY_SOURCE,
+    minzoom: config.OUTLINES_MIN_ZOOM,
+    filter: ['==', ['get', '_kind'], 'area'],
+    paint: {
+      'fill-color': '#4ade80',
+      'fill-opacity': 0.35
+    }
+  });
+  addBoundaryLayer({
+    id: SKI_PMTILES_LAYERS.boundaryLine,
+    type: 'line',
+    source: SKI_BOUNDARY_OVERLAY_SOURCE,
+    minzoom: config.OUTLINES_MIN_ZOOM,
+    filter: ['==', ['get', '_kind'], 'area'],
+    paint: {
+      'line-color': '#14532d',
+      'line-width': ['interpolate', ['linear'], ['zoom'], 8, 3, 12, 5, 14, 6],
+      'line-opacity': 1
+    }
+  });
+  addBoundaryLayer({
+    id: SKI_PMTILES_LAYERS.bufferLine,
+    type: 'line',
+    source: SKI_BOUNDARY_OVERLAY_SOURCE,
+    minzoom: 12,
+    filter: ['==', ['get', '_kind'], 'buffer'],
+    paint: {
+      'line-color': '#1d4ed8',
+      'line-width': ['interpolate', ['linear'], ['zoom'], 12, 3, 14, 5],
+      'line-opacity': 1,
+      'line-dasharray': [2, 1.5]
+    }
+  });
+
+  let syncTimer;
+  let syncInFlight = false;
+  const scheduleSync = () => {
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(async () => {
+      if (syncInFlight) return;
+      syncInFlight = true;
+      try {
+        let n = await syncBoundaryOverlay(map);
+        let mode = 'mvt';
+        if (!n) {
+          n = await syncBoundaryOverlayDirect(map);
+          mode = 'direct';
+        }
+        pmtilesLog('boundary overlay synced', {
+          features: n,
+          zoom: Number(map.getZoom().toFixed(2)),
+          mode
+        });
+      } finally {
+        syncInFlight = false;
+      }
+    }, 200);
+  };
+
+  map.on('moveend', scheduleSync);
+  map.on('sourcedata', (e) => {
+    if (e?.sourceId === SKI_PMTILES_SOURCES.overview || e?.sourceId === SKI_PMTILES_SOURCES.resort) {
+      if (e.isSourceLoaded || e.tile) scheduleSync();
+    }
+  });
+  map.once('idle', scheduleSync);
+
+  pmtilesLog('boundary GeoJSON overlay attached');
 }
 
 /** Style layers to stack on a MapTiler WINTER basemap (insert below labels when possible). */
@@ -104,55 +494,45 @@ export function getSkiPmtilesLayerDefs(options = {}) {
     });
   }
 
+  const outlinesMinZoom = config.OUTLINES_MIN_ZOOM;
+
   if (includeResortDetail) {
-    layers.push(
-      {
-        id: SKI_PMTILES_LAYERS.resortBuffer,
-        type: 'fill',
-        source: SKI_PMTILES_SOURCES.resort,
-        'source-layer': 'buffer',
-        minzoom: 12,
-        paint: { 'fill-color': '#3498db', 'fill-opacity': 0.08 }
-      },
-      {
-        id: SKI_PMTILES_LAYERS.resortOsmFill,
-        type: 'fill',
-        source: SKI_PMTILES_SOURCES.resort,
-        'source-layer': 'osm',
-        minzoom: 12,
-        filter: ['any', ['==', ['geometry-type'], 'Polygon'], ['==', ['geometry-type'], 'MultiPolygon']],
-        paint: { 'fill-color': '#95a5a6', 'fill-opacity': 0.25 }
-      }
-    );
+    layers.push({
+      id: SKI_PMTILES_LAYERS.resortOsmFill,
+      type: 'fill',
+      source: SKI_PMTILES_SOURCES.resort,
+      'source-layer': 'osm',
+      minzoom: 12,
+      filter: ['any', ['==', ['geometry-type'], 'Polygon'], ['==', ['geometry-type'], 'MultiPolygon']],
+      paint: { 'fill-color': '#95a5a6', 'fill-opacity': 0.12 }
+    });
   }
 
   layers.push(
-    {
-      id: SKI_PMTILES_LAYERS.areasFill,
-      type: 'fill',
-      source: SKI_PMTILES_SOURCES.overview,
-      'source-layer': 'ski_areas',
-      minzoom: 8,
-      filter: ['any', ['==', ['geometry-type'], 'Polygon'], ['==', ['geometry-type'], 'MultiPolygon']],
-      paint: { 'fill-color': '#2ecc71', 'fill-opacity': 0.22 }
-    },
-    {
-      id: SKI_PMTILES_LAYERS.areasOutline,
-      type: 'line',
-      source: SKI_PMTILES_SOURCES.overview,
-      'source-layer': 'ski_areas',
-      minzoom: 8,
-      filter: ['any', ['==', ['geometry-type'], 'Polygon'], ['==', ['geometry-type'], 'MultiPolygon']],
-      paint: { 'line-color': '#1e8449', 'line-width': 1 }
-    },
     {
       id: SKI_PMTILES_LAYERS.areasPoint,
       type: 'circle',
       source: SKI_PMTILES_SOURCES.overview,
       'source-layer': 'ski_areas',
-      minzoom: 8,
+      minzoom: outlinesMinZoom,
       filter: ['==', ['geometry-type'], 'Point'],
       paint: { 'circle-radius': 4, 'circle-color': '#27ae60' }
+    },
+    {
+      id: SKI_PMTILES_LAYERS.pistes,
+      type: 'line',
+      source: SKI_PMTILES_SOURCES.overview,
+      'source-layer': 'pistes',
+      minzoom: 10,
+      paint: { 'line-width': pistesWidth, 'line-color': PISTE_LINE_COLOR }
+    },
+    {
+      id: SKI_PMTILES_LAYERS.lifts,
+      type: 'line',
+      source: SKI_PMTILES_SOURCES.overview,
+      'source-layer': 'lifts',
+      minzoom: 10,
+      paint: { 'line-color': liftsColor, 'line-width': liftsWidth }
     }
   );
 
@@ -171,33 +551,16 @@ export function getSkiPmtilesLayerDefs(options = {}) {
       type: 'line',
       source: SKI_PMTILES_SOURCES.resort,
       'source-layer': 'contours',
-      minzoom: 13,
+      minzoom: 12,
       paint: {
-        'line-color': '#8B7355',
-        'line-width': ['interpolate', ['linear'], ['zoom'], 13, 0.5, 15, 1],
-        'line-opacity': 0.7
+        'line-color': '#6b4f2a',
+        'line-width': ['interpolate', ['linear'], ['zoom'], 12, 0.8, 14, 1.5, 16, 2],
+        'line-opacity': 0.85
       }
     });
   }
 
-  layers.push(
-    {
-      id: SKI_PMTILES_LAYERS.pistes,
-      type: 'line',
-      source: SKI_PMTILES_SOURCES.overview,
-      'source-layer': 'pistes',
-      minzoom: 10,
-      paint: { 'line-width': pistesWidth, 'line-color': PISTE_LINE_COLOR }
-    },
-    {
-      id: SKI_PMTILES_LAYERS.lifts,
-      type: 'line',
-      source: SKI_PMTILES_SOURCES.overview,
-      'source-layer': 'lifts',
-      minzoom: 10,
-      paint: { 'line-color': liftsColor, 'line-width': liftsWidth }
-    }
-  );
+  // Resort boundaries render via GeoJSON overlay (attachBoundaryOverlay) — MVT fill was not painting.
 
   if (includeLabels) {
     layers.push({
@@ -224,15 +587,10 @@ export function getSkiPmtilesLayerDefs(options = {}) {
   return layers;
 }
 
-function findBeforeId(map) {
-  const style = map.getStyle();
-  if (!style?.layers) return undefined;
-  const labelLayer = style.layers.find((l) => /label/i.test(l.id));
-  return labelLayer?.id;
-}
-
 /**
  * Add overview + resort PMTiles sources and layers to an existing map.
+ * Layers default to the top of the style (above the basemap) so boundaries and
+ * contours are not hidden under terrain or hillshade. Pass beforeId to tuck under labels.
  * @returns {Promise<void>}
  */
 export async function addSkiPmtilesToMap(map, options = {}) {
@@ -241,19 +599,179 @@ export async function addSkiPmtilesToMap(map, options = {}) {
 
   const overviewUrl = options.overviewUrl ?? config.PMTILES_OVERVIEW_URL;
   const detailUrl = options.detailUrl ?? config.PMTILES_RESORT_URL;
-  const beforeId = options.beforeId ?? findBeforeId(map);
+  const beforeId = options.beforeId;
 
   if (!map.getSource(SKI_PMTILES_SOURCES.overview)) {
-    map.addSource(SKI_PMTILES_SOURCES.overview, skiOverviewSource(overviewUrl));
+    map.addSource(SKI_PMTILES_SOURCES.overview, buildPmtilesVectorSource(overviewUrl));
+    pmtilesLog('source added', SKI_PMTILES_SOURCES.overview, overviewUrl);
   }
   if (options.includeResortDetail !== false && !map.getSource(SKI_PMTILES_SOURCES.resort)) {
-    map.addSource(SKI_PMTILES_SOURCES.resort, skiResortSource(detailUrl));
+    map.addSource(SKI_PMTILES_SOURCES.resort, buildPmtilesVectorSource(detailUrl));
+    pmtilesLog('source added', SKI_PMTILES_SOURCES.resort, detailUrl);
   }
 
-  for (const layer of getSkiPmtilesLayerDefs(options)) {
-    if (map.getLayer(layer.id)) continue;
-    map.addLayer(layer, beforeId);
+  const layerDefs = getSkiPmtilesLayerDefs(options);
+  const added = [];
+  const skipped = [];
+  const failed = [];
+  for (const layer of layerDefs) {
+    if (map.getLayer(layer.id)) {
+      skipped.push(layer.id);
+      continue;
+    }
+    try {
+      if (beforeId) map.addLayer(layer, beforeId);
+      else map.addLayer(layer);
+      added.push(layer.id);
+    } catch (err) {
+      failed.push({ id: layer.id, error: err?.message || String(err) });
+      pmtilesWarn('addLayer failed', layer.id, err);
+    }
   }
+  pmtilesLog('layers', { added, skipped, failed, total: layerDefs.length });
+  attachBoundaryOverlay(map);
+}
+
+/** Boundary overlay sits above pistes/lifts, below resort markers. */
+export const SKI_BOUNDARY_LAYER_IDS = [
+  SKI_PMTILES_LAYERS.boundaryFill,
+  SKI_PMTILES_LAYERS.boundaryLine,
+  SKI_PMTILES_LAYERS.bufferLine
+];
+
+export function ensureBoundaryLayersOnTop(map, beforeLayerId) {
+  const anchor = beforeLayerId && map.getLayer(beforeLayerId) ? beforeLayerId : undefined;
+  const moved = [];
+  const missing = [];
+  for (const id of SKI_BOUNDARY_LAYER_IDS) {
+    if (!map.getLayer(id)) {
+      missing.push(id);
+      continue;
+    }
+    try {
+      if (anchor) map.moveLayer(id, anchor);
+      else map.moveLayer(id);
+      moved.push(id);
+    } catch (err) {
+      pmtilesWarn('moveLayer failed', id, err?.message || err);
+    }
+  }
+  pmtilesLog('ensureBoundaryLayersOnTop', { anchor: anchor || '(top)', moved, missing });
+}
+
+/** Console diagnostics — source load, layer visibility, rendered feature counts. */
+export function attachPmtilesDebugLogging(map) {
+  if (map.__pmtilesDebugAttached) return;
+  map.__pmtilesDebugAttached = true;
+
+  map.on('error', (e) => {
+    const tile = e?.tile;
+    pmtilesWarn('map error', {
+      message: e?.error?.message || e?.error || e,
+      sourceId: e?.sourceId,
+      tile: tile ? { z: tile.tileID?.canonical?.z, x: tile.tileID?.canonical?.x, y: tile.tileID?.canonical?.y } : undefined
+    });
+  });
+
+  map.on('sourcedata', (e) => {
+    if (!e?.sourceId || !e.sourceId.startsWith('ski-')) return;
+    if (!e.isSourceLoaded) return;
+    pmtilesLog('source loaded', e.sourceId, {
+      dataType: e.dataType,
+      tile: e.tile,
+      sourceCache: !!e.sourceCache
+    });
+  });
+
+  const sampleLayers = [
+    ...SKI_BOUNDARY_LAYER_IDS,
+    SKI_PMTILES_LAYERS.pistes,
+    SKI_PMTILES_LAYERS.lifts
+  ];
+
+  let idleTimer;
+  const logViewport = () => {
+    if (!map.isStyleLoaded()) return;
+    const z = Number(map.getZoom().toFixed(2));
+    const center = map.getCenter();
+
+    const layerState = {};
+    for (const id of sampleLayers) {
+      const layer = map.getLayer(id);
+      if (!layer) {
+        layerState[id] = 'missing';
+        continue;
+      }
+      let visibility = 'visible';
+      try {
+        visibility = map.getLayoutProperty(id, 'visibility') || 'visible';
+      } catch (_) { /* ignore */ }
+      let rendered = 0;
+      try {
+        rendered = map.queryRenderedFeatures({ layers: [id] }).length;
+      } catch (_) { /* ignore */ }
+      layerState[id] = { visibility, minzoom: layer.minzoom, rendered };
+    }
+
+    const sourceFeatures = {};
+    try {
+      sourceFeatures.ski_areas = map.querySourceFeatures(SKI_PMTILES_SOURCES.overview, {
+        sourceLayer: 'ski_areas'
+      }).length;
+      sourceFeatures.pistes = map.querySourceFeatures(SKI_PMTILES_SOURCES.overview, {
+        sourceLayer: 'pistes'
+      }).length;
+      sourceFeatures.lifts = map.querySourceFeatures(SKI_PMTILES_SOURCES.overview, {
+        sourceLayer: 'lifts'
+      }).length;
+      if (map.getSource(SKI_PMTILES_SOURCES.resort)) {
+        sourceFeatures.buffer = map.querySourceFeatures(SKI_PMTILES_SOURCES.resort, {
+          sourceLayer: 'buffer'
+        }).length;
+        sourceFeatures.contours = map.querySourceFeatures(SKI_PMTILES_SOURCES.resort, {
+          sourceLayer: 'contours'
+        }).length;
+      }
+    } catch (err) {
+      sourceFeatures.error = err?.message || String(err);
+    }
+
+    const styleLayers = map.getStyle()?.layers || [];
+    const indices = {};
+    for (const id of SKI_BOUNDARY_LAYER_IDS) {
+      const idx = styleLayers.findIndex((l) => l.id === id);
+      if (idx >= 0) indices[id] = `${idx + 1}/${styleLayers.length}`;
+    }
+
+    const overlayFeatures = map.__lastBoundaryFeatureCount ?? 0;
+
+    pmtilesLog(
+      'viewport summary',
+      `z=${z}`,
+      `src: areas=${sourceFeatures.ski_areas ?? 0} buffer=${sourceFeatures.buffer ?? 0} pistes=${sourceFeatures.pistes ?? 0}`,
+      `rendered: boundaryFill=${layerState[SKI_PMTILES_LAYERS.boundaryFill]?.rendered ?? 0}`,
+      `boundaryLine=${layerState[SKI_PMTILES_LAYERS.boundaryLine]?.rendered ?? 0}`,
+      `bufferLine=${layerState[SKI_PMTILES_LAYERS.bufferLine]?.rendered ?? 0}`,
+      `pistes=${layerState[SKI_PMTILES_LAYERS.pistes]?.rendered ?? 0}`,
+      `overlayGeoJSON=${overlayFeatures}`
+    );
+    pmtilesLog('viewport detail', {
+      zoom: z,
+      center: [Number(center.lng.toFixed(4)), Number(center.lat.toFixed(4))],
+      layerState,
+      sourceFeaturesInTile: sourceFeatures,
+      boundaryLayerIndices: indices,
+      overlayFeatures
+    });
+  };
+
+  map.on('moveend', () => {
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(logViewport, 400);
+  });
+  map.once('idle', () => setTimeout(logViewport, 600));
+
+  pmtilesLog('debug logging attached (move map to sample viewport)');
 }
 
 /** Standalone style (PMTilestest / no MapTiler basemap). */
@@ -270,8 +788,8 @@ export function buildSkiPmtilesStyle(overviewUrl, detailUrl, showBasemap = false
         attribution: '© OpenStreetMap contributors',
         maxzoom: 19
       },
-      [SKI_PMTILES_SOURCES.overview]: skiOverviewSource(overviewUrl),
-      [SKI_PMTILES_SOURCES.resort]: skiResortSource(detailUrl)
+      [SKI_PMTILES_SOURCES.overview]: buildPmtilesVectorSource(overviewUrl),
+      [SKI_PMTILES_SOURCES.resort]: buildPmtilesVectorSource(detailUrl)
     },
     layers: [
       {
