@@ -383,7 +383,7 @@
   <div class="map-wrapper tw-flex-1 tw-min-h-0 tw-px-[5%] tw-pt-2 tw-pb-6 max-lg:tw-px-4">
     <div class="page">
     <h1 class="tw-text-4xl tw-font-medium tw-text-gray-900 tw-mb-2">Ski Resort Size Comparison</h1>
-    <p class="tw-text-xl tw-font-medium tw-text-gray-700 tw-mb-3 tw-max-w-2xl">Compare ski resort outlines and trail layouts from Global Ski Atlas PMTiles data. Select resorts to view side by side.</p>
+    <p class="tw-text-xl tw-font-medium tw-text-gray-700 tw-mb-3 tw-max-w-2xl">Compare ski resort outlines and trail layouts from the Global Ski Atlas parquet data. Select resorts to view side by side.</p>
 
     <div class="content-wrapper">
       <div class="map-chart-wrapper">
@@ -536,12 +536,17 @@
       window.addEventListener('resize', responsive);
     })();
   </script>
-  <script defer src="https://cdn.maptiler.com/maptiler-sdk-js/v3.10.2/maptiler-sdk.umd.min.js"></script>
   <script type="module">
-    import { fetchSkiAreaCatalog, loadPmtilesLayerFeatures } from './scripts/pmtiles-core.js';
+    import {
+      loadSkiAreasAnalyzed,
+      loadSkiAreasOutlines,
+      loadPistesForResorts,
+      lineGeometryPaths
+    } from './scripts/geoparquet-browser.js';
     import {
       getMapSizeTier,
       getMapTierColorForProps,
+      getTrailCount,
       MAP_TIER_LEGEND,
       MAP_TIER_COLORS,
       isNotDownhill
@@ -651,7 +656,6 @@
     let resortData = []; // { name, outlineFeature, pisteFeatures }
     let resortTransforms = []; // { resortMinX, resortMinY, globalScaleFactor } per index
     let globalScaleFactorCache = 0;
-    let pisteFeaturesCache = null; // raw piste features when loaded
 
     function rowToFeature(row) {
       const g = row.geometry;
@@ -711,26 +715,26 @@
 
     /** Load outlines + analyzed only (fast). Pistes load lazily when user selects resorts. */
     async function loadData() {
-      const [catalog, outlineFeatsRaw] = await Promise.all([
-        fetchSkiAreaCatalog(),
-        loadPmtilesLayerFeatures('ski_areas', 8)
+      const [dataOutlines, dataAnalyzed] = await Promise.all([
+        loadSkiAreasOutlines(),
+        loadSkiAreasAnalyzed()
       ]);
 
-      const dataAnalyzed = catalog.map((f) => ({ ...(f.properties || {}), geometry: f.geometry }));
       const analyzedByName = new Map();
-      dataAnalyzed.forEach((row) => {
+      (dataAnalyzed || []).forEach((row) => {
         const name = getProp(row, NAME_KEYS);
         if (name != null && String(name).trim() !== '') {
           analyzedByName.set(normalizeResortName(name), row);
         }
       });
 
-      const outlineFeatures = outlineFeatsRaw
-        .filter((f) => {
-          const g = f.geometry;
+      const outlineFeatures = (dataOutlines || [])
+        .filter((row) => {
+          const g = row.geometry;
           return g && (g.type === 'Polygon' || g.type === 'MultiPolygon');
         })
-        .map((f) => ({ type: 'Feature', geometry: f.geometry, properties: f.properties || {} }));
+        .map(rowToFeature)
+        .filter(Boolean);
 
       resortData = outlineFeatures
         .map((f) => {
@@ -769,65 +773,86 @@
       return resortData;
     }
 
-    /** Load pistes and match only to selected outline indices. Avoids O(pistes × all_outlines). */
+    const pisteHelpers = {
+      nameKeys: NAME_KEYS,
+      normalizeName: normalizeResortName,
+      rowToFeature,
+      pointInPolygon,
+      lineCentroid
+    };
+
     async function loadPistesForSelected(selectedIndices) {
       if (selectedIndices.length === 0) return;
-      if (!pisteFeaturesCache) {
-        const raw = await loadPmtilesLayerFeatures('pistes', 10);
-        pisteFeaturesCache = raw
-          .filter((f) => {
-            const g = f.geometry;
-            return g && (g.type === 'LineString' || g.type === 'MultiLineString');
-          })
-          .map((f) => ({ type: 'Feature', geometry: f.geometry, properties: f.properties || {} }));
-      }
-      const selectedOutlines = selectedIndices.map((i) => resortData[i].outlineFeature);
-      const pistesByResort = new Map();
-      selectedIndices.forEach((i) => pistesByResort.set(resortData[i].key, []));
-      pisteFeaturesCache.forEach((f) => {
-        const centroid = lineCentroid(f.geometry);
-        if (!centroid) return;
-        const [lon, lat] = centroid;
-        for (let i = 0; i < selectedIndices.length; i++) {
-          if (pointInPolygon(lon, lat, selectedOutlines[i].geometry)) {
-            const key = resortData[selectedIndices[i]].key;
-            pistesByResort.get(key).push(f);
-            break;
-          }
-        }
-      });
-      selectedIndices.forEach((i) => {
-        resortData[i].pisteFeatures = pistesByResort.get(resortData[i].key) || [];
-      });
-      addTrailPathsToResorts(selectedIndices);
+      await loadTrailsWithStatus(selectedIndices);
     }
 
     function addTrailPathsToResorts(indices) {
       indices.forEach((index) => {
         const r = resortData[index];
         const t = resortTransforms[index];
-        if (!t || !r.pisteFeatures) return;
+        if (!t || !r.pisteFeatures?.length) return;
         const resortGroup = d3.select(`#resort-${index}`);
-        if (!resortGroup.selectAll('.trail-line').empty()) return; // already has trails
+        if (resortGroup.empty()) return;
+        resortGroup.selectAll('.trail-line').remove();
+        const lineGen = d3.line().x((d) => d[0]).y((d) => -d[1]);
         r.pisteFeatures.forEach((trail) => {
-          const coords = trail.geometry.type === 'LineString'
-            ? trail.geometry.coordinates
-            : trail.geometry.coordinates.flat();
-          const trailCoords = coords.map((c) => [
-            (c[0] - t.resortMinX) * t.globalScaleFactor,
-            (c[1] - t.resortMinY) * t.globalScaleFactor
-          ]);
           const color = getPisteColor(trail.properties);
-          resortGroup.insert('path', '.polygon')
-            .attr('class', 'trail-line')
-            .attr('fill', 'none')
-            .attr('stroke', color)
-            .attr('stroke-width', 2)
-            .attr('stroke-opacity', 0.9)
-            .attr('vector-effect', 'non-scaling-stroke')
-            .attr('d', d3.line().x((d) => d[0]).y((d) => -d[1])(trailCoords));
+          lineGeometryPaths(trail.geometry).forEach((line) => {
+            if (!line || line.length < 2) return;
+            const trailCoords = line.map((c) => [
+              (c[0] - t.resortMinX) * t.globalScaleFactor,
+              (c[1] - t.resortMinY) * t.globalScaleFactor
+            ]);
+            resortGroup.append('path')
+              .attr('class', 'trail-line')
+              .attr('fill', 'none')
+              .attr('stroke', color)
+              .attr('stroke-width', 2.5)
+              .attr('stroke-opacity', 0.95)
+              .attr('vector-effect', 'non-scaling-stroke')
+              .attr('d', lineGen(trailCoords));
+          });
         });
       });
+    }
+
+    async function loadTrailsWithStatus(selectedIndices) {
+      const loadingEl = document.getElementById('trail-loading');
+      if (loadingEl) {
+        loadingEl.style.display = 'block';
+        loadingEl.textContent = 'Building trail index (first load may take a minute)…';
+      }
+      try {
+        const needLoad = selectedIndices.filter((i) => !resortData[i].pisteFeatures?.length);
+        if (needLoad.length > 0) {
+          const selectedResorts = needLoad.map((i) => resortData[i]);
+          const pistesByResort = await loadPistesForResorts(selectedResorts, {
+            ...pisteHelpers,
+            onProgress: (rows) => {
+              if (loadingEl) loadingEl.textContent = `Indexing trails… ${rows.toLocaleString()} rows`;
+            }
+          });
+          needLoad.forEach((i) => {
+            resortData[i].pisteFeatures = pistesByResort.get(resortData[i].key) || [];
+          });
+        }
+        addTrailPathsToResorts(selectedIndices);
+        const totalTrails = selectedIndices.reduce((n, i) => n + (resortData[i].pisteFeatures?.length || 0), 0);
+        if (loadingEl) {
+          loadingEl.textContent = totalTrails > 0
+            ? `${totalTrails.toLocaleString()} trail segments loaded`
+            : 'No trails found for selection (try another resort)';
+          loadingEl.style.display = 'block';
+          setTimeout(() => { if (loadingEl) loadingEl.style.display = 'none'; }, 4000);
+        }
+      } catch (e) {
+        if (loadingEl) {
+          loadingEl.textContent = 'Trail load failed: ' + (e.message || e);
+          loadingEl.style.display = 'block';
+        }
+        console.error('Trail load failed:', e);
+        throw e;
+      }
     }
 
     function displayResorts() {
@@ -878,23 +903,22 @@
           .attr('class', 'resort-group');
 
         r.pisteFeatures.forEach((trail) => {
-          const coords = trail.geometry.type === 'LineString'
-            ? trail.geometry.coordinates
-            : trail.geometry.coordinates.flat();
-          const trailCoords = coords.map((c) => [
-            (c[0] - resortMinX) * globalScaleFactor,
-            (c[1] - resortMinY) * globalScaleFactor
-          ]);
           const color = getPisteColor(trail.properties);
-          resortGroup.append('path')
-            .datum(trailCoords)
-            .attr('class', 'trail-line')
-            .attr('fill', 'none')
-            .attr('stroke', color)
-            .attr('stroke-width', 2)
-            .attr('stroke-opacity', 0.9)
-            .attr('vector-effect', 'non-scaling-stroke')
-            .attr('d', d3.line().x((d) => d[0]).y((d) => -d[1]));
+          lineGeometryPaths(trail.geometry).forEach((line) => {
+            const trailCoords = line.map((c) => [
+              (c[0] - resortMinX) * globalScaleFactor,
+              (c[1] - resortMinY) * globalScaleFactor
+            ]);
+            resortGroup.append('path')
+              .datum(trailCoords)
+              .attr('class', 'trail-line')
+              .attr('fill', 'none')
+              .attr('stroke', color)
+              .attr('stroke-width', 2)
+              .attr('stroke-opacity', 0.9)
+              .attr('vector-effect', 'non-scaling-stroke')
+              .attr('d', d3.line().x((d) => d[0]).y((d) => -d[1]));
+          });
         });
 
         const color = colorScale(index);
@@ -960,14 +984,7 @@
               }
             });
             if (selectedIndices.length > 0 && selectedIndices.length <= 20) {
-              const loadingEl = document.getElementById('trail-loading');
-              if (loadingEl) loadingEl.style.display = 'block';
-              loadPistesForSelected(selectedIndices).then(() => {
-                if (loadingEl) loadingEl.style.display = 'none';
-              }).catch((e) => {
-                if (loadingEl) { loadingEl.style.display = 'none'; loadingEl.textContent = 'Trail load failed'; }
-                console.warn('Trail load failed:', e);
-              });
+              loadPistesForSelected(selectedIndices).catch(() => {});
             }
             if (d3.select('#offset-toggle').property('checked')) applyOffsetToResorts();
             else { clearTimeout(window._zoomTimeout); window._zoomTimeout = setTimeout(autoZoomToSelection, 300); }
@@ -1164,21 +1181,19 @@
     function selectRandomResorts(n) {
       d3.selectAll('.resort-checkbox').property('checked', false);
       d3.selectAll('.resort-group').classed('hidden', true);
-      const indices = d3.shuffle(d3.range(resortData.length)).slice(0, Math.min(n, resortData.length));
+      const withTrails = resortData
+        .map((r, i) => ({ i, trails: getTrailCount(r.analyzedRow || {}) }))
+        .filter((x) => x.trails >= 10)
+        .map((x) => x.i);
+      const pool = withTrails.length >= n ? withTrails : d3.range(resortData.length);
+      const indices = d3.shuffle(pool).slice(0, Math.min(n, pool.length));
       indices.forEach((i) => {
         d3.select(`#checkbox-${i}`).property('checked', true);
         d3.select(`#resort-${i}`).classed('hidden', false);
       });
       updateMapTitle();
       if (indices.length > 0) {
-        const loadingEl = document.getElementById('trail-loading');
-        if (loadingEl) loadingEl.style.display = 'block';
-        loadPistesForSelected(indices).then(() => {
-          if (loadingEl) loadingEl.style.display = 'none';
-        }).catch((e) => {
-          if (loadingEl) loadingEl.style.display = 'none';
-          console.warn('Trail load failed:', e);
-        });
+        loadPistesForSelected(indices).catch(() => {});
       }
       if (d3.select('#offset-toggle').property('checked')) applyOffsetToResorts();
       else setTimeout(autoZoomToSelection, 300);

@@ -15,6 +15,12 @@ export const config = {
   // ── MapTiler Data API (resort catalog / search metadata, not map tiles) ───
   SKI_AREAS_MAPTILER_URL: `https://api.maptiler.com/data/019c9294-30cd-7aa0-96a0-e552ef79eee8/features.json?key=${MAPTILER_KEY}`,
 
+  // ── GeoParquet (D3 comparison/tier tools — full geometries, not map tiles) ─
+  PARQUET_SKI_AREAS_ANALYZED_URL: `${S3_OUTPUT}/combined/ski_areas_analyzed.parquet`,
+  PARQUET_SKI_AREAS_URL:           `${S3_OUTPUT}/combined/ski_areas.parquet`,
+  PARQUET_PISTES_URL:              `${S3_OUTPUT}/combined/pistes.parquet`,
+  PARQUET_LIFTS_URL:               `${S3_OUTPUT}/combined/lifts.parquet`,
+
   // ── Legacy GeoJSON (download page / wiki ingest only — not used by maps) ─
   SKI_AREAS_GEOJSON_URL: `${S3_OUTPUT}/combined/ski_areas.geojson`,
 

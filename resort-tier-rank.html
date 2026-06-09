@@ -520,6 +520,7 @@
           <div class="tier-container" id="tier-container">
             <div class="loading" id="loading">Loading resort data…</div>
           </div>
+          <div id="trail-loading" class="tw-text-sm tw-text-gray-500 tw-mt-2" style="display: none;">Loading trail layouts…</div>
           <span class="watermark" id="watermark">globalskiatlas.com</span>
           <button type="button" id="print-chart-btn" class="print-chart-btn" aria-label="Print tier ranking">
             <i class="bi bi-printer"></i> Print
@@ -700,9 +701,13 @@
       window.addEventListener('resize', responsive);
     })();
   </script>
-  <script defer src="https://cdn.maptiler.com/maptiler-sdk-js/v3.10.2/maptiler-sdk.umd.min.js"></script>
   <script type="module">
-    import { fetchSkiAreaCatalog, loadPmtilesLayerFeatures } from './scripts/pmtiles-core.js';
+    import {
+      loadSkiAreasAnalyzed,
+      loadSkiAreasOutlines,
+      loadPistesForResorts,
+      lineGeometryPaths
+    } from './scripts/geoparquet-browser.js';
 
     const TIERS = ['S', 'A', 'B', 'C', 'D', 'E', 'F'];
     const AUTO_TIER_LABELS = { size: 'Size (acres)', runs: 'Number of runs', lifts: 'Number of lifts', difficult: 'Difficult/extreme runs', random: 'Random' };
@@ -801,25 +806,58 @@
 
     let resortData = [];
     let tierAssignments = { S: [], A: [], B: [], C: [], D: [], E: [], F: [] };
-    let pisteFeaturesCache = null;
+
+    const pisteHelpers = {
+      nameKeys: NAME_KEYS,
+      normalizeName: normalizeResortName,
+      rowToFeature,
+      pointInPolygon,
+      lineCentroid
+    };
+
+    async function loadPistesForIndices(indices) {
+      if (indices.length === 0) return;
+      const needLoad = indices.filter((i) => !resortData[i].pisteFeatures?.length);
+      if (needLoad.length === 0) return;
+      const statusEl = document.getElementById('trail-loading');
+      if (statusEl) {
+        statusEl.style.display = 'block';
+        statusEl.textContent = 'Loading trail layouts…';
+      }
+      try {
+        const selectedResorts = needLoad.map((i) => resortData[i]);
+        const pistesByResort = await loadPistesForResorts(selectedResorts, {
+          ...pisteHelpers,
+          onProgress: (rows) => {
+            if (statusEl) statusEl.textContent = `Indexing trails… ${rows.toLocaleString()} rows`;
+          }
+        });
+        needLoad.forEach((i) => {
+          resortData[i].pisteFeatures = pistesByResort.get(resortData[i].key) || [];
+        });
+      } catch (e) {
+        if (statusEl) statusEl.textContent = 'Trail load failed: ' + (e.message || e);
+        console.error('Trail load failed:', e);
+        throw e;
+      } finally {
+        if (statusEl) statusEl.style.display = 'none';
+      }
+    }
 
     async function loadData() {
-      const [catalog, outlineFeatsRaw] = await Promise.all([
-        fetchSkiAreaCatalog(),
-        loadPmtilesLayerFeatures('ski_areas', 8)
+      const [dataOutlines, dataAnalyzed] = await Promise.all([
+        loadSkiAreasOutlines(),
+        loadSkiAreasAnalyzed()
       ]);
-      const dataAnalyzed = catalog.map((f) => ({ ...(f.properties || {}), geometry: f.geometry }));
       const analyzedByName = new Map();
-      dataAnalyzed.forEach((row) => {
+      (dataAnalyzed || []).forEach((row) => {
         const name = getProp(row, NAME_KEYS);
         if (name != null && String(name).trim() !== '') analyzedByName.set(normalizeResortName(name), row);
       });
-      const outlineFeatures = outlineFeatsRaw
-        .filter((f) => {
-          const g = f.geometry;
-          return g && (g.type === 'Polygon' || g.type === 'MultiPolygon');
-        })
-        .map((f) => ({ type: 'Feature', geometry: f.geometry, properties: f.properties || {} }));
+      const outlineFeatures = (dataOutlines || [])
+        .filter((row) => row.geometry && (row.geometry.type === 'Polygon' || row.geometry.type === 'MultiPolygon'))
+        .map(rowToFeature)
+        .filter(Boolean);
       resortData = outlineFeatures.map((f) => {
         const name = getProp(f.properties, NAME_KEYS);
         if (name == null || String(name).trim() === '') return null;
@@ -843,33 +881,6 @@
         return a.name.localeCompare(b.name);
       });
       return resortData;
-    }
-
-    async function loadPistesForIndices(indices) {
-      if (indices.length === 0) return;
-      if (!pisteFeaturesCache) {
-        const raw = await loadPmtilesLayerFeatures('pistes', 10);
-        pisteFeaturesCache = raw
-          .filter((f) => {
-            const g = f.geometry;
-            return g && (g.type === 'LineString' || g.type === 'MultiLineString');
-          })
-          .map((f) => ({ type: 'Feature', geometry: f.geometry, properties: f.properties || {} }));
-      }
-      const outlines = indices.map((i) => resortData[i].outlineFeature);
-      const byKey = new Map();
-      indices.forEach((i) => byKey.set(resortData[i].key, []));
-      pisteFeaturesCache.forEach((f) => {
-        const c = lineCentroid(f.geometry);
-        if (!c) return;
-        for (let i = 0; i < indices.length; i++) {
-          if (pointInPolygon(c[0], c[1], outlines[i].geometry)) {
-            byKey.get(resortData[indices[i]].key).push(f);
-            break;
-          }
-        }
-      });
-      indices.forEach((i) => { resortData[i].pisteFeatures = byKey.get(resortData[i].key) || []; });
     }
 
     function getAtlasUrl(r) {
@@ -976,10 +987,11 @@
       const cy = pad + (maxCy - minCy) / 2;
       const normCoords = coords.map((c) => [c[0] - minCx + pad, c[1] - minCy + pad]);
       const trailPaths = (r.pisteFeatures || []).map((t) => {
-        const pts = t.geometry.type === 'LineString' ? t.geometry.coordinates : t.geometry.coordinates.flat();
-        const tc = pts.map((c) => [(c[0] - minX) * scale - minCx + pad, (c[1] - minY) * scale - minCy + pad]);
         const color = getPisteColor(t.properties);
-        try { return `<path fill="none" stroke="${color}" stroke-width="1" vector-effect="non-scaling-stroke" d="${d3.line()(tc)}"/>`; } catch (e) { return ''; }
+        return lineGeometryPaths(t.geometry).map((line) => {
+          const tc = line.map((c) => [(c[0] - minX) * scale - minCx + pad, (c[1] - minY) * scale - minCy + pad]);
+          try { return `<path fill="none" stroke="${color}" stroke-width="1" vector-effect="non-scaling-stroke" d="${d3.line()(tc)}"/>`; } catch (e) { return ''; }
+        }).join('');
       }).join('');
       const outlineD = d3.line().curve(d3.curveLinearClosed)(normCoords);
       const showNames = document.getElementById('show-names') && document.getElementById('show-names').checked;
