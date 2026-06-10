@@ -20,7 +20,7 @@ import {
   isGlobalStatsReady,
   isSkiFeatureStatsLoading
 } from './ski-feature-stats.js?v=2';
-import { buildComparisonCharts } from './ski-feature-charts.js?v=1';
+import { buildComparisonCharts } from './ski-feature-charts.js?v=2';
 
 function difficultyBadgeHtml(diff, escapeHtml) {
   const color = DIFF_COLORS[diff] || '#64748b';
@@ -199,7 +199,7 @@ export function initSkiFeaturePopups(map, options = {}) {
   const escapeHtml = options.escapeHtml || ((s) => String(s));
   const tipEl = options.tipEl || document.getElementById('vt-tooltip');
   const popup = options.popup || new maptilersdk.Popup({
-    maxWidth: '340px',
+    maxWidth: '720px',
     closeButton: true,
     className: 'ski-feature-popup'
   });

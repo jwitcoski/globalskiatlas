@@ -214,6 +214,125 @@
       padding: 2px 8px;
       border-radius: 999px;
     }
+    .maplibregl-popup.ski-resort-popup .maplibregl-popup-content,
+    .mapboxgl-popup.ski-resort-popup .mapboxgl-popup-content {
+      padding: 14px 16px;
+      border-radius: 12px;
+      width: min(92vw, 780px);
+      max-width: min(92vw, 780px);
+    }
+    .maplibregl-popup.ski-feature-popup .maplibregl-popup-content,
+    .mapboxgl-popup.ski-feature-popup .mapboxgl-popup-content {
+      width: min(92vw, 720px);
+      max-width: min(92vw, 720px);
+    }
+    .sr-popup-wide { max-width: 100%; }
+    .sr-popup-header { margin-bottom: 6px; }
+    .sr-title-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px 12px;
+    }
+    .sr-title-row .sf-popup-title { margin-bottom: 0; flex: 1 1 auto; }
+    .sr-title-row .sf-popup-badge { margin-bottom: 0; flex: 0 0 auto; }
+    .sr-popup-body { display: flex; flex-direction: column; gap: 8px; }
+    .sr-charts-row {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: nowrap;
+      gap: 10px;
+      align-items: stretch;
+      width: 100%;
+    }
+    .sr-charts-row .sf-chart-block,
+    .sr-charts-row .sr-chart-panel {
+      flex: 1 1 0;
+      min-width: 0;
+      margin-bottom: 0;
+    }
+    .sr-chart-panel .sf-chart-svg {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+    .sr-stat-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 14px;
+      padding: 4px 0;
+    }
+    .sr-stat-chip {
+      font-size: 12px;
+      color: #1e293b;
+      white-space: nowrap;
+    }
+    .sr-stat-k {
+      color: #64748b;
+      font-weight: 500;
+      margin-right: 4px;
+    }
+    .sr-stat-k::after { content: ' '; }
+    .sr-popup-footer {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid #e2e8f0;
+    }
+    .sr-popup-footer .sf-popup-foot {
+      margin: 0;
+      text-align: right;
+      flex: 1 1 120px;
+    }
+    .sr-popup-footer .sr-popup-actions {
+      margin-top: 0;
+      flex: 0 0 auto;
+    }
+    .sr-popup .sr-headline {
+      font-size: 12px;
+      font-weight: 600;
+      color: #0d9488;
+      margin: 4px 0 0;
+      line-height: 1.35;
+    }
+    .sr-badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 999px;
+    }
+    .sr-charts-big .sf-chart-block { padding: 10px 8px 6px; }
+    .sr-chart-big .sf-chart-svg { min-height: 130px; }
+    .sr-details-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      border-radius: 8px;
+      background: #2563eb;
+      color: #fff !important;
+      padding: 8px 12px;
+      font-size: 13px;
+      font-weight: 500;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .sr-details-btn:hover { background: #1d4ed8; color: #fff !important; }
+    .sr-popup-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+    @media (max-width: 560px) {
+      .sr-charts-row { flex-direction: column; }
+      .sr-popup-footer { flex-direction: column; align-items: flex-start; }
+      .sr-popup-footer .sf-popup-foot { text-align: left; }
+    }
     .legend-mountain-icon { display: inline-flex; align-items: center; vertical-align: middle; margin-right: 6px; }
     @media (max-width: 768px) {
       .map-wrapper {
@@ -655,6 +774,6 @@
   <script src="scripts/header-toggle.js"></script>
   <script defer src="https://cdn.maptiler.com/maptiler-sdk-js/v3.10.2/maptiler-sdk.umd.min.js"></script>
   <script type="module" src="scripts/pmtiles-protocol-init.js"></script>
-  <script type="module" src="scripts/roadtripskimap-ml-main.js?v=17"></script>
+  <script type="module" src="scripts/roadtripskimap-ml-main.js?v=19"></script>
 </body>
 </html>

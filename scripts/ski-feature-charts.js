@@ -75,8 +75,8 @@ export function buildLengthChartSvg(options) {
     highlightKm = 0,
     title = '',
     subtitle = '',
-    width = 292,
-    height = 108,
+    width = 280,
+    height = 100,
     margin = { top: 4, right: 8, bottom: 22, left: 8 }
   } = options;
 
@@ -126,10 +126,10 @@ export function buildLengthChartSvg(options) {
   const subEsc = subtitle.replace(/&/g, '&amp;').replace(/</g, '&lt;');
 
   return (
-    `<div class="sf-chart-block">` +
+    `<div class="sf-chart-block sr-chart-panel">` +
     `<div class="sf-chart-title">${titleEsc}</div>` +
     (subtitle ? `<div class="sf-chart-sub">${subEsc}</div>` : '') +
-    `<svg class="sf-chart-svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}" role="img" aria-label="${titleEsc}">` +
+    `<svg class="sf-chart-svg" viewBox="0 0 ${width} ${height}" width="100%" role="img" aria-label="${titleEsc}">` +
     `<g transform="translate(${margin.left},${margin.top + 16})">` +
     plotSvg +
     `<g transform="translate(0,${plotH + 4})">${axisTicks(maxKm, plotW)}</g>` +
@@ -230,7 +230,7 @@ export function buildComparisonCharts(meta, globalIndex, viewportIndex) {
   if (!charts.length) return { html: '', caption: '' };
 
   return {
-    html: `<div class="sf-charts">${charts.join('')}</div>`,
+    html: `<div class="sf-charts sr-charts-row">${charts.join('')}</div>`,
     caption: captions.slice(0, 3).join(' · ')
   };
 }

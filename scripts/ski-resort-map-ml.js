@@ -14,8 +14,7 @@ import {
 } from './pmtiles-core.js?v=12';
 import {
   getProp, escapeHtml, resortDisplayName, ENGLISH_NAME_KEYS,
-  NAME_KEYS, ID_KEYS, COUNTRY_KEYS, STATE_KEYS, LIFTS_KEYS,
-  slug,
+  NAME_KEYS, COUNTRY_KEYS, STATE_KEYS,
   foldDiacritics,
   SKIABLE_TERRAIN_ACRES_KEYS,
   SKIABLE_TERRAIN_HA_KEYS,
@@ -26,9 +25,7 @@ import {
   getMapSizeTier,
   getMapTierColorForProps,
   MAP_TIER_LEGEND,
-  MAP_TIER_COLORS,
-  isNotDownhill,
-  getTrailCount
+  MAP_TIER_COLORS
 } from './resort-categories.js';
 import {
   hillSvg,
@@ -38,7 +35,12 @@ import {
   getIconId,
   addResortIconImages
 } from './resort-tier-icons.js';
-import { initSkiFeaturePopups } from './ski-feature-popups.js?v=5';
+import { initSkiFeaturePopups } from './ski-feature-popups.js?v=6';
+import {
+  buildResortPopupHtml,
+  buildResortHoverHtml,
+  buildResortStatsIndex
+} from './ski-resort-popups.js?v=2';
 
 const {
   LIFTS_MIN_ZOOM,
@@ -63,57 +65,7 @@ function wikiDisplayName(p) {
   return en || ti || '';
 }
 
-// ── Popup HTML ─────────────────────────────────────────────────────────────
-function buildPopupHtml(properties, latlng, options = {}, wikiPage = null) {
-  if (!properties || !Object.keys(properties).length) return '<em>No data</em>';
-  const name        = getProp(properties, NAME_KEYS);
-  const displayStr  = wikiPage ? wikiDisplayName(wikiPage) : (resortDisplayName(properties) || (name ? String(name).trim() : ''));
-  const displayName = displayStr ? escapeHtml(displayStr) : 'Resort';
-  const id          = getProp(properties, ID_KEYS);
-  const trails      = getProp(properties, COLOR_BY_KEYS);
-  const lifts       = getProp(properties, LIFTS_KEYS);
-  const country     = getProp(properties, COUNTRY_KEYS);
-  const state       = getProp(properties, STATE_KEYS);
-  const trailsNum   = trails != null && trails !== '' ? Number(trails) : null;
-  const liftsNum    = lifts  != null && lifts  !== '' ? Number(lifts)  : null;
-  const trailsStr   = trailsNum != null && !Number.isNaN(trailsNum) ? trailsNum.toLocaleString() + ' slopes' : null;
-  const liftsStr    = liftsNum  != null && !Number.isNaN(liftsNum)  ? liftsNum.toLocaleString()  + ' lifts'  : null;
-  let countryStr    = country != null && String(country).trim() !== '' ? String(country).trim() : null;
-  if (countryStr && /^united states/i.test(countryStr)) countryStr = 'USA';
-  const terrainStr  = formatSkiableTerrain(getProp(properties, SKIABLE_TERRAIN_ACRES_KEYS), getProp(properties, SKIABLE_TERRAIN_HA_KEYS));
-  const terrainFact = terrainStr ? 'Skiable Terrain ' + terrainStr : null;
-  const factsHtml = [trailsStr, liftsStr, terrainFact, countryStr].filter(Boolean).length
-    ? `<p style="margin:4px 0 8px 0;font-size:13px;color:#6b7280">${[trailsStr, liftsStr, terrainFact, countryStr].filter(Boolean).map(escapeHtml).join(' \u2022 ')}</p>`
-    : '';
-  const lat = latlng?.lat ?? null;
-  const lon = latlng?.lng ?? null;
-  let pageParam = '';
-  if (wikiPage && wikiPage.pageId) {
-    pageParam = wikiPage.pageId;
-  } else {
-    const englishName = getProp(properties, ENGLISH_NAME_KEYS);
-    const nameForSlug = (englishName != null && englishName !== '') ? String(englishName).trim() : (name != null ? String(name).trim() : '');
-    const nameSlug    = slug(nameForSlug);
-    const stateSlug  = state != null && String(state).trim() !== '' ? slug(String(state).trim()) : '';
-    const countrySlug = country != null && String(country).trim() !== '' ? slug(String(country).trim()) : '';
-    pageParam = nameSlug ? (stateSlug ? nameSlug + '-' + stateSlug : countrySlug ? nameSlug + '-' + countrySlug : nameSlug) : '';
-  }
-  const popupUrl   = pageParam
-    ? new URL('wiki/resort.html', location.href).href + '?page=' + encodeURIComponent(pageParam)
-    : new URL('wiki/browse.html', location.href).href;
-  const stored    = JSON.stringify({ name: displayStr || name || null, id: id != null ? String(id) : null, lat, lon });
-  const storedAttr = stored.replace(/"/g, '&quot;');
-  let extraButtons = '';
-  if (options.includeRoadTripButton) {
-    const rn = escapeHtml(String(displayStr || name || 'Resort'));
-    const rc = country != null && String(country).trim() ? escapeHtml(String(country).trim()) : '';
-    extraButtons = `<button class="rtp-add-btn" data-resort-name="${rn}" data-resort-lat="${lat ?? 0}" data-resort-lon="${lon ?? 0}" data-resort-country="${rc}"><i class="bi bi-plus-circle"></i> Road Trip</button>`;
-  }
-  return `<p style="margin:0 0 4px 0;font-weight:600">${displayName}</p>${factsHtml}` +
-    `<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">` +
-    `<a href="#" data-resort-url="${escapeHtml(popupUrl)}" data-resort-stored="${storedAttr}" class="resort-details-link" style="display:inline-flex;align-items:center;gap:4px;border-radius:8px;background:#2563eb;color:#fff;padding:8px 12px;font-size:13px;font-weight:500;text-decoration:none;cursor:pointer;">View details <i class="bi bi-arrow-up-right"></i></a>` +
-    extraButtons + `</div>`;
-}
+// ── Popup HTML (see ski-resort-popups.js for charts + fun facts) ─────────────
 
 const OLYMPIC_HOSTS = [
   { name: 'Milan',              lat: 45.4642, lon: 9.19   },
@@ -243,6 +195,20 @@ export async function initSkiResortMap(options = {}) {
     return null;
   }
 
+  const resortStatsIndex = buildResortStatsIndex(rows, (p) => {
+    const wp = findWikiPage(p);
+    return wp ? wikiDisplayName(wp) : (resortDisplayName(p) || getProp(p, NAME_KEYS) || '');
+  });
+
+  function makeResortPopup(properties, latlng, wikiPage) {
+    return buildResortPopupHtml(properties, latlng, {
+      includeRoadTripButton,
+      wikiPage,
+      statsIndex: resortStatsIndex,
+      escapeHtml
+    });
+  }
+
   const searchResorts = [];
   const resortFeatures = [];
 
@@ -287,8 +253,7 @@ export async function initSkiResortMap(options = {}) {
         latlng,
         country: country ? String(country).trim() : '',
         properties,
-        wikiPage,
-        popupHtml: buildPopupHtml(properties, latlng, { includeRoadTripButton }, wikiPage)
+        wikiPage
       });
     }
   });
@@ -319,7 +284,11 @@ export async function initSkiResortMap(options = {}) {
   // ── Resort dots + icon symbols (single GeoJSON source, aligned coordinates) ─
   await addResortMarkerLayers(map, resortFeatures);
 
-  const resortPopup = new maptilersdk.Popup({ maxWidth: '340px', closeButton: true });
+  const resortPopup = new maptilersdk.Popup({
+    maxWidth: '780px',
+    closeButton: true,
+    className: 'ski-resort-popup'
+  });
 
   const vtTipEl = document.createElement('div');
   vtTipEl.id = 'vt-tooltip';
@@ -340,7 +309,7 @@ export async function initSkiResortMap(options = {}) {
     const wikiPage = findWikiPage(properties);
     resortPopup
       .setLngLat(lngLat)
-      .setHTML(buildPopupHtml(properties, latlng, { includeRoadTripButton }, wikiPage))
+      .setHTML(makeResortPopup(properties, latlng, wikiPage))
       .addTo(map);
   }
 
@@ -350,12 +319,11 @@ export async function initSkiResortMap(options = {}) {
       map.on('mousemove', id, (e) => {
         if (!e.features.length) return;
         const p = e.features[0].properties;
-        const facts = [p._trails > 0 ? `${p._trails} slopes` : null, p._terrain || null, p._country || null].filter(Boolean).join(' · ');
-        showVtTip(e.point,
-          `<div class="tt-name">${escapeHtml(p._name || 'Resort')}</div>` +
-          (facts ? `<div class="tt-hint">${escapeHtml(facts)}</div>` : '') +
-          (id.includes('circles') ? `<div class="tt-hint" style="margin-top:3px;color:#7dd3fc">🔍 Click to zoom in</div>` : '')
-        );
+        let properties = {};
+        try { properties = JSON.parse(p._propsJson || '{}'); } catch (_) { /* ignore */ }
+        showVtTip(e.point, buildResortHoverHtml(properties, p._name, resortStatsIndex, escapeHtml, {
+          circleLayer: id.includes('circles')
+        }));
       });
       map.on('mouseleave', id, () => { map.getCanvas().style.cursor = ''; hideVtTip(); });
       map.on('click', id, (e) => {
@@ -423,7 +391,9 @@ export async function initSkiResortMap(options = {}) {
     searchInput.blur();
     map.flyTo({ center: [r.latlng.lng, r.latlng.lat], zoom: 16, duration: 600 });
     map.once('moveend', () => {
-      resortPopup.setLngLat([r.latlng.lng, r.latlng.lat]).setHTML(r.popupHtml).addTo(map);
+      resortPopup.setLngLat([r.latlng.lng, r.latlng.lat])
+        .setHTML(makeResortPopup(r.properties, r.latlng, r.wikiPage))
+        .addTo(map);
     });
   }
 
