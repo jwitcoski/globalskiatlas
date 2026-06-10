@@ -1,0 +1,292 @@
+/* Shared ski map popups, hover tooltips, and chart panels (mainmap, DriveTimeMap, etc.) */
+
+.maplibregl-popup,
+.mapboxgl-popup {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1100;
+  pointer-events: none;
+}
+
+.maplibregl-popup .maplibregl-popup-content,
+.mapboxgl-popup .mapboxgl-popup-content {
+  pointer-events: auto;
+}
+
+.lift-marker-icon { background: none !important; border: none !important; }
+.olympic-rings-marker { background: none !important; border: none !important; }
+.mountain-marker { background: none !important; border: none !important; }
+.resort-tooltip {
+  background: rgba(15,23,42,0.92);
+  border: none;
+  border-radius: 7px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+  color: #f1f5f9;
+  font-size: 13px;
+  padding: 6px 10px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.resort-tooltip::before { display: none; }
+.resort-tooltip .tt-name { font-weight: 600; }
+.resort-tooltip .tt-hint { color: #94a3b8; font-size: 11px; margin-top: 2px; }
+#vt-tooltip {
+  position: fixed;
+  display: none;
+  z-index: 9999;
+  pointer-events: none;
+  background: rgba(15,23,42,0.92);
+  border-radius: 7px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+  color: #f1f5f9;
+  font-size: 13px;
+  padding: 6px 10px;
+  white-space: nowrap;
+}
+#vt-tooltip .tt-name { font-weight: 600; }
+#vt-tooltip .tt-hint { color: #94a3b8; font-size: 11px; margin-top: 2px; }
+#vt-tooltip .tt-diff { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+#vt-tooltip .sf-fact { margin-top: 4px; line-height: 1.35; }
+#vt-tooltip .sf-fact-highlight { color: #fcd34d; }
+#vt-tooltip .sf-click-hint { color: #64748b; font-size: 10px; margin-top: 4px; }
+#vt-tooltip .sf-loading { font-style: italic; }
+.maplibregl-popup.ski-feature-popup .maplibregl-popup-content,
+.mapboxgl-popup.ski-feature-popup .mapboxgl-popup-content {
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.4;
+}
+.sf-popup-title { font-weight: 700; font-size: 15px; margin-bottom: 4px; color: #0f172a; }
+.sf-popup-badge { margin-bottom: 8px; }
+.sf-popup-facts { margin: 8px 0; }
+.sf-popup-facts .sf-fact {
+  font-size: 12px;
+  color: #334155;
+  padding: 4px 0;
+  border-top: 1px solid #e2e8f0;
+}
+.sf-popup-facts .sf-fact:first-child { border-top: none; padding-top: 0; }
+.sf-popup-facts .sf-fact-highlight { color: #b45309; font-weight: 600; }
+.sf-popup-table { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 12px; }
+.sf-popup-table th {
+  text-align: left;
+  padding: 3px 10px 3px 0;
+  color: #64748b;
+  font-weight: 500;
+  vertical-align: top;
+  white-space: nowrap;
+}
+.sf-popup-table td { padding: 3px 0; color: #1e293b; }
+.sf-popup-foot { margin-top: 8px; font-size: 10px; color: #94a3b8; }
+.sf-popup-charts { margin: 8px 0 4px; }
+.sf-chart-block {
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 8px 6px 4px;
+  margin-bottom: 8px;
+  border: 1px solid #e2e8f0;
+}
+.sf-chart-block:last-child { margin-bottom: 0; }
+.sf-chart-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #0f172a;
+  padding: 0 4px 2px;
+}
+.sf-chart-sub {
+  font-size: 10px;
+  color: #64748b;
+  padding: 0 4px 4px;
+}
+.sf-chart-caption {
+  font-size: 11px;
+  color: #475569;
+  text-align: center;
+  margin-top: 4px;
+  line-height: 1.35;
+}
+.sf-chart-svg { display: block; max-width: 100%; height: auto; }
+.sf-chart-legend-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  padding: 4px 2px 0;
+  font-size: 9px;
+  color: #64748b;
+}
+.sf-chart-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+.sf-chart-legend-swatch {
+  width: 8px;
+  height: 8px;
+  border-radius: 1px;
+  border: 1px solid #cbd5e1;
+  flex-shrink: 0;
+}
+.sf-chart-legend-shape {
+  flex-shrink: 0;
+  display: block;
+}
+.sf-badge-lift {
+  display: inline-block;
+  background: #fff7ed;
+  color: #c2410c;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+.maplibregl-popup.ski-resort-popup .maplibregl-popup-content,
+.mapboxgl-popup.ski-resort-popup .mapboxgl-popup-content {
+  padding: 14px 16px;
+  border-radius: 12px;
+  width: min(92vw, 780px);
+  max-width: min(92vw, 780px);
+}
+.maplibregl-popup.ski-feature-popup .maplibregl-popup-content,
+.mapboxgl-popup.ski-feature-popup .mapboxgl-popup-content {
+  width: min(92vw, 720px);
+  max-width: min(92vw, 720px);
+}
+.sr-popup-wide { max-width: 100%; }
+.sr-popup-header { margin-bottom: 6px; }
+.sr-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+.sr-title-row .sf-popup-title { margin-bottom: 0; flex: 1 1 auto; }
+.sr-title-row .sf-popup-badge { margin-bottom: 0; flex: 0 0 auto; }
+.sr-popup-body { display: flex; flex-direction: column; gap: 8px; }
+.sr-charts-wrap { width: 100%; }
+.sr-scope-bar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+.sr-scope-btn {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 11px;
+  border: 1px solid #cbd5e1;
+  border-radius: 999px;
+  background: #fff;
+  color: #475569;
+  cursor: pointer;
+  line-height: 1.2;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.sr-scope-btn:hover {
+  border-color: #0d9488;
+  color: #0f766e;
+}
+.sr-scope-btn.active {
+  background: #0d9488;
+  color: #fff;
+  border-color: #0d9488;
+}
+.sr-charts-row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 10px;
+  align-items: stretch;
+  width: 100%;
+}
+.sr-charts-row .sf-chart-block,
+.sr-charts-row .sr-chart-panel {
+  flex: 1 1 0;
+  min-width: 0;
+  margin-bottom: 0;
+}
+.sr-chart-panel .sf-chart-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.sr-stat-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  padding: 4px 0;
+}
+.sr-stat-chip {
+  font-size: 12px;
+  color: #1e293b;
+  white-space: nowrap;
+}
+.sr-stat-k {
+  color: #64748b;
+  font-weight: 500;
+  margin-right: 4px;
+}
+.sr-stat-k::after { content: ' '; }
+.sr-popup-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #e2e8f0;
+}
+.sr-popup-footer .sf-popup-foot {
+  margin: 0;
+  text-align: right;
+  flex: 1 1 120px;
+}
+.sr-popup-footer .sr-popup-actions {
+  margin-top: 0;
+  flex: 0 0 auto;
+}
+.sr-popup .sr-headline {
+  font-size: 12px;
+  font-weight: 600;
+  color: #0d9488;
+  margin: 4px 0 0;
+  line-height: 1.35;
+}
+.sr-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+.sr-charts-big .sf-chart-block { padding: 10px 8px 6px; }
+.sr-chart-big .sf-chart-svg { min-height: 130px; }
+.sr-details-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 8px;
+  background: #2563eb;
+  color: #fff !important;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+}
+.sr-details-btn:hover { background: #1d4ed8; color: #fff !important; }
+.sr-popup-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+@media (max-width: 560px) {
+  .sr-charts-row { flex-direction: column; }
+  .sr-popup-footer { flex-direction: column; align-items: flex-start; }
+  .sr-popup-footer .sf-popup-foot { text-align: left; }
+}
