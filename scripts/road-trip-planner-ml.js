@@ -388,6 +388,8 @@ export function initRoadTripPlanner({ map, searchResorts, escapeHtml }) {
   });
 
   // ── Route drawing helpers ──────────────────────────────────────────────
+  let lastRouteGeometry = null;
+
   function clearRoute() {
     waypointMarkers.forEach(m => m.remove());
     waypointMarkers = [];
@@ -395,9 +397,11 @@ export function initRoadTripPlanner({ map, searchResorts, escapeHtml }) {
       if (map.getLayer(id)) map.removeLayer(id);
     }
     if (map.getSource(RTP_ROUTE_SOURCE)) map.removeSource(RTP_ROUTE_SOURCE);
+    lastRouteGeometry = null;
   }
 
   function drawRouteLine(routeGeometry) {
+    lastRouteGeometry = routeGeometry;
     const feature = { type: 'Feature', geometry: routeGeometry, properties: {} };
     if (map.getSource(RTP_ROUTE_SOURCE)) {
       map.getSource(RTP_ROUTE_SOURCE).setData(feature);
@@ -560,4 +564,10 @@ export function initRoadTripPlanner({ map, searchResorts, escapeHtml }) {
 
   rtpUpdateUI();
   console.log('[road-trip-planner-ml] initialized');
+
+  return {
+    restoreOverlays() {
+      if (lastRouteGeometry) drawRouteLine(lastRouteGeometry);
+    }
+  };
 }

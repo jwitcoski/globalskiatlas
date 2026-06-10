@@ -4,13 +4,16 @@
  */
 import { config } from './map-config.js';
 import { createMapLibre } from './map-core.js';
+import { getBasemapStyle, getSavedBasemapId } from './basemap-options.js';
 import {
   addSkiPmtilesToMap,
+  ATLAS_COLORS,
   attachPmtilesDebugLogging,
-  ensureBoundaryLayersOnTop,
+  ensureBoundaryLayersOnBottom,
   fetchSkiAreaCatalog,
+  restoreSkiPmtilesAfterStyleChange,
   SKI_PMTILES_LAYERS
-} from './pmtiles-core.js?v=7';
+} from './pmtiles-core.js?v=11';
 import {
   getProp, escapeHtml, resortDisplayName, ENGLISH_NAME_KEYS,
   NAME_KEYS, ID_KEYS, COUNTRY_KEYS, STATE_KEYS, LIFTS_KEYS,
@@ -144,19 +147,76 @@ const OLYMPIC_HOSTS = [
   { name: "Cortina d'Ampezzo", lat: 46.5369, lon: 12.1356 }
 ];
 
+const SKI_PMTILES_OPTIONS = {
+  liftsWidth: 2,
+  pistesWidth: 3,
+  includeAnalyzedPoints: false
+};
+
+async function addResortMarkerLayers(map, resortFeatures) {
+  const data = { type: 'FeatureCollection', features: resortFeatures };
+  if (!map.getSource('ski-resorts')) {
+    map.addSource('ski-resorts', { type: 'geojson', data });
+  } else {
+    map.getSource('ski-resorts').setData(data);
+  }
+
+  const symbolLayout = {
+    'icon-image': ['get', '_icon'],
+    'icon-size': 1,
+    'icon-allow-overlap': true,
+    'icon-ignore-placement': true,
+    'icon-anchor': 'center'
+  };
+
+  const circleLayerDefs = [
+    { id: 'ski-small-circles', tier: 'small', radius: ['interpolate', ['linear'], ['zoom'], 3, 1.5, 8, 4] },
+    { id: 'ski-medium-circles', tier: 'medium', radius: ['interpolate', ['linear'], ['zoom'], 3, 3, 8, 6] },
+    { id: 'ski-large-circles', tier: 'large', radius: ['interpolate', ['linear'], ['zoom'], 3, 3.5, 8, 7] },
+    { id: 'ski-mega-circles', tier: 'mega', radius: ['interpolate', ['linear'], ['zoom'], 3, 4, 8, 8] }
+  ];
+
+  for (const def of circleLayerDefs) {
+    if (map.getLayer(def.id)) continue;
+    map.addLayer({
+      id: def.id,
+      type: 'circle',
+      source: 'ski-resorts',
+      filter: ['==', ['get', '_tier'], def.tier],
+      maxzoom: RESORT_ICON_MIN_ZOOM,
+      paint: { ...circlePaint, 'circle-radius': def.radius }
+    });
+  }
+
+  await addResortIconImages(map);
+
+  for (const tier of ['small', 'medium', 'large', 'mega']) {
+    const id = `ski-icons-${tier}`;
+    if (map.getLayer(id)) continue;
+    map.addLayer({
+      id,
+      type: 'symbol',
+      source: 'ski-resorts',
+      minzoom: RESORT_ICON_MIN_ZOOM,
+      filter: ['==', ['get', '_tier'], tier],
+      layout: symbolLayout
+    });
+  }
+
+  ensureBoundaryLayersOnBottom(map);
+}
+
 // ── Main export ────────────────────────────────────────────────────────────
 export async function initSkiResortMap(options = {}) {
   const includeRoadTripButton = !!options.includeRoadTripButton;
 
   // ── Initialise MapLibre map (map-core) ──────────────────────────────────
-  const { map } = await createMapLibre({ containerId: 'map' });
-  console.log('[ski-resort-map-ml] map ready, adding PMTiles…');
-  await addSkiPmtilesToMap(map, {
-    liftsColor: '#f87171',
-    liftsWidth: 2,
-    pistesWidth: 3,
-    includeAnalyzedPoints: false
+  const { map } = await createMapLibre({
+    containerId: 'map',
+    style: getBasemapStyle(getSavedBasemapId())
   });
+  console.log('[ski-resort-map-ml] map ready, adding PMTiles…');
+  await addSkiPmtilesToMap(map, SKI_PMTILES_OPTIONS);
   attachPmtilesDebugLogging(map);
 
   // MapTiler Data API has correct WGS84 coordinates (querySourceFeatures geometry is unreliable).
@@ -275,21 +335,18 @@ export async function initSkiResortMap(options = {}) {
       `<div class="legend-row" style="margin-top:6px"><span class="legend-mountain-icon">${hillSvg('#999', 18, 12)}</span> Grey = not a downhill ski resort</div>` +
       `<div class="legend-row" style="margin-top:8px;font-size:11px;color:#64748b">Colored dots at wide zoom; mountain icons from zoom ${RESORT_ICON_MIN_ZOOM}+</div>` +
       '<h3 style="margin-top:10px">Resort boundary (zoom 8+)</h3>' +
-      '<div class="legend-row"><span class="legend-line" style="background:#145a32;height:3px"></span> Green outline = ski area boundary</div>' +
-      '<div class="legend-row" style="font-size:11px;color:#64748b">Blue outline at zoom 12+ = 1,000 ft resort buffer</div>' +
-      '<div class="legend-row" style="font-size:11px;color:#64748b">Brown lines at zoom 12+ = elevation contours (where available)</div>' +
-      '<h3 style="margin-top:10px">Pistes (zoom 10+) – US colors</h3>' +
-      '<div class="legend-row"><span class="legend-line" style="background:#22c55e"></span> Green = easy</div>' +
-      '<div class="legend-row"><span class="legend-line" style="background:#2563eb"></span> Blue = intermediate</div>' +
-      '<div class="legend-row"><span class="legend-line" style="background:#1a1a1a"></span> Black = advanced</div>' +
-      '<div class="legend-row"><span class="legend-line" style="background:#991b1b"></span> Red = expert</div>';
+      `<div class="legend-row"><span class="legend-line" style="background:${ATLAS_COLORS.boundaryOutline};height:2px;border-top:2px dashed ${ATLAS_COLORS.boundaryOutline}"></span> Dashed outline = ski area boundary</div>` +
+      `<div class="legend-row" style="font-size:11px;color:#64748b">Tan lines at zoom 12+ = elevation contours (where available)</div>` +
+      '<h3 style="margin-top:10px">Pistes (zoom 10+)</h3>' +
+      `<div class="legend-row"><span class="legend-line" style="background:${ATLAS_COLORS.pisteEasy}"></span> Green = easy / novice</div>` +
+      `<div class="legend-row"><span class="legend-line" style="background:${ATLAS_COLORS.pisteIntermediate}"></span> Blue = intermediate</div>` +
+      `<div class="legend-row"><span class="legend-line" style="background:${ATLAS_COLORS.pisteAdvanced}"></span> Black = advanced</div>` +
+      `<div class="legend-row"><span class="legend-line" style="background:${ATLAS_COLORS.pisteExpert}"></span> Red = expert</div>` +
+      `<div class="legend-row"><span class="legend-line" style="background:${ATLAS_COLORS.lift}"></span> Orange = lifts</div>`;
   }
 
   // ── Resort dots + icon symbols (single GeoJSON source, aligned coordinates) ─
-  map.addSource('ski-resorts', {
-    type: 'geojson',
-    data: { type: 'FeatureCollection', features: resortFeatures }
-  });
+  await addResortMarkerLayers(map, resortFeatures);
 
   const resortPopup = new maptilersdk.Popup({ maxWidth: '340px', closeButton: true });
 
@@ -342,54 +399,6 @@ export async function initSkiResortMap(options = {}) {
     });
   }
 
-  map.addLayer({
-    id: 'ski-small-circles',
-    type: 'circle',
-    source: 'ski-resorts',
-    filter: ['==', ['get', '_tier'], 'small'],
-    maxzoom: RESORT_ICON_MIN_ZOOM,
-    paint: {
-      ...circlePaint,
-      'circle-radius': ['interpolate', ['linear'], ['zoom'], 3, 1.5, 8, 4]
-    }
-  });
-
-  map.addLayer({
-    id: 'ski-medium-circles',
-    type: 'circle',
-    source: 'ski-resorts',
-    filter: ['==', ['get', '_tier'], 'medium'],
-    maxzoom: RESORT_ICON_MIN_ZOOM,
-    paint: {
-      ...circlePaint,
-      'circle-radius': ['interpolate', ['linear'], ['zoom'], 3, 3, 8, 6]
-    }
-  });
-
-  map.addLayer({
-    id: 'ski-large-circles',
-    type: 'circle',
-    source: 'ski-resorts',
-    filter: ['==', ['get', '_tier'], 'large'],
-    maxzoom: RESORT_ICON_MIN_ZOOM,
-    paint: {
-      ...circlePaint,
-      'circle-radius': ['interpolate', ['linear'], ['zoom'], 3, 3.5, 8, 7]
-    }
-  });
-
-  map.addLayer({
-    id: 'ski-mega-circles',
-    type: 'circle',
-    source: 'ski-resorts',
-    filter: ['==', ['get', '_tier'], 'mega'],
-    maxzoom: RESORT_ICON_MIN_ZOOM,
-    paint: {
-      ...circlePaint,
-      'circle-radius': ['interpolate', ['linear'], ['zoom'], 3, 4, 8, 8]
-    }
-  });
-
   attachResortLayerEvents([
     'ski-small-circles',
     'ski-medium-circles',
@@ -397,57 +406,17 @@ export async function initSkiResortMap(options = {}) {
     'ski-mega-circles'
   ]);
 
-  const symbolLayout = {
-    'icon-image': ['get', '_icon'],
-    'icon-size': 1,
-    'icon-allow-overlap': true,
-    'icon-ignore-placement': true,
-    'icon-anchor': 'center'
-  };
-
-  await addResortIconImages(map);
-
-  map.addLayer({
-    id: 'ski-icons-small',
-    type: 'symbol',
-    source: 'ski-resorts',
-    minzoom: RESORT_ICON_MIN_ZOOM,
-    filter: ['==', ['get', '_tier'], 'small'],
-    layout: symbolLayout
-  });
-  map.addLayer({
-    id: 'ski-icons-medium',
-    type: 'symbol',
-    source: 'ski-resorts',
-    minzoom: RESORT_ICON_MIN_ZOOM,
-    filter: ['==', ['get', '_tier'], 'medium'],
-    layout: symbolLayout
-  });
-  map.addLayer({
-    id: 'ski-icons-large',
-    type: 'symbol',
-    source: 'ski-resorts',
-    minzoom: RESORT_ICON_MIN_ZOOM,
-    filter: ['==', ['get', '_tier'], 'large'],
-    layout: symbolLayout
-  });
-  map.addLayer({
-    id: 'ski-icons-mega',
-    type: 'symbol',
-    source: 'ski-resorts',
-    minzoom: RESORT_ICON_MIN_ZOOM,
-    filter: ['==', ['get', '_tier'], 'mega'],
-    layout: symbolLayout
-  });
-
   attachResortLayerEvents(['ski-icons-large', 'ski-icons-mega', 'ski-icons-medium', 'ski-icons-small']);
 
-  // Keep resort boundary rings above trail/lift linework (still below resort markers).
-  ensureBoundaryLayersOnTop(map, 'ski-icons-small');
+  async function restoreOverlays() {
+    await restoreSkiPmtilesAfterStyleChange(map, SKI_PMTILES_OPTIONS);
+    await addResortMarkerLayers(map, resortFeatures);
+  }
+
   console.log('[ski-resort-map-ml] init complete', {
     resortMarkers: resortFeatures.length,
     zoom: map.getZoom(),
-    boundaryLayers: ['ski-boundary-fill', 'ski-boundary-line', 'ski-buffer-line']
+    boundaryLayers: ['ski-boundary-line']
       .map((id) => ({ id, present: !!map.getLayer(id) }))
   });
 
@@ -573,5 +542,5 @@ export async function initSkiResortMap(options = {}) {
   });
   map.on('mouseleave', SKI_PMTILES_LAYERS.pistes, () => { map.getCanvas().style.cursor = ''; hideVtTip(); });
 
-  return { map, searchResorts, escapeHtml };
+  return { map, searchResorts, escapeHtml, restoreOverlays };
 }

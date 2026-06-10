@@ -438,7 +438,7 @@
       center: [flybyStart.lon, flybyStart.lat],
       zoom: 10
     });
-    await addSkiPmtilesToMap(map, { liftsColor: '#f87171', pistesWidth: 3 });
+    await addSkiPmtilesToMap(map, { pistesWidth: 3 });
     if (map.getAttributionControl) map.getAttributionControl().addAttribution('© MapTiler © OpenStreetMap');
 
     map.on('load', () => {

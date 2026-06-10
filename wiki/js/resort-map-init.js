@@ -39,7 +39,6 @@ export async function initResortMap(lat, lon, pageId, zoom) {
   });
 
   await addSkiPmtilesToMap(m, {
-    liftsColor: '#f87171',
     pistesWidth: 3
   });
 
