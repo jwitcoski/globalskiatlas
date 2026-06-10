@@ -2,7 +2,7 @@
  * Road Trip Ski Map – MapLibre GL JS entry point.
  * Used by mainmap.html and TravelMap.html.
  */
-import { initSkiResortMap }    from './ski-resort-map-ml.js?v=17';
+import { initSkiResortMap }    from './ski-resort-map-ml.js?v=19';
 import { initRoadTripPlanner } from './road-trip-planner-ml.js?v=3';
 import { initBasemapSwitcher } from './basemap-switcher.js?v=1';
 

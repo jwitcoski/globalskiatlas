@@ -205,6 +205,31 @@
       line-height: 1.35;
     }
     .sf-chart-svg { display: block; max-width: 100%; height: auto; }
+    .sf-chart-legend-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px 10px;
+      padding: 4px 2px 0;
+      font-size: 9px;
+      color: #64748b;
+    }
+    .sf-chart-legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+    }
+    .sf-chart-legend-swatch {
+      width: 8px;
+      height: 8px;
+      border-radius: 1px;
+      border: 1px solid #cbd5e1;
+      flex-shrink: 0;
+    }
+    .sf-chart-legend-shape {
+      flex-shrink: 0;
+      display: block;
+    }
     .sf-badge-lift {
       display: inline-block;
       background: #fff7ed;
@@ -237,6 +262,35 @@
     .sr-title-row .sf-popup-title { margin-bottom: 0; flex: 1 1 auto; }
     .sr-title-row .sf-popup-badge { margin-bottom: 0; flex: 0 0 auto; }
     .sr-popup-body { display: flex; flex-direction: column; gap: 8px; }
+    .sr-charts-wrap { width: 100%; }
+    .sr-scope-bar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 4px;
+      margin-bottom: 6px;
+    }
+    .sr-scope-btn {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 11px;
+      border: 1px solid #cbd5e1;
+      border-radius: 999px;
+      background: #fff;
+      color: #475569;
+      cursor: pointer;
+      line-height: 1.2;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .sr-scope-btn:hover {
+      border-color: #0d9488;
+      color: #0f766e;
+    }
+    .sr-scope-btn.active {
+      background: #0d9488;
+      color: #fff;
+      border-color: #0d9488;
+    }
     .sr-charts-row {
       display: flex;
       flex-direction: row;
@@ -773,6 +827,6 @@
   <script src="scripts/header-toggle.js"></script>
   <script defer src="https://cdn.maptiler.com/maptiler-sdk-js/v3.10.2/maptiler-sdk.umd.min.js"></script>
   <script type="module" src="scripts/pmtiles-protocol-init.js"></script>
-  <script type="module" src="scripts/roadtripskimap-ml-main.js?v=19"></script>
+  <script type="module" src="scripts/roadtripskimap-ml-main.js?v=22"></script>
 </body>
 </html>

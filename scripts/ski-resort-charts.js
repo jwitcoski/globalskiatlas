@@ -43,9 +43,26 @@ function fmtAcres(n) {
   return String(Math.round(n));
 }
 
+function percentileFromSorted(sorted, value) {
+  if (!sorted?.length || value <= 0) return null;
+  let lo = 0;
+  let hi = sorted.length;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    if (sorted[mid] < value) lo = mid + 1;
+    else hi = mid;
+  }
+  return { rank: lo + 1, total: sorted.length, pct: Math.round((lo / sorted.length) * 100) };
+}
+
+function scatterPoints(group) {
+  return (group?.resorts || [])
+    .filter((r) => r.trails > 0 && r.acres > 0)
+    .map((r) => ({ trails: r.trails, acres: r.acres, name: r.name, key: r.key }));
+}
+
 /**
  * Trails vs skiable acres scatter — Vermont-facts style, go big.
- * @param {{ trails: number, acres: number, name: string, key: string }[]} points
  */
 export function buildTrailsVsAcresScatter(options) {
   const {
@@ -55,8 +72,8 @@ export function buildTrailsVsAcresScatter(options) {
     title = '',
     subtitle = '',
     width = 300,
-    height = 165,
-    margin = { top: 24, right: 10, bottom: 32, left: 38 }
+    height = 175,
+    margin = { top: 22, right: 10, bottom: 42, left: 38 }
   } = options;
 
   const valid = points.filter((p) => p.trails > 0 && p.acres > 0);
@@ -92,7 +109,7 @@ export function buildTrailsVsAcresScatter(options) {
   }
 
   let dots = '';
-  valid.forEach((p, i) => {
+  valid.forEach((p) => {
     if (p.key === highlightKey) return;
     const cx = scale(p.trails, maxTrails, plotW);
     const cy = plotH - scale(p.acres, maxAcres, plotH);
@@ -102,56 +119,56 @@ export function buildTrailsVsAcresScatter(options) {
   const hiX = scale(hi.trails, maxTrails, plotW);
   const hiY = plotH - scale(hi.acres, maxAcres, plotH);
   const hiDot = `<circle cx="${hiX.toFixed(1)}" cy="${hiY.toFixed(1)}" r="7" fill="${TEAL}" stroke="#fff" stroke-width="2"/>`;
-  const label = hi.name.length > 22 ? hi.name.slice(0, 20) + '…' : hi.name;
-  const lx = Math.min(hiX + 10, plotW - 4);
-  const ly = hiY - 6;
-  const hiLabel = `<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" fill="#0f172a" font-size="10" font-weight="700">${esc(label)}</text>`;
+  const label = hi.name.length > 18 ? hi.name.slice(0, 16) + '…' : hi.name;
+  const nearRight = hiX > plotW * 0.62;
+  const nearTop = hiY < plotH * 0.18;
+  const lx = nearRight ? hiX - 8 : hiX + 10;
+  const ly = nearTop ? hiY + 14 : hiY - 6;
+  const anchor = nearRight ? 'end' : 'start';
+  const hiLabel = `<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="${anchor}" fill="#0f172a" font-size="9" font-weight="700">${esc(label)}</text>`;
 
   let xTicks = '';
-  const xSteps = 4;
-  for (let i = 0; i <= xSteps; i++) {
-    const v = (maxTrails * i) / xSteps;
+  for (let i = 0; i <= 4; i++) {
+    const v = (maxTrails * i) / 4;
     const x = scale(v, maxTrails, plotW);
     xTicks += `<line x1="${x.toFixed(1)}" y1="${plotH}" x2="${x.toFixed(1)}" y2="${plotH + 4}" stroke="#cbd5e1"/>`;
-    xTicks += `<text x="${x.toFixed(1)}" y="${plotH + 16}" text-anchor="middle" fill="#64748b" font-size="9">${fmtN(v)}</text>`;
+    xTicks += `<text x="${x.toFixed(1)}" y="${plotH + 14}" text-anchor="middle" fill="#64748b" font-size="8">${fmtN(v)}</text>`;
   }
 
   let yTicks = '';
-  const ySteps = 4;
-  for (let i = 0; i <= ySteps; i++) {
-    const v = (maxAcres * i) / ySteps;
+  for (let i = 0; i <= 4; i++) {
+    const v = (maxAcres * i) / 4;
     const y = plotH - scale(v, maxAcres, plotH);
     yTicks += `<line x1="-4" y1="${y.toFixed(1)}" x2="0" y2="${y.toFixed(1)}" stroke="#cbd5e1"/>`;
     yTicks += `<text x="-6" y="${(y + 3).toFixed(1)}" text-anchor="end" fill="#64748b" font-size="9">${fmtAcres(v)}</text>`;
   }
 
-  const legendY = height - 6;
-  let legend = '';
-  TRAIL_ZONES.forEach((z, i) => {
-    const lx = margin.left + i * 52;
-    legend += `<rect x="${lx}" y="${legendY}" width="7" height="7" fill="${z.color}" stroke="#cbd5e1" stroke-width="0.5"/>`;
-    legend += `<text x="${lx + 10}" y="${legendY + 6}" fill="#64748b" font-size="7">${esc(z.label)}</text>`;
-  });
+  const svgH = margin.top + plotH + margin.bottom;
+  const xAxisY = margin.top + plotH + 28;
+  const legendHtml = TRAIL_ZONES.map((z) =>
+    `<span class="sf-chart-legend-item"><span class="sf-chart-legend-swatch" style="background:${z.color}"></span>${esc(z.label)}</span>`
+  ).join('');
 
   return (
     `<div class="sf-chart-block sr-chart-panel">` +
     `<div class="sf-chart-title">${esc(title)}</div>` +
     (subtitle ? `<div class="sf-chart-sub">${esc(subtitle)}</div>` : '') +
-    `<svg class="sf-chart-svg" viewBox="0 0 ${width} ${height + 8}" width="100%" role="img">` +
+    `<svg class="sf-chart-svg" viewBox="0 0 ${width} ${svgH}" width="100%" role="img">` +
     `<g transform="translate(${margin.left},${margin.top})">` +
     zones + dots + hiDot + hiLabel +
     `<line x1="0" y1="${plotH}" x2="${plotW}" y2="${plotH}" stroke="#94a3b8" stroke-width="1"/>` +
     `<line x1="0" y1="0" x2="0" y2="${plotH}" stroke="#94a3b8" stroke-width="1"/>` +
     xTicks + yTicks +
     `</g>` +
-    `<text x="${margin.left + plotW / 2}" y="${height - 2}" text-anchor="middle" fill="#475569" font-size="10" font-weight="600">Number of trails</text>` +
-    `<text transform="translate(12,${margin.top + plotH / 2}) rotate(-90)" text-anchor="middle" fill="#475569" font-size="10" font-weight="600">Skiable acres</text>` +
-    legend +
-    `</svg></div>`
+    `<text x="${margin.left + plotW / 2}" y="${xAxisY}" text-anchor="middle" fill="#475569" font-size="9" font-weight="600">Number of trails</text>` +
+    `<text transform="translate(12,${margin.top + plotH / 2}) rotate(-90)" text-anchor="middle" fill="#475569" font-size="9" font-weight="600">Skiable acres</text>` +
+    `</svg>` +
+    `<div class="sf-chart-legend-row">${legendHtml}</div>` +
+    `</div>`
   );
 }
 
-/** Rug plot: trail count vs peers (state/country/global). */
+/** Rug plot: trail count vs peers. */
 export function buildTrailsRankChart(options) {
   const {
     trailCounts = [],
@@ -205,110 +222,156 @@ export function buildTrailsRankChart(options) {
   );
 }
 
-/**
- * Build resort popup charts from stats index.
- */
-export function buildResortComparisonCharts(record, index) {
-  if (!record || !index) return { html: '', caption: '' };
-
-  const charts = [];
-  const captions = [];
-
+/** @returns {{ id: string, label: string }[]} */
+export function getResortComparisonScopes(record, index) {
+  if (!record || !index) return [];
+  const scopes = [];
   const stateGroup = index.byState[record.stateKey];
   const countryGroup = index.byCountry[record.countryNorm];
 
-  const scatterPoints = (group) =>
-    (group?.resorts || [])
-      .filter((r) => r.trails > 0 && r.acres > 0)
-      .map((r) => ({ trails: r.trails, acres: r.acres, name: r.name, key: r.key }));
-
-  if (stateGroup && record.state) {
-    const pts = scatterPoints(stateGroup);
-    if (pts.length >= 3 && record.acres > 0) {
-      const chart = buildTrailsVsAcresScatter({
-        points: pts,
-        highlightKey: record.key,
-        highlightName: record.name,
-        title: `${record.state}: trails vs acreage`,
-        subtitle: `${pts.length} resorts in ${record.state}`
-      });
-      if (chart) charts.push(chart);
-    }
+  if (record.state && stateGroup?.trails?.sorted?.length >= 3) {
+    scopes.push({ id: 'state', label: record.state });
   }
-
-  if (!charts.length && countryGroup && record.countryNorm) {
-    const pts = scatterPoints(countryGroup);
-    if (pts.length >= 5 && record.acres > 0) {
-      const chart = buildTrailsVsAcresScatter({
-        points: pts,
-        highlightKey: record.key,
-        highlightName: record.name,
-        title: `${record.countryNorm}: trails vs acreage`,
-        subtitle: `${pts.length} resorts nationwide`
-      });
-      if (chart) charts.push(chart);
-    }
+  if (record.countryNorm && countryGroup?.trails?.sorted?.length >= 5) {
+    scopes.push({ id: 'country', label: record.countryNorm });
   }
-
-  if (stateGroup?.trails?.sorted?.length >= 3) {
-    const st = percentileFromSorted(stateGroup.trails.sorted, record.trails);
-    if (st) captions.push(`#${st.rank} of ${st.total} in ${record.state} by trails`);
-    charts.push(buildTrailsRankChart({
-      trailCounts: stateGroup.trails.sorted,
-      highlightTrails: record.trails,
-      title: `Trail count · ${record.state || record.countryNorm}`,
-      subtitle: st ? `${st.pct}th percentile in state` : ''
-    }));
-  } else if (countryGroup?.trails?.sorted?.length >= 5) {
-    const ct = percentileFromSorted(countryGroup.trails.sorted, record.trails);
-    if (ct) captions.push(`#${ct.rank} of ${ct.total} in ${record.countryNorm}`);
-    charts.push(buildTrailsRankChart({
-      trailCounts: countryGroup.trails.sorted,
-      highlightTrails: record.trails,
-      title: `Trail count · ${record.countryNorm}`,
-      subtitle: ct ? `${ct.pct}th percentile nationally` : ''
-    }));
+  if (index.trails.sorted.length >= 10) {
+    scopes.push({ id: 'worldwide', label: 'Worldwide' });
   }
+  return scopes;
+}
 
-  if (index.trails.sorted.length >= 10 && charts.length < 2) {
-    const gt = percentileFromSorted(index.trails.sorted, record.trails);
-    if (gt) captions.push(`More trails than ${gt.pct}% of resorts worldwide`);
-    charts.push(buildTrailsRankChart({
-      trailCounts: index.trails.sorted,
-      highlightTrails: record.trails,
-      title: 'All resorts worldwide',
-      subtitle: gt ? `Top ${100 - gt.pct}% by trail count` : ''
-    }));
-  }
+export function getDefaultResortScope(record, index) {
+  return getResortComparisonScopes(record, index)[0]?.id || 'worldwide';
+}
 
-  if (record.lifts > 0 && index.lifts.sorted.length >= 10) {
-    const gl = percentileFromSorted(index.lifts.sorted, record.lifts);
-    if (gl && gl.pct >= 75) captions.push(`${record.lifts} lifts — top ${100 - gl.pct}% globally`);
-  }
-
-  if (record.acres > 0 && index.acres.avg > 0) {
-    const ratio = record.acres / index.acres.avg;
-    if (ratio >= 1.5) captions.push(`${ratio.toFixed(1)}× average skiable acreage`);
-  }
-
-  if (record.category === 'mega_resort') {
-    captions.unshift('Mega resort — 100+ trails');
-  }
-
+function getScopeGroup(record, index, scopeId) {
+  if (scopeId === 'state') return index.byState[record.stateKey];
+  if (scopeId === 'country') return index.byCountry[record.countryNorm];
   return {
-    html: charts.length ? `<div class="sf-charts sr-charts-row">${charts.slice(0, 2).join('')}</div>` : '',
-    caption: [...new Set(captions)].slice(0, 4).join(' · ')
+    resorts: index.all,
+    trails: index.trails,
+    lifts: index.lifts,
+    acres: index.acres
   };
 }
 
-function percentileFromSorted(sorted, value) {
-  if (!sorted?.length || value <= 0) return null;
-  let lo = 0;
-  let hi = sorted.length;
-  while (lo < hi) {
-    const mid = (lo + hi) >> 1;
-    if (sorted[mid] < value) lo = mid + 1;
-    else hi = mid;
+function scopeRankLabel(scopeId, record) {
+  if (scopeId === 'state') return record.state || 'State';
+  if (scopeId === 'country') return record.countryNorm || 'Country';
+  return 'Worldwide';
+}
+
+/**
+ * Build resort popup charts for one comparison scope.
+ * @param {'state'|'country'|'worldwide'} scopeId
+ */
+export function buildResortComparisonCharts(record, index, scopeId) {
+  if (!record || !index) return { html: '', caption: '', foot: '' };
+
+  const scopes = getResortComparisonScopes(record, index);
+  const scope = scopeId && scopes.some((s) => s.id === scopeId)
+    ? scopeId
+    : scopes[0]?.id || 'worldwide';
+
+  const group = getScopeGroup(record, index, scope);
+  if (!group) return { html: '', caption: '', foot: '' };
+
+  const charts = [];
+  const captions = [];
+  const scopeLabel = scopeRankLabel(scope, record);
+
+  const pts = scatterPoints(group);
+  if (pts.length >= 2 && record.acres > 0) {
+    const scatterTitle = scope === 'worldwide'
+      ? 'Worldwide: trails vs acreage'
+      : `${scopeLabel}: trails vs acreage`;
+    const scatterSub = scope === 'worldwide'
+      ? `${pts.length.toLocaleString()} resorts globally`
+      : scope === 'country'
+        ? `${pts.length} resorts in ${scopeLabel}`
+        : `${pts.length} resorts in ${scopeLabel}`;
+    const scatter = buildTrailsVsAcresScatter({
+      points: pts,
+      highlightKey: record.key,
+      highlightName: record.name,
+      title: scatterTitle,
+      subtitle: scatterSub
+    });
+    if (scatter) charts.push(scatter);
   }
-  return { rank: lo + 1, total: sorted.length, pct: Math.round((lo / sorted.length) * 100) };
+
+  const trailSorted = group.trails?.sorted || [];
+  if (trailSorted.length >= 2 && record.trails > 0) {
+    const tr = percentileFromSorted(trailSorted, record.trails);
+    const rankTitle = scope === 'worldwide'
+      ? 'Trail count · Worldwide'
+      : `Trail count · ${scopeLabel}`;
+    let rankSub = '';
+    if (tr) {
+      if (scope === 'worldwide') {
+        rankSub = `Longer than ${tr.pct}% of all resorts`;
+        captions.push(`#${tr.rank} of ${tr.total.toLocaleString()} worldwide`);
+      } else if (scope === 'country') {
+        rankSub = `${tr.pct}th percentile nationally`;
+        captions.push(`#${tr.rank} of ${tr.total} in ${scopeLabel}`);
+      } else {
+        rankSub = `${tr.pct}th percentile in state`;
+        captions.push(`#${tr.rank} of ${tr.total} in ${scopeLabel}`);
+      }
+    }
+    const rank = buildTrailsRankChart({
+      trailCounts: trailSorted,
+      highlightTrails: record.trails,
+      title: rankTitle,
+      subtitle: rankSub
+    });
+    if (rank) charts.push(rank);
+  }
+
+  if (record.lifts > 0 && group.lifts?.sorted?.length >= 5) {
+    const lr = percentileFromSorted(group.lifts.sorted, record.lifts);
+    if (lr && lr.pct >= 70) {
+      captions.push(`${record.lifts} lifts — top ${100 - lr.pct}% in ${scopeLabel}`);
+    }
+  }
+
+  if (record.acres > 0 && group.acres?.sorted?.length >= 5) {
+    const avgAcres = group.acres.sorted.reduce((a, b) => a + b, 0) / group.acres.sorted.length;
+    if (avgAcres > 0) {
+      const ratio = record.acres / avgAcres;
+      if (ratio >= 1.4) captions.push(`${ratio.toFixed(1)}× average acreage in ${scopeLabel}`);
+    }
+  }
+
+  if (record.category === 'mega_resort' && scope === 'worldwide') {
+    captions.unshift('Mega resort — 100+ trails');
+  }
+
+  const peerCount = scope === 'worldwide'
+    ? index.count
+    : group.trails?.count || group.resorts?.length || 0;
+
+  const foot = scope === 'worldwide'
+    ? `Compared against ${index.count.toLocaleString()} downhill resorts worldwide`
+    : `Compared against ${peerCount.toLocaleString()} resorts in ${scopeLabel}`;
+
+  return {
+    html: charts.length ? `<div class="sf-charts sr-charts-row">${charts.slice(0, 2).join('')}</div>` : '',
+    caption: [...new Set(captions)].slice(0, 4).join(' · '),
+    foot,
+    scope
+  };
+}
+
+export function buildScopeToggleHtml(scopes, activeScope, escapeHtmlFn) {
+  if (!scopes || scopes.length <= 1) return '';
+  return (
+    `<div class="sr-scope-bar" role="tablist" aria-label="Comparison scope">` +
+    scopes.map((s) =>
+      `<button type="button" role="tab" class="sr-scope-btn${s.id === activeScope ? ' active' : ''}" ` +
+      `data-sr-scope="${esc(s.id)}" aria-selected="${s.id === activeScope}">${escapeHtmlFn(s.label)}</button>`
+    ).join('') +
+    `</div>`
+  );
 }

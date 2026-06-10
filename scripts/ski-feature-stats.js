@@ -31,21 +31,37 @@ function percentile(sorted, value) {
   return { rank, total: sorted.length, percentile: pct, longerThanPct: pct };
 }
 
-function buildGroup(lengths) {
-  const sorted = lengths.filter((n) => n > 0.001).sort((a, b) => a - b);
+function buildGroup(items) {
+  const points = items.filter((p) => p && p.km > 0.001);
+  const sorted = points.map((p) => p.km).sort((a, b) => a - b);
   const sum = sorted.reduce((a, b) => a + b, 0);
   return {
     count: sorted.length,
     sorted,
+    points,
     avgKm: sorted.length ? sum / sorted.length : 0,
     maxKm: sorted.length ? sorted[sorted.length - 1] : 0
   };
 }
 
-function addToMap(map, key, lengthKm) {
-  if (!key || lengthKm <= 0.001) return;
+function addToMap(map, key, point) {
+  if (!key || !point || point.km <= 0.001) return;
   if (!map.has(key)) map.set(key, []);
-  map.get(key).push(lengthKm);
+  map.get(key).push(point);
+}
+
+function addToNestedMap(outer, outerKey, innerKey, point) {
+  if (!outerKey || !innerKey || !point || point.km <= 0.001) return;
+  if (!outer.has(outerKey)) outer.set(outerKey, new Map());
+  addToMap(outer.get(outerKey), innerKey, point);
+}
+
+function nestedMapToGroups(outer) {
+  const out = {};
+  for (const [outerKey, inner] of outer.entries()) {
+    out[outerKey] = Object.fromEntries([...inner.entries()].map(([k, v]) => [k, buildGroup(v)]));
+  }
+  return out;
 }
 
 /** Build stats index from raw GeoJSON features (parquet, PMTiles, or map query). */
@@ -53,6 +69,10 @@ export function buildStatsIndexFromFeatures(pisteFeats, liftFeats) {
   const pistesAll = [];
   const pistesByDiff = new Map();
   const pistesByResort = new Map();
+  const pistesByState = new Map();
+  const pistesByCountry = new Map();
+  const pistesByStateDiff = new Map();
+  const pistesByCountryDiff = new Map();
   const pistesByKey = new Map();
 
   for (const f of pisteFeats) {
@@ -60,17 +80,30 @@ export function buildStatsIndexFromFeatures(pisteFeats, liftFeats) {
     const a = analyzeFeature('piste', f);
     if (!isDownhillPiste(a.props)) continue;
     if (a.lengthKm <= 0.01) continue;
-    pistesAll.push(a.lengthKm);
-    pistesByKey.set(a.key, a);
     const diff = getDifficulty(a.props) || 'unknown';
-    addToMap(pistesByDiff, diff, a.lengthKm);
+    const pt = { km: a.lengthKm, cat: diff };
+    pistesAll.push(pt);
+    pistesByKey.set(a.key, a);
+    addToMap(pistesByDiff, diff, pt);
     const resort = a.resort || 'Unknown resort';
-    addToMap(pistesByResort, resort, a.lengthKm);
+    addToMap(pistesByResort, resort, pt);
+    if (a.state) {
+      addToMap(pistesByState, a.stateKey, pt);
+      addToNestedMap(pistesByStateDiff, a.stateKey, diff, pt);
+    }
+    if (a.countryNorm) {
+      addToMap(pistesByCountry, a.countryNorm, pt);
+      addToNestedMap(pistesByCountryDiff, a.countryNorm, diff, pt);
+    }
   }
 
   const liftsAll = [];
   const liftsByType = new Map();
   const liftsByResort = new Map();
+  const liftsByState = new Map();
+  const liftsByCountry = new Map();
+  const liftsByStateType = new Map();
+  const liftsByCountryType = new Map();
   const liftsByKey = new Map();
 
   for (const f of liftFeats) {
@@ -79,24 +112,44 @@ export function buildStatsIndexFromFeatures(pisteFeats, liftFeats) {
     const aw = getAerialway(a.props);
     if (LIFT_EXCLUDE.has(aw)) continue;
     if (a.lengthKm <= 0.005) continue;
-    liftsAll.push(a.lengthKm);
+    const liftType = aw || 'unknown';
+    const pt = { km: a.lengthKm, cat: liftType };
+    liftsAll.push(pt);
     liftsByKey.set(a.key, a);
-    addToMap(liftsByType, aw || 'unknown', a.lengthKm);
+    addToMap(liftsByType, liftType, pt);
     const resort = a.resort || 'Unknown resort';
-    addToMap(liftsByResort, resort, a.lengthKm);
+    addToMap(liftsByResort, resort, pt);
+    if (a.state) {
+      addToMap(liftsByState, a.stateKey, pt);
+      addToNestedMap(liftsByStateType, a.stateKey, liftType, pt);
+    }
+    if (a.countryNorm) {
+      addToMap(liftsByCountry, a.countryNorm, pt);
+      addToNestedMap(liftsByCountryType, a.countryNorm, liftType, pt);
+    }
   }
+
+  const mapToGroups = (m) => Object.fromEntries([...m.entries()].map(([k, v]) => [k, buildGroup(v)]));
 
   return {
     loadedAt: Date.now(),
     pistes: {
       all: buildGroup(pistesAll),
-      byDifficulty: Object.fromEntries([...pistesByDiff.entries()].map(([k, v]) => [k, buildGroup(v)])),
-      byResort: Object.fromEntries([...pistesByResort.entries()].map(([k, v]) => [k, buildGroup(v)]))
+      byDifficulty: mapToGroups(pistesByDiff),
+      byResort: mapToGroups(pistesByResort),
+      byState: mapToGroups(pistesByState),
+      byCountry: mapToGroups(pistesByCountry),
+      byStateDifficulty: nestedMapToGroups(pistesByStateDiff),
+      byCountryDifficulty: nestedMapToGroups(pistesByCountryDiff)
     },
     lifts: {
       all: buildGroup(liftsAll),
-      byType: Object.fromEntries([...liftsByType.entries()].map(([k, v]) => [k, buildGroup(v)])),
-      byResort: Object.fromEntries([...liftsByResort.entries()].map(([k, v]) => [k, buildGroup(v)]))
+      byType: mapToGroups(liftsByType),
+      byResort: mapToGroups(liftsByResort),
+      byState: mapToGroups(liftsByState),
+      byCountry: mapToGroups(liftsByCountry),
+      byStateType: nestedMapToGroups(liftsByStateType),
+      byCountryType: nestedMapToGroups(liftsByCountryType)
     },
     pistesByKey,
     liftsByKey
@@ -191,7 +244,18 @@ export function comparePiste(lengthKm, meta, index) {
   const diffCmp = byDiff ? percentile(byDiff.sorted, lengthKm) : null;
   const byResort = resort ? index.pistes.byResort[resort] : null;
   const resortCmp = byResort ? percentile(byResort.sorted, lengthKm) : null;
-  return { global, diff: diffCmp, resort: resortCmp, avgGlobalKm: index.pistes.all.avgKm };
+  const byState = meta.state ? index.pistes.byState?.[meta.stateKey] : null;
+  const stateCmp = byState ? percentile(byState.sorted, lengthKm) : null;
+  const byCountry = meta.countryNorm ? index.pistes.byCountry?.[meta.countryNorm] : null;
+  const countryCmp = byCountry ? percentile(byCountry.sorted, lengthKm) : null;
+  return {
+    global,
+    diff: diffCmp,
+    resort: resortCmp,
+    state: stateCmp,
+    country: countryCmp,
+    avgGlobalKm: index.pistes.all.avgKm
+  };
 }
 
 export function compareLift(lengthKm, meta, index) {
@@ -203,5 +267,16 @@ export function compareLift(lengthKm, meta, index) {
   const typeCmp = byType ? percentile(byType.sorted, lengthKm) : null;
   const byResort = resort ? index.lifts.byResort[resort] : null;
   const resortCmp = byResort ? percentile(byResort.sorted, lengthKm) : null;
-  return { global, type: typeCmp, resort: resortCmp, avgGlobalKm: index.lifts.all.avgKm };
+  const byState = meta.state ? index.lifts.byState?.[meta.stateKey] : null;
+  const stateCmp = byState ? percentile(byState.sorted, lengthKm) : null;
+  const byCountry = meta.countryNorm ? index.lifts.byCountry?.[meta.countryNorm] : null;
+  const countryCmp = byCountry ? percentile(byCountry.sorted, lengthKm) : null;
+  return {
+    global,
+    type: typeCmp,
+    resort: resortCmp,
+    state: stateCmp,
+    country: countryCmp,
+    avgGlobalKm: index.lifts.all.avgKm
+  };
 }

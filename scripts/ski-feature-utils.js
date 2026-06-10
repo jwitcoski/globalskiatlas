@@ -7,6 +7,7 @@ export const LIFT_NAME_KEYS = ['name', 'Name'];
 export const RESORT_KEYS = ['Ski Area', 'ski_area', 'resort_name', 'area_name', 'resort', 'ski_area_name', 'skiarea_name'];
 export const RESORT_ENGLISH_KEYS = ['resort_english_name', 'ski_area_english_name', 'english_name', 'englishName'];
 export const COUNTRY_KEYS = ['Country', 'country', 'country_name', 'addr:country'];
+export const STATE_KEYS = ['state', 'State', 'addr:state', 'province', 'addr:province', 'state_province', 'region'];
 export const DIFF_KEYS = ['piste:difficulty', 'piste_difficulty', 'difficulty'];
 export const PISTE_TYPE_KEYS = ['piste:type', 'piste_type'];
 export const AERIALWAY_KEYS = ['aerialway', 'Aerialway'];
@@ -78,6 +79,25 @@ export function getCountry(props) {
   const v = getProp(props, COUNTRY_KEYS);
   if (v && String(v).trim()) return String(v).trim();
   return getFromOtherTags(props, 'country') || '';
+}
+
+export function normCountry(c) {
+  if (!c) return '';
+  const s = String(c).trim();
+  if (/^united states/i.test(s)) return 'USA';
+  return s;
+}
+
+export function getState(props) {
+  const v = getProp(props, STATE_KEYS);
+  if (v && String(v).trim()) return String(v).trim();
+  return getFromOtherTags(props, 'addr:state') || getFromOtherTags(props, 'state') || '';
+}
+
+export function stateRegionKey(country, state) {
+  const c = normCountry(country);
+  const st = state ? String(state).trim() : '';
+  return st ? `${c}|${st}` : c;
 }
 
 export function getDifficulty(props) {
@@ -215,6 +235,9 @@ export function analyzeFeature(kind, feature) {
     name: kind === 'lift' ? getLiftName(props) : getTrailName(props),
     resort: getResortName(props),
     country: getCountry(props),
+    countryNorm: normCountry(getCountry(props)),
+    state: getState(props),
+    stateKey: stateRegionKey(getCountry(props), getState(props)),
     difficulty: getDifficulty(props),
     pisteType: getPisteType(props),
     aerialway: getAerialway(props),

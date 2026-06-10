@@ -19,8 +19,12 @@ import {
   getSkiFeatureStatsIndex,
   isGlobalStatsReady,
   isSkiFeatureStatsLoading
-} from './ski-feature-stats.js?v=2';
-import { buildComparisonCharts } from './ski-feature-charts.js?v=2';
+} from './ski-feature-stats.js?v=4';
+import {
+  buildComparisonCharts,
+  buildFeatureChartsPanel,
+  getDefaultFeatureScope
+} from './ski-feature-charts.js?v=4';
 
 function difficultyBadgeHtml(diff, escapeHtml) {
   const color = DIFF_COLORS[diff] || '#64748b';
@@ -33,32 +37,39 @@ function pickResortIndex(globalIndex, viewportIndex) {
   return viewportIndex || globalIndex;
 }
 
-function buildComparisonFacts(meta, globalIndex, viewportIndex, escapeHtml) {
+function buildComparisonFacts(meta, globalIndex, viewportIndex, escapeHtml, scope = 'worldwide') {
   if (meta.lengthKm <= 0) return '';
   const isLift = meta.kind === 'lift';
   const globalReady = isGlobalStatsReady(globalIndex);
   const resortIndex = pickResortIndex(globalIndex, viewportIndex);
   if (!globalReady && !resortIndex) return '';
 
-  const globalCmp = globalReady
-    ? (isLift ? compareLift(meta.lengthKm, meta, globalIndex) : comparePiste(meta.lengthKm, meta, globalIndex))
-    : null;
-  const resortCmpSource = resortIndex
-    ? (isLift ? compareLift(meta.lengthKm, meta, resortIndex) : comparePiste(meta.lengthKm, meta, resortIndex))
-    : null;
+  const index = globalReady ? globalIndex : resortIndex;
+  const cmp = isLift
+    ? compareLift(meta.lengthKm, meta, index)
+    : comparePiste(meta.lengthKm, meta, index);
 
   const parts = [];
-  if (globalCmp?.global) parts.push(`Longer than ${globalCmp.global.percentile}% worldwide`);
-  if (!isLift && globalCmp?.diff && meta.difficulty) {
-    parts.push(`${globalCmp.diff.percentile}th percentile ${diffLabel(meta.difficulty)}`);
+  if (scope === 'state' && cmp?.state) {
+    parts.push(`#${cmp.state.rank} of ${cmp.state.total.toLocaleString()} in ${meta.state}`);
+  } else if (scope === 'country' && cmp?.country) {
+    parts.push(`#${cmp.country.rank} of ${cmp.country.total.toLocaleString()} in ${meta.countryNorm}`);
+  } else if (cmp?.global) {
+    parts.push(`Longer than ${cmp.global.percentile}% worldwide`);
   }
-  if (isLift && globalCmp?.type && meta.aerialway) {
-    parts.push(`${globalCmp.type.percentile}th percentile ${aerialwayLabel(meta.aerialway)}`);
+
+  if (!isLift && cmp?.diff && meta.difficulty) {
+    parts.push(`${cmp.diff.percentile}th percentile ${diffLabel(meta.difficulty)}`);
   }
-  const resortCmp = globalCmp?.resort || resortCmpSource?.resort;
-  if (resortCmp && meta.resort) {
+  if (isLift && cmp?.type && meta.aerialway) {
+    parts.push(`${cmp.type.percentile}th percentile ${aerialwayLabel(meta.aerialway)}`);
+  }
+
+  const resortCmp = cmp?.resort;
+  if (resortCmp && meta.resort && scope === 'state') {
     parts.push(resortCmp.rank === 1 ? 'Longest at resort' : `#${resortCmp.rank} of ${resortCmp.total} at resort`);
   }
+
   if (parts.length) return `<div class="sf-fact">${escapeHtml(parts.join(' · '))}</div>`;
   if (isSkiFeatureStatsLoading()) {
     return `<div class="sf-fact sf-loading">Worldwide rankings loading…</div>`;
@@ -67,15 +78,41 @@ function buildComparisonFacts(meta, globalIndex, viewportIndex, escapeHtml) {
 }
 
 function buildComparisonPanel(meta, globalIndex, viewportIndex, escapeHtml) {
-  const charts = buildComparisonCharts(meta, globalIndex, viewportIndex);
-  if (charts.html) {
-    const cap = charts.caption
-      ? `<div class="sf-chart-caption">${escapeHtml(charts.caption)}</div>`
-      : '';
-    return `<div class="sf-popup-charts">${charts.html}${cap}</div>`;
+  if (!isGlobalStatsReady(globalIndex)) {
+    const facts = buildComparisonFacts(meta, globalIndex, viewportIndex, escapeHtml);
+    return facts ? `<div class="sf-popup-facts">${facts}</div>` : '';
   }
+
+  const defaultScope = getDefaultFeatureScope(meta, globalIndex);
+  const panel = buildFeatureChartsPanel(meta, globalIndex, defaultScope, escapeHtml);
+  if (panel.panel) {
+    return `<div class="sf-popup-charts">${panel.panel}</div>`;
+  }
+
   const facts = buildComparisonFacts(meta, globalIndex, viewportIndex, escapeHtml);
   return facts ? `<div class="sf-popup-facts">${facts}</div>` : '';
+}
+
+function buildFooter(meta, globalIndex, scope = 'worldwide') {
+  const isLift = meta.kind === 'lift';
+  const noun = isLift ? 'lifts' : 'trails';
+
+  if (isGlobalStatsReady(globalIndex)) {
+    const panel = buildComparisonCharts(meta, globalIndex, scope);
+    if (panel.foot) return panel.foot;
+  }
+
+  const globalCount = isLift
+    ? (globalIndex?.lifts?.all?.count ?? 0)
+    : (globalIndex?.pistes?.all?.count ?? 0);
+
+  if (globalCount > 0) {
+    return `Compared against ${globalCount.toLocaleString()} ${noun} worldwide`;
+  }
+  if (isSkiFeatureStatsLoading()) {
+    return 'Loading worldwide comparison stats…';
+  }
+  return 'Zoom in closer for resort-level comparisons';
 }
 
 function buildMetaRows(meta, escapeHtml) {
@@ -87,6 +124,7 @@ function buildMetaRows(meta, escapeHtml) {
     rows.push(['Width', meta.widthFromPolygon ? `${w} (est. from shape)` : w]);
   }
   if (meta.resort) rows.push(['Resort', meta.resort]);
+  if (meta.state) rows.push(['State', meta.state]);
   if (meta.country) rows.push(['Country', meta.country]);
   if (meta.pisteType && meta.pisteType !== 'downhill') rows.push(['Type', meta.pisteType.replace(/_/g, ' ')]);
   if (meta.lit === true) rows.push(['Lighting', 'Night skiing']);
@@ -98,28 +136,6 @@ function buildMetaRows(meta, escapeHtml) {
   return rows.map(([k, v]) =>
     `<tr><th>${escapeHtml(k)}</th><td>${escapeHtml(String(v))}</td></tr>`
   ).join('');
-}
-
-function buildFooter(meta, globalIndex, viewportIndex) {
-  const isLift = meta.kind === 'lift';
-  const globalCount = isLift
-    ? (globalIndex?.lifts?.all?.count ?? 0)
-    : (globalIndex?.pistes?.all?.count ?? 0);
-  const viewportCount = isLift
-    ? (viewportIndex?.lifts?.all?.count ?? 0)
-    : (viewportIndex?.pistes?.all?.count ?? 0);
-  const noun = isLift ? 'lifts' : 'trails';
-
-  if (globalCount > 0) {
-    return `Compared against ${globalCount.toLocaleString()} ${noun} worldwide`;
-  }
-  if (viewportCount > 0) {
-    return `Resort stats from ${viewportCount.toLocaleString()} ${noun} on map · worldwide stats loading…`;
-  }
-  if (isSkiFeatureStatsLoading()) {
-    return 'Loading worldwide comparison stats…';
-  }
-  return 'Zoom in closer for resort-level comparisons';
 }
 
 function buildHoverHtml(meta, globalIndex, viewportIndex, escapeHtml) {
@@ -137,7 +153,10 @@ function buildHoverHtml(meta, globalIndex, viewportIndex, escapeHtml) {
   const w = formatWidthM(meta.widthM);
   if (w) html += `<div class="tt-hint">${escapeHtml(w)} wide</div>`;
 
-  const facts = buildComparisonFacts(meta, globalIndex, viewportIndex, escapeHtml);
+  const scope = isGlobalStatsReady(globalIndex)
+    ? getDefaultFeatureScope(meta, globalIndex)
+    : 'worldwide';
+  const facts = buildComparisonFacts(meta, globalIndex, viewportIndex, escapeHtml, scope);
   if (facts) {
     html += facts.replace(/class="sf-fact/g, 'class="tt-hint sf-fact');
   }
@@ -152,19 +171,69 @@ function buildPopupHtml(meta, globalIndex, viewportIndex, escapeHtml) {
     ? `<span class="sf-badge sf-badge-lift">${escapeHtml(aerialwayLabel(meta.aerialway))}</span>`
     : difficultyBadgeHtml(meta.difficulty, escapeHtml);
 
+  const defaultScope = isGlobalStatsReady(globalIndex)
+    ? getDefaultFeatureScope(meta, globalIndex)
+    : 'worldwide';
   const rows = buildMetaRows(meta, escapeHtml);
   const comparison = buildComparisonPanel(meta, globalIndex, viewportIndex, escapeHtml);
-  const foot = buildFooter(meta, globalIndex, viewportIndex);
+  const foot = buildFooter(meta, globalIndex, defaultScope);
 
   return (
-    `<div class="sf-popup">` +
+    `<div class="sf-popup" data-sf-key="${escapeHtml(meta.key)}">` +
     `<div class="sf-popup-title">${escapeHtml(title)}</div>` +
     (badge ? `<div class="sf-popup-badge">${badge}</div>` : '') +
     comparison +
     (rows ? `<table class="sf-popup-table">${rows}</table>` : '') +
-    `<div class="sf-popup-foot">${foot}</div>` +
+    `<div class="sf-popup-foot sf-feature-foot">${escapeHtml(foot)}</div>` +
     `</div>`
   );
+}
+
+function wireFeatureScopeSwitcher(getOpenMeta, escapeHtml) {
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('.sr-scope-btn');
+    if (!btn || !btn.closest('.sf-popup')) return;
+
+    const root = btn.closest('.sf-popup');
+    if (!root || root.closest('.sr-popup')) return;
+
+    const key = root.dataset.sfKey;
+    const scope = btn.dataset.srScope;
+    const globalIndex = getSkiFeatureStatsIndex();
+    if (!key || !scope || !isGlobalStatsReady(globalIndex)) return;
+
+    const openMeta = getOpenMeta();
+    const meta = (openMeta?.key === key)
+      ? openMeta
+      : (globalIndex.pistesByKey.get(key) || globalIndex.liftsByKey.get(key));
+    if (!meta) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    root.querySelectorAll('.sr-scope-btn').forEach((b) => {
+      const active = b === btn;
+      b.classList.toggle('active', active);
+      b.setAttribute('aria-selected', active ? 'true' : 'false');
+    });
+
+    const charts = buildComparisonCharts(meta, globalIndex, scope);
+    const panel = root.querySelector('.sf-charts-panel');
+    if (panel) panel.innerHTML = charts.html;
+
+    const caption = root.querySelector('.sf-chart-caption');
+    if (caption) {
+      if (charts.caption) {
+        caption.textContent = charts.caption;
+        caption.style.display = '';
+      } else {
+        caption.style.display = 'none';
+      }
+    }
+
+    const foot = root.querySelector('.sf-feature-foot');
+    if (foot && charts.foot) foot.textContent = charts.foot;
+  });
 }
 
 /** Try to enrich trail width from resort-detail OSM polygons at click point. */
@@ -206,6 +275,7 @@ export function initSkiFeaturePopups(map, options = {}) {
 
   let lastPopupMeta = null;
   let lastPopupLngLat = null;
+  let scopeSwitcherWired = false;
 
   function refreshOpenPopup() {
     if (!lastPopupMeta || !lastPopupLngLat || !popup.isOpen()) return;
@@ -217,6 +287,11 @@ export function initSkiFeaturePopups(map, options = {}) {
   }
 
   ensureSkiFeatureStatsIndex(() => refreshOpenPopup());
+
+  if (!scopeSwitcherWired) {
+    wireFeatureScopeSwitcher(() => lastPopupMeta, escapeHtml);
+    scopeSwitcherWired = true;
+  }
 
   function showTip(point, html) {
     if (!tipEl) return;

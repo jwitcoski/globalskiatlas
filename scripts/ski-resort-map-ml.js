@@ -35,12 +35,13 @@ import {
   getIconId,
   addResortIconImages
 } from './resort-tier-icons.js';
-import { initSkiFeaturePopups } from './ski-feature-popups.js?v=6';
+import { initSkiFeaturePopups } from './ski-feature-popups.js?v=8';
 import {
   buildResortPopupHtml,
   buildResortHoverHtml,
-  buildResortStatsIndex
-} from './ski-resort-popups.js?v=2';
+  buildResortStatsIndex,
+  initResortPopupScopeSwitcher
+} from './ski-resort-popups.js?v=4';
 
 const {
   LIFTS_MIN_ZOOM,
@@ -452,6 +453,7 @@ export async function initSkiResortMap(options = {}) {
   else setTimeout(loadAd, 1500);
 
   initSkiFeaturePopups(map, { escapeHtml, tipEl: vtTipEl });
+  initResortPopupScopeSwitcher(resortStatsIndex, escapeHtml);
 
   return { map, searchResorts, escapeHtml, restoreOverlays };
 }
