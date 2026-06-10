@@ -306,7 +306,18 @@
       border-radius: 8px;
       padding: 12px;
       display: none;
+      max-height: min(42vh, 360px);
+      overflow-y: auto;
     }
+    .rtp-directions { margin-top: 12px; padding-top: 10px; border-top: 1px solid #bae6fd; }
+    .rtp-dir-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #6b7280; margin-bottom: 8px; }
+    .rtp-dir-list { list-style: none; margin: 0; padding: 0; }
+    .rtp-dir-step { display: grid; grid-template-columns: 22px 1fr auto; gap: 6px 8px; align-items: start; padding: 7px 0; border-bottom: 1px solid #e0f2fe; font-size: 12px; line-height: 1.35; color: #374151; }
+    .rtp-dir-step:last-child { border-bottom: none; }
+    .rtp-dir-num { font-weight: 700; color: #2563eb; font-size: 11px; padding-top: 1px; }
+    .rtp-dir-dist { font-size: 11px; color: #64748b; white-space: nowrap; }
+    .rtp-calc-hint { font-size: 12px; color: #6b7280; margin-top: 8px; line-height: 1.4; min-height: 1.2em; }
+    .rtp-calc-hint.rtp-calc-hint-warn { color: #b45309; }
     .rtp-sum-row { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #0369a1; font-weight: 600; margin-bottom: 4px; }
     .rtp-sum-row:last-child { margin-bottom: 0; }
     #rtpClearBtn {
@@ -478,8 +489,9 @@
         </div>
         <div id="rtpRegionWarning" class="rtp-warning" style="display:none;"></div>
         <div>
-          <button class="rtp-btn rtp-btn-full" id="rtpCalcBtn" disabled>Calculate Route</button>
-          <button id="rtpClearBtn">&#x2715; Clear All</button>
+          <button class="rtp-btn rtp-btn-full" id="rtpCalcBtn" type="button">Calculate Route</button>
+          <div id="rtpCalcHint" class="rtp-calc-hint rtp-calc-hint-warn">Set a starting point and add at least one resort.</div>
+          <button id="rtpClearBtn" type="button">&#x2715; Clear All</button>
         </div>
         <div id="routeSummary"></div>
       </div>
@@ -536,6 +548,6 @@
   <script src="scripts/header-toggle.js"></script>
   <script defer src="https://cdn.maptiler.com/maptiler-sdk-js/v3.10.2/maptiler-sdk.umd.min.js"></script>
   <script type="module" src="scripts/pmtiles-protocol-init.js"></script>
-  <script type="module" src="scripts/roadtripskimap-ml-main.js?v=7"></script>
+  <script type="module" src="scripts/roadtripskimap-ml-main.js?v=9"></script>
 </body>
 </html>

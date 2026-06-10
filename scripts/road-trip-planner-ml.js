@@ -1,12 +1,16 @@
 /**
  * Road Trip Planner – MapLibre GL JS edition.
- * Replaces road-trip-planner.js (Leaflet / LRM) for TravelMap.html.
- * Routing via direct OSRM API; route drawn as a GeoJSON layer on the MapLibre map.
+ * Routing via OSRM; geocoding via MapTiler; route + turn-by-turn directions on the map.
  *
  * initRoadTripPlanner({ map, searchResorts, escapeHtml })
  */
+import { config } from './map-config.js';
 
 const RTP_MAX_RESORTS = 25;
+const OSRM_ROUTE_URL = 'https://router.project-osrm.org/route/v1/driving';
+const RTP_ROUTE_SOURCE = 'rtp-route';
+const RTP_ROUTE_CASING = 'rtp-route-casing';
+const RTP_ROUTE_LINE = 'rtp-route-line';
 
 function foldDiacritics(str) { if (str == null || str === '') return ''; return String(str).normalize('NFD').replace(/\p{M}/gu, ''); }
 
@@ -28,7 +32,7 @@ export function initRoadTripPlanner({ map, searchResorts, escapeHtml }) {
   let rtpResortWaypoints = [];
   let rtpEndMode         = 'last';
   let rtpEndWaypoint     = null;
-  let waypointMarkers    = []; // maptilersdk.Marker instances drawn on the map
+  let waypointMarkers    = [];
 
   // ── DOM refs ───────────────────────────────────────────────────────────
   const rtpPanel          = document.getElementById('roadTripPanel');
@@ -49,9 +53,14 @@ export function initRoadTripPlanner({ map, searchResorts, escapeHtml }) {
   const rtpEndGeoBtn      = document.getElementById('geocodeEndBtn');
   const rtpEndStatus      = document.getElementById('endPointStatus');
 
+  if (!rtpPanel || !rtpToggle || !rtpCalcBtn || !rtpSummary) {
+    console.warn('[road-trip-planner-ml] Road trip panel DOM missing — planner not initialized');
+    return;
+  }
+
   // ── Panel open / close ─────────────────────────────────────────────────
   rtpToggle.addEventListener('click', () => rtpPanel.classList.toggle('open'));
-  rtpClose.addEventListener('click',  () => rtpPanel.classList.remove('open'));
+  rtpClose?.addEventListener('click', () => rtpPanel.classList.remove('open'));
 
   // ── Region warning ─────────────────────────────────────────────────────
   function getWaypointRegions() {
@@ -82,10 +91,60 @@ export function initRoadTripPlanner({ map, searchResorts, escapeHtml }) {
     else         { hint.textContent = '(max 25 – routing API limit)';          hint.style.color = ''; }
   }
 
+  const resorts = () => searchResorts || [];
+
+  function rtpCanCalculate() {
+    if (rtpEndMode === 'custom' && !rtpEndWaypoint) return false;
+    if (rtpEndMode === 'start' && !rtpHomeWaypoint) return false;
+    const n = rtpResortWaypoints.length;
+    if (rtpHomeWaypoint && n >= 1) return true;
+    if (n >= 2) return true;
+    return false;
+  }
+
+  function rtpCalcHintText() {
+    if (rtpEndMode === 'custom' && !rtpEndWaypoint) {
+      return 'Enter an ending address and click Go, or choose a different end option.';
+    }
+    if (rtpEndMode === 'start' && !rtpHomeWaypoint) {
+      return 'Return-to-start needs a starting point — enter an address or use my location.';
+    }
+    const n = rtpResortWaypoints.length;
+    if (n === 0) return 'Add at least one ski resort (search below or Road Trip on a resort popup).';
+    if (!rtpHomeWaypoint && n < 2) {
+      return 'Set a starting point (address + Go, or Use my location). Or add 2+ resorts to route between them.';
+    }
+    return '';
+  }
+
+  function buildRouteWaypoints() {
+    const resortWps = rtpResortWaypoints.map((wp) => ({
+      lat: wp.lat, lng: wp.lng, label: wp.name
+    }));
+    let allWps;
+    if (rtpHomeWaypoint) {
+      allWps = [
+        { lat: rtpHomeWaypoint.lat, lng: rtpHomeWaypoint.lng, label: rtpHomeWaypoint.label },
+        ...resortWps
+      ];
+    } else {
+      allWps = [...resortWps];
+    }
+    const hasExplicitEnd = rtpEndMode === 'start' || (rtpEndMode === 'custom' && rtpEndWaypoint);
+    if (rtpEndMode === 'start' && rtpHomeWaypoint) {
+      allWps.push({ lat: rtpHomeWaypoint.lat, lng: rtpHomeWaypoint.lng, label: rtpHomeWaypoint.label });
+    } else if (rtpEndMode === 'custom' && rtpEndWaypoint) {
+      allWps.push({ lat: rtpEndWaypoint.lat, lng: rtpEndWaypoint.lng, label: rtpEndWaypoint.label });
+    }
+    return { allWps, hasExplicitEnd, usesHome: !!rtpHomeWaypoint };
+  }
+
   // ── Waypoint list UI ───────────────────────────────────────────────────
   function rtpUpdateUI() {
     const countEl = document.getElementById('waypointCount');
     if (countEl) countEl.textContent = rtpResortWaypoints.length ? `(${rtpResortWaypoints.length})` : '';
+
+    if (!rtpWpList) return;
 
     if (rtpResortWaypoints.length === 0) {
       rtpWpList.innerHTML = '<div class="waypoint-empty">No resorts added yet.<br>Search below or click a resort on the map.</div>';
@@ -118,25 +177,72 @@ export function initRoadTripPlanner({ map, searchResorts, escapeHtml }) {
         })
       );
     }
-    rtpCalcBtn.disabled = !(rtpHomeWaypoint && rtpResortWaypoints.length > 0 && (rtpEndMode !== 'custom' || rtpEndWaypoint));
+    const canCalc = rtpCanCalculate();
+    rtpCalcBtn.disabled = !canCalc;
+    const hintEl = document.getElementById('rtpCalcHint');
+    const hint = rtpCalcHintText();
+    if (hintEl) {
+      hintEl.textContent = hint;
+      hintEl.classList.toggle('rtp-calc-hint-warn', !canCalc && !!hint);
+    }
     rtpSetMaxHint(rtpResortWaypoints.length >= RTP_MAX_RESORTS);
     rtpUpdateRegionWarning();
   }
 
-  // ── Geocoding (Nominatim) ──────────────────────────────────────────────
+  // ── Geocoding (MapTiler — works in browser; Nominatim blocks missing User-Agent) ─
   async function rtpGeocode(address) {
-    const res  = await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + encodeURIComponent(address), { headers: { Accept: 'application/json' } });
+    const q = encodeURIComponent(address.trim());
+    const url = `https://api.maptiler.com/geocoding/${q}.json?key=${config.MAPTILER_KEY}&limit=1`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`Geocoding failed (${res.status})`);
     const data = await res.json();
-    if (data?.length) {
-      const item    = data[0];
-      const country = item.address?.country || item.address?.country_code || null;
-      return { lat: parseFloat(item.lat), lng: parseFloat(item.lon), label: item.display_name.split(',').slice(0, 2).join(',').trim(), country: country || undefined };
+    const feat = data.features?.[0];
+    if (!feat?.geometry?.coordinates) return null;
+    const [lng, lat] = feat.geometry.coordinates;
+    const label = (feat.place_name || feat.text || address).split(',').slice(0, 2).join(',').trim();
+    const countryCtx = (feat.context || []).find((c) => String(c.id || '').startsWith('country.'));
+    const country = countryCtx?.text || undefined;
+    return { lat, lng, label, country };
+  }
+
+  async function ensureHomeWaypointFromInput() {
+    if (rtpHomeWaypoint) return true;
+    const addr = rtpHomeInput?.value?.trim();
+    if (!addr || /^my location$/i.test(addr)) return false;
+    try {
+      const result = await rtpGeocode(addr);
+      if (!result) return false;
+      rtpHomeWaypoint = result;
+      if (rtpHomeStatus) {
+        rtpHomeStatus.textContent = '✓ ' + result.label;
+        rtpHomeStatus.style.color = '#16a34a';
+      }
+      return true;
+    } catch (_) {
+      return false;
     }
-    return null;
+  }
+
+  async function ensureEndWaypointFromInput() {
+    if (rtpEndWaypoint || rtpEndMode !== 'custom') return rtpEndMode !== 'custom' || !!rtpEndWaypoint;
+    const addr = rtpEndInput?.value?.trim();
+    if (!addr) return false;
+    try {
+      const result = await rtpGeocode(addr);
+      if (!result) return false;
+      rtpEndWaypoint = result;
+      if (rtpEndStatus) {
+        rtpEndStatus.textContent = '✓ ' + result.label;
+        rtpEndStatus.style.color = '#16a34a';
+      }
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 
   // Home geocode
-  rtpGeoBtn.addEventListener('click', async () => {
+  rtpGeoBtn?.addEventListener('click', async () => {
     const address = rtpHomeInput.value.trim();
     if (!address) return;
     rtpGeoBtn.textContent = '…'; rtpGeoBtn.disabled = true;
@@ -159,10 +265,11 @@ export function initRoadTripPlanner({ map, searchResorts, escapeHtml }) {
       rtpGeoBtn.textContent = 'Go'; rtpGeoBtn.disabled = false;
     }
   });
-  rtpHomeInput.addEventListener('keydown', e => { if (e.key === 'Enter') rtpGeoBtn.click(); });
+  rtpHomeInput?.addEventListener('keydown', (e) => { if (e.key === 'Enter') rtpGeoBtn?.click(); });
+  rtpHomeInput?.addEventListener('input', () => rtpUpdateUI());
 
   // Geolocation
-  rtpLocBtn.addEventListener('click', () => {
+  rtpLocBtn?.addEventListener('click', () => {
     if (!navigator.geolocation) {
       rtpHomeStatus.textContent = 'Geolocation not supported in this browser.';
       rtpHomeStatus.style.color = '#ef4444';
@@ -194,14 +301,14 @@ export function initRoadTripPlanner({ map, searchResorts, escapeHtml }) {
   document.querySelectorAll('input[name="rtpEnd"]').forEach(radio =>
     radio.addEventListener('change', () => {
       rtpEndMode = radio.value;
-      rtpEndAddressRow.style.display = rtpEndMode === 'custom' ? 'flex' : 'none';
+      if (rtpEndAddressRow) rtpEndAddressRow.style.display = rtpEndMode === 'custom' ? 'flex' : 'none';
       if (rtpEndMode !== 'custom') { rtpEndWaypoint = null; rtpEndInput.value = ''; rtpEndStatus.textContent = ''; }
       rtpUpdateUI();
     })
   );
 
   // End geocode
-  rtpEndGeoBtn.addEventListener('click', async () => {
+  rtpEndGeoBtn?.addEventListener('click', async () => {
     const address = rtpEndInput.value.trim();
     if (!address) return;
     rtpEndGeoBtn.textContent = '…'; rtpEndGeoBtn.disabled = true;
@@ -224,7 +331,7 @@ export function initRoadTripPlanner({ map, searchResorts, escapeHtml }) {
       rtpEndGeoBtn.textContent = 'Go'; rtpEndGeoBtn.disabled = false;
     }
   });
-  rtpEndInput.addEventListener('keydown', e => { if (e.key === 'Enter') rtpEndGeoBtn.click(); });
+  rtpEndInput?.addEventListener('keydown', (e) => { if (e.key === 'Enter') rtpEndGeoBtn?.click(); });
 
   // ── Add resort to waypoints ────────────────────────────────────────────
   function rtpAddResort(resort) {
@@ -242,11 +349,12 @@ export function initRoadTripPlanner({ map, searchResorts, escapeHtml }) {
 
   // Resort search-in-panel
   let rtpAddMatches = [];
-  rtpAddInput.addEventListener('input', () => {
+  rtpAddInput?.addEventListener('input', () => {
     const q = foldDiacritics(rtpAddInput.value).toLowerCase().trim();
-    if (!q) { rtpAddDrop.classList.remove('visible'); return; }
-    rtpAddMatches = searchResorts.filter(r => foldDiacritics(r.name).toLowerCase().includes(q)).slice(0, 7);
-    if (!rtpAddMatches.length) { rtpAddDrop.classList.remove('visible'); return; }
+    if (!q) { rtpAddDrop?.classList.remove('visible'); return; }
+    rtpAddMatches = resorts().filter((r) => foldDiacritics(r.name).toLowerCase().includes(q)).slice(0, 7);
+    if (!rtpAddMatches.length) { rtpAddDrop?.classList.remove('visible'); return; }
+    if (!rtpAddDrop) return;
     rtpAddDrop.innerHTML = rtpAddMatches.map((r, i) =>
       `<div class="rtp-search-item" data-index="${i}">${escapeHtml(r.name)}</div>`
     ).join('');
@@ -261,7 +369,10 @@ export function initRoadTripPlanner({ map, searchResorts, escapeHtml }) {
     );
   });
   document.addEventListener('click', (e) => {
-    if (!rtpAddInput.contains(e.target) && !rtpAddDrop.contains(e.target)) rtpAddDrop.classList.remove('visible');
+    if (rtpAddInput && rtpAddDrop
+        && !rtpAddInput.contains(e.target) && !rtpAddDrop.contains(e.target)) {
+      rtpAddDrop.classList.remove('visible');
+    }
   });
 
   // "Road Trip" button inside resort popups
@@ -280,8 +391,56 @@ export function initRoadTripPlanner({ map, searchResorts, escapeHtml }) {
   function clearRoute() {
     waypointMarkers.forEach(m => m.remove());
     waypointMarkers = [];
-    if (map.getLayer('rtp-route-line')) map.removeLayer('rtp-route-line');
-    if (map.getSource('rtp-route'))     map.removeSource('rtp-route');
+    for (const id of [RTP_ROUTE_LINE, RTP_ROUTE_CASING]) {
+      if (map.getLayer(id)) map.removeLayer(id);
+    }
+    if (map.getSource(RTP_ROUTE_SOURCE)) map.removeSource(RTP_ROUTE_SOURCE);
+  }
+
+  function drawRouteLine(routeGeometry) {
+    const feature = { type: 'Feature', geometry: routeGeometry, properties: {} };
+    if (map.getSource(RTP_ROUTE_SOURCE)) {
+      map.getSource(RTP_ROUTE_SOURCE).setData(feature);
+    } else {
+      map.addSource(RTP_ROUTE_SOURCE, { type: 'geojson', data: feature });
+      map.addLayer({
+        id: RTP_ROUTE_CASING,
+        type: 'line',
+        source: RTP_ROUTE_SOURCE,
+        paint: { 'line-color': '#ffffff', 'line-width': 8, 'line-opacity': 0.9 },
+        layout: { 'line-cap': 'round', 'line-join': 'round' }
+      });
+      map.addLayer({
+        id: RTP_ROUTE_LINE,
+        type: 'line',
+        source: RTP_ROUTE_SOURCE,
+        paint: { 'line-color': '#2563eb', 'line-width': 5, 'line-opacity': 0.88 },
+        layout: { 'line-cap': 'round', 'line-join': 'round' }
+      });
+    }
+    for (const id of [RTP_ROUTE_CASING, RTP_ROUTE_LINE]) {
+      if (map.getLayer(id)) map.moveLayer(id);
+    }
+  }
+
+  function buildDirectionsHtml(route) {
+    const steps = [];
+    for (const leg of route.legs || []) {
+      for (const step of leg.steps || []) {
+        const instruction = step.maneuver?.instruction || step.name;
+        if (instruction) steps.push({ instruction, distance: step.distance || 0 });
+      }
+    }
+    if (!steps.length) return '';
+    const items = steps.map((step, i) => {
+      const distMi = step.distance > 0 ? `${(step.distance / 1609.34).toFixed(1)} mi` : '';
+      return `<li class="rtp-dir-step">` +
+        `<span class="rtp-dir-num">${i + 1}</span>` +
+        `<span class="rtp-dir-text">${escapeHtml(step.instruction)}</span>` +
+        (distMi ? `<span class="rtp-dir-dist">${distMi}</span>` : '') +
+        `</li>`;
+    }).join('');
+    return `<div class="rtp-directions"><div class="rtp-dir-title">Turn-by-turn directions</div><ol class="rtp-dir-list">${items}</ol></div>`;
   }
 
   function makeWaypointMarker(lng, lat, html, popupHtml) {
@@ -298,51 +457,32 @@ export function initRoadTripPlanner({ map, searchResorts, escapeHtml }) {
 
   // ── Calculate Route ────────────────────────────────────────────────────
   rtpCalcBtn.addEventListener('click', async () => {
-    if (!rtpHomeWaypoint || rtpResortWaypoints.length === 0) return;
-    if (rtpEndMode === 'custom' && !rtpEndWaypoint) return;
+    if (!rtpCanCalculate()) {
+      await ensureHomeWaypointFromInput();
+      await ensureEndWaypointFromInput();
+      rtpUpdateUI();
+    }
+    if (!rtpCanCalculate()) return;
 
     clearRoute();
 
-    const allWps = [
-      { lat: rtpHomeWaypoint.lat, lng: rtpHomeWaypoint.lng, label: rtpHomeWaypoint.label },
-      ...rtpResortWaypoints.map(wp => ({ lat: wp.lat, lng: wp.lng, label: wp.name }))
-    ];
-    const hasExplicitEnd = rtpEndMode === 'start' || (rtpEndMode === 'custom' && rtpEndWaypoint);
-    if (rtpEndMode === 'start') {
-      allWps.push({ lat: rtpHomeWaypoint.lat, lng: rtpHomeWaypoint.lng, label: rtpHomeWaypoint.label });
-    } else if (rtpEndMode === 'custom' && rtpEndWaypoint) {
-      allWps.push({ lat: rtpEndWaypoint.lat, lng: rtpEndWaypoint.lng, label: rtpEndWaypoint.label });
-    }
+    const { allWps, hasExplicitEnd, usesHome } = buildRouteWaypoints();
 
     rtpCalcBtn.textContent = 'Calculating…';
     rtpCalcBtn.disabled    = true;
 
     try {
       const coordStr = allWps.map(wp => `${wp.lng},${wp.lat}`).join(';');
-      const url      = `https://router.project-osrm.org/route/v1/driving/${coordStr}?overview=full&geometries=geojson`;
-      const resp     = await fetch(url);
-      const data     = await resp.json();
+      const url = `${OSRM_ROUTE_URL}/${coordStr}?overview=full&geometries=geojson&steps=true`;
+      const resp = await fetch(url);
+      const data = await resp.json();
 
       if (!data.routes?.length || data.code !== 'Ok') {
         throw new Error(data.message || 'Route not found');
       }
 
       const route = data.routes[0];
-
-      // Draw route line
-      const routeGeoJSON = { type: 'Feature', geometry: route.geometry, properties: {} };
-      if (map.getSource('rtp-route')) {
-        map.getSource('rtp-route').setData(routeGeoJSON);
-      } else {
-        map.addSource('rtp-route', { type: 'geojson', data: routeGeoJSON });
-        map.addLayer({
-          id: 'rtp-route-line',
-          type: 'line',
-          source: 'rtp-route',
-          paint: { 'line-color': '#2563eb', 'line-width': 5, 'line-opacity': 0.78 },
-          layout: { 'line-cap': 'round', 'line-join': 'round' }
-        });
-      }
+      drawRouteLine(route.geometry);
 
       // Fit map to route
       const coords = route.geometry.coordinates;
@@ -358,14 +498,14 @@ export function initRoadTripPlanner({ map, searchResorts, escapeHtml }) {
         const isEnd   = hasExplicitEnd && i === allWps.length - 1;
         let html, popupHtml;
 
-        if (isStart) {
+        if (isStart && usesHome) {
           html      = `<div style="background:#16a34a;color:#fff;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 2px 6px rgba(0,0,0,0.35)">🏠</div>`;
           popupHtml = `<strong>Start:</strong> ${escapeHtml(wp.label || '')}`;
         } else if (isEnd) {
           html      = `<div style="background:#dc2626;color:#fff;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 2px 6px rgba(0,0,0,0.35)">🏁</div>`;
           popupHtml = `<strong>End:</strong> ${escapeHtml(wp.label || '')}`;
         } else {
-          const num = i; // 1-indexed resort
+          const num = usesHome ? i : i + 1;
           html      = `<div style="background:#2563eb;color:#fff;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,0.35)">${num}</div>`;
           popupHtml = `<strong>${num}. ${escapeHtml(wp.label || '')}</strong>`;
         }
@@ -384,30 +524,31 @@ export function initRoadTripPlanner({ map, searchResorts, escapeHtml }) {
       rtpSummary.innerHTML =
         `<div class="rtp-sum-row">🛣 ${distKm} km (${distMi} mi)</div>` +
         `<div class="rtp-sum-row">⏱ ~${timeStr} driving</div>` +
-        `<div class="rtp-sum-row" style="font-size:11px;color:#64748b;font-weight:400">Routing via OSRM / OpenStreetMap</div>`;
+        `<div class="rtp-sum-row" style="font-size:11px;color:#64748b;font-weight:400">Routing via OSRM / OpenStreetMap</div>` +
+        buildDirectionsHtml(route);
 
       rtpCalcBtn.textContent = 'Recalculate Route';
-      rtpCalcBtn.disabled    = false;
+      rtpUpdateUI();
     } catch (err) {
       console.warn('[road-trip-planner-ml] routing error:', err);
       rtpSummary.style.display = 'block';
       rtpSummary.innerHTML = `<div style="color:#ef4444;font-size:13px">Route not found. Some resorts may be unreachable by road.</div>`;
       rtpCalcBtn.textContent = 'Calculate Route';
-      rtpCalcBtn.disabled    = false;
+      rtpUpdateUI();
     }
   });
 
   // ── Clear all ──────────────────────────────────────────────────────────
-  rtpClearBtn.addEventListener('click', () => {
+  rtpClearBtn?.addEventListener('click', () => {
     rtpHomeWaypoint    = null;
     rtpResortWaypoints = [];
     rtpEndMode         = 'last';
     rtpEndWaypoint     = null;
-    rtpHomeInput.value = '';
-    rtpHomeStatus.textContent = '';
-    rtpEndAddressRow.style.display = 'none';
-    rtpEndInput.value  = '';
-    rtpEndStatus.textContent = '';
+    if (rtpHomeInput) rtpHomeInput.value = '';
+    if (rtpHomeStatus) rtpHomeStatus.textContent = '';
+    if (rtpEndAddressRow) rtpEndAddressRow.style.display = 'none';
+    if (rtpEndInput) rtpEndInput.value = '';
+    if (rtpEndStatus) rtpEndStatus.textContent = '';
     const lastRadio = document.querySelector('input[name="rtpEnd"][value="last"]');
     if (lastRadio) lastRadio.checked = true;
     rtpSummary.style.display = 'none';
@@ -418,4 +559,5 @@ export function initRoadTripPlanner({ map, searchResorts, escapeHtml }) {
   });
 
   rtpUpdateUI();
+  console.log('[road-trip-planner-ml] initialized');
 }
