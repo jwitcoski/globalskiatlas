@@ -144,6 +144,76 @@
     #vt-tooltip .tt-name { font-weight: 600; }
     #vt-tooltip .tt-hint { color: #94a3b8; font-size: 11px; margin-top: 2px; }
     #vt-tooltip .tt-diff { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+    #vt-tooltip .sf-fact { margin-top: 4px; line-height: 1.35; }
+    #vt-tooltip .sf-fact-highlight { color: #fcd34d; }
+    #vt-tooltip .sf-click-hint { color: #64748b; font-size: 10px; margin-top: 4px; }
+    #vt-tooltip .sf-loading { font-style: italic; }
+    .maplibregl-popup.ski-feature-popup .maplibregl-popup-content,
+    .mapboxgl-popup.ski-feature-popup .mapboxgl-popup-content {
+      padding: 12px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+    .sf-popup-title { font-weight: 700; font-size: 15px; margin-bottom: 4px; color: #0f172a; }
+    .sf-popup-badge { margin-bottom: 8px; }
+    .sf-popup-facts { margin: 8px 0; }
+    .sf-popup-facts .sf-fact {
+      font-size: 12px;
+      color: #334155;
+      padding: 4px 0;
+      border-top: 1px solid #e2e8f0;
+    }
+    .sf-popup-facts .sf-fact:first-child { border-top: none; padding-top: 0; }
+    .sf-popup-facts .sf-fact-highlight { color: #b45309; font-weight: 600; }
+    .sf-popup-table { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 12px; }
+    .sf-popup-table th {
+      text-align: left;
+      padding: 3px 10px 3px 0;
+      color: #64748b;
+      font-weight: 500;
+      vertical-align: top;
+      white-space: nowrap;
+    }
+    .sf-popup-table td { padding: 3px 0; color: #1e293b; }
+    .sf-popup-foot { margin-top: 8px; font-size: 10px; color: #94a3b8; }
+    .sf-popup-charts { margin: 8px 0 4px; }
+    .sf-chart-block {
+      background: #f8fafc;
+      border-radius: 8px;
+      padding: 8px 6px 4px;
+      margin-bottom: 8px;
+      border: 1px solid #e2e8f0;
+    }
+    .sf-chart-block:last-child { margin-bottom: 0; }
+    .sf-chart-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: #0f172a;
+      padding: 0 4px 2px;
+    }
+    .sf-chart-sub {
+      font-size: 10px;
+      color: #64748b;
+      padding: 0 4px 4px;
+    }
+    .sf-chart-caption {
+      font-size: 11px;
+      color: #475569;
+      text-align: center;
+      margin-top: 4px;
+      line-height: 1.35;
+    }
+    .sf-chart-svg { display: block; max-width: 100%; height: auto; }
+    .sf-badge-lift {
+      display: inline-block;
+      background: #fff7ed;
+      color: #c2410c;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 999px;
+    }
     .legend-mountain-icon { display: inline-flex; align-items: center; vertical-align: middle; margin-right: 6px; }
     @media (max-width: 768px) {
       .map-wrapper {
@@ -585,6 +655,6 @@
   <script src="scripts/header-toggle.js"></script>
   <script defer src="https://cdn.maptiler.com/maptiler-sdk-js/v3.10.2/maptiler-sdk.umd.min.js"></script>
   <script type="module" src="scripts/pmtiles-protocol-init.js"></script>
-  <script type="module" src="scripts/roadtripskimap-ml-main.js?v=13"></script>
+  <script type="module" src="scripts/roadtripskimap-ml-main.js?v=17"></script>
 </body>
 </html>

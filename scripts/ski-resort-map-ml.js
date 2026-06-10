@@ -8,12 +8,10 @@ import { getBasemapStyle, getSavedBasemapId } from './basemap-options.js';
 import {
   addSkiPmtilesToMap,
   ATLAS_COLORS,
-  attachPmtilesDebugLogging,
   ensureBoundaryLayersOnBottom,
   fetchSkiAreaCatalog,
-  restoreSkiPmtilesAfterStyleChange,
-  SKI_PMTILES_LAYERS
-} from './pmtiles-core.js?v=11';
+  restoreSkiPmtilesAfterStyleChange
+} from './pmtiles-core.js?v=12';
 import {
   getProp, escapeHtml, resortDisplayName, ENGLISH_NAME_KEYS,
   NAME_KEYS, ID_KEYS, COUNTRY_KEYS, STATE_KEYS, LIFTS_KEYS,
@@ -40,27 +38,13 @@ import {
   getIconId,
   addResortIconImages
 } from './resort-tier-icons.js';
+import { initSkiFeaturePopups } from './ski-feature-popups.js?v=5';
 
 const {
   LIFTS_MIN_ZOOM,
   PISTES_MIN_ZOOM
 } = config;
 
-function getPisteDifficultyFromProps(p) {
-  if (!p) return '';
-  let v = getProp(p, ['piste:difficulty', 'piste_difficulty', 'difficulty']);
-  if (v == null && typeof p.other_tags === 'string') {
-    const m = p.other_tags.match(/"piste:difficulty"=>"([^"]+)"/);
-    if (m) v = m[1];
-  }
-  return v != null ? String(v).toLowerCase().trim() : '';
-}
-
-function getAerialwayFromProps(p) {
-  return getProp(p, ['aerialway', 'Aerialway']) || '';
-}
-
-// ── Zoom thresholds: circles when zoomed out, shaped icons when zoomed in ──
 const RESORT_ICON_MIN_ZOOM = 9;
 
 const circlePaint = {
@@ -129,17 +113,6 @@ function buildPopupHtml(properties, latlng, options = {}, wikiPage = null) {
     `<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">` +
     `<a href="#" data-resort-url="${escapeHtml(popupUrl)}" data-resort-stored="${storedAttr}" class="resort-details-link" style="display:inline-flex;align-items:center;gap:4px;border-radius:8px;background:#2563eb;color:#fff;padding:8px 12px;font-size:13px;font-weight:500;text-decoration:none;cursor:pointer;">View details <i class="bi bi-arrow-up-right"></i></a>` +
     extraButtons + `</div>`;
-}
-
-// ── Tooltip labels for lifts/pistes (data comes from loaders) ──────────────
-function aerialwayLabel(type) {
-  const L = { gondola: 'Gondola', cable_car: 'Cable car', chair_lift: 'Chairlift', mixed_lift: 'Mixed lift', drag_lift: 'Drag lift', 't-bar': 'T-bar', j_bar: 'J-bar', platter: 'Platter', rope_tow: 'Rope tow', magic_carpet: 'Magic carpet' };
-  return L[type] || (type ? type.replace(/_/g, ' ') : 'Lift');
-}
-function difficultyBadge(d) {
-  const tbl = { easy: ['#22c55e', 'Easy'], novice: ['#22c55e', 'Novice'], intermediate: ['#2563eb', 'Intermediate'], medium: ['#2563eb', 'Medium'], advanced: ['#1a1a1a', 'Advanced'], hard: ['#1a1a1a', 'Hard'], expert: ['#991b1b', 'Expert'], freeride: ['#991b1b', 'Freeride'], extreme: ['#991b1b', 'Extreme'] };
-  const [color, label] = tbl[d] || ['#64748b', 'Unrated'];
-  return `<span class="tt-diff" style="background:${color}"></span>${label}`;
 }
 
 const OLYMPIC_HOSTS = [
@@ -215,9 +188,7 @@ export async function initSkiResortMap(options = {}) {
     containerId: 'map',
     style: getBasemapStyle(getSavedBasemapId())
   });
-  console.log('[ski-resort-map-ml] map ready, adding PMTiles…');
   await addSkiPmtilesToMap(map, SKI_PMTILES_OPTIONS);
-  attachPmtilesDebugLogging(map);
 
   // MapTiler Data API has correct WGS84 coordinates (querySourceFeatures geometry is unreliable).
   let rows = [];
@@ -413,13 +384,6 @@ export async function initSkiResortMap(options = {}) {
     await addResortMarkerLayers(map, resortFeatures);
   }
 
-  console.log('[ski-resort-map-ml] init complete', {
-    resortMarkers: resortFeatures.length,
-    zoom: map.getZoom(),
-    boundaryLayers: ['ski-boundary-line']
-      .map((id) => ({ id, present: !!map.getLayer(id) }))
-  });
-
   document.addEventListener('mousemove', (ev) => {
     if (vtTipEl.style.display !== 'none') {
       vtTipEl.style.left = (ev.clientX + 14) + 'px';
@@ -517,30 +481,7 @@ export async function initSkiResortMap(options = {}) {
   if (typeof requestIdleCallback !== 'undefined') requestIdleCallback(loadAd, { timeout: 2000 });
   else setTimeout(loadAd, 1500);
 
-  // ── PMTiles lift / piste tooltips (vector tiles, z ≥ 10) ─────────────────
-  map.on('mouseenter', SKI_PMTILES_LAYERS.lifts, () => { map.getCanvas().style.cursor = 'pointer'; });
-  map.on('mousemove', SKI_PMTILES_LAYERS.lifts, (e) => {
-    if (!e.features.length) return;
-    const p = e.features[0].properties || {};
-    const aw = getAerialwayFromProps(p);
-    const name = getProp(p, NAME_KEYS) || p.name || '';
-    showVtTip(e.point,
-      `<div class="tt-name">${escapeHtml(aerialwayLabel(aw))}${name ? ' · ' + escapeHtml(String(name)) : ''}</div>`
-    );
-  });
-  map.on('mouseleave', SKI_PMTILES_LAYERS.lifts, () => { map.getCanvas().style.cursor = ''; hideVtTip(); });
-
-  map.on('mouseenter', SKI_PMTILES_LAYERS.pistes, () => { map.getCanvas().style.cursor = 'pointer'; });
-  map.on('mousemove', SKI_PMTILES_LAYERS.pistes, (e) => {
-    if (!e.features.length) return;
-    const p = e.features[0].properties || {};
-    const diff = getPisteDifficultyFromProps(p);
-    const name = getProp(p, NAME_KEYS) || p.name || '';
-    showVtTip(e.point,
-      `<div class="tt-name">${name ? escapeHtml(String(name)) + ' · ' : ''}${difficultyBadge(diff)}</div>`
-    );
-  });
-  map.on('mouseleave', SKI_PMTILES_LAYERS.pistes, () => { map.getCanvas().style.cursor = ''; hideVtTip(); });
+  initSkiFeaturePopups(map, { escapeHtml, tipEl: vtTipEl });
 
   return { map, searchResorts, escapeHtml, restoreOverlays };
 }

@@ -32,12 +32,31 @@ export function loadSkiAreasOutlines() {
   return loadParquetRows(config.PARQUET_SKI_AREAS_URL);
 }
 
-const PISTE_BATCH_SIZE = 20000;
-const SKI_AREA_KEYS = ['Ski Area', 'Ski_Area', 'ski_area', 'resort_name', 'name'];
-
 function isLineGeometry(geom) {
   return geom && (geom.type === 'LineString' || geom.type === 'MultiLineString');
 }
+
+/** GeoParquet rows → GeoJSON features for stats / analysis. */
+export function parquetRowsToLineFeatures(rows) {
+  const out = [];
+  for (const row of rows) {
+    if (!isLineGeometry(row.geometry)) continue;
+    const { geometry, ...props } = row;
+    out.push({ type: 'Feature', geometry, properties: props });
+  }
+  return out;
+}
+
+export function loadPistesLineFeatures() {
+  return loadParquetRows(config.PARQUET_PISTES_URL).then(parquetRowsToLineFeatures);
+}
+
+export function loadLiftsLineFeatures() {
+  return loadParquetRows(config.PARQUET_LIFTS_URL).then(parquetRowsToLineFeatures);
+}
+
+const PISTE_BATCH_SIZE = 20000;
+const SKI_AREA_KEYS = ['Ski Area', 'Ski_Area', 'ski_area', 'resort_name', 'name'];
 
 function getSkiAreaFromRow(row) {
   return SKI_AREA_KEYS.map((k) => row[k]).find((v) => v != null && String(v).trim() !== '');

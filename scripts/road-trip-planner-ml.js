@@ -563,7 +563,6 @@ export function initRoadTripPlanner({ map, searchResorts, escapeHtml }) {
   });
 
   rtpUpdateUI();
-  console.log('[road-trip-planner-ml] initialized');
 
   return {
     restoreOverlays() {

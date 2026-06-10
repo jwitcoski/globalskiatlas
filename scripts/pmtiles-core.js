@@ -6,7 +6,7 @@ import { ATLAS_COLORS, PISTE_LINE_COLOR } from './map-colors.js';
 
 export { ATLAS_COLORS, PISTE_LINE_COLOR } from './map-colors.js';
 
-export const PMTILES_CORE_VERSION = 'v11';
+export const PMTILES_CORE_VERSION = 'v12';
 
 let protocolReady = null;
 let pmtilesProtocol = null;
@@ -17,8 +17,12 @@ let turfUnionLib = null;
 
 const LOG = '[PMTiles]';
 
+function isDebugEnabled() {
+  return globalThis.__GSA_DEBUG === true;
+}
+
 function pmtilesLog(...args) {
-  console.log(LOG, ...args);
+  if (isDebugEnabled()) console.log(LOG, ...args);
 }
 
 function pmtilesWarn(...args) {
@@ -189,6 +193,49 @@ async function fetchLayerPolygons(pm, layerName, z, x, y, kind) {
     out.push(gj);
   }
   return out;
+}
+
+/** Decode one MVT tile layer to GeoJSON features (lines, points, polygons). */
+async function fetchLayerGeoFeatures(pm, layerName, z, x, y) {
+  const { VectorTile, Pbf } = await getMvtLibs();
+  const resp = await pm.getZxy(z, x, y);
+  if (!resp?.data?.byteLength) return [];
+  const tile = new VectorTile(new Pbf(resp.data));
+  const layer = tile.layers[layerName];
+  if (!layer) return [];
+  const out = [];
+  for (let i = 0; i < layer.length; i++) {
+    out.push(layer.feature(i).toGeoJSON(x, y, z));
+  }
+  return out;
+}
+
+function worldCoverageTiles(z, lonStep = 35, latStep = 18) {
+  const seen = new Set();
+  const tiles = [];
+  for (let lon = -170; lon <= 170; lon += lonStep) {
+    for (let lat = -55; lat <= 72; lat += latStep) {
+      const [x, y] = lngLatToTileXY(lon, lat, z);
+      const key = `${x},${y}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        tiles.push([x, y]);
+      }
+    }
+  }
+  return tiles;
+}
+
+function featureDedupeKey(f) {
+  const p = f.properties || {};
+  const id = p.osm_id ?? p.id ?? p['@id'] ?? p.osm_way_id ?? p.ref;
+  if (id != null && id !== '') return String(id);
+  const name = p.name ?? p['piste:name'] ?? '';
+  const resort = p['Ski Area'] ?? p.ski_area ?? p.resort_name ?? '';
+  const coord = f.geometry?.coordinates?.[0];
+  const pt = Array.isArray(coord?.[0]) ? coord[0] : coord;
+  const sig = pt ? `${Number(pt[0]).toFixed(4)},${Number(pt[1]).toFixed(4)}` : '';
+  return `${String(name).toLowerCase()}|${String(resort).toLowerCase()}|${sig}`;
 }
 
 /** Fetch resort boundaries directly from PMTiles (works even when MapLibre protocol fails). */
@@ -686,8 +733,9 @@ export function ensureBoundaryLayersOnTop(map, beforeLayerId) {
   ensureBoundaryLayersOnBottom(map);
 }
 
-/** Console diagnostics — source load, layer visibility, rendered feature counts. */
+/** Console diagnostics — enable with globalThis.__GSA_DEBUG = true in devtools. */
 export function attachPmtilesDebugLogging(map) {
+  if (!isDebugEnabled()) return;
   if (map.__pmtilesDebugAttached) return;
   map.__pmtilesDebugAttached = true;
 
@@ -906,8 +954,59 @@ export async function queryPmtilesLayerGrid(map, sourceLayer, zoom = 10) {
   return [...seen.values()];
 }
 
-/** Hidden map probe — load all features from one PMTiles source-layer. */
-export async function loadPmtilesLayerFeatures(sourceLayer, zoom = 10) {
+/** Load features by sampling z/x/y tiles at each resort centroid (sparse PMTiles archive). */
+async function loadPmtilesLayerFeaturesFromResorts(sourceLayer, zoom = 10) {
+  if (!overviewPm) {
+    const { PMTiles } = await loadPmtilesLib();
+    overviewPm = new PMTiles(config.PMTILES_OVERVIEW_URL);
+  }
+  const catalog = await fetchSkiAreaCatalog();
+  const tileKeys = new Set();
+  for (const f of catalog) {
+    const coords = f.geometry?.coordinates;
+    if (!coords || coords.length < 2) continue;
+    const [lon, lat] = coords;
+    const [x, y] = lngLatToTileXY(lon, lat, zoom);
+    tileKeys.add(`${x},${y}`);
+  }
+  const seen = new Map();
+  for (const key of tileKeys) {
+    const [x, y] = key.split(',').map(Number);
+    const batch = await fetchLayerGeoFeatures(overviewPm, sourceLayer, zoom, x, y);
+    for (const f of batch) {
+      const dedupe = featureDedupeKey(f);
+      if (!seen.has(dedupe)) seen.set(dedupe, f);
+    }
+  }
+  pmtilesLog('loadPmtilesLayerFeaturesFromResorts', { sourceLayer, zoom, features: seen.size, tiles: tileKeys.size });
+  return [...seen.values()];
+}
+
+/** Load all features from one PMTiles source-layer via direct tile reads (no extra WebGL map). */
+export async function loadPmtilesLayerFeaturesDirect(sourceLayer, zoom = 10) {
+  if (!overviewPm) {
+    const { PMTiles } = await loadPmtilesLib();
+    overviewPm = new PMTiles(config.PMTILES_OVERVIEW_URL);
+  }
+  const tiles = worldCoverageTiles(zoom);
+  const seen = new Map();
+  for (const [x, y] of tiles) {
+    const batch = await fetchLayerGeoFeatures(overviewPm, sourceLayer, zoom, x, y);
+    for (const f of batch) {
+      const key = featureDedupeKey(f);
+      if (!seen.has(key)) seen.set(key, f);
+    }
+  }
+  if (seen.size === 0) {
+    pmtilesWarn('coarse grid missed all PMTiles tiles; sampling resort centroids', { sourceLayer, zoom });
+    return loadPmtilesLayerFeaturesFromResorts(sourceLayer, zoom);
+  }
+  pmtilesLog('loadPmtilesLayerFeaturesDirect', { sourceLayer, zoom, features: seen.size, tiles: tiles.length });
+  return [...seen.values()];
+}
+
+/** Hidden map probe fallback when direct tile reads fail. */
+async function loadPmtilesLayerFeaturesProbe(sourceLayer, zoom = 10) {
   const probeEl = document.createElement('div');
   probeEl.id = 'pmtiles-probe-' + sourceLayer;
   probeEl.style.cssText = 'position:fixed;left:-9999px;width:512px;height:384px;visibility:hidden;pointer-events:none';
@@ -923,6 +1022,16 @@ export async function loadPmtilesLayerFeatures(sourceLayer, zoom = 10) {
   probeMap.remove();
   probeEl.remove();
   return feats;
+}
+
+/** Load all features from one PMTiles source-layer (direct read, probe map fallback). */
+export async function loadPmtilesLayerFeatures(sourceLayer, zoom = 10) {
+  try {
+    return await loadPmtilesLayerFeaturesDirect(sourceLayer, zoom);
+  } catch (err) {
+    pmtilesWarn('direct feature load failed, using probe map', sourceLayer, err?.message || err);
+    return loadPmtilesLayerFeaturesProbe(sourceLayer, zoom);
+  }
 }
 
 /**

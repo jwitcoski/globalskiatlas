@@ -10,4 +10,3 @@ if (!sdk) {
 
 await initPmtilesProtocol(sdk);
 globalThis.__skiPmtilesProtocolReady = true;
-console.log('[PMTiles] protocol init module complete');
