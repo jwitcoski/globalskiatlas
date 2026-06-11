@@ -12,23 +12,23 @@
     gtag('config', 'G-KJGNL3KJL0');
   </script>
   <!-- Ad script loaded after map is interactive (see mainmap module) -->
-  <title>Interactive Ski Resort Map – Global Ski Atlas</title>
-  <meta name="description" content="Interactive map of 3,000+ ski resorts worldwide. Explore trails, lifts, resort stats, and comparison charts—zoom in for piste and lift detail." />
-  <meta name="keywords" content="ski resort map, interactive ski map, ski atlas, ski trails map, ski lifts map, worldwide ski resorts" />
+  <title>Ski Road Trip Planner & Interactive Ski Resort Map – Global Ski Atlas</title>
+  <meta name="description" content="Free ski road trip planner: plan multi-resort ski trips with turn-by-turn directions. Interactive map of 3,000+ ski resorts worldwide—trails, lifts, route planner." />
+  <meta name="keywords" content="ski road trip planner, ski trip planner, ski resort map, multi resort ski trip, ski road trip route, ski resort directions, interactive ski map" />
   <!-- Open Graph -->
-  <meta property="og:title" content="Interactive Ski Resort Map – Global Ski Atlas" />
-  <meta property="og:description" content="Explore 3,000+ ski resorts on an interactive map with trails, lifts, and rich resort popups." />
+  <meta property="og:title" content="Ski Road Trip Planner & Interactive Ski Resort Map – Global Ski Atlas" />
+  <meta property="og:description" content="Plan a ski road trip with turn-by-turn directions. Interactive map of 3,000+ ski resorts—trails, lifts, and free route planner." />
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://globalskiatlas.com/mainmap.html" />
+  <meta property="og:url" content="https://globalskiatlas.com/TripPlannerMap.html" />
   <meta property="og:image" content="https://globalskiatlas.com/assets/og-banner.png" />
   <meta property="og:site_name" content="Global Ski Atlas" />
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Interactive Ski Resort Map – Global Ski Atlas" />
-  <meta name="twitter:description" content="Explore 3,000+ ski resorts on an interactive map with trails, lifts, and rich resort popups." />
+  <meta name="twitter:title" content="Ski Road Trip Planner & Interactive Ski Resort Map – Global Ski Atlas" />
+  <meta name="twitter:description" content="Plan a ski road trip with turn-by-turn directions. Interactive map of 3,000+ ski resorts—trails, lifts, route planner." />
   <meta name="twitter:image" content="https://globalskiatlas.com/assets/og-banner.png" />
   <!-- Canonical -->
-  <link rel="canonical" href="https://globalskiatlas.com/mainmap.html" />
+  <link rel="canonical" href="https://globalskiatlas.com/TripPlannerMap.html" />
   <!-- Preconnect to critical origins for faster tile and PMTiles fetches -->
   <link rel="preconnect" href="https://api.maptiler.com" crossorigin />
   <link rel="preconnect" href="https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com" crossorigin />
@@ -38,9 +38,10 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" integrity="sha512-dPXYcDub/aeb08c63jRq/k6GaKccl256JQy/AnOq7CAnEZ9FzSL9wSbcZkMp4R26vBsMLFYH4kQ67/bbV8XaCQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <link href="https://cdn.maptiler.com/maptiler-sdk-js/v3.10.2/maptiler-sdk.css" rel="stylesheet" />
   <link rel="stylesheet" href="css/mainmap.css" />
+  <link rel="stylesheet" href="css/tripplannermap.css" />
 </head>
 <body class="tw-flex tw-min-h-[100vh] tw-flex-col tw-bg-[#fff]">
-  <h1 class="tw-sr-only">Interactive map of 3,000+ ski resorts worldwide with trails, lifts, and resort details</h1>
+  <h1 class="tw-sr-only">Ski Road Trip Planner – Interactive map of 3,000+ ski resorts worldwide with trails, lifts, and turn-by-turn route planning</h1>
   <header
     class="tw-absolute tw-top-0 tw-z-[100] tw-flex tw-h-[60px] tw-w-full tw-bg-opacity-0 
            tw-px-[5%] max-lg:tw-mr-auto max-lg:tw-px-4 lg:tw-justify-around"
@@ -130,6 +131,60 @@
     <div id="heavyLoadIndicator" class="map-legend" style="display:none;bottom:12px;top:auto;background:rgba(255,255,255,0.95);padding:10px 14px;font-size:13px;">
       Loading trail & lift data…
     </div>
+
+    <button id="roadTripToggle">
+      <i class="bi bi-signpost-2-fill"></i> Plan Road Trip
+    </button>
+
+    <div id="roadTripPanel">
+      <div class="rtp-header">
+        <h2><i class="bi bi-signpost-2-fill" style="margin-right:6px"></i>Road Trip Planner</h2>
+        <button class="rtp-close-btn" id="roadTripClose" aria-label="Close">&#x2715;</button>
+      </div>
+      <div class="rtp-body">
+        <div>
+          <div class="rtp-label">Starting Point</div>
+          <div class="rtp-input-row">
+            <input type="text" id="homeAddressInput" placeholder="Enter your address…" autocomplete="off" />
+            <button class="rtp-btn" id="geocodeHomeBtn">Go</button>
+          </div>
+          <button class="rtp-loc-btn" id="useMyLocationBtn">
+            <i class="bi bi-geo-alt-fill"></i> Use my location
+          </button>
+          <div class="rtp-status" id="homePointStatus"></div>
+        </div>
+        <div>
+          <div class="rtp-label">Ending Point</div>
+          <div class="rtp-end-options">
+            <label class="rtp-radio"><input type="radio" name="rtpEnd" value="last" checked /> End at last resort</label>
+            <label class="rtp-radio"><input type="radio" name="rtpEnd" value="start" /> Return to start</label>
+            <label class="rtp-radio"><input type="radio" name="rtpEnd" value="custom" /> Different address</label>
+          </div>
+          <div id="rtpEndAddressRow" class="rtp-input-row" style="display:none; margin-top:6px;">
+            <input type="text" id="endAddressInput" placeholder="Enter ending address…" autocomplete="off" />
+            <button class="rtp-btn" id="geocodeEndBtn">Go</button>
+          </div>
+          <div class="rtp-status" id="endPointStatus"></div>
+        </div>
+        <div>
+          <div class="rtp-label">Ski Resorts <span id="waypointCount"></span> <span class="rtp-max-hint">(max 25 – routing API limit)</span></div>
+          <div id="waypointList">
+            <div class="waypoint-empty">No resorts added yet.<br>Search below or click a resort on the map.</div>
+          </div>
+          <div class="rtp-search-wrapper">
+            <input type="text" class="rtp-search-input" id="resortAddInput" placeholder="Search resort to add…" autocomplete="off" />
+            <div id="resortAddDropdown" class="rtp-search-dropdown"></div>
+          </div>
+        </div>
+        <div id="rtpRegionWarning" class="rtp-warning" style="display:none;"></div>
+        <div>
+          <button class="rtp-btn rtp-btn-full" id="rtpCalcBtn" type="button">Calculate Route</button>
+          <div id="rtpCalcHint" class="rtp-calc-hint rtp-calc-hint-warn">Set a starting point and add at least one resort.</div>
+          <button id="rtpClearBtn" type="button">&#x2715; Clear All</button>
+        </div>
+        <div id="routeSummary"></div>
+      </div>
+    </div>
   </div>
 
   <footer
@@ -183,6 +238,6 @@
   <script src="scripts/header-toggle.js"></script>
   <script defer src="https://cdn.maptiler.com/maptiler-sdk-js/v3.10.2/maptiler-sdk.umd.min.js"></script>
   <script type="module" src="scripts/pmtiles-protocol-init.js"></script>
-  <script type="module" src="scripts/mainmap-ml-main.js?v=1"></script>
+  <script type="module" src="scripts/roadtripskimap-ml-main.js?v=22"></script>
 </body>
 </html>

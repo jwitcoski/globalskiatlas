@@ -998,8 +998,8 @@ export async function loadPmtilesLayerFeaturesDirect(sourceLayer, zoom = 10) {
     }
   }
   if (seen.size === 0) {
-    pmtilesWarn('coarse grid missed all PMTiles tiles; sampling resort centroids', { sourceLayer, zoom });
-    return loadPmtilesLayerFeaturesFromResorts(sourceLayer, zoom);
+    pmtilesLog('coarse grid found no features', { sourceLayer, zoom });
+    return [];
   }
   pmtilesLog('loadPmtilesLayerFeaturesDirect', { sourceLayer, zoom, features: seen.size, tiles: tiles.length });
   return [...seen.values()];
@@ -1024,14 +1024,22 @@ async function loadPmtilesLayerFeaturesProbe(sourceLayer, zoom = 10) {
   return feats;
 }
 
-/** Load all features from one PMTiles source-layer (direct read, probe map fallback). */
+/** Load all features from one PMTiles source-layer (resort tiles first, then coarse grid, then probe map). */
 export async function loadPmtilesLayerFeatures(sourceLayer, zoom = 10) {
   try {
-    return await loadPmtilesLayerFeaturesDirect(sourceLayer, zoom);
+    const fromResorts = await loadPmtilesLayerFeaturesFromResorts(sourceLayer, zoom);
+    if (fromResorts.length > 0) return fromResorts;
   } catch (err) {
-    pmtilesWarn('direct feature load failed, using probe map', sourceLayer, err?.message || err);
+    pmtilesWarn('resort-centroid feature load failed', sourceLayer, err?.message || err);
+  }
+  try {
+    const fromGrid = await loadPmtilesLayerFeaturesDirect(sourceLayer, zoom);
+    if (fromGrid.length > 0) return fromGrid;
+  } catch (err) {
+    pmtilesWarn('direct grid feature load failed, using probe map', sourceLayer, err?.message || err);
     return loadPmtilesLayerFeaturesProbe(sourceLayer, zoom);
   }
+  return loadPmtilesLayerFeaturesProbe(sourceLayer, zoom);
 }
 
 /**

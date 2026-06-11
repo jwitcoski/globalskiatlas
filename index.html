@@ -65,6 +65,10 @@
             crossorigin="anonymous"
             referrerpolicy="no-referrer"
         />
+        <link rel="preconnect" href="https://api.maptiler.com" crossorigin />
+        <link rel="preconnect" href="https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com" crossorigin />
+        <link href="https://cdn.maptiler.com/maptiler-sdk-js/v3.10.2/maptiler-sdk.css" rel="stylesheet" />
+        <link rel="stylesheet" href="css/index-hero-map.css" />
     </head>
     <body class="tw-flex tw-min-h-[100vh] tw-flex-col tw-bg-[#fff]">
         <header
@@ -89,18 +93,19 @@
                 >
                     <!-- Atlas -->
                     <div class="header-dropdown-group">
-                        <a class="header-tab header-links" href="wiki/browse.html" aria-haspopup="true">Atlas <i class="bi bi-chevron-down tw-text-xs"></i></a>
+                        <a class="header-tab header-links" href="mainmap.html" aria-haspopup="true">Atlas <i class="bi bi-chevron-down tw-text-xs"></i></a>
                         <div class="header-dropdown" role="menu">
                             <a class="header-links" href="coffee-table-book.html" role="menuitem">Coffee Table Book</a>
                             <a class="header-links" href="bookpitch.html" role="menuitem">Book pitch</a>
-                            <a class="header-links" href="wiki/browse.html" role="menuitem">Online Atlas</a>
+                            <a class="header-links" href="mainmap.html" role="menuitem">Interactive Map</a>
+            <a class="header-links" href="wiki/browse.html" role="menuitem">Online Atlas</a>
                         </div>
                     </div>
                     <!-- Driving -->
                     <div class="header-dropdown-group">
-                        <a class="header-tab header-links" href="mainmap.html" aria-haspopup="true">Driving <i class="bi bi-chevron-down tw-text-xs"></i></a>
+                        <a class="header-tab header-links" href="TripPlannerMap.html" aria-haspopup="true">Driving <i class="bi bi-chevron-down tw-text-xs"></i></a>
                         <div class="header-dropdown" role="menu">
-                            <a class="header-links" href="mainmap.html" role="menuitem">Trip Planner</a>
+                            <a class="header-links" href="TripPlannerMap.html" role="menuitem">Trip Planner</a>
                             <a class="header-links" href="DriveTimeMap.html" role="menuitem">Drive Time</a>
                         </div>
                     </div>
@@ -206,12 +211,17 @@
                     class="tw-flex tw-w-full tw-max-w-[50%] tw-place-content-center tw-place-items-center 
                             tw-overflow-hidden max-lg:tw-max-w-[unset]"
                 >
-                    <div class="tw-relative tw-max-h-[420px] tw-max-w-[560px] tw-overflow-hidden tw-rounded-lg max-lg:tw-max-h-[280px] max-lg:tw-max-w-[320px]">
-                        <img
-                            src="./assets/ski-resort-dashboard-phone.png"
-                            alt="Phone showing ski resort dashboard"
-                            class="reveal-hero-img tw-z-[1] tw-h-full tw-w-full tw-object-cover"
-                        />
+                    <div
+                        class="hero-map-embed reveal-hero-img tw-relative tw-z-[1] tw-h-[420px] tw-w-full tw-max-w-[560px] tw-overflow-hidden tw-rounded-lg tw-shadow-lg max-lg:tw-h-[280px] max-lg:tw-max-w-[320px]"
+                    >
+                        <div id="map" aria-label="Interactive ski resort map"></div>
+                        <div class="search-box" id="searchBox" style="display: none;">
+                            <input type="text" id="searchInput" placeholder="Search for a resort..." autocomplete="off" />
+                            <div class="search-dropdown" id="searchDropdown"></div>
+                        </div>
+                        <div id="legend" class="map-legend" style="display: none;"></div>
+                        <div id="basemapControl" class="basemap-control" aria-label="Basemap options"></div>
+                        <a href="mainmap.html" class="hero-map-open-link">Open full map <i class="bi bi-arrow-up-right"></i></a>
                     </div>
                 </div>
             </div>
@@ -408,7 +418,7 @@
                     <h3 class="tw-text-4xl tw-font-medium">Ski Trip Planner</h3>
                     <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700">Plan the perfect multi-resort ski adventure</p>
                     <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600">Use our interactive map to plan multi-resort ski trips with turn-by-turn directions. Add up to 25 stops, explore 3,000+ resorts on the map, and choose whether to end at your last destination or loop back to the start. The ultimate tool for road-tripping skiers.</p>
-                    <a href="mainmap.html" class="tw-mt-6 tw-inline-flex tw-gap-2 tw-rounded-lg tw-px-8 tw-py-4 tw-text-lg tw-font-semibold tw-shadow-md tw-no-underline tw-text-white hover:tw-opacity-90" style="background-color: #2563eb;" aria-label="Open Ski Trip Planner">Plan your trip <i class="bi bi-arrow-right"></i></a>
+                    <a href="TripPlannerMap.html" class="tw-mt-6 tw-inline-flex tw-gap-2 tw-rounded-lg tw-px-8 tw-py-4 tw-text-lg tw-font-semibold tw-shadow-md tw-no-underline tw-text-white hover:tw-opacity-90" style="background-color: #2563eb;" aria-label="Open Ski Trip Planner">Plan your trip <i class="bi bi-arrow-right"></i></a>
                 </div>
             </div>
         </section>
@@ -737,7 +747,7 @@
                     <a href="coffee-table-book.html" class="footer-link">Coffee Table Book</a>
                     <a href="bookpitch.html" class="footer-link">Book pitch</a>
                     <a href="wiki/browse.html" class="footer-link">Online Atlas</a>
-                    <a href="mainmap.html" class="footer-link">Trip Planner</a>
+                    <a href="TripPlannerMap.html" class="footer-link">Trip Planner</a>
                     <a href="DriveTimeMap.html" class="footer-link">Drive Time</a>
                     <a href="resort-comparison.html" class="footer-link">Compare Resorts</a>
                     <a href="SkiResortFacts.html" class="footer-link">Resort Facts</a>
@@ -850,6 +860,8 @@
     </style>
 
     <script defer src="https://cdn.maptiler.com/maptiler-sdk-js/v3.10.2/maptiler-sdk.umd.min.js"></script>
+    <script type="module" src="scripts/pmtiles-protocol-init.js"></script>
+    <script type="module" src="scripts/index-hero-map.js?v=1"></script>
     <script type="module">
         import { fetchSkiAreaCatalog, loadPmtilesLayerFeatures } from './scripts/pmtiles-core.js';
         (async function () {

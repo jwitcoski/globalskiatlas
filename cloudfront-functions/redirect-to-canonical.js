@@ -18,7 +18,7 @@ function handler(event) {
   var canonicalHost = 'globalskiatlas.com';
   var directRedirects = {
     '/atlas.html': '/wiki/browse.html',
-    '/roadtripskimap.html': '/mainmap.html'
+    '/roadtripskimap.html': '/TripPlannerMap.html'
   };
 
   function queryString() {

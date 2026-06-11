@@ -18,7 +18,8 @@ import {
   ENGLISH_NAME_KEYS,
   NAME_KEYS,
   COUNTRY_KEYS,
-  STATE_KEYS
+  STATE_KEYS,
+  COLOR_BY_KEYS
 } from './utils.js';
 
 if (typeof maptilersdk === 'undefined' || typeof maptilerweather === 'undefined') {

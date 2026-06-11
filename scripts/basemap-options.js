@@ -39,7 +39,7 @@ export function getBasemapStyle(basemapId) {
     case 'topo':
       return M.TOPO;
     case 'streets':
-      return M.STREETS;
+      return M.STREETS.LIGHT;
     case 'light':
       return M.BACKDROP.LIGHT;
     default:
