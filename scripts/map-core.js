@@ -4,7 +4,7 @@
  * Dependencies: map-config.js; page must load maptiler-sdk UMD before modules run.
  */
 import { config } from './map-config.js';
-import { initPmtilesProtocol } from './pmtiles-core.js?v=11';
+import { initPmtilesProtocol } from './pmtiles-core.js';
 
 /** @returns {typeof maptilersdk} */
 export function initMapTilerSdk() {

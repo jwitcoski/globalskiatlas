@@ -1,7 +1,7 @@
 /**
  * Global trail/lift length index for percentile comparisons (background load).
  */
-import { SKI_PMTILES_SOURCES } from './pmtiles-core.js?v=12';
+import { SKI_PMTILES_SOURCES } from './pmtiles-core.js';
 import { loadLiftsLineFeatures, loadPistesLineFeatures } from './geoparquet-browser.js';
 import {
   analyzeFeature,

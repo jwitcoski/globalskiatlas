@@ -154,13 +154,32 @@ function tilesForViewport(map, tileZ, maxTiles = 36) {
   const b = map.getBounds();
   const sw = b.getSouthWest();
   const ne = b.getNorthEast();
+  const scale = 2 ** tileZ;
   const [xMin, yMin] = lngLatToTileXY(sw.lng, ne.lat, tileZ);
   const [xMax, yMax] = lngLatToTileXY(ne.lng, sw.lat, tileZ);
+  const crossesAntimeridian = sw.lng > ne.lng;
   const tiles = [];
   const pad = 1;
-  for (let x = xMin - pad; x <= xMax + pad; x++) {
-    for (let y = yMin - pad; y <= yMax + pad; y++) {
-      tiles.push([x, y]);
+  const y0 = Math.max(0, Math.min(yMin, yMax) - pad);
+  const y1 = Math.min(scale - 1, Math.max(yMin, yMax) + pad);
+
+  const pushXY = (x, y) => {
+    const xx = ((x % scale) + scale) % scale;
+    if (y < 0 || y >= scale) return;
+    tiles.push([xx, y]);
+  };
+
+  if (crossesAntimeridian) {
+    // West side: xMin..scale-1, east side: 0..xMax (with padding)
+    for (let x = xMin - pad; x < scale; x++) {
+      for (let y = y0; y <= y1; y++) pushXY(x, y);
+    }
+    for (let x = 0; x <= xMax + pad; x++) {
+      for (let y = y0; y <= y1; y++) pushXY(x, y);
+    }
+  } else {
+    for (let x = xMin - pad; x <= xMax + pad; x++) {
+      for (let y = y0; y <= y1; y++) pushXY(x, y);
     }
   }
   if (tiles.length > maxTiles) {
@@ -170,7 +189,10 @@ function tilesForViewport(map, tileZ, maxTiles = 36) {
     const capped = [];
     for (let dx = -half; dx <= half; dx++) {
       for (let dy = -half; dy <= half; dy++) {
-        capped.push([cx + dx, cy + dy]);
+        const xx = ((cx + dx) % scale + scale) % scale;
+        const yy = cy + dy;
+        if (yy < 0 || yy >= scale) continue;
+        capped.push([xx, yy]);
       }
     }
     return capped;

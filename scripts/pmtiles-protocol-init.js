@@ -1,7 +1,7 @@
 /**
  * Register pmtiles:// before the main map module runs (MapTiler UMD must load first).
  */
-import { initPmtilesProtocol } from './pmtiles-core.js?v=11';
+import { initPmtilesProtocol } from './pmtiles-core.js';
 
 const sdk = typeof maptilersdk !== 'undefined' ? maptilersdk : null;
 if (!sdk) {

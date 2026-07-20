@@ -1,7 +1,7 @@
 /**
  * Hover tooltips and click popups for ski trails and lifts with comparative stats.
  */
-import { SKI_PMTILES_LAYERS } from './pmtiles-core.js?v=12';
+import { SKI_PMTILES_LAYERS } from './pmtiles-core.js';
 import {
   aerialwayLabel,
   analyzeFeature,
