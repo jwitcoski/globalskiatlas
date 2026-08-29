@@ -155,9 +155,71 @@
     }
     #overlay.lobby #panel {
       pointer-events: auto;
-      width: min(320px, 92vw);
+      display: flex;
+      flex-direction: column;
+      width: min(360px, 92vw);
+      max-height: min(78vh, 720px);
+      overflow: hidden;
       margin: 0 0 var(--pad-b) var(--pad-l);
       background: rgba(255,255,255,.72);
+    }
+    #overlay.lobby #panel .actions { flex-shrink: 0; margin-top: 10px; }
+    .lobby-details {
+      flex: 1 1 auto;
+      min-height: 0;
+      margin: 0;
+      border-top: 1px solid rgba(42,50,56,.14);
+    }
+    .lobby-details summary {
+      cursor: pointer;
+      list-style: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 8px 0;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .04em;
+      color: #2a3238;
+    }
+    .lobby-details summary::-webkit-details-marker { display: none; }
+    .lobby-details summary::after {
+      content: "▸";
+      font-size: 11px;
+      opacity: .7;
+    }
+    .lobby-details[open] summary::after { content: "▾"; }
+    .lobby-details-body {
+      max-height: min(42vh, 380px);
+      overflow-y: auto;
+      padding: 0 0 6px;
+    }
+    .atlas-stats { margin: 0 0 10px; }
+    .atlas-stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px 12px;
+    }
+    .atlas-stat { font-size: 12px; line-height: 1.25; }
+    .atlas-stat .stat-label, .atlas-breakdown .stat-label {
+      display: block;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .04em;
+      color: #4a5a68;
+    }
+    .atlas-breakdown, .atlas-meta {
+      margin: 8px 0 0;
+      font-size: 11px;
+      line-height: 1.35;
+    }
+    .atlas-wiki {
+      display: inline-block;
+      margin-top: 8px;
+      font-size: 12px;
+      font-weight: 650;
+      color: #1a5f7a;
     }
     #overlay.lobby .trails { display: none; }
     .trail-meta { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 13px; font-weight: 600; }
@@ -273,6 +335,6 @@
     { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
                    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }
   </script>
-  <script type="module" src="./main.js?v=island18"></script>
+  <script type="module" src="./main.js?v=island21"></script>
 </body>
 </html>

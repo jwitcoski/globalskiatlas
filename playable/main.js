@@ -41,7 +41,8 @@ import {
   setInspectAtmosphere,
 } from "./look.js?v=island1";
 import { addResortIsland, updateIslandDust } from "./island.js?v=island10";
-import { bindUi, setHud, openPanel, closePanel } from "./ui.js?v=vis23";
+import { bindUi, setHud, openPanel, closePanel } from "./ui.js?v=vis26";
+import { atlasStatsHtml, prefetchWikiIndex } from "./atlas-stats.js?v=stats1";
 import { showPickerMap, destroyPickerMap } from "./picker-map.js?v=map4";
 import { capDpr, bindPads, attachDebug } from "./debug.js?v=fix1";
 import { bakePisteSculpt, drapeSculptOnMesh } from "./piste-sculpt.js?v=feel3";
@@ -66,6 +67,8 @@ const PUBLIC_SCENES =
   "https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/game_scenes/";
 let SCENE_ROOT = new URL("./", import.meta.url);
 let catalogHub = null;
+let lastManifest = null;
+let readySeq = 0;
 const STEP = 1 / 60;
 
 const ui = bindUi();
@@ -136,9 +139,16 @@ function selectedDiff() {
   return classifyDifficulty(activeCourse?.piste_difficulty, activeCourse?.piste_type);
 }
 
+function currentCatalogResort() {
+  const path = scenePathFromUrl();
+  return (
+    catalogHub?.data?.resorts?.find((r) => String(r.path || "").replace(/\/+$/, "") === path) || null
+  );
+}
+
 function showReady() {
   const d = selectedDiff();
-  openPanel(ui, "ready", {
+  const payload = {
     course: courseName,
     legal: LEGAL,
     trails: trailChoices,
@@ -148,7 +158,22 @@ function showReady() {
     diffLabel: d.label,
     legend: difficultyLegendHtml(),
     changeMountain: !!catalogHub,
-  });
+  };
+  openPanel(ui, "ready", payload);
+  const seq = ++readySeq;
+  const catalog = currentCatalogResort();
+  const hint = {
+    name: String(lastManifest?.display_name || catalog?.name || "").replace(/\s+[—-]\s+Prototype$/i, ""),
+    country: catalog?.country,
+    location: catalog?.location,
+    id: catalog?.id,
+  };
+  atlasStatsHtml(hint)
+    .then((html) => {
+      if (!html || seq !== readySeq || run?.phase !== "ready") return;
+      openPanel(ui, "ready", { ...payload, atlasStats: html });
+    })
+    .catch(() => {});
 }
 
 function setIslandLobby(on) {
@@ -453,6 +478,7 @@ async function fetchCatalog() {
 
 async function loadMountain() {
   const manifest = await loadJSON("scene-manifest.json");
+  lastManifest = manifest;
   if (manifest.display_name) document.title = String(manifest.display_name).replace(" — Prototype", "");
   const hfMeta = await loadJSON(manifest.terrain.heightfield_metadata);
   const buf = await (await fetch(new URL(manifest.terrain.heightfield, SCENE_ROOT))).arrayBuffer();
@@ -572,6 +598,7 @@ async function loadMountain() {
 }
 
 async function bootScene() {
+  prefetchWikiIndex();
   catalogHub = await fetchCatalog();
   const path = scenePathFromUrl();
   if (path) {

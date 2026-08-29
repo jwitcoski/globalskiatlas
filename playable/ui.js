@@ -68,12 +68,35 @@ function actions(rows) {
     .join("")}</div>`;
 }
 
+let lobbyDetailsOpen = true;
+
 function trailMeta(data) {
   const t = (data.trails || []).find((r) => r.id === data.selectedId) || {};
   const drop = Math.round(t.vertical_drop_m || t.drop || 0);
   const len = Math.round(t.length_m || t.length || 0);
   const label = data.diffLabel || "Unrated";
   return `<p class="trail-meta">${data.marker || ""}<span>${label} · ${drop} m drop · ${len} m</span></p>`;
+}
+
+function lobbyDetailsHtml(data) {
+  const open = lobbyDetailsOpen ? " open" : "";
+  return `<details class="lobby-details"${open}>
+      <summary>Resort details</summary>
+      <div class="lobby-details-body">
+        ${data.atlasStats || ""}
+        ${data.legend || ""}
+        <p class="hint">Click a marker on the mountain. Drag to orbit.</p>
+        <p class="fine">${data.legal}</p>
+      </div>
+    </details>`;
+}
+
+function bindLobbyDetails(ui) {
+  const el = ui.panel?.querySelector(".lobby-details");
+  if (!el) return;
+  el.addEventListener("toggle", () => {
+    lobbyDetailsOpen = el.open;
+  });
 }
 
 function esc(s) {
@@ -123,9 +146,7 @@ export function openPanel(ui, kind, data) {
     ui.panel.innerHTML = `<p class="kicker">Pick a trail</p>
       <h2>${data.course}</h2>
       ${trailMeta(data)}
-      ${data.legend || ""}
-      <p class="hint">Click a marker on the mountain. Drag to orbit.</p>
-      <p class="fine">${data.legal}</p>
+      ${lobbyDetailsHtml(data)}
       ${actions(
         data.changeMountain
           ? [
@@ -134,6 +155,7 @@ export function openPanel(ui, kind, data) {
             ]
           : [["start", "Ski", "primary"]],
       )}`;
+    bindLobbyDetails(ui);
     return;
   }
   if (kind === "paused") {
