@@ -46,7 +46,19 @@ jobs:
             --exclude "*.md" \
             --exclude "package*.json" \
             --exclude "tailwind.config.js" \
-            --exclude "docs/*"
+            --exclude "docs/*" \
+            --exclude "cloudfront-functions/*"
+
+      - name: Publish CloudFront directory-index function
+        run: |
+          ETAG=$(aws cloudfront describe-function --name redirect-to-canonical --stage DEVELOPMENT --query ETag --output text)
+          OUT=$(aws cloudfront update-function --name redirect-to-canonical \
+            --if-match "$ETAG" \
+            --function-config Comment="Canonical redirects for SEO",Runtime=cloudfront-js-2.0 \
+            --function-code fileb://cloudfront-functions/redirect-to-canonical.js \
+            --output json)
+          NEW=$(echo "$OUT" | python3 -c "import json,sys; print(json.load(sys.stdin)['ETag'])")
+          aws cloudfront publish-function --name redirect-to-canonical --if-match "$NEW"
 
       - name: Verify wiki assets on S3
         run: |

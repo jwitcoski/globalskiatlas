@@ -22,3 +22,8 @@ Thumbs.db
 .env.local
 .env.*.local
 project.local.properties
+
+# Gameplay trailer capture output
+playable/trailer.webm
+playable/trailer-status.json
+playable/trailer-frame.jpg

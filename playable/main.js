@@ -54,13 +54,23 @@ import {
   setTrailMapSelection,
   pickTrailOnMap,
   frameTrailOverview,
+  fitLobbyClip,
+  updateTrailMapLod,
   difficultyLegendHtml,
   classifyDifficulty,
   markerSvg,
   parseSkiArea,
-} from "./trail-map.js?v=vis25";
+} from "./trail-map.js?v=zoom2";
 import { makeMinimap } from "./minimap.js?v=feel4";
 import { updateTraffic } from "./traffic.js?v=vis16";
+import {
+  TRAILER,
+  trailerDefaultPath,
+  armTrailer,
+  steerTrailer,
+  trailerNeedsPaint,
+  paintTrailerFrame,
+} from "./trailer.js?v=t2";
 
 /** Served at /playable/. Scene cakes live on S3 (catalog.json + per-resort prefixes). */
 const PUBLIC_SCENES =
@@ -87,7 +97,11 @@ bindPads(keys);
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.5, 24000);
 camera.userData.pov = "chase";
-const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+const renderer = new THREE.WebGLRenderer({
+  antialias: true,
+  powerPreference: "high-performance",
+  preserveDrawingBuffer: TRAILER,
+});
 renderer.info.autoReset = false;
 renderer.setPixelRatio(capDpr());
 renderer.setSize(innerWidth, innerHeight);
@@ -97,10 +111,56 @@ const look = addSkyAndLights(THREE, scene, renderer);
 const orbit = new OrbitControls(camera, renderer.domElement);
 orbit.enabled = false;
 orbit.enableDamping = true;
-orbit.dampingFactor = 0.08;
+orbit.dampingFactor = 0.1;
+orbit.rotateSpeed = 0.72;
+orbit.panSpeed = 0.7;
+orbit.zoomSpeed = 0.7;
+orbit.zoomToCursor = false;
+orbit.screenSpacePanning = true;
+let lobbyZoomTo = 0;
 const raycaster = new THREE.Raycaster();
 const ndc = new THREE.Vector2();
 let pointerDown = null;
+
+function wheelPixels(e) {
+  let dy = e.deltaY;
+  if (e.deltaMode === 1) dy *= 16;
+  else if (e.deltaMode === 2) dy *= Math.max(400, innerHeight);
+  return Math.max(-64, Math.min(64, dy));
+}
+
+function applyLobbyZoom(dt) {
+  if (!orbit.enabled || !lobbyZoomTo) return;
+  const t = orbit.target;
+  const p = camera.position;
+  const ox = p.x - t.x;
+  const oy = p.y - t.y;
+  const oz = p.z - t.z;
+  const dist = Math.hypot(ox, oy, oz) || 1;
+  const lo = orbit.minDistance || 1;
+  const hi = orbit.maxDistance || dist;
+  const want = Math.min(hi, Math.max(lo, lobbyZoomTo));
+  const next = dist + (want - dist) * (1 - Math.exp(-10 * dt));
+  const s = next / dist;
+  p.set(t.x + ox * s, t.y + oy * s, t.z + oz * s);
+  if (Math.abs(next - want) < Math.max(0.04, want * 0.0005)) lobbyZoomTo = 0;
+}
+
+renderer.domElement.addEventListener(
+  "wheel",
+  (e) => {
+    if (!orbit.enabled || run?.phase !== "ready") return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    const dist = camera.position.distanceTo(orbit.target);
+    if (!lobbyZoomTo) lobbyZoomTo = dist;
+    lobbyZoomTo = Math.min(
+      orbit.maxDistance,
+      Math.max(orbit.minDistance, lobbyZoomTo * Math.exp(wheelPixels(e) * 0.002)),
+    );
+  },
+  { capture: true, passive: false },
+);
 
 const lineMats = new Map();
 function lineMat(color) {
@@ -147,6 +207,10 @@ function currentCatalogResort() {
 }
 
 function showReady() {
+  if (TRAILER) {
+    closePanel(ui);
+    return;
+  }
   const d = selectedDiff();
   const payload = {
     course: courseName,
@@ -209,14 +273,20 @@ function enterLobby(reframe) {
   if (trailMap) trailMap.root.visible = true;
   setPlayableVisible(false);
   orbit.enabled = true;
-  if (reframe !== false) frameTrailOverview(camera, orbit, trailMap, scene.userData.island);
+  camera.fov = 60;
+  if (reframe !== false) {
+    lobbyZoomTo = 0;
+    frameTrailOverview(camera, orbit, trailMap, scene.userData.island);
+  }
   setTrailMapSelection(trailMap, activeCourse?.id);
+  updateTrailMapLod(trailMap, camera);
   document.body.style.cursor = "grab";
   showReady();
 }
 
 function exitLobby() {
   orbit.enabled = false;
+  lobbyZoomTo = 0;
   setInspectAtmosphere(scene, look, false);
   setIslandLobby(false);
   if (trailMap) trailMap.root.visible = false;
@@ -422,7 +492,8 @@ function scenePathFromUrl() {
   const ver = q.get("ver");
   if (resort && ver) return `${resort}/${ver}`;
   const scene = q.get("scene");
-  return scene ? scene.replace(/^\/+|\/+$/g, "") : "";
+  if (scene) return scene.replace(/^\/+|\/+$/g, "");
+  return TRAILER ? trailerDefaultPath() : "";
 }
 
 function rememberScenePath(path) {
@@ -693,6 +764,7 @@ renderer.domElement.addEventListener("pointermove", (e) => {
 });
 
 document.addEventListener("visibilitychange", () => {
+  if (TRAILER) return;
   if (document.hidden) {
     keys.clear();
     if (run?.phase === "running") {
@@ -714,10 +786,14 @@ function tick(now) {
   fpsEma = fpsEma * 0.9 + (1 / Math.max(0.001, frameDt)) * 0.1;
   try {
   if (hf && run && run.phase !== "paused") {
-    const freeze = run.phase === "finished" || run.phase === "dnf" || (run.phase === "ready" && !ui.overlay.hidden);
+    const freeze =
+      run.phase === "finished" ||
+      run.phase === "dnf" ||
+      (run.phase === "ready" && orbit.enabled);
     if (!freeze) {
       acc += frameDt;
       let steps = 0;
+      if (TRAILER) steerTrailer(keys, run, skier, heading, !orbit.enabled);
       const turning = keys.has("KeyA") || keys.has("KeyD") || keys.has("ArrowLeft") || keys.has("ArrowRight");
       while (acc >= STEP && steps < 5) {
         const gatesBefore = run.gateHit || 0;
@@ -767,7 +843,9 @@ function tick(now) {
         finishedShown = true;
         acc = 0;
         const scored = commitBestScore(run);
-        openPanel(ui, "finished", {
+        if (TRAILER) {
+          /* keep rolling for the sting card */
+        } else openPanel(ui, "finished", {
           course: courseName,
           time: formatTime(run.time),
           score: formatScore(scored),
@@ -780,7 +858,7 @@ function tick(now) {
         dnfShown = true;
         acc = 0;
         if (run.dnfReason === "yeti") skier.visible = false;
-        openPanel(ui, "dnf", {
+        if (!TRAILER) openPanel(ui, "dnf", {
           score: formatScore(run.score),
           time: formatTime(run.time),
           reason: run.dnfReason || "piste",
@@ -824,7 +902,12 @@ function tick(now) {
       updateFallingSnow(flakes, camera, frameDt);
     }
   }
-  if (run?.phase === "ready" && orbit.enabled) orbit.update();
+  if (run?.phase === "ready" && orbit.enabled) {
+    applyLobbyZoom(frameDt);
+    orbit.update();
+    fitLobbyClip(camera, orbit);
+    updateTrailMapLod(trailMap, camera);
+  }
   if (run?.phase === "ready") updateIslandDust(scene.userData.island, frameDt);
   if (scene.userData.traffic && hf) updateTraffic(scene.userData.traffic, frameDt, (x, z) => hf.sample(x, z));
   if (mini && run) {
@@ -851,10 +934,26 @@ function tick(now) {
       : skier.position;
   followSun(look.sun, sunFocus);
   renderer.render(scene, camera);
+  if (trailerNeedsPaint()) paintTrailerFrame(renderer.domElement);
   dbg.tick(frameDt);
 }
 requestAnimationFrame(tick);
 addEventListener("resize", fitRenderer);
+
+armTrailer({
+  renderer,
+  orbit,
+  keys,
+  skier,
+  getRun: () => run,
+  getHeading: () => heading,
+  start: () => onUiAct("start"),
+  cyclePov,
+  closeHud: () => closePanel(ui),
+  cameraPov: () => camera.userData.pov,
+  courseName: () => courseName,
+  displayName: () => lastManifest?.display_name || courseName,
+});
 
 window.__ski = { scene, camera, orbit, renderer };
 window.__THREE_GAME_DIAGNOSTICS__ = {

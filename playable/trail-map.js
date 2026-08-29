@@ -466,18 +466,30 @@ export function addTrailMap(THREE, scene, courses, pisteLines, elevFn, skiArea =
 
 export function setTrailMapSelection(map, courseId) {
   if (!map) return;
+  map.selectedId = courseId;
   for (const p of map.picks) {
     const on = p.course.id === courseId;
     p.glow.material.opacity = on ? 1 : 0.85;
-    const bw = p.spr.userData.baseW || 96;
-    const bh = p.spr.userData.baseH || 96;
-    const k = on ? 1.12 : 1;
-    p.spr.scale.set(bw * k, bh * k, 1);
     p.spr.material.opacity = on ? 1 : 0.9;
     p.line.material.color.setHex(p.style.color);
     p.line.material.opacity = 1;
     p.line.visible = true;
     p.glow.visible = true;
+  }
+}
+
+/** Keep badges readable while zooming: world size tracks camera distance. */
+export function updateTrailMapLod(map, camera) {
+  if (!map?.picks?.length || !camera) return;
+  const b = map.bounds;
+  const midY = Number.isFinite(b.minY) && Number.isFinite(b.maxY) ? (b.minY + b.maxY) * 0.5 : camera.position.y;
+  const dist = Math.hypot(camera.position.x - b.cx, camera.position.y - midY, camera.position.z - b.cz);
+  const lod = Math.max(0.35, Math.min(2.6, dist / 1100));
+  const sel = map.selectedId;
+  for (const p of map.picks) {
+    const on = p.course.id === sel;
+    const k = lod * (on ? 1.12 : 1);
+    p.spr.scale.set((p.spr.userData.baseW || 96) * k, (p.spr.userData.baseH || 96) * k, 1);
   }
 }
 
@@ -494,6 +506,19 @@ export function pickTrailOnMap(map, raycaster, camera, ndc) {
   return hits[0]?.object?.userData?.courseId || null;
 }
 
+export function fitLobbyClip(camera, controls) {
+  if (!camera || !controls) return;
+  const d = camera.position.distanceTo(controls.target);
+  const near = Math.max(0.35, d * 0.014);
+  const far = Math.max(6000, d * 28, d + 2500);
+  const nearCh = Math.abs(camera.near - near) / near;
+  const farCh = Math.abs(camera.far - far) / far;
+  if (nearCh < 0.18 && farCh < 0.18) return;
+  camera.near = near;
+  camera.far = far;
+  camera.updateProjectionMatrix();
+}
+
 export function frameTrailOverview(camera, controls, map, island) {
   if (!map?.bounds) return;
   const { cx, cz, span, maxY, minY } = map.bounds;
@@ -501,19 +526,18 @@ export function frameTrailOverview(camera, controls, map, island) {
   const hi = Number.isFinite(maxY) ? maxY : lo;
   const midY = Number.isFinite(island?.center?.y) ? island.center.y : (lo + hi) * 0.5;
   const dist = Math.max(700, span * 1.05, Math.max(80, hi - lo) * 1.6);
-  camera.near = 2;
-  camera.far = Math.max(14000, dist * 12, span * 12);
-  camera.updateProjectionMatrix();
+  camera.fov = 60;
   camera.position.set(cx + span * 0.08, midY + dist * 0.62, cz + dist * 0.72);
   if (controls) {
     controls.target.set(cx, midY, cz);
-    controls.minDistance = Math.max(40, span * 0.08);
-    controls.maxDistance = Math.max(dist * 2.2, span * 3.2);
+    controls.minDistance = Math.max(28, span * 0.03);
+    controls.maxDistance = Math.max(dist * 2.4, span * 3.6);
     controls.minPolarAngle = 0.12;
     controls.maxPolarAngle = 2.72;
     controls.enablePan = true;
     controls.update();
   }
+  fitLobbyClip(camera, controls);
 }
 
 export function difficultyLegendHtml() {

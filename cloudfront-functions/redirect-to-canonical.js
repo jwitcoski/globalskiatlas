@@ -47,7 +47,7 @@ function handler(event) {
   }
 
   // 3. /index.html → / (or /foo/index.html → /foo/)
-  if (uri === '/index.html' || (uri.length >= 11 && uri.slice(-11) === 'index.html')) {
+  if (uri === '/index.html' || uri.slice(-11) === '/index.html') {
     needRedirect = true;
     if (uri === '/index.html') {
       newPath = '/';
