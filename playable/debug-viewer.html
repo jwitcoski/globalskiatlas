@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DEBUG VIEWER — NOT GAMEPLAY</title>
+  <style>
+    html, body { margin: 0; height: 100%; background: #111; color: #eee; font-family: sans-serif; }
+    #hud { position: absolute; top: 8px; left: 8px; z-index: 2; background: rgba(0,0,0,.65); padding: 10px 12px; max-width: 440px; font-size: 13px; }
+    #warn { color: #f6c445; font-weight: bold; }
+    canvas { display: block; }
+    a { color: #9ec9ff; }
+  </style>
+</head>
+<body>
+  <div id="hud">
+    <div id="warn">DEBUG VIEWER — NOT GAMEPLAY</div>
+    <div id="info">Loading scene-manifest.json…</div>
+  </div>
+  <script type="importmap">
+    { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                   "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }
+  </script>
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+    import { addOsmWorld } from './osm-world.js?v=island11';
+
+    const PUBLIC_SCENES =
+      'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/game_scenes/';
+    const info = document.getElementById('info');
+
+    function sceneRootFromUrl() {
+      const q = new URLSearchParams(location.search);
+      const scene = q.get('scene');
+      if (scene) return new URL(scene.endsWith('/') ? scene : `${scene}/`);
+      const resort = q.get('resort');
+      const ver = q.get('ver');
+      if (resort && ver) return new URL(`${resort}/${ver}/`, PUBLIC_SCENES);
+      return null;
+    }
+
+    const root = sceneRootFromUrl();
+    if (!root) {
+      info.innerHTML = `Pass <code>?resort=&lt;id&gt;&amp;ver=&lt;v&gt;</code> or <code>?scene=&lt;S3 prefix&gt;</code>.
+        Example: <a href="./debug-viewer.html?resort=montage_mountain_pa&amp;ver=v0">montage</a>
+        · <a href="./">back to ski game</a>`;
+      throw new Error('No scene in query');
+    }
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x87a0b4);
+    const camera = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 1, 50000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.setSize(innerWidth, innerHeight);
+    document.body.appendChild(renderer.domElement);
+    const controls = new OrbitControls(camera, renderer.domElement);
+
+    scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+    const sun = new THREE.DirectionalLight(0xfff5e0, 1.1);
+    sun.position.set(400, 900, 200);
+    scene.add(sun);
+
+    let sampleElev = () => 400;
+
+    function lineObj(coords, color) {
+      const pts = [];
+      for (const c of coords) {
+        const x = c[0];
+        const z = -c[1];
+        pts.push(new THREE.Vector3(x, sampleElev(x, z) + 2, z));
+      }
+      return new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color }));
+    }
+
+    async function loadJSON(rel) {
+      const r = await fetch(new URL(rel, root));
+      if (!r.ok) throw new Error(rel + ' ' + r.status);
+      return r.json();
+    }
+
+    function fit() {
+      camera.aspect = innerWidth / innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+      renderer.setSize(innerWidth, innerHeight);
+    }
+
+    try {
+      const manifest = await loadJSON('scene-manifest.json');
+      const zmin = manifest.terrain.elevation_min_m;
+      const zmax = manifest.terrain.elevation_max_m;
+      const crs = manifest.coordinate_system?.projected_crs || '';
+
+      const hfMeta = await loadJSON(manifest.terrain.heightfield_metadata);
+      const hfBuf = await fetch(new URL(manifest.terrain.heightfield, root)).then((r) => r.arrayBuffer());
+      const u16 = new Uint16Array(hfBuf);
+      const rows = hfMeta.rows;
+      const cols = hfMeta.cols;
+      const cell = hfMeta.cell_size_m;
+      const nodata = hfMeta.nodata_uint16;
+      const off = hfMeta.elevation_offset_m;
+      const sc = hfMeta.elevation_scale_m;
+      const maxN = hfMeta.bounds_local_m.max_north_m;
+      sampleElev = (x, z) => {
+        const east = x;
+        const north = -z;
+        const col = Math.min(cols - 1, Math.max(0, Math.floor(east / cell)));
+        const row = Math.min(rows - 1, Math.max(0, Math.floor((maxN - north) / cell)));
+        const v = u16[row * cols + col];
+        if (v === nodata) return (zmin + zmax) / 2;
+        return off + v * sc;
+      };
+
+      let html = `<div>${manifest.display_name}</div>
+        <div>X east / Y elev / Z -north · units m</div>
+        <div>elev ${zmin}–${zmax} m · CRS ${crs}</div>
+        <div>OSM polygons (pistes, woods, buildings) + roads + ski-area boundary draped on the DEM.</div>`
+
+      const loader = new GLTFLoader();
+      loader.load(
+        new URL(manifest.terrain.mesh, root).href,
+        (gltf) => {
+          gltf.scene.traverse((o) => {
+            if (o.isMesh) {
+              o.material = new THREE.MeshLambertMaterial({ color: 0x8aa37a, side: THREE.DoubleSide });
+            }
+          });
+          scene.add(gltf.scene);
+          const box = new THREE.Box3().setFromObject(gltf.scene);
+          const c = box.getCenter(new THREE.Vector3());
+          const s = box.getSize(new THREE.Vector3());
+          camera.position.set(c.x, c.y + Math.max(s.y, 80) + 400, c.z + Math.max(s.x, s.z) * 0.9);
+          controls.target.copy(c);
+        },
+        undefined,
+        (err) => {
+          info.textContent = html + ' Mesh load failed: ' + err;
+        },
+      );
+
+      const osmCounts = await addOsmWorld(THREE, scene, root, manifest, sampleElev);
+      html += `<div>OSM ${JSON.stringify(osmCounts)}</div>`;
+      const routes = await loadJSON(manifest.vectors.route_centers);
+      for (const f of routes.features || []) {
+        if (f.geometry?.type === 'LineString') {
+          const col = f.properties.status === 'approved' ? 0x33ff66 : 0x888888;
+          scene.add(lineObj(f.geometry.coordinates, col));
+        }
+      }
+      const spawnDoc = await loadJSON(manifest.gameplay.spawn_points);
+      for (const p of spawnDoc.points || []) {
+        const m = new THREE.Mesh(
+          new THREE.SphereGeometry(8, 12, 8),
+          new THREE.MeshBasicMaterial({ color: 0xffff00 }),
+        );
+        m.position.set(p.game.x, p.game.y + 10, p.game.z);
+        scene.add(m);
+      }
+      html += `<div>spawns ${(spawnDoc.points || []).length}</div>`;
+      info.innerHTML = html;
+    } catch (e) {
+      info.textContent = 'Load error: ' + e + ' (use ?resort= and ?ver= from the S3 catalog)';
+    }
+
+    function tick() {
+      requestAnimationFrame(tick);
+      controls.update();
+      renderer.render(scene, camera);
+    }
+    tick();
+    addEventListener('resize', fit);
+  </script>
+</body>
+</html>

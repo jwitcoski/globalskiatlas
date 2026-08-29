@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Ski Game – Global Ski Atlas</title>
+  <link rel="shortcut icon" href="../assets/logo.png?v=2" type="image/x-icon" />
+  <link rel="preconnect" href="https://api.maptiler.com" crossorigin />
+  <link href="https://cdn.maptiler.com/maptiler-sdk-js/v3.10.2/maptiler-sdk.css" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/map-popups.css" />
+  <style>
+    :root {
+      --hud: transparent;
+      --line: rgba(255,255,255,.22);
+      --ok: #2a4a38;
+      --bad: #6a3030;
+      --pad: max(14px, env(safe-area-inset-top));
+      --pad-l: max(16px, env(safe-area-inset-left));
+      --pad-r: max(16px, env(safe-area-inset-right));
+      --pad-b: max(16px, env(safe-area-inset-bottom));
+      --type: rgba(255,255,255,.92);
+    }
+    html, body { margin: 0; height: 100%; overflow: hidden; background: #7eb8e4; color: var(--type); font-family: "Segoe UI", system-ui, sans-serif; touch-action: none; }
+    body.picker { touch-action: auto; }
+    canvas { display: block; touch-action: none; }
+    #obj, #clock, #score-box, #piste, #speed-box, #dist-read, #pause-btn, #pov-btn, #load-note, #mini-wrap, #nav-arrow {
+      position: absolute; z-index: 2; pointer-events: none;
+      text-shadow: 0 1px 8px rgba(40,50,60,.35);
+      font-weight: 600; letter-spacing: .04em;
+    }
+    #clock {
+      top: var(--pad); left: 50%; transform: translateX(-50%);
+      min-width: 8ch; text-align: center; font-size: clamp(16px, 2.4vw, 22px);
+      font-variant-numeric: tabular-nums; font-weight: 500; opacity: .92;
+    }
+    #nav-arrow {
+      top: calc(var(--pad) + 28px); left: 50%; width: 0; height: 0;
+      border-left: 9px solid transparent; border-right: 9px solid transparent;
+      border-bottom: 16px solid rgba(255,255,255,.9);
+      transform-origin: 50% 70%; filter: drop-shadow(0 1px 6px rgba(40,50,60,.4));
+    }
+    #nav-arrow[hidden] { display: none !important; }
+    #mini-wrap {
+      top: var(--pad); right: var(--pad-r);
+      display: flex; flex-direction: column; align-items: flex-end; gap: 6px;
+    }
+    #minimap {
+      width: clamp(132px, 18vw, 196px); height: clamp(132px, 18vw, 196px);
+      display: block; touch-action: none;
+    }
+    #score-box {
+      position: static; min-width: 5ch; text-align: right; font-variant-numeric: tabular-nums; font-weight: 500;
+      font-size: 14px; opacity: .88;
+    }
+    #obj {
+      bottom: calc(var(--pad-b) + 8px); left: 50%; transform: translateX(-50%);
+      max-width: min(70vw, 420px); text-align: center; font-size: 13px; font-weight: 500;
+      letter-spacing: .12em; text-transform: uppercase; white-space: nowrap;
+      overflow: hidden; text-overflow: ellipsis;
+    }
+    #dist-read {
+      bottom: var(--pad-b); left: var(--pad-l);
+      font-size: 12px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase;
+      font-variant-numeric: tabular-nums;
+    }
+    #remain { display: none; }
+    #piste {
+      bottom: calc(var(--pad-b) + 28px); left: var(--pad-l);
+      font-size: 10px; letter-spacing: .14em; text-transform: uppercase; opacity: .7;
+    }
+    #piste.ok, #piste.bad { background: none; }
+    #speed-box {
+      bottom: var(--pad-b); right: var(--pad-r); text-align: right;
+      font-size: 12px; letter-spacing: .1em; text-transform: uppercase;
+    }
+    #speed-box label { display: none; }
+    #speed { display: none; }
+    #speed-read { font-variant-numeric: tabular-nums; font-size: 12px; font-weight: 500; }
+    #pause-btn {
+      pointer-events: auto; top: var(--pad); left: var(--pad-l);
+      min-width: 40px; min-height: 40px; border: 0; background: transparent;
+      color: inherit; font-weight: 600; letter-spacing: .08em; cursor: pointer; opacity: .75;
+    }
+    #pause-btn:hover, #pov-btn:hover { opacity: 1; }
+    #pov-btn {
+      pointer-events: auto; top: calc(var(--pad) + 42px); left: var(--pad-l);
+      min-width: 40px; min-height: 32px; border: 0; background: transparent;
+      color: inherit; font-weight: 700; letter-spacing: .08em; cursor: pointer; opacity: .75;
+      font-size: 11px;
+    }
+    #load-note { display: none; }
+    #dbg {
+      position: absolute; z-index: 3; left: var(--pad-l); bottom: calc(var(--pad-b) + 56px);
+      padding: 8px 10px; border-radius: 8px; background: rgba(255,255,255,.45); color: #243038;
+      font: 11px/1.35 ui-monospace, Consolas, monospace; white-space: pre; pointer-events: none;
+      max-width: min(92vw, 420px);
+    }
+    #pads {
+      display: none; position: absolute; z-index: 3; inset: auto var(--pad-r) var(--pad-b) var(--pad-l);
+      justify-content: space-between; align-items: flex-end; pointer-events: none;
+    }
+    #pads .col { display: flex; gap: 8px; pointer-events: auto; }
+    #pads button {
+      min-width: 56px; min-height: 56px; border-radius: 14px; border: 1px solid rgba(255,255,255,.35);
+      background: rgba(255,255,255,.18); color: inherit; font-size: 18px; font-weight: 700; touch-action: none;
+    }
+    #pads button.down { background: rgba(255,255,255,.4); }
+    @media (pointer: coarse) {
+      #pads { display: flex; }
+      #speed-box, #dist-read, #obj, #piste { bottom: calc(var(--pad-b) + 72px); }
+    }
+    #overlay {
+      position: absolute; inset: 0; z-index: 4; display: flex; align-items: center; justify-content: center;
+      background: transparent; padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
+    }
+    #overlay[hidden] { display: none !important; }
+    #panel {
+      width: min(420px, 92vw); background: rgba(255,255,255,.78); color: #2a3238; padding: 22px 24px; border-radius: 4px;
+      border: 1px solid rgba(255,255,255,.9);
+    }
+    #panel h2 { margin: 0 0 10px; font-size: 22px; font-weight: 600; }
+    #panel .kicker { margin: 0 0 6px; color: #6a5a28; font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+    #panel .big { font-size: clamp(28px, 6vw, 36px); font-variant-numeric: tabular-nums; }
+    #panel .fine, #panel .hint { opacity: .72; font-size: 12px; }
+    #panel .trails { display: grid; gap: 8px; margin: 12px 0 4px; max-height: min(42vh, 360px); overflow-y: auto; }
+    #panel .trail {
+      min-height: 48px; text-align: left; padding: 8px 12px; border-radius: 4px;
+      border: 1px solid rgba(40,50,60,.18); background: transparent; color: inherit;
+      font-weight: 700; cursor: pointer;
+    }
+    #panel .trail .diff {
+      display: inline-block; margin-left: 8px; font-size: 11px; font-weight: 700;
+      letter-spacing: .06em; text-transform: uppercase; opacity: .9;
+    }
+    #panel .trail .diff.novice, #panel .trail .diff.easy { color: #1f7a38; }
+    #panel .trail .diff.intermediate { color: #1d5fb8; }
+    #panel .trail .diff.advanced, #panel .trail .diff.expert, #panel .trail .diff.extreme { color: #1a1a1c; }
+    #panel .trail .diff.unrated { color: #6a7076; }
+    #panel .trail .meta { display: block; font-size: 12px; font-weight: 600; opacity: .7; }
+    #panel .trail.on { background: rgba(40,50,60,.08); outline: 1px solid #2a3238; }
+    #panel .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+    .btn {
+      min-height: 44px; min-width: 120px; padding: 0 16px; border-radius: 4px; border: 1px solid transparent;
+      font-weight: 700; cursor: pointer; color: #101418;
+    }
+    .btn.primary { background: #2a3238; color: #f4f6f8; }
+    .btn.ghost { background: transparent; color: #2a3238; border-color: rgba(42,50,56,.28); }
+    .btn:hover { filter: brightness(1.08); }
+    .btn:active { transform: scale(.98); }
+    .btn:focus-visible { outline: 2px solid #2a3238; outline-offset: 2px; }
+    #overlay.lobby {
+      align-items: flex-end; justify-content: flex-start;
+      background: linear-gradient(90deg, rgba(40,70,95,.18) 0, rgba(40,70,95,.04) 260px, transparent 38%);
+      pointer-events: none;
+    }
+    #overlay.lobby #panel {
+      pointer-events: auto;
+      width: min(320px, 92vw);
+      margin: 0 0 var(--pad-b) var(--pad-l);
+      background: rgba(255,255,255,.72);
+    }
+    #overlay.lobby .trails { display: none; }
+    .trail-meta { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 13px; font-weight: 600; }
+    .diff-svg { flex: 0 0 auto; display: block; }
+    .legend {
+      list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 6px;
+      font-size: 12px; font-weight: 650;
+    }
+    .legend li { display: flex; align-items: center; gap: 8px; }
+    .legend .diff-svg { flex: 0 0 auto; }
+    body.lobby #clock, body.lobby #score-box, body.lobby #dist-read, body.lobby #piste,
+    body.lobby #speed-box, body.lobby #obj, body.lobby #pause-btn, body.lobby #pov-btn,
+    body.lobby #pads, body.lobby #nav-arrow { display: none !important; }
+    #overlay.picker {
+      align-items: stretch; justify-content: stretch;
+      padding: max(12px, env(safe-area-inset-top)) 16px max(12px, env(safe-area-inset-bottom));
+      background: #7eb6d9;
+    }
+    #overlay.picker #panel {
+      width: 100%; max-width: none; height: 100%;
+      display: flex; flex-direction: column; gap: 8px;
+      background: transparent; border: 0; padding: 0; pointer-events: auto;
+    }
+    #overlay.picker h2 { margin: 0; color: #243038; }
+    .world-head { flex: 0 0 auto; }
+    .world-legal { margin: 0; text-align: center; color: #2a3238; }
+    .atlas-home { color: inherit; text-decoration: none; }
+    .atlas-home:hover { text-decoration: underline; }
+    .world-stage {
+      flex: 1 1 auto; min-height: 0;
+      position: relative; border-radius: 6px; overflow: hidden;
+      background: #9eb8c8;
+    }
+    #picker-map { position: absolute; inset: 0; width: 100%; height: 100%; }
+    #overlay.picker .search-box {
+      position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+      z-index: 1000; width: 90%; max-width: 360px;
+    }
+    #overlay.picker .search-box input {
+      width: 100%; padding: 10px 14px; font-size: 15px; border: 1px solid #ccc;
+      border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,.15); outline: none; box-sizing: border-box;
+    }
+    #overlay.picker .search-dropdown {
+      position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px;
+      background: #fff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,.2);
+      max-height: 280px; overflow-y: auto; display: none;
+    }
+    #overlay.picker .search-dropdown.visible { display: block; }
+    #overlay.picker .search-item {
+      padding: 10px 14px; cursor: pointer; border-bottom: 1px solid #eee; font-size: 14px; color: #243038;
+    }
+    #overlay.picker .search-item:hover, #overlay.picker .search-item.active { background: #f0f4ff; }
+    #overlay.picker .map-legend {
+      position: absolute; bottom: 24px; left: 12px; z-index: 1000;
+      background: #fff; padding: 10px 14px; border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.2); font-size: 12px; color: #243038;
+      max-height: min(42vh, 280px); overflow-y: auto;
+    }
+    #overlay.picker .map-legend h3 { margin: 0 0 8px; font-size: 13px; }
+    #overlay.picker .legend-row { display: flex; align-items: center; gap: 8px; margin: 4px 0; }
+    #overlay.picker .legend-swatch { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
+    #overlay.picker .legend-line { width: 18px; height: 4px; border-radius: 2px; flex-shrink: 0; display: inline-block; }
+    #overlay.picker .basemap-control {
+      position: absolute; bottom: 24px; right: 12px; z-index: 1000;
+      background: #fff; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,.2);
+      padding: 8px 10px; display: flex; flex-direction: column; gap: 4px;
+      font-size: 12px; min-width: 148px; color: #243038;
+    }
+    #overlay.picker .maplibregl-ctrl-attrib, #overlay.picker .maptiler-ctrl-attrib { font-size: 10px; }
+    #overlay.picker .maplibregl-popup, #overlay.picker .maptiler-popup { z-index: 1100; }
+    body.picker #clock, body.picker #score-box, body.picker #dist-read, body.picker #piste,
+    body.picker #speed-box, body.picker #obj, body.picker #pause-btn, body.picker #pov-btn,
+    body.picker #pads, body.picker #nav-arrow, body.picker #mini-wrap { display: none !important; }
+    @media (max-width: 640px) {
+      #overlay.lobby { align-items: flex-end; background: linear-gradient(180deg, transparent 42%, rgba(232,238,242,.62)); }
+      #overlay.lobby #panel { width: min(100%, 92vw); }
+    }
+  </style>
+</head>
+<body>
+  <div id="obj">Loading course…</div>
+  <div id="clock">0:00.00</div>
+  <div id="nav-arrow" hidden aria-hidden="true"></div>
+  <div id="mini-wrap">
+    <canvas id="minimap" width="196" height="196" aria-label="Trail map"></canvas>
+    <div id="score-box">00000</div>
+  </div>
+  <div id="dist-read"></div>
+  <div id="remain"><div id="remain-fill"></div></div>
+  <button id="pause-btn" type="button" aria-label="Pause">II</button>
+  <button id="pov-btn" type="button" aria-label="Toggle camera">CAM</button>
+  <div id="piste" class="ok">ON PISTE</div>
+  <div id="speed-box">
+    <label>SPEED KM/H</label>
+    <div id="speed-read">  0</div>
+    <div id="speed"><div id="speed-fill"></div></div>
+  </div>
+  <div id="load-note"></div>
+  <pre id="dbg" hidden></pre>
+  <div id="pads">
+    <div class="col">
+      <button type="button" data-pad="brake" aria-label="Brake">S</button>
+      <button type="button" data-pad="tuck" aria-label="Tuck">W</button>
+    </div>
+    <div class="col">
+      <button type="button" data-pad="left" aria-label="Left">A</button>
+      <button type="button" data-pad="right" aria-label="Right">D</button>
+    </div>
+  </div>
+  <div id="overlay"><div id="panel"><p class="kicker">Loading</p><h2>Fetching the mountain</h2><p>DEM + OSM scene…</p></div></div>
+  <script defer src="https://cdn.maptiler.com/maptiler-sdk-js/v3.10.2/maptiler-sdk.umd.min.js"></script>
+  <script type="importmap">
+    { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                   "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }
+  </script>
+  <script type="module" src="./main.js?v=island18"></script>
+</body>
+</html>

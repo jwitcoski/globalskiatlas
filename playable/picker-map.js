@@ -1,0 +1,60 @@
+import { initSkiResortMap } from "../scripts/ski-resort-map-ml.js?v=21";
+import { initBasemapSwitcher } from "../scripts/basemap-switcher.js?v=1";
+
+let pickerMap = null;
+let onResize = null;
+
+function waitForSdk() {
+  if (typeof maptilersdk !== "undefined") return Promise.resolve(maptilersdk);
+  return new Promise((resolve, reject) => {
+    const t0 = Date.now();
+    const id = setInterval(() => {
+      if (typeof maptilersdk !== "undefined") {
+        clearInterval(id);
+        resolve(maptilersdk);
+      } else if (Date.now() - t0 > 8000) {
+        clearInterval(id);
+        reject(new Error("MapTiler SDK failed to load"));
+      }
+    }, 40);
+  });
+}
+
+export function destroyPickerMap() {
+  if (onResize) {
+    removeEventListener("resize", onResize);
+    onResize = null;
+  }
+  if (!pickerMap) return;
+  try {
+    pickerMap.remove();
+  } catch {
+    /* already gone */
+  }
+  pickerMap = null;
+  const tip = document.getElementById("vt-tooltip");
+  if (tip) tip.remove();
+}
+
+export async function showPickerMap(container, resorts, onPick) {
+  destroyPickerMap();
+  if (!container) throw new Error("Picker map container missing");
+  await waitForSdk();
+
+  const { map, restoreOverlays } = await initSkiResortMap({
+    containerId: container.id || "picker-map",
+    includeRoadTripButton: false,
+    loadAds: false,
+    playableResorts: resorts,
+    onPlayablePick: onPick,
+  });
+  pickerMap = map;
+  initBasemapSwitcher(map, { restoreOverlays });
+  onResize = () => pickerMap?.resize();
+  addEventListener("resize", onResize);
+  requestAnimationFrame(() => {
+    map.resize();
+    requestAnimationFrame(() => map.resize());
+  });
+  return map;
+}

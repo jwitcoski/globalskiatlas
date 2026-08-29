@@ -510,6 +510,10 @@ app.get('/wiki*', optionalCognito, async (req, res) => {
 });
 
 // --- Root static files (existing GlobalSkiAtlas_2 HTML/CSS/JS) --------------
+express.static.mime.define({
+  'model/gltf-binary': ['glb'],
+  'image/svg+xml': ['svg'],
+});
 app.use(express.static(__dirname, {
   index: 'index.html',
   dotfiles: 'ignore',

@@ -1,7 +1,7 @@
 /**
  * Homepage hero map – waits for layout, then resizes after GSAP reveal.
  */
-import { initSkiResortMap } from './ski-resort-map-ml.js?v=19';
+import { initSkiResortMap } from './ski-resort-map-ml.js?v=21';
 import { initBasemapSwitcher } from './basemap-switcher.js?v=1';
 
 function whenLayoutReady() {

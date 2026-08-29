@@ -41,7 +41,7 @@ import {
   buildResortHoverHtml,
   buildResortStatsIndex,
   initResortPopupScopeSwitcher
-} from './ski-resort-popups.js?v=4';
+} from './ski-resort-popups.js?v=5';
 
 const {
   LIFTS_MIN_ZOOM,
@@ -50,12 +50,71 @@ const {
 
 const RESORT_ICON_MIN_ZOOM = 9;
 
-const circlePaint = {
-  'circle-color':        ['get', '_color'],
-  'circle-stroke-color': 'rgba(255,255,255,0.65)',
-  'circle-stroke-width': 1.2,
-  'circle-opacity':      0.85
-};
+function circlePaintFor(playableMode) {
+  return {
+    'circle-color': ['get', '_color'],
+    'circle-stroke-color': playableMode
+      ? ['case', ['==', ['get', '_playable'], 1], '#0d9488', 'rgba(255,255,255,0.65)']
+      : 'rgba(255,255,255,0.65)',
+    'circle-stroke-width': playableMode
+      ? ['case', ['==', ['get', '_playable'], 1], 2.2, 1.2]
+      : 1.2,
+    'circle-opacity': 0.85
+  };
+}
+
+function haversineKm(lat1, lon1, lat2, lon2) {
+  const r = 6371;
+  const p1 = (lat1 * Math.PI) / 180;
+  const p2 = (lat2 * Math.PI) / 180;
+  const dp = p2 - p1;
+  const dl = ((lon2 - lon1) * Math.PI) / 180;
+  const a = Math.sin(dp / 2) ** 2 + Math.cos(p1) * Math.cos(p2) * Math.sin(dl / 2) ** 2;
+  return 2 * r * Math.asin(Math.min(1, Math.sqrt(a)));
+}
+
+function matchPlayableResort(lon, lat, name, properties, playableResorts) {
+  if (!playableResorts?.length) return null;
+  const osm = String(
+    properties.osm_id || properties.osmId || properties.id || properties.winter_sports_id || ''
+  ).replace(/^[^0-9]*/, '');
+  const nameN = foldDiacritics(name || '').toLowerCase().trim();
+  let best = null;
+  let bestD = Infinity;
+  for (const r of playableResorts) {
+    const rid = String(r.id || r.winter_sports_id || '');
+    if (osm && rid && (rid === osm || rid.startsWith(`${osm}_`) || String(r.winter_sports_id || '') === osm)) {
+      return r;
+    }
+    const d = haversineKm(lat, lon, Number(r.lat), Number(r.lon));
+    if (!Number.isFinite(d)) continue;
+    const rn = foldDiacritics(r.name || '').toLowerCase().trim();
+    const nameHit = nameN && rn && (nameN === rn || nameN.includes(rn) || rn.includes(nameN));
+    const maxD = nameHit ? 8 : 2.2;
+    if (d <= maxD && d < bestD) {
+      bestD = d;
+      best = r;
+    }
+  }
+  return best;
+}
+
+async function fetchPlayableCatalog() {
+  const r = await fetch(config.GAME_SCENES_CATALOG_URL);
+  if (!r.ok) throw new Error(`Playable catalog ${r.status}`);
+  const data = await r.json();
+  return Array.isArray(data?.resorts) ? data.resorts : [];
+}
+
+function playableHrefFromPath(path) {
+  const rel = String(path || '').replace(/^\/+|\/+$/g, '');
+  if (!rel) return '';
+  const slash = rel.indexOf('/');
+  const q = new URLSearchParams();
+  q.set('resort', slash < 0 ? rel : rel.slice(0, slash));
+  if (slash >= 0) q.set('ver', rel.slice(slash + 1));
+  return `/playable/?${q.toString()}`;
+}
 
 /** Same format as wiki resort/browse: "English (local)" from a wiki page object. */
 function wikiDisplayName(p) {
@@ -110,7 +169,7 @@ async function addResortMarkerLayers(map, resortFeatures) {
       source: 'ski-resorts',
       filter: ['==', ['get', '_tier'], def.tier],
       maxzoom: RESORT_ICON_MIN_ZOOM,
-      paint: { ...circlePaint, 'circle-radius': def.radius }
+      paint: { ...(map._skiCirclePaint || circlePaintFor(false)), 'circle-radius': def.radius }
     });
   }
 
@@ -135,12 +194,26 @@ async function addResortMarkerLayers(map, resortFeatures) {
 // ── Main export ────────────────────────────────────────────────────────────
 export async function initSkiResortMap(options = {}) {
   const includeRoadTripButton = !!options.includeRoadTripButton;
+  const containerId = options.containerId || 'map';
+  const loadAds = options.loadAds !== false;
+  const onPlayablePick = typeof options.onPlayablePick === 'function' ? options.onPlayablePick : null;
+  let gameResorts = options.playableResorts || null;
+  if (!gameResorts) {
+    try {
+      gameResorts = await fetchPlayableCatalog();
+    } catch (e) {
+      console.warn('[ski-resort-map-ml] playable catalog failed:', e);
+      gameResorts = [];
+    }
+  }
+  const playableMode = !!(gameResorts.length && onPlayablePick);
 
   // ── Initialise MapLibre map (map-core) ──────────────────────────────────
   const { map } = await createMapLibre({
-    containerId: 'map',
+    containerId,
     style: getBasemapStyle(getSavedBasemapId())
   });
+  map._skiCirclePaint = circlePaintFor(playableMode);
   await addSkiPmtilesToMap(map, SKI_PMTILES_OPTIONS);
 
   // MapTiler Data API has correct WGS84 coordinates (querySourceFeatures geometry is unreliable).
@@ -201,12 +274,13 @@ export async function initSkiResortMap(options = {}) {
     return wp ? wikiDisplayName(wp) : (resortDisplayName(p) || getProp(p, NAME_KEYS) || '');
   });
 
-  function makeResortPopup(properties, latlng, wikiPage) {
+  function makeResortPopup(properties, latlng, wikiPage, playablePath) {
     return buildResortPopupHtml(properties, latlng, {
       includeRoadTripButton,
       wikiPage,
       statsIndex: resortStatsIndex,
-      escapeHtml
+      escapeHtml,
+      playableHref: playablePath ? playableHrefFromPath(playablePath) : '',
     });
   }
 
@@ -231,6 +305,7 @@ export async function initSkiResortMap(options = {}) {
     const en         = wikiPage ? (wikiPage.englishName || '') : (getProp(properties, ENGLISH_NAME_KEYS) || '');
     const searchText = [displayStr, en, wikiPage ? wikiPage.title : ''].filter(Boolean).join(' ').trim() || displayStr;
     const latlng = { lat, lng: lon };
+    const playable = gameResorts.length ? matchPlayableResort(lon, lat, displayStr || name, properties, gameResorts) : null;
 
     resortFeatures.push({
       type: 'Feature',
@@ -243,6 +318,8 @@ export async function initSkiResortMap(options = {}) {
         _country: countryDisp,
         _trails: Number.isNaN(trailsNum) ? 0 : trailsNum,
         _terrain: terrainDisp || '',
+        _playable: playable ? 1 : 0,
+        _playablePath: playable ? String(playable.path) : '',
         _propsJson: JSON.stringify(properties)
       }
     });
@@ -254,7 +331,8 @@ export async function initSkiResortMap(options = {}) {
         latlng,
         country: country ? String(country).trim() : '',
         properties,
-        wikiPage
+        wikiPage,
+        playablePath: playable ? String(playable.path) : ''
       });
     }
   });
@@ -271,6 +349,9 @@ export async function initSkiResortMap(options = {}) {
       `<div class="legend-row"><span class="legend-mountain-icon">${megaMountainsSvg(MAP_TIER_COLORS.mega, 26, 16)}</span> ${MAP_TIER_LEGEND.mega}</div>` +
       `<div class="legend-row" style="margin-top:6px"><span class="legend-mountain-icon">${hillSvg('#999', 18, 12)}</span> Grey = not a downhill ski resort</div>` +
       `<div class="legend-row" style="margin-top:8px;font-size:11px;color:#64748b">Colored dots at wide zoom; mountain icons from zoom ${RESORT_ICON_MIN_ZOOM}+</div>` +
+      (playableMode
+        ? '<div class="legend-row" style="margin-top:8px"><span class="legend-swatch" style="background:#0d9488;border:2px solid #0d9488;border-radius:50%"></span> Teal ring = playable in Ski Game (click to ski)</div>'
+        : '') +
       '<h3 style="margin-top:10px">Resort boundary (zoom 8+)</h3>' +
       `<div class="legend-row"><span class="legend-line" style="background:${ATLAS_COLORS.boundaryOutline};height:2px;border-top:2px dashed ${ATLAS_COLORS.boundaryOutline}"></span> Dashed outline = ski area boundary</div>` +
       `<div class="legend-row" style="font-size:11px;color:#64748b">Tan lines at zoom 12+ = elevation contours (where available)</div>` +
@@ -310,7 +391,7 @@ export async function initSkiResortMap(options = {}) {
     const wikiPage = findWikiPage(properties);
     resortPopup
       .setLngLat(lngLat)
-      .setHTML(makeResortPopup(properties, latlng, wikiPage))
+      .setHTML(makeResortPopup(properties, latlng, wikiPage, props._playablePath))
       .addTo(map);
   }
 
@@ -324,12 +405,18 @@ export async function initSkiResortMap(options = {}) {
         try { properties = JSON.parse(p._propsJson || '{}'); } catch (_) { /* ignore */ }
         showVtTip(e.point, buildResortHoverHtml(properties, p._name, resortStatsIndex, escapeHtml, {
           circleLayer: id.includes('circles')
-        }));
+        }) + (playableMode && p._playablePath
+          ? '<div class="tt-hint">Click to ski this mountain</div>'
+          : (p._playablePath ? '<div class="tt-hint">3D ski game available</div>' : '')));
       });
       map.on('mouseleave', id, () => { map.getCanvas().style.cursor = ''; hideVtTip(); });
       map.on('click', id, (e) => {
         if (!e.features.length) return;
         const p = e.features[0].properties;
+        if (playableMode && p._playablePath && onPlayablePick) {
+          onPlayablePick(p._playablePath);
+          return;
+        }
         if (id.includes('circles')) {
           map.flyTo({ center: e.lngLat, zoom: Math.max(map.getZoom() + 4, 11), duration: 500 });
         } else {
@@ -390,10 +477,14 @@ export async function initSkiResortMap(options = {}) {
     searchDropdown.classList.remove('visible');
     searchInput.value = r.name;
     searchInput.blur();
+    if (playableMode && r.playablePath && onPlayablePick) {
+      onPlayablePick(r.playablePath);
+      return;
+    }
     map.flyTo({ center: [r.latlng.lng, r.latlng.lat], zoom: 16, duration: 600 });
     map.once('moveend', () => {
       resortPopup.setLngLat([r.latlng.lng, r.latlng.lat])
-        .setHTML(makeResortPopup(r.properties, r.latlng, r.wikiPage))
+        .setHTML(makeResortPopup(r.properties, r.latlng, r.wikiPage, r.playablePath))
         .addTo(map);
     });
   }
@@ -441,16 +532,17 @@ export async function initSkiResortMap(options = {}) {
     if (url) window.open(url, '_blank', 'noopener');
   });
 
-  // ── Deferred AdSense ──────────────────────────────────────────────────────
-  const loadAd = () => {
-    const s = document.createElement('script');
-    s.async = true;
-    s.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4372859798489282';
-    s.crossOrigin = 'anonymous';
-    document.head.appendChild(s);
-  };
-  if (typeof requestIdleCallback !== 'undefined') requestIdleCallback(loadAd, { timeout: 2000 });
-  else setTimeout(loadAd, 1500);
+  if (loadAds) {
+    const loadAd = () => {
+      const s = document.createElement('script');
+      s.async = true;
+      s.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4372859798489282';
+      s.crossOrigin = 'anonymous';
+      document.head.appendChild(s);
+    };
+    if (typeof requestIdleCallback !== 'undefined') requestIdleCallback(loadAd, { timeout: 2000 });
+    else setTimeout(loadAd, 1500);
+  }
 
   initSkiFeaturePopups(map, { escapeHtml, tipEl: vtTipEl });
   initResortPopupScopeSwitcher(resortStatsIndex, escapeHtml);

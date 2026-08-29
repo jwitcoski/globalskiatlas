@@ -56,6 +56,12 @@ function handler(event) {
     }
   }
 
+  // 4. /playable → /playable/ so relative ESM imports resolve under /playable/
+  if (uri === '/playable') {
+    needRedirect = true;
+    newPath = '/playable/';
+  }
+
   if (needRedirect) {
     var location = 'https://' + canonicalHost + newPath + queryString();
     return {
@@ -63,6 +69,12 @@ function handler(event) {
       statusDescription: 'Moved Permanently',
       headers: { location: { value: location } }
     };
+  }
+
+  // 5. Directory URLs: fetch index.html at the origin without changing the browser path.
+  // Needed so /playable/ works on S3 (default root object only applies to /).
+  if (uri !== '/' && uri.charAt(uri.length - 1) === '/') {
+    request.uri = uri + 'index.html';
   }
 
   return request;

@@ -279,6 +279,20 @@
   cursor: pointer;
 }
 .sr-details-btn:hover { background: #1d4ed8; color: #fff !important; }
+.sr-ski-game-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 8px;
+  background: #0d9488;
+  color: #fff !important;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+}
+.sr-ski-game-btn:hover { background: #0f766e; color: #fff !important; }
 .sr-popup-actions {
   display: flex;
   flex-wrap: wrap;
