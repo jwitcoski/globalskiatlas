@@ -175,14 +175,23 @@ export function createRun(finish, radiusM = 28) {
     pisteWidth: 22,
     pisteDist: 0,
     bestScore: Number(localStorage.getItem(`montage_best_score:${name}`) || "") || null,
+    clocked: false,
+    startAlong: 4,
   };
 }
 
-export function tickRun(run, pos, spawnXZ, dt, moving) {
+export function tickRun(run, pos, spawnXZ, dt, moving, along = 0) {
   if (run.phase === "paused" || run.phase === "finished" || run.phase === "dnf") return run;
   if (run.phase === "ready") {
-    if (moving && xzDist(pos.x, pos.z, spawnXZ.x, spawnXZ.z) > 8) {
+    if (moving && xzDist(pos.x, pos.z, spawnXZ.x, spawnXZ.z) > 4) {
       run.phase = "running";
+      run.leftGate = false;
+    }
+    return run;
+  }
+  if (!run.clocked) {
+    if (along >= (run.startAlong || 8)) {
+      run.clocked = true;
       run.leftGate = true;
     }
     return run;

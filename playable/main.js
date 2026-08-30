@@ -15,38 +15,34 @@ import {
   makeCamShake,
   addTrauma,
   applyCamShake,
-} from "./physics.js?v=feel7";
-import { featuredCourses, attachPisteDifficulty, courseFinish, createRun, tickRun, formatTime } from "./run.js?v=map2";
-import { coordsToXz, attachPiste, resetScore, tickScore, commitBestScore, formatScore } from "./score.js?v=feel1";
-import {
-  orientPiste,
-  placeGates,
-  resetGates,
-  tickGates,
-  clearGateMeshes,
-  addGateMeshes,
-} from "./gates.js?v=vis16";
-import { addOsmWorld } from "./osm-world.js?v=island12";
+} from "./physics.js?v=feel11";
+import { featuredCourses, attachPisteDifficulty, courseFinish, createRun, tickRun, formatTime } from "./run.js?v=map4";
+import { coordsToXz, attachPiste, resetScore, tickScore, commitBestScore, formatScore, distToPolyline } from "./score.js?v=feel3";
+import { orientPiste, alongTrack, alongPolyline } from "./gates.js?v=vis18";
+import { addOsmWorld } from "./osm-world.js?v=island14";
 import {
   snowTerrainMaterial,
   addSkyAndLights,
   followSky,
   followSun,
   addFinish,
+  addStart,
   addContactBlob,
   makeSpray,
   updateSpray,
   makeFallingSnow,
   updateFallingSnow,
   setInspectAtmosphere,
-} from "./look.js?v=island1";
+} from "./look.js?v=island4";
 import { addResortIsland, updateIslandDust } from "./island.js?v=island10";
-import { bindUi, setHud, openPanel, closePanel } from "./ui.js?v=vis27";
+import { bindUi, setHud, openPanel, closePanel, updateLoading } from "./ui.js?v=vis31";
 import { atlasStatsHtml, prefetchWikiIndex } from "./atlas-stats.js?v=stats1";
 import { showPickerMap, destroyPickerMap } from "./picker-map.js?v=map5";
 import { capDpr, bindPads, attachDebug } from "./debug.js?v=fix1";
+import { intentsFrom, isTurning } from "./input.js?v=feel1";
+import { bindMobileChrome } from "./mobile.js?v=feel1";
 import { bakePisteSculpt, drapeSculptOnMesh } from "./piste-sculpt.js?v=feel3";
-import { addTrailMarks, clearTrailMarks } from "./trail-marks.js?v=marks2";
+import { addTrailMarks, clearTrailMarks, updateTrailMarks } from "./trail-marks.js?v=marks10";
 import { makeYeti, resetYeti, parkYetiAtStart, tickYeti } from "./yeti.js?v=vis16";
 import { createSkiWake, clearSkiWake, pushSkiWake, updateSkiWake } from "./ski-wake.js?v=feel1";
 import {
@@ -62,7 +58,8 @@ import {
   markerSvg,
   parseSkiArea,
 } from "./trail-map.js?v=zoom3";
-import { makeMinimap } from "./minimap.js?v=feel4";
+import { makeMinimap } from "./minimap.js?v=feel6";
+import { createNpcSkiers, clearNpcSkiers, tickNpcSkiers } from "./npc-skiers.js?v=feel4";
 import { updateTraffic } from "./traffic.js?v=vis16";
 import {
   TRAILER,
@@ -73,9 +70,13 @@ import {
   paintTrailerFrame,
 } from "./trailer.js?v=t2";
 
-/** Served at /playable/. Scene cakes live on S3 (catalog.json + per-resort prefixes). */
+/** Website CloudFront can origin-pull game_scenes; S3 is the fallback. */
+const S3_SCENES = "https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/game_scenes/";
+const CF_SCENES = "https://globalskiatlas.com/game_scenes/";
 const PUBLIC_SCENES =
-  "https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/game_scenes/";
+  location.hostname === "globalskiatlas.com" || location.hostname === "www.globalskiatlas.com"
+    ? CF_SCENES
+    : S3_SCENES;
 let SCENE_ROOT = new URL("./", import.meta.url);
 let catalogHub = null;
 let lastManifest = null;
@@ -94,6 +95,7 @@ addEventListener("keydown", (e) => {
 addEventListener("keyup", (e) => keys.delete(e.code));
 addEventListener("blur", () => keys.clear());
 bindPads(keys);
+const mobile = bindMobileChrome(keys);
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.5, 24000);
@@ -190,11 +192,27 @@ async function loadJSON(rel) {
   return r.json();
 }
 
-function loadGltf(url) {
+function loadGltf(url, onProgress) {
   return new Promise((resolve, reject) => {
-    new GLTFLoader().load(url, resolve, undefined, reject);
+    new GLTFLoader().load(
+      url,
+      resolve,
+      (ev) => {
+        if (!onProgress) return;
+        if (ev.total) onProgress(ev.loaded, ev.total);
+        else onProgress(ev.loaded, 0);
+      },
+      reject,
+    );
   });
 }
+
+function pushLoad(partial) {
+  Object.assign(loadUi, partial);
+  updateLoading(ui, loadUi);
+}
+
+let loadUi = {};
 
 function selectedDiff() {
   return classifyDifficulty(activeCourse?.piste_difficulty, activeCourse?.piste_type);
@@ -258,10 +276,11 @@ function setPlayableVisible(on) {
   spray.visible = on;
   if (flakes?.pts) flakes.pts.visible = on;
   if (wake) wake.mesh.visible = on && wake.samples.length > 1;
-  if (gateRoot) gateRoot.visible = on;
   if (marksRoot) marksRoot.visible = on;
+  if (npcPack?.root) npcPack.root.visible = on && !TRAILER;
   if (yeti) yeti.visible = on && !!run?.yetiOut;
   if (finishMark) finishMark.visible = on;
+  if (startMark) startMark.visible = on;
   setPistePlayMode(on);
 }
 
@@ -310,11 +329,10 @@ function applyRunCam() {
 }
 
 function navAngleDeg() {
-  if (!run) return 0;
-  const g = run.gates?.[run.gateIndex];
-  const tx = g ? g.x : run.finish.x;
-  const tz = g ? g.z : run.finish.z;
-  const bearing = Math.atan2(tx - skier.position.x, tz - skier.position.z);
+  if (!run?.pistePts) return 0;
+  const tr = alongTrack(run.pistePts, skier.position.x, skier.position.z);
+  const aim = alongPolyline(run.pistePts, tr.along + 42);
+  const bearing = Math.atan2(aim.x - skier.position.x, aim.z - skier.position.z);
   let a = bearing - heading;
   while (a > Math.PI) a -= Math.PI * 2;
   while (a < -Math.PI) a += Math.PI * 2;
@@ -399,10 +417,11 @@ let finishedShown = false;
 let dnfShown = false;
 let courseLineMat = null;
 let finishMark = null;
+let startMark = null;
 let trailChoices = [];
 let activeCourse = null;
-let gateRoot = null;
 let marksRoot = null;
+let npcPack = null;
 let trailMap = null;
 let mini = null;
 const pisteLines = [];
@@ -445,7 +464,18 @@ function applyCourse(course) {
     finishMark.position.set(finish.x, hf.sample(finish.x, finish.z), finish.z);
   }
   run = createRun(finish);
-  const hit = pisteLines.find((p) => course.name && p.name === course.name);
+  const named = pisteLines.find((p) => course.name && p.name === course.name);
+  let hit = named;
+  let best = Infinity;
+  for (const p of pisteLines) {
+    if (!p.pts || p.pts.length < 2) continue;
+    const d = distToPolyline(spawnXZ.x, spawnXZ.z, p.pts) * 2 + distToPolyline(finish.x, finish.z, p.pts);
+    if (d < best) {
+      best = d;
+      hit = p;
+    }
+  }
+  if (named && distToPolyline(spawnXZ.x, spawnXZ.z, named.pts) < 40) hit = named;
   const pistePts = orientPiste(
     hit && hit.pts.length >= 2
       ? hit.pts
@@ -454,16 +484,24 @@ function applyCourse(course) {
           { x: finish.x, z: finish.z },
         ],
     spawnXZ,
+    finish,
   );
   attachPiste(run, pistePts);
   run.courseLen = Math.hypot(finish.x - spawnXZ.x, finish.z - spawnXZ.z) || 1;
-  run.gates = placeGates(pistePts);
-  resetGates(run);
-  clearGateMeshes(gateRoot);
-  gateRoot = hf ? addGateMeshes(THREE, scene, run.gates, (x, z) => hf.sample(x, z)) : null;
+  run.clocked = false;
+  run.startAlong = 4;
+  const p0 = alongPolyline(pistePts, 0);
+  const yaw = Math.atan2(p0.tx, p0.tz);
+  if (startMark && hf) {
+    startMark.position.set(p0.x, hf.sample(p0.x, p0.z), p0.z);
+    startMark.rotation.y = yaw;
+  }
+  const diff = classifyDifficulty(course.piste_difficulty, course.piste_type);
   clearTrailMarks(marksRoot);
-  if (gateRoot) gateRoot.visible = false;
+  marksRoot = hf ? addTrailMarks(THREE, scene, pistePts, (x, z) => hf.sample(x, z)) : null;
   if (marksRoot) marksRoot.visible = false;
+  clearNpcSkiers(npcPack);
+  npcPack = TRAILER || !hf ? null : createNpcSkiers(THREE, scene, pisteLines, (x, z) => hf.sample(x, z), spawnXZ, pistePts);
 }
 
 function resetRun(opts = {}) {
@@ -471,8 +509,8 @@ function resetRun(opts = {}) {
   run.phase = "ready";
   run.time = 0;
   run.leftGate = false;
+  run.clocked = false;
   resetScore(run);
-  resetGates(run);
   resetYeti(yeti, run);
   clearSkiWake(wake);
   resetAirState(air);
@@ -516,7 +554,20 @@ async function openMountain(path) {
   SCENE_ROOT = new URL(`${rel}/`, base);
   pisteLines.length = 0;
   destroyPickerMap();
-  openPanel(ui, "loading", { message: "DEM + OSM scene…" });
+  const catalog = catalogHub?.data?.resorts?.find((r) => String(r.path || "").replace(/\/+$/, "") === rel) || null;
+  const name = String(catalog?.name || rel.split("/")[0] || "Mountain").replace(/_/g, " ");
+  loadUi = { name, message: "Reading the scene manifest…", stage: "manifest", factsHtml: "" };
+  openPanel(ui, "loading", loadUi);
+  atlasStatsHtml({
+    name,
+    country: catalog?.country,
+    location: catalog?.location,
+    id: catalog?.id,
+  })
+    .then((html) => {
+      if (html) pushLoad({ factsHtml: html });
+    })
+    .catch(() => {});
   await loadMountain();
 }
 
@@ -529,7 +580,8 @@ function catalogUrls() {
     const root = custom.endsWith("/") ? custom : `${custom}/`;
     urls.push(new URL("catalog.json", root));
   } else if (!localOnly) {
-    urls.push(new URL("catalog.json", PUBLIC_SCENES));
+    urls.push(new URL("catalog.json", CF_SCENES));
+    urls.push(new URL("catalog.json", S3_SCENES));
   }
   urls.push(new URL("../catalog.json", import.meta.url), new URL("../../../catalog.json", import.meta.url));
   return urls;
@@ -550,9 +602,14 @@ async function fetchCatalog() {
 }
 
 async function loadMountain() {
+  pushLoad({ message: "Reading the scene manifest…" });
   const manifest = await loadJSON("scene-manifest.json");
   lastManifest = manifest;
-  if (manifest.display_name) document.title = String(manifest.display_name).replace(" — Prototype", "");
+  if (manifest.display_name) {
+    document.title = String(manifest.display_name).replace(" — Prototype", "");
+    pushLoad({ name: String(manifest.display_name).replace(/\s+[—-]\s+Prototype$/i, "") });
+  }
+  pushLoad({ message: "Loading the heightfield…" });
   const hfMeta = await loadJSON(manifest.terrain.heightfield_metadata);
   const buf = await (await fetch(new URL(manifest.terrain.heightfield, SCENE_ROOT))).arrayBuffer();
   hf = makeHeightfield(hfMeta, new Uint16Array(buf));
@@ -560,7 +617,21 @@ async function loadMountain() {
   const snowMat = snowTerrainMaterial(THREE);
   let terrainRoot = null;
   try {
-    const gltf = await loadGltf(new URL(manifest.terrain.mesh, SCENE_ROOT).href);
+    pushLoad({ message: "Downloading terrain mesh…", pct: 0.02 });
+    const gltf = await loadGltf(new URL(manifest.terrain.mesh, SCENE_ROOT).href, (loaded, total) => {
+      if (!total) {
+        pushLoad({
+          message: `Downloading terrain mesh… ${(loaded / (1024 * 1024)).toFixed(0)} MB so far`,
+        });
+        return;
+      }
+      const mb = total / (1024 * 1024);
+      pushLoad({
+        pct: loaded / total,
+        sizeHint: mb > 40 ? `About ${mb.toFixed(0)} MB of terrain` : `Terrain ${mb.toFixed(0)} MB`,
+        message: `Downloading terrain mesh… ${Math.round((loaded / total) * 100)}%`,
+      });
+    });
     gltf.scene.traverse((o) => {
       if (o.isMesh) {
         o.material = snowMat;
@@ -593,8 +664,10 @@ async function loadMountain() {
   drapeSculptOnMesh(terrainRoot, hf);
 
   const drap = (x, z) => hf.sample(x, z);
+  pushLoad({ message: "Draping OSM on the mountain…", pct: 0.92 });
   const osmCounts = await addOsmWorld(THREE, scene, SCENE_ROOT, manifest, drap);
   console.info("OSM world", osmCounts);
+  pushLoad({ message: "Readying the run…", pct: 0.98 });
 
   const hull = scene.userData.osmHull;
   if (Array.isArray(hull) && hull.length >= 3) {
@@ -631,6 +704,7 @@ async function loadMountain() {
   if (!finish0 || finish0.x == null) throw new Error("No approved course with an end point");
   const finY = hf.sample(finish0.x, finish0.z);
   finishMark = addFinish(THREE, scene, finish0.x, finY, finish0.z);
+  startMark = addStart(THREE, scene, spawnXZ?.x || 0, finY, spawnXZ?.z || 0, 0);
   applyCourse(first);
 
   let skiArea = null;
@@ -787,7 +861,7 @@ function tick(now) {
   last = now;
   fpsEma = fpsEma * 0.9 + (1 / Math.max(0.001, frameDt)) * 0.1;
   try {
-  if (hf && run && run.phase !== "paused") {
+  if (hf && run && run.phase !== "paused" && !mobile.blocked()) {
     const freeze =
       run.phase === "finished" ||
       run.phase === "dnf" ||
@@ -796,9 +870,9 @@ function tick(now) {
       acc += frameDt;
       let steps = 0;
       if (TRAILER) steerTrailer(keys, run, skier, heading, !orbit.enabled);
-      const turning = keys.has("KeyA") || keys.has("KeyD") || keys.has("ArrowLeft") || keys.has("ArrowRight");
+      const turning = isTurning(keys);
       while (acc >= STEP && steps < 5) {
-        const gatesBefore = run.gateHit || 0;
+        const extras = TRAILER ? [] : tickNpcSkiers(THREE, npcPack, STEP, skier.position, hf, alongTrack(run.pistePts, skier.position.x, skier.position.z).along);
         const st = stepSki(THREE, {
           pos: skier.position,
           vel,
@@ -809,6 +883,7 @@ function tick(now) {
           trees: scene.userData.treeHash,
           air,
           onPiste: run.onPiste !== false,
+          extras,
         });
         heading = st.heading;
         skier.userData.steer = st.steer;
@@ -817,30 +892,34 @@ function tick(now) {
         skier.userData.pole = !!st.pole;
         if (st.treeHit?.impact > 1) addTrauma(shake, Math.min(0.7, st.treeHit.impact * 0.05));
         if (st.landed > 4) addTrauma(shake, Math.min(0.55, (st.landed - 4) * 0.05));
-        tickRun(run, skier.position, spawnXZ, STEP, vel.length() > 1.5);
+        const along = alongTrack(run.pistePts, skier.position.x, skier.position.z).along;
+        tickRun(run, skier.position, spawnXZ, STEP, vel.length() > 1.5, along);
         tickScore(run, skier.position, vel.length(), turning, STEP, {
           gap: st.treeHit?.gap,
           grazed: st.treeHit?.hit,
           skid: st.skid || 0,
           air: st.air,
+          landed: st.landed || 0,
+          airTime: st.airTime || 0,
+          airDist: st.airDist || 0,
         });
-        tickGates(run, skier.position);
-        if ((run.gateHit || 0) > gatesBefore) addTrauma(shake, 0.18);
         tickYeti(yeti, run, skier, hf, STEP, spawnXZ);
         acc -= STEP;
         steps += 1;
       }
+      updateTrailMarks(marksRoot, alongTrack(run.pistePts, skier.position.x, skier.position.z).along, skier.position);
+      const intent = intentsFrom(keys);
       orientSkier(THREE, skier, skier.position, heading, vel, hf, skier.userData.steer || 0, {
         air: skier.userData.air,
-        tuck: (keys.has("KeyW") || keys.has("ArrowUp")) && !skier.userData.pole,
+        tuck: intent.tuck && !skier.userData.pole,
         pole: !!skier.userData.pole,
-        brake: keys.has("KeyS") || keys.has("ArrowDown"),
+        brake: intent.brake,
         speed: vel.length(),
         dt: frameDt,
       });
       applyRunCam();
       applyCamShake(camera, shake, frameDt);
-      punchFov(camera, keys.has("KeyW") || keys.has("ArrowUp"), frameDt, vel.length());
+      punchFov(camera, intent.tuck, frameDt, vel.length());
       if (run.phase === "finished" && !finishedShown) {
         finishedShown = true;
         acc = 0;
@@ -851,7 +930,6 @@ function tick(now) {
           course: courseName,
           time: formatTime(run.time),
           score: formatScore(scored),
-          gates: `${run.gateHit || 0}/${run.gates?.length || 0}`,
           bestScore: run.bestScore != null ? formatScore(run.bestScore) : "—",
           bestTime: run.best != null ? formatTime(run.best) : "—",
         });
@@ -864,12 +942,11 @@ function tick(now) {
           score: formatScore(run.score),
           time: formatTime(run.time),
           reason: run.dnfReason || "piste",
-          gates: `${run.gateHit || 0}/${run.gates?.length || 0}`,
         });
       }
     }
     const spd = vel.length() * 3.6;
-    const tlabel = run.phase === "ready" ? "0:00.00" : formatTime(run.time);
+    const tlabel = run.phase === "ready" || !run.clocked ? "0:00.00" : formatTime(run.time);
     const distRemain = Math.hypot(skier.position.x - run.finish.x, skier.position.z - run.finish.z);
     setHud(ui, {
       timeLabel: tlabel,
@@ -880,9 +957,12 @@ function tick(now) {
       distRemain,
       distTotal: run.courseLen || distRemain || 1,
       course: courseName,
-      gatesHit: run.gateHit || 0,
-      gatesTotal: run.gates?.length || 0,
+      combo: run.combo || 1,
+      clocked: run.clocked && run.phase !== "ready",
+      styleFlash: run.styleFlash || "",
       gateFlash: run.gateFlash || "",
+      shoutLine: run.shoutLine || "",
+      shoutPts: run.shoutPts || 0,
       yetiOut: !!run.yetiOut,
       navShow: run.phase === "running" || run.phase === "paused",
       navAngle: navAngleDeg(),
@@ -920,6 +1000,7 @@ function tick(now) {
       heading,
       courseId: activeCourse?.id,
       finish: run.finish,
+      start: startMark ? { x: startMark.position.x, z: startMark.position.z } : null,
       yeti: hunting,
       yetiX: hunting ? yeti.position.x : null,
       yetiZ: hunting ? yeti.position.z : null,
@@ -975,7 +1056,7 @@ window.__THREE_GAME_DIAGNOSTICS__ = {
       trauma: shake.trauma,
       fov: camera.fov,
       fps: Math.round(fpsEma),
-      gates: `${run?.gateHit || 0}/${run?.gates?.length || 0}`,
+      gates: run?.clocked ? "clocked" : "gate",
       course: courseName,
       calls: renderer.info.render.calls,
       triangles: renderer.info.render.triangles,

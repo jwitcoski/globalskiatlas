@@ -1,55 +1,35 @@
-/** Green path chevrons + oval mogul pimples. Visual only; physics overlay is separate. */
+/** Ice-blue path decals on the OSM centerline — flat on the snow, like trail stamps. */
 
-const CHEV_STEP = 12;
-const MOGUL_STEP = 20;
-const MOGUL_SIDE = 3.1;
+import { alongPolyline, polylineLen } from "./gates.js?v=vis18";
 
-function alongPts(pts, dist) {
-  let left = Math.max(0, dist);
-  for (let i = 1; i < pts.length; i++) {
-    const ax = pts[i - 1].x;
-    const az = pts[i - 1].z;
-    const bx = pts[i].x;
-    const bz = pts[i].z;
-    const seg = Math.hypot(bx - ax, bz - az) || 1e-6;
-    if (left <= seg) {
-      const t = left / seg;
-      const tx = (bx - ax) / seg;
-      const tz = (bz - az) / seg;
-      return { x: ax + tx * left, z: az + tz * left, tx, tz };
-    }
-    left -= seg;
-  }
-  const last = pts[pts.length - 1];
-  const prev = pts[pts.length - 2] || last;
-  const seg = Math.hypot(last.x - prev.x, last.z - prev.z) || 1;
-  return { x: last.x, z: last.z, tx: (last.x - prev.x) / seg, tz: (last.z - prev.z) / seg };
-}
+const CHEV_STEP = 7.6;
+const SHOW_BACK = 10;
+const SHOW_AHEAD = 110;
+const ICE = 0x8ec9e8;
 
-function polyLen(pts) {
-  let n = 0;
-  for (let i = 1; i < pts.length; i++) n += Math.hypot(pts[i].x - pts[i - 1].x, pts[i].z - pts[i - 1].z);
-  return n;
-}
-
-function makeChevron(THREE) {
-  const g = new THREE.Group();
-  const mat = new THREE.MeshBasicMaterial({
-    color: 0x3dcf6a,
-    transparent: true,
-    opacity: 0.42,
-    depthWrite: false,
-    side: THREE.DoubleSide,
-  });
-  const arm = new THREE.BoxGeometry(1.85, 0.08, 0.22);
-  const L = new THREE.Mesh(arm, mat);
-  const R = new THREE.Mesh(arm, mat);
-  L.rotation.y = 0.52;
-  R.rotation.y = -0.52;
-  L.position.set(-0.55, 0, 0.35);
-  R.position.set(0.55, 0, 0.35);
-  g.add(L, R);
+function chevronGeo(THREE) {
+  const shape = new THREE.Shape();
+  shape.moveTo(0, 3.1);
+  shape.lineTo(-3.4, -2.15);
+  shape.lineTo(-2.15, -2.15);
+  shape.lineTo(0, 1.15);
+  shape.lineTo(2.15, -2.15);
+  shape.lineTo(3.4, -2.15);
+  shape.closePath();
+  const g = new THREE.ExtrudeGeometry(shape, { depth: 0.05, bevelEnabled: false, steps: 1 });
+  g.rotateX(Math.PI / 2);
+  g.computeVertexNormals();
   return g;
+}
+
+function placeChev(dummy, p, elevFn, scale) {
+  const y0 = elevFn(p.x, p.z);
+  const y1 = elevFn(p.x + p.tx * 2.4, p.z + p.tz * 2.4);
+  const pitch = Math.atan2(y0 - y1, 2.4);
+  dummy.position.set(p.x, y0 + 0.07, p.z);
+  dummy.rotation.set(pitch, Math.atan2(p.tx, p.tz), 0);
+  dummy.scale.setScalar(scale);
+  dummy.updateMatrix();
 }
 
 export function clearTrailMarks(root) {
@@ -64,37 +44,71 @@ export function clearTrailMarks(root) {
 
 export function addTrailMarks(THREE, scene, pts, elevFn) {
   const root = new THREE.Group();
+  root.name = "trail-chevrons";
+  root.userData.pts = pts;
   if (!pts || pts.length < 2) {
     scene.add(root);
     return root;
   }
-  const len = polyLen(pts);
-  const chevMatParent = makeChevron(THREE);
-  for (let s = 8; s < len - 12; s += CHEV_STEP) {
-    const p = alongPts(pts, s);
-    const mark = chevMatParent.clone();
-    mark.position.set(p.x, elevFn(p.x, p.z) + 1.55, p.z);
-    mark.rotation.y = Math.atan2(p.tx, p.tz) + Math.PI;
-    root.add(mark);
+  const len = polylineLen(pts);
+  const n = Math.max(0, Math.floor((len - 10) / CHEV_STEP));
+  if (!n) {
+    scene.add(root);
+    return root;
   }
-
-  const mogGeo = new THREE.SphereGeometry(1, 10, 8);
-  const mogMat = new THREE.MeshLambertMaterial({ color: 0xd8dee4 });
-  let slot = 0;
-  for (let s = 14; s < len - 16; s += MOGUL_STEP) {
-    const p = alongPts(pts, s);
-    const nx = -p.tz;
-    const nz = p.tx;
-    const side = slot % 2 === 0 ? -1 : 1;
-    slot += 1;
-    const x = p.x + nx * MOGUL_SIDE * side;
-    const z = p.z + nz * MOGUL_SIDE * side;
-    const mesh = new THREE.Mesh(mogGeo, mogMat);
-    mesh.position.set(x, elevFn(x, z) + 0.55, z);
-    mesh.scale.set(3.6, 2.15, 2.5);
-    mesh.rotation.y = Math.atan2(p.tx, p.tz);
-    root.add(mesh);
+  const geo = chevronGeo(THREE);
+  const mat = new THREE.MeshBasicMaterial({
+    color: ICE,
+    transparent: true,
+    opacity: 0.52,
+    depthWrite: false,
+    polygonOffset: true,
+    polygonOffsetFactor: -2,
+    polygonOffsetUnits: -2,
+    side: THREE.DoubleSide,
+  });
+  const mesh = new THREE.InstancedMesh(geo, mat, n);
+  mesh.frustumCulled = false;
+  mesh.renderOrder = 4;
+  const dummy = new THREE.Object3D();
+  dummy.rotation.order = "YXZ";
+  for (let i = 0; i < n; i++) {
+    const p = alongPolyline(pts, 4 + i * CHEV_STEP);
+    placeChev(dummy, p, elevFn, 1);
+    mesh.setMatrixAt(i, dummy.matrix);
   }
+  mesh.instanceMatrix.needsUpdate = true;
+  root.add(mesh);
+  root.userData.mesh = mesh;
+  root.userData.n = n;
+  root.userData.step = CHEV_STEP;
+  root.userData.dummy = dummy;
+  root.userData.elevFn = elevFn;
   scene.add(root);
   return root;
+}
+
+export function updateTrailMarks(root, along, skierPos) {
+  const mesh = root?.userData?.mesh;
+  const dummy = root?.userData?.dummy;
+  const pts = root?.userData?.pts;
+  const elevFn = root?.userData?.elevFn;
+  if (!mesh || !dummy || !pts) return;
+  const n = root.userData.n;
+  const step = root.userData.step;
+  const sx = skierPos?.x ?? 0;
+  const sz = skierPos?.z ?? 0;
+  for (let i = 0; i < n; i++) {
+    const s = 4 + i * step;
+    const ahead = s - along;
+    const p = alongPolyline(pts, s);
+    const near = Math.hypot(p.x - sx, p.z - sz);
+    let scale = 0.001;
+    if (near <= SHOW_AHEAD || (ahead >= -SHOW_BACK && ahead <= SHOW_AHEAD)) {
+      scale = ahead >= -3 && ahead < 55 ? 1 : 0.82;
+    }
+    placeChev(dummy, p, elevFn, scale);
+    mesh.setMatrixAt(i, dummy.matrix);
+  }
+  mesh.instanceMatrix.needsUpdate = true;
 }

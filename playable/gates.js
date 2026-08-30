@@ -5,13 +5,13 @@ export const GATE_RADIUS_M = 10;
 export const GATE_MISS_DNF = 3;
 export const GATE_BONUS = 420;
 
-function polylineLen(pts) {
+export function polylineLen(pts) {
   let n = 0;
   for (let i = 1; i < pts.length; i++) n += Math.hypot(pts[i].x - pts[i - 1].x, pts[i].z - pts[i - 1].z);
   return n;
 }
 
-function alongPolyline(pts, dist) {
+export function alongPolyline(pts, dist) {
   let left = Math.max(0, dist);
   for (let i = 1; i < pts.length; i++) {
     const ax = pts[i - 1].x;
@@ -60,10 +60,15 @@ export function alongTrack(pts, x, z) {
   return { along, dist: best };
 }
 
-export function orientPiste(pts, start) {
+export function orientPiste(pts, start, finish) {
   if (!pts || pts.length < 2 || !start) return pts || [];
-  const a = Math.hypot(pts[0].x - start.x, pts[0].z - start.z);
-  const b = Math.hypot(pts[pts.length - 1].x - start.x, pts[pts.length - 1].z - start.z);
+  const last = pts[pts.length - 1];
+  const fx = finish?.x ?? last.x;
+  const fz = finish?.z ?? last.z;
+  const a =
+    Math.hypot(pts[0].x - start.x, pts[0].z - start.z) + Math.hypot(last.x - fx, last.z - fz);
+  const b =
+    Math.hypot(last.x - start.x, last.z - start.z) + Math.hypot(pts[0].x - fx, pts[0].z - fz);
   return a <= b ? pts : [...pts].reverse();
 }
 

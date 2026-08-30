@@ -27,14 +27,15 @@ const POWDER_SKID = 1.4;
 
 /** Short ballistic pops over DEM rollers — never a flight sim. */
 const G_AIR = 24;
-const MAX_AIR_S = 1.1;
+const MAX_AIR_S = 1.7;
 /**
  * Launch only when the skier is *leaving* the snow (convex lip), not when the
  * DEM simply drops along a steady downhill. Steady pitch: vel.y ≈ groundVel.
  */
-const LAUNCH_MIN = 0.32;
-const LAUNCH_SEP = 5.5;
-const LAUNCH_SPD = 12;
+const LAUNCH_MIN = 0.04;
+const LAUNCH_SEP = 0.85;
+const LAUNCH_SPD = 6.5;
+const LAUNCH_CONVEX = 0.06;
 const AIR_COOL = 0.35;
 const AIR_TURN = 0.42;
 const AIR_DRAG = 0.05;
@@ -108,15 +109,15 @@ function std(THREE, color, extra = {}) {
  * goggles, long yellow skis. Built as named joints so `orientSkier` can pose it
  * (lean, tuck, brake, air) and so `skiTails` can still find the ski tails.
  */
-export function makeSkier(THREE, scene) {
+export function makeSkier(THREE, scene, opts = {}) {
   const g = new THREE.Group();
-  g.name = "skier";
+  g.name = opts.name || "skier";
 
-  const suit = std(THREE, 0xd8342e, { roughness: 0.6 });
+  const suit = std(THREE, opts.suit ?? 0xd8342e, { roughness: 0.6 });
   const panel = std(THREE, 0xf1f3f6, { roughness: 0.64 });
   const dark = std(THREE, 0x1b1e23, { roughness: 0.5, env: 0.75 });
   const shell = std(THREE, 0xf6f8fa, { roughness: 0.3, metalness: 0.06, env: 0.95 });
-  const skiTop = std(THREE, 0xf2c02e, { roughness: 0.28, metalness: 0.16, env: 1 });
+  const skiTop = std(THREE, opts.ski ?? 0xf2c02e, { roughness: 0.28, metalness: 0.16, env: 1 });
   const skiBase = std(THREE, 0x15171c, { roughness: 0.22, metalness: 0.3, env: 1 });
   const skin = std(THREE, 0xd2a887, { roughness: 0.72 });
   const metal = std(THREE, 0x8d949c, { roughness: 0.34, metalness: 0.6, env: 1 });
@@ -280,7 +281,7 @@ export function makeSkier(THREE, scene) {
       o.receiveShadow = true;
     }
   });
-  scene.add(g);
+  if (opts.add !== false) scene.add(g);
   return g;
 }
 
@@ -356,8 +357,37 @@ export function collideTrees(pos, vel, hash) {
   return { hit, crash: false, impact, gap };
 }
 
+function mergeHits(a, b) {
+  return {
+    hit: !!(a?.hit || b?.hit),
+    crash: false,
+    impact: Math.max(a?.impact || 0, b?.impact || 0),
+    gap: Math.min(a?.gap ?? Infinity, b?.gap ?? Infinity),
+  };
+}
+
+export function collideCylinders(pos, vel, list) {
+  if (!list?.length) return { hit: false, crash: false, impact: 0, gap: Infinity };
+  const hash = { cell: 12, buckets: new Map(), xzr: [] };
+  for (const o of list) {
+    if (!o || o.r == null) continue;
+    const i = hash.xzr.length;
+    hash.xzr.push(o.x, o.z, o.r);
+    const ix = Math.floor(o.x / hash.cell);
+    const iz = Math.floor(o.z / hash.cell);
+    const key = `${ix},${iz}`;
+    let bin = hash.buckets.get(key);
+    if (!bin) {
+      bin = [];
+      hash.buckets.set(key, bin);
+    }
+    bin.push(i);
+  }
+  return collideTrees(pos, vel, hash);
+}
+
 export function makeAirState() {
-  return { on: false, vy: 0, t: 0, height: 0, cool: 0 };
+  return { on: false, vy: 0, t: 0, height: 0, cool: 0, tuckHeld: false, ox: 0, oz: 0 };
 }
 
 export function resetAirState(air) {
@@ -367,6 +397,9 @@ export function resetAirState(air) {
   air.t = 0;
   air.height = 0;
   air.cool = 0;
+  air.tuckHeld = false;
+  air.ox = 0;
+  air.oz = 0;
 }
 
 function readTurn(keys) {
@@ -388,7 +421,7 @@ function carve(THREE, vel, fwd, edged, powder, dt) {
   return skidLen;
 }
 
-function stepAir(THREE, { pos, vel, heading, keys, hf, dt, trees, air }) {
+function stepAir(THREE, { pos, vel, heading, keys, hf, dt, trees, air, extras }) {
   const turn = readTurn(keys);
   if (turn !== 0) heading += turn * AIR_TURN * dt;
 
@@ -401,7 +434,7 @@ function stepAir(THREE, { pos, vel, heading, keys, hf, dt, trees, air }) {
   pos.z += vel.z * dt;
   pos.y += air.vy * dt;
   clampToDem(pos, hf);
-  const treeHit = collideTrees(pos, vel, trees);
+  const treeHit = mergeHits(collideTrees(pos, vel, trees), collideCylinders(pos, vel, extras));
 
   const ground = hf.sample(pos.x, pos.z);
   air.height = Math.max(0, pos.y - RIDE - ground);
@@ -410,10 +443,22 @@ function stepAir(THREE, { pos, vel, heading, keys, hf, dt, trees, air }) {
   const forced = air.t >= MAX_AIR_S;
   if (pos.y - RIDE > ground && !forced) {
     vel.y = air.vy;
-    return { heading, ground, speed: vel.length(), steer: turn, treeHit, air: true, landed: 0 };
+    return {
+      heading,
+      ground,
+      speed: vel.length(),
+      steer: turn,
+      treeHit,
+      air: true,
+      landed: 0,
+      airTime: air.t,
+      airDist: Math.hypot(pos.x - (air.ox || pos.x), pos.z - (air.oz || pos.z)),
+    };
   }
 
   const impact = Math.max(0, -air.vy);
+  const airTime = air.t;
+  const airDist = Math.hypot(pos.x - (air.ox || pos.x), pos.z - (air.oz || pos.z));
   pos.y = ground + RIDE;
   vel.y = 0;
   const n = slopeNormal(THREE, hf, pos.x, pos.z, v3(THREE, _n));
@@ -432,12 +477,12 @@ function stepAir(THREE, { pos, vel, heading, keys, hf, dt, trees, air }) {
   air.t = 0;
   air.height = 0;
   air.cool = AIR_COOL;
-  return { heading, ground, speed: vel.length(), steer: turn, treeHit, air: false, landed: impact };
+  return { heading, ground, speed: vel.length(), steer: turn, treeHit, air: false, landed: impact, airTime, airDist };
 }
 
-export function stepSki(THREE, { pos, vel, heading, keys, hf, dt, trees, air, onPiste = true }) {
+export function stepSki(THREE, { pos, vel, heading, keys, hf, dt, trees, air, onPiste = true, extras }) {
   if (air?.cool > 0) air.cool = Math.max(0, air.cool - dt);
-  if (air?.on) return stepAir(THREE, { pos, vel, heading, keys, hf, dt, trees, air });
+  if (air?.on) return stepAir(THREE, { pos, vel, heading, keys, hf, dt, trees, air, extras });
 
   const n = slopeNormal(THREE, hf, pos.x, pos.z, v3(THREE, _n));
   const fall = fallLine(THREE, n, v3(THREE, _fall));
@@ -497,6 +542,8 @@ export function stepSki(THREE, { pos, vel, heading, keys, hf, dt, trees, air, on
   pos.addScaledVector(vel, dt);
   clampToDem(pos, hf);
   const treeHit = collideTrees(pos, vel, trees);
+  const extraHit = collideCylinders(pos, vel, extras);
+  Object.assign(treeHit, mergeHits(treeHit, extraHit));
   const ground = hf.sample(pos.x, pos.z);
   const climb = ground - y0;
   const step = Math.max(vel.length() * dt, 0.04);
@@ -511,21 +558,27 @@ export function stepSki(THREE, { pos, vel, heading, keys, hf, dt, trees, air, on
   heading = wrapAngle(heading);
   const sep = pos.y - RIDE - ground;
   const groundVel = (ground - y0) / Math.max(dt, 1e-4);
-  /* Leave snow only when separating from a lip — not when the pitch itself drops. */
   const leaving = vy0 - groundVel;
-  if (
-    air &&
-    air.cool <= 0 &&
-    climb <= 0 &&
-    sep > LAUNCH_MIN &&
-    leaving > LAUNCH_SEP &&
-    vel.length() > LAUNCH_SPD &&
-    !treeHit.hit
-  ) {
+  const look = 3.8;
+  const yAhead = hf.sample(pos.x + fwd.x * look, pos.z + fwd.z * look);
+  const slopeAhead = (yAhead - ground) / look;
+  const horiz = Math.hypot(vel.x, vel.z) || 1;
+  const slopeNow = vel.y / horiz;
+  const convex = slopeNow - slopeAhead;
+  const tucked = keys.has("KeyW") || keys.has("ArrowUp");
+  const tuckPop = !!(air?.tuckHeld && !tucked && vel.length() > 10 && convex > 0.04 && slopeAhead < -0.02);
+  if (air) air.tuckHeld = tucked;
+  const lip =
+    (sep > LAUNCH_MIN && leaving > LAUNCH_SEP) ||
+    (convex > LAUNCH_CONVEX && slopeAhead < -0.03) ||
+    tuckPop;
+  if (air && air.cool <= 0 && climb <= 0 && vel.length() > LAUNCH_SPD && !treeHit.hit && lip) {
     air.on = true;
     air.t = 0;
-    air.vy = Math.max(0.5, leaving * 0.35);
-    air.height = sep;
+    air.ox = pos.x;
+    air.oz = pos.z;
+    air.vy = Math.min(4.4, Math.max(1.15, tuckPop ? 2.6 : Math.max(leaving * 0.42, convex * horiz * 0.55)));
+    air.height = Math.max(sep, 0.2);
     return { heading, ground, speed: vel.length(), steer: turn, treeHit, air: true, landed: 0, skid };
   }
 

@@ -18,6 +18,8 @@ export function bindUi() {
     nav: document.getElementById("nav-arrow"),
     navNeedle: document.getElementById("nav-needle"),
     povBtn: document.getElementById("pov-btn"),
+    combo: document.getElementById("combo-read"),
+    shout: document.getElementById("air-shout"),
   };
 }
 
@@ -29,12 +31,29 @@ export function setHud(ui, s) {
   const off = s.offTimer ?? s.offTimer ?? 0;
   const speed = s.speedKmh ?? s.speedKmh ?? 0;
   if (ui.clock) ui.clock.textContent = timeLabel;
+  const hunt = s.yetiOut ? " · HUNT" : "";
   if (ui.obj) {
-    const g =
-      s.gatesTotal > 0 ? `${s.gatesHit || 0} / ${s.gatesTotal}` : s.course;
-    const hunt = s.yetiOut ? "  ·  YETI" : "";
-    const flash = s.gateFlash ? `  ·  ${s.gateFlash}` : "";
-    ui.obj.textContent = `${g}${hunt}${flash}`;
+    const g = s.clocked === false ? "GATE" : s.styleFlash || s.gateFlash || (s.combo > 1.05 ? `${s.combo.toFixed(1)}×` : s.course);
+    ui.obj.textContent = `${g}${hunt}`;
+  }
+  if (ui.combo) {
+    const show = s.clocked !== false;
+    ui.combo.hidden = !show;
+    ui.combo.textContent = `${(s.combo || 1).toFixed(1)}×`;
+    ui.combo.classList.toggle("pop", !!(s.styleFlash || s.gateFlash));
+  }
+  if (ui.shout) {
+    const key = s.shoutLine ? `${s.shoutLine}|${s.shoutPts}` : "";
+    if (ui.shout.dataset.key !== key) {
+      ui.shout.dataset.key = key;
+      if (s.shoutLine) {
+        ui.shout.hidden = false;
+        ui.shout.innerHTML = `<span class="air-line">${s.shoutLine}</span><span class="air-pts">+${Math.round(s.shoutPts || 0)}</span>`;
+      } else {
+        ui.shout.hidden = true;
+        ui.shout.textContent = "";
+      }
+    }
   }
   if (ui.distRead) ui.distRead.textContent = `${Math.round(remain)} meters`;
   if (ui.score) ui.score.textContent = String(Math.round(s.score)).padStart(5, "0");
@@ -62,9 +81,29 @@ export function setHud(ui, s) {
     if (abs > 150) way = "behind you";
     else if (deg > 20) way = "to your right";
     else if (deg < -20) way = "to your left";
-    ui.nav.setAttribute("aria-label", `Next gate ${way}`);
+    ui.nav.setAttribute("aria-label", `Trail ${way}`);
   }
   if (ui.povBtn) ui.povBtn.textContent = s.pov === "iso" ? "ISO" : "CAM";
+}
+
+export function updateLoading(ui, data) {
+  if (!ui.panel || !ui.overlay || ui.overlay.hidden) return;
+  if (!ui.overlay.dataset.loading) return;
+  const stage = data.stage || "Loading";
+  const pct = data.pct;
+  const bar =
+    pct != null
+      ? `<div class="load-bar"><span style="width:${Math.round(Math.min(100, Math.max(2, pct * 100)))}%"></span></div>`
+      : `<div class="load-bar indet"><span></span></div>`;
+  const facts = data.factsHtml || "";
+  const size = data.sizeHint ? `<p class="fine">${data.sizeHint}</p>` : "";
+  ui.panel.innerHTML = `<p class="kicker">Loading</p>
+      <h2>${data.name || "Fetching the mountain"}</h2>
+      <p>${data.message || stage}</p>
+      ${size}
+      ${bar}
+      <p class="fine">Large terrain files can take a while. This is still loading.</p>
+      ${facts}`;
 }
 
 function actions(rows) {
@@ -136,11 +175,16 @@ export function openPanel(ui, kind, data) {
   document.body.classList.toggle("lobby", kind === "ready");
   document.body.classList.toggle("picker", kind === "mountains");
   if (kind === "loading") {
+    ui.overlay.dataset.loading = "1";
     ui.panel.innerHTML = `<p class="kicker">Loading</p>
-      <h2>Fetching the mountain</h2>
-      <p>${data.message || "DEM + OSM scene…"}</p>`;
+      <h2>${data.name || "Fetching the mountain"}</h2>
+      <p>${data.message || "DEM + OSM scene…"}</p>
+      <div class="load-bar indet"><span></span></div>
+      <p class="fine">Large terrain files can take a while. This is still loading.</p>
+      ${data.factsHtml || ""}`;
     return;
   }
+  delete ui.overlay.dataset.loading;
   if (kind === "mountains") {
     ui.panel.innerHTML = `<div class="world-head">
         <p class="kicker"><a class="atlas-home" href="/">Global Ski Atlas</a> · Pick a mountain</p>
@@ -181,7 +225,7 @@ export function openPanel(ui, kind, data) {
     ui.panel.innerHTML = `<p class="kicker">Finished</p>
       <h2 class="big">${data.time}</h2>
       <p>${data.course}</p>
-      <p>Score ${data.score} · gates ${data.gates || "—"} · best ${data.bestScore}</p>
+      <p>Score ${data.score} · best ${data.bestScore}</p>
       <p class="fine">Best time ${data.bestTime}</p>
       ${actions([
         ["restart", "Ski again", "primary"],
@@ -195,7 +239,7 @@ export function openPanel(ui, kind, data) {
     ui.panel.innerHTML = `<p class="kicker">${yeti ? "Eaten" : tree ? "Wipeout" : "DNF"}</p>
       <h2>${yeti ? "Abominable snowman" : tree ? "Tree" : "Stopped"}</h2>
       <p>${yeti ? "It hunted you down before the finish." : tree ? "You hit a tree." : "Run ended."}</p>
-      <p>Score ${data.score} · ${data.time}${data.gates ? ` · gates ${data.gates}` : ""}</p>
+      <p>Score ${data.score} · ${data.time}</p>
       ${actions([
         ["restart", "Restart", "primary"],
         ["lobby", "Other trail", "ghost"],

@@ -116,6 +116,14 @@ export function makeMinimap(canvas, trailMap) {
       ctx.globalAlpha = 1;
     }
 
+    if (state.start) {
+      const q = to(state.start.x, state.start.z, w, h, pad);
+      ctx.fillStyle = "#2a6fdb";
+      ctx.beginPath();
+      ctx.arc(q.u, q.v, 4, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
     if (state.finish) {
       const q = to(state.finish.x, state.finish.z, w, h, pad);
       ctx.strokeStyle = "#c4b06a";

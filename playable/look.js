@@ -225,6 +225,51 @@ export function addFinish(THREE, scene, x, y, z) {
   return g;
 }
 
+function bannerTex(label) {
+  const c = document.createElement("canvas");
+  c.width = 256;
+  c.height = 96;
+  const ctx = c.getContext("2d");
+  ctx.fillStyle = "#d8c45a";
+  ctx.fillRect(0, 0, 256, 96);
+  ctx.fillStyle = "#1a1c18";
+  ctx.font = "bold 42px sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(label, 128, 50);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.needsUpdate = true;
+  return tex;
+}
+
+function gateBanner(THREE, scene, label, width = 10) {
+  const g = new THREE.Group();
+  const poleG = new THREE.CylinderGeometry(0.12, 0.14, 8.5, 6);
+  const poleM = new THREE.MeshLambertMaterial({ color: 0xe8e8e6 });
+  const L = new THREE.Mesh(poleG, poleM);
+  const R = new THREE.Mesh(poleG, poleM);
+  L.position.set(-width * 0.5, 4.25, 0);
+  R.position.set(width * 0.5, 4.25, 0);
+  const cloth = new THREE.Mesh(
+    new THREE.PlaneGeometry(width - 0.4, 1.8),
+    new THREE.MeshLambertMaterial({ map: bannerTex(label), side: THREE.FrontSide }),
+  );
+  cloth.position.set(0, 7.4, 0);
+  cloth.rotation.y = Math.PI;
+  g.add(L, R, cloth);
+  scene.add(g);
+  return g;
+}
+
+export function addStart(THREE, scene, x, y, z, yaw = 0) {
+  const g = gateBanner(THREE, scene, "START", 11);
+  g.position.set(x, y, z);
+  /* Plane faces +Z; chase cam looks downhill (+tangent), so flip to face the camera. */
+  g.rotation.y = yaw;
+  return g;
+}
+
 export function addContactBlob(THREE, scene) {
   const disc = new THREE.Mesh(
     new THREE.CircleGeometry(0.72, 16),

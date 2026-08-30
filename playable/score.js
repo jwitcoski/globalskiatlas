@@ -1,4 +1,4 @@
-/** Arcade piste score: stay near the green OSM centerline. */
+/** Arcade piste score: stay on the centerline, carve, catch air. */
 
 function scoreStore(run) {
   return `montage_best_score:${run.finish?.name || "course"}`;
@@ -42,13 +42,13 @@ export function attachPiste(run, pts) {
   run.bestScore = Number(localStorage.getItem(scoreStore(run)) || "") || null;
 }
 
-/** Grazing a trunk this close without touching it pays out. */
 export const NEAR_MISS_M = 2;
 const NEAR_MISS_BONUS = 160;
 const NEAR_MISS_COOL = 0.55;
 const NEAR_MISS_SPD = 9;
 const CARVE_SKID_M = 2.6;
 const FLASH_S = 1.1;
+const SHOUT_S = 2.15;
 
 export function resetScore(run) {
   run.score = 0;
@@ -56,10 +56,12 @@ export function resetScore(run) {
   run.offTimer = 0;
   run.pisteDist = 0;
   run.styleMult = 1;
+  run.combo = 1;
   run.nearMiss = 0;
   run.nearCool = 0;
   run.flashT = 0;
   run.gateFlash = "";
+  run.styleFlash = "";
   run.lastFlash = "";
   run.yetiWanted = false;
   run.yetiOut = false;
@@ -67,22 +69,35 @@ export function resetScore(run) {
   run.yetiChase = false;
   run.yetiArmed = false;
   run.yetiWait = 0;
+  run.airScoreT = 0;
+  run.shoutLine = "";
+  run.shoutPts = 0;
 }
 
-/** Gates and near-misses both write gateFlash; expire it so the HUD stays live. */
 function tickFlash(run, dt) {
-  if (run.gateFlash !== run.lastFlash) {
-    run.lastFlash = run.gateFlash;
-    run.flashT = run.gateFlash ? FLASH_S : 0;
+  const cur = run.styleFlash || run.gateFlash || "";
+  if (cur !== run.lastFlash) {
+    run.lastFlash = cur;
+    run.flashT = cur ? FLASH_S : 0;
     return;
   }
   if (run.flashT > 0) {
     run.flashT -= dt;
     if (run.flashT <= 0) {
       run.gateFlash = "";
+      run.styleFlash = "";
       run.lastFlash = "";
+      run.shoutLine = "";
+      run.shoutPts = 0;
     }
   }
+}
+
+function flash(run, text, hold = FLASH_S) {
+  run.styleFlash = text;
+  run.gateFlash = text;
+  run.lastFlash = text;
+  run.flashT = hold;
 }
 
 function tickNearMiss(run, gap, grazed, speed, dt) {
@@ -91,8 +106,9 @@ function tickNearMiss(run, gap, grazed, speed, dt) {
   if (!(gap >= 0) || gap > NEAR_MISS_M) return;
   if (run.nearCool > 0) return;
   run.nearMiss = (run.nearMiss || 0) + 1;
-  run.score += NEAR_MISS_BONUS;
-  run.gateFlash = "CLOSE";
+  run.score += NEAR_MISS_BONUS * (run.combo || 1);
+  flash(run, "CLOSE");
+  run.combo = Math.min(4, (run.combo || 1) + 0.25);
   run.nearCool = NEAR_MISS_COOL;
 }
 
@@ -102,18 +118,48 @@ export function tickScore(run, pos, speed, turning, dt, extra = {}) {
   const d = distToPolyline(pos.x, pos.z, run.pistePts);
   run.pisteDist = d;
   run.onPiste = d <= run.pisteWidth;
+  if (!run.clocked) {
+    run.styleMult = 1;
+    return run;
+  }
   if (run.onPiste) {
     run.offTimer = 0;
     const carving = turning && (extra.skid || 0) < CARVE_SKID_M;
     const speedBonus = Math.min(speed / 36, 0.55);
     run.styleMult = 1 + (carving ? 0.4 : 0) + speedBonus;
-    run.score += speed * dt * 14 * run.styleMult;
+    if (carving && speed > 8) {
+      run.combo = Math.min(4, (run.combo || 1) + dt * 0.15);
+      if ((run.flashT || 0) <= 0) flash(run, "CARVE");
+    } else {
+      run.combo = Math.max(1, (run.combo || 1) - dt * 0.12);
+    }
+    run.score += speed * dt * 14 * run.styleMult * (run.combo || 1);
   } else {
     run.styleMult = 1;
+    run.combo = Math.max(1, (run.combo || 1) - dt * 0.4);
     run.offTimer += dt;
     run.yetiBoost = Math.min(10, (run.yetiBoost || 0) + dt * 0.7);
   }
-  tickNearMiss(run, extra.gap, extra.grazed, speed, dt);
+  if (extra.air) {
+    run.airScoreT = extra.airTime || (run.airScoreT || 0) + dt;
+    run.styleFlash = `AIR ${run.airScoreT.toFixed(2)}s`;
+    run.gateFlash = run.styleFlash;
+    run.lastFlash = run.styleFlash;
+    run.flashT = 0.3;
+  } else if ((extra.airTime || 0) >= 0.22 && (extra.airDist || 0) >= 2.2) {
+    const t = extra.airTime;
+    const dist = extra.airDist;
+    const pts = Math.round((t * 680 + dist * 48) * (run.combo || 1));
+    run.score += pts;
+    run.shoutLine = `${t.toFixed(2)}s   ${Math.round(dist)} m`;
+    run.shoutPts = pts;
+    flash(run, `${t.toFixed(2)}s · ${Math.round(dist)}m  +${pts.toLocaleString("en-US")}`, SHOUT_S);
+    run.combo = Math.min(4, (run.combo || 1) + 0.4);
+    run.airScoreT = 0;
+  } else if ((extra.landed || 0) > 2) {
+    run.airScoreT = 0;
+  }
+  if (!run.shoutLine) tickNearMiss(run, extra.gap, extra.grazed, speed, dt);
   return run;
 }
 

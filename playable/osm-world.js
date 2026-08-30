@@ -4,6 +4,7 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { styleForPisteFeature } from "./trail-map.js?v=vis24";
 import { addOsmTraffic } from "./traffic.js?v=vis16";
+import { alongPolyline, polylineLen } from "./gates.js?v=vis17";
 
 const GRID = 12;
 const MAX_FILL_SPAN = 700;
@@ -1031,4 +1032,94 @@ export async function addOsmWorld(THREE, scene, sceneRoot, manifest, elevFn) {
   counts.hull_points = scene.userData.osmHull.length;
 
   return counts;
+}
+
+/** Fill empty piste edges when OSM forest is thin along the corridor. */
+export function addPisteEdgeScenery(THREE, scene, pistePolys, elevFn) {
+  const hash = scene.userData.treeHash;
+  const existing = hash?.xzr || [];
+  function nearTree(x, z) {
+    if (!existing.length) return false;
+    const cell = hash.cell || 12;
+    const ix = Math.floor(x / cell);
+    const iz = Math.floor(z / cell);
+    for (let dx = -1; dx <= 1; dx++) {
+      for (let dz = -1; dz <= 1; dz++) {
+        const bin = hash.buckets?.get(`${ix + dx},${iz + dz}`);
+        if (!bin) continue;
+        for (const i of bin) {
+          if (Math.hypot(x - existing[i], z - existing[i + 1]) < 7) return true;
+        }
+      }
+    }
+    return false;
+  }
+  const dummy = new THREE.Object3D();
+  const trunkG = new THREE.CylinderGeometry(0.12, 0.18, 3.2, 5);
+  const crownG = new THREE.ConeGeometry(1.05, 7.4, 6);
+  const rockG = new THREE.DodecahedronGeometry(0.7, 0);
+  const bark = new THREE.MeshLambertMaterial({ color: 0x4a3a2c });
+  const needle = new THREE.MeshLambertMaterial({ color: 0x1e3a2c });
+  const snow = new THREE.MeshLambertMaterial({ color: 0xd8dee4 });
+  const pts = [];
+  for (const poly of pistePolys || []) {
+    const len = polylineLen(poly);
+    if (len < 30) continue;
+    for (let s = 12; s < len - 12; s += 16) {
+      const p = alongPolyline(poly, s);
+      const nx = -p.tz;
+      const nz = p.tx;
+      for (const side of [-1, 1]) {
+        const x = p.x + nx * (24 + (s % 5)) * side;
+        const z = p.z + nz * (24 + (s % 5)) * side;
+        if (nearTree(x, z)) continue;
+        pts.push(x, z, (s + side) % 3 === 0 ? 1 : 0);
+      }
+    }
+  }
+  if (pts.length < 6) return 0;
+  const n = Math.min(280, Math.floor(pts.length / 3));
+  const trunks = new THREE.InstancedMesh(trunkG, bark, n);
+  const crowns = new THREE.InstancedMesh(crownG, needle, n);
+  const rocks = new THREE.InstancedMesh(rockG, snow, Math.ceil(n * 0.25));
+  let ri = 0;
+  let ti = 0;
+  for (let i = 0; i < n; i++) {
+    const x = pts[i * 3];
+    const z = pts[i * 3 + 1];
+    const rock = pts[i * 3 + 2];
+    const y = elevFn(x, z);
+    const s = 0.7 + (i % 7) * 0.06;
+    if (rock && ri < rocks.count) {
+      dummy.position.set(x, y + 0.35 * s, z);
+      dummy.scale.setScalar(1.4 * s);
+      dummy.rotation.set(0.2, i, 0.1);
+      dummy.updateMatrix();
+      rocks.setMatrixAt(ri, dummy.matrix);
+      ri += 1;
+      continue;
+    }
+    dummy.position.set(x, y + 1.6 * s, z);
+    dummy.scale.set(s, s * 1.15, s);
+    dummy.rotation.set(0, i * 0.7, 0);
+    dummy.updateMatrix();
+    trunks.setMatrixAt(ti, dummy.matrix);
+    dummy.position.y = y + 5.2 * s;
+    dummy.updateMatrix();
+    crowns.setMatrixAt(ti, dummy.matrix);
+    ti += 1;
+  }
+  trunks.count = ti;
+  crowns.count = ti;
+  rocks.count = ri;
+  trunks.instanceMatrix.needsUpdate = true;
+  crowns.instanceMatrix.needsUpdate = true;
+  rocks.instanceMatrix.needsUpdate = true;
+  trunks.castShadow = true;
+  crowns.castShadow = true;
+  scene.add(trunks, crowns, rocks);
+  const xzr = hash?.xzr ? hash.xzr.slice() : [];
+  for (let i = 0; i < n; i++) xzr.push(pts[i * 3], pts[i * 3 + 1], 0.55);
+  scene.userData.treeHash = buildTreeHash(xzr);
+  return n;
 }
