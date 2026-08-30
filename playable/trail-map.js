@@ -519,6 +519,15 @@ export function fitLobbyClip(camera, controls) {
   camera.updateProjectionMatrix();
 }
 
+/** Chase/iso sit a few meters off the snow; lobby near would clip the foreground. */
+export function fitPlayClip(camera) {
+  if (!camera) return;
+  if (camera.near === 0.5 && camera.far === 24000) return;
+  camera.near = 0.5;
+  camera.far = 24000;
+  camera.updateProjectionMatrix();
+}
+
 export function frameTrailOverview(camera, controls, map, island) {
   if (!map?.bounds) return;
   const { cx, cz, span, maxY, minY } = map.bounds;

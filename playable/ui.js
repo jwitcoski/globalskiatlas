@@ -16,6 +16,7 @@ export function bindUi() {
     pauseBtn: document.getElementById("pause-btn"),
     loadNote: document.getElementById("load-note"),
     nav: document.getElementById("nav-arrow"),
+    navNeedle: document.getElementById("nav-needle"),
     povBtn: document.getElementById("pov-btn"),
   };
 }
@@ -54,7 +55,14 @@ export function setHud(ui, s) {
   }
   if (ui.nav) {
     ui.nav.hidden = !s.navShow;
-    ui.nav.style.transform = `translateX(-50%) rotate(${s.navAngle || 0}deg)`;
+    const deg = s.navAngle || 0;
+    if (ui.navNeedle) ui.navNeedle.setAttribute("transform", `rotate(${deg} 20 20)`);
+    const abs = Math.abs(deg);
+    let way = "ahead";
+    if (abs > 150) way = "behind you";
+    else if (deg > 20) way = "to your right";
+    else if (deg < -20) way = "to your left";
+    ui.nav.setAttribute("aria-label", `Next gate ${way}`);
   }
   if (ui.povBtn) ui.povBtn.textContent = s.pov === "iso" ? "ISO" : "CAM";
 }

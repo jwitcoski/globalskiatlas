@@ -25,15 +25,29 @@ export function destroyPickerMap() {
     removeEventListener("resize", onResize);
     onResize = null;
   }
-  if (!pickerMap) return;
-  try {
-    pickerMap.remove();
-  } catch {
-    /* already gone */
-  }
+  const map = pickerMap;
   pickerMap = null;
   const tip = document.getElementById("vt-tooltip");
   if (tip) tip.remove();
+  if (!map) return;
+  /* MapTiler Map.remove() calls setStyle("") and warns. Drop the GL context instead. */
+  try {
+    map.stop?.();
+  } catch {
+    /* already gone */
+  }
+  try {
+    const canvas = map.getCanvas?.();
+    const gl = canvas?.getContext?.("webgl2") || canvas?.getContext?.("webgl");
+    gl?.getExtension?.("WEBGL_lose_context")?.loseContext();
+  } catch {
+    /* no GL */
+  }
+  try {
+    map.getContainer?.()?.replaceChildren();
+  } catch {
+    /* container already gone */
+  }
 }
 
 export async function showPickerMap(container, resorts, onPick) {

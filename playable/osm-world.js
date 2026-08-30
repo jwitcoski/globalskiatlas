@@ -814,6 +814,8 @@ export async function addOsmWorld(THREE, scene, sceneRoot, manifest, elevFn) {
   async function loadLayer(key, { hull = true } = {}) {
     const rel = v[key] || defaults[key];
     if (!rel) return null;
+    /* Baker lists cliffs in every manifest but does not upload the object (S3 403). */
+    if (key === "cliffs") return null;
     const fc = await loadFC(new URL(rel, sceneRoot));
     if (hull) {
       for (const f of fc?.features || []) {

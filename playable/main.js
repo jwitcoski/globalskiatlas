@@ -26,7 +26,7 @@ import {
   clearGateMeshes,
   addGateMeshes,
 } from "./gates.js?v=vis16";
-import { addOsmWorld } from "./osm-world.js?v=island11";
+import { addOsmWorld } from "./osm-world.js?v=island12";
 import {
   snowTerrainMaterial,
   addSkyAndLights,
@@ -41,9 +41,9 @@ import {
   setInspectAtmosphere,
 } from "./look.js?v=island1";
 import { addResortIsland, updateIslandDust } from "./island.js?v=island10";
-import { bindUi, setHud, openPanel, closePanel } from "./ui.js?v=vis26";
+import { bindUi, setHud, openPanel, closePanel } from "./ui.js?v=vis27";
 import { atlasStatsHtml, prefetchWikiIndex } from "./atlas-stats.js?v=stats1";
-import { showPickerMap, destroyPickerMap } from "./picker-map.js?v=map4";
+import { showPickerMap, destroyPickerMap } from "./picker-map.js?v=map5";
 import { capDpr, bindPads, attachDebug } from "./debug.js?v=fix1";
 import { bakePisteSculpt, drapeSculptOnMesh } from "./piste-sculpt.js?v=feel3";
 import { addTrailMarks, clearTrailMarks } from "./trail-marks.js?v=marks2";
@@ -55,12 +55,13 @@ import {
   pickTrailOnMap,
   frameTrailOverview,
   fitLobbyClip,
+  fitPlayClip,
   updateTrailMapLod,
   difficultyLegendHtml,
   classifyDifficulty,
   markerSvg,
   parseSkiArea,
-} from "./trail-map.js?v=zoom2";
+} from "./trail-map.js?v=zoom3";
 import { makeMinimap } from "./minimap.js?v=feel4";
 import { updateTraffic } from "./traffic.js?v=vis16";
 import {
@@ -287,6 +288,7 @@ function enterLobby(reframe) {
 function exitLobby() {
   orbit.enabled = false;
   lobbyZoomTo = 0;
+  fitPlayClip(camera);
   setInspectAtmosphere(scene, look, false);
   setIslandLobby(false);
   if (trailMap) trailMap.root.visible = false;
