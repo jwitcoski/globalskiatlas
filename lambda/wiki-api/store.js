@@ -169,6 +169,31 @@ async function listComments(pageId, limit = 100) {
   return res.Items || [];
 }
 
+const OSM_FIX_PAGE_ID = '__playable-osm-fix';
+
+async function addOsmFixReport({ note, resort, path, course, osmUrl }) {
+  const item = {
+    pageId: OSM_FIX_PAGE_ID,
+    commentId: commentId(),
+    timestamp: new Date().toISOString(),
+    kind: 'playable-osm-fix',
+    snsPending: true,
+    userId: null,
+    userDisplayName: 'playable',
+    parentCommentId: null,
+    resort: String(resort || '').slice(0, 200),
+    path: String(path || '').slice(0, 240),
+    course: String(course || '').slice(0, 200),
+    osmUrl: String(osmUrl || '').slice(0, 400),
+    content: String(note || '').slice(0, 1500),
+  };
+  await docClient.send(new PutCommand({
+    TableName: tables.comments(),
+    Item: item,
+  }));
+  return item;
+}
+
 async function addComment(pageId, userId, content, parentCommentId, userDisplayName) {
   const comment = {
     pageId,
@@ -221,5 +246,7 @@ module.exports = {
   listRevisions,
   listComments,
   addComment,
+  addOsmFixReport,
+  OSM_FIX_PAGE_ID,
   listPages,
 };

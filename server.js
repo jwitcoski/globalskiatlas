@@ -128,6 +128,7 @@ const RATE_LIMIT_MAX = {
   save:   parseInt(process.env.WIKI_RATE_LIMIT_SAVE, 10) || 10,
   flag:   parseInt(process.env.WIKI_RATE_LIMIT_FLAG, 10) || 5,
   refresh: parseInt(process.env.WIKI_RATE_LIMIT_REFRESH, 10) || 3,
+  osmFix: parseInt(process.env.WIKI_RATE_LIMIT_OSM_FIX, 10) || 5,
 };
 const rateLimitBuckets = new Map(); // key (userId:action) -> [timestamps]
 
@@ -143,6 +144,28 @@ function rateLimitByUser(action, maxPerMinute, options = {}) {
     const userId = req.cognitoPrincipal ? req.cognitoPrincipal.sub : null;
     if (!userId) return next();
     const key = userId + ':' + action;
+    let timestamps = rateLimitBuckets.get(key);
+    if (!timestamps) {
+      timestamps = [];
+      rateLimitBuckets.set(key, timestamps);
+    }
+    pruneOldTimestamps(timestamps);
+    if (timestamps.length >= maxPerMinute) {
+      res.set('Retry-After', '60');
+      return res.status(429).json({
+        error: 'Too Many Requests',
+        message: 'Rate limit exceeded. Try again in a minute.',
+      });
+    }
+    timestamps.push(Date.now());
+    next();
+  };
+}
+
+function rateLimitByIp(action, maxPerMinute) {
+  return (req, res, next) => {
+    const ip = req.ip || req.headers['x-forwarded-for'] || 'anon';
+    const key = String(ip) + ':' + action;
     let timestamps = rateLimitBuckets.get(key);
     if (!timestamps) {
       timestamps = [];
@@ -350,6 +373,32 @@ apiWikiRouter.get('/:pageId/revisions', handleWikiRevisions);
 apiWikiRouter.get('/:pageId/comments', handleWikiComments);
 apiWikiRouter.get('/:pageId', optionalCognito, handleWikiGetPage);
 app.use('/api/wiki', apiWikiRouter);
+
+async function handleOsmFixReport(req, res) {
+  const body = req.body || {};
+  if (String(body.website || '').trim()) return res.status(201).json({ ok: true });
+  const note = String(body.note || '').trim();
+  if (note.length < 8 || note.length > 1500) {
+    return res.status(400).json({ error: 'Bad Request', message: 'note required (8–1500 characters)' });
+  }
+  try {
+    // TODO: publish to SNS to enqueue a game_scenes rebuild for body.path
+    const report = await wikiStore.addOsmFixReport({
+      note,
+      resort: body.resort,
+      path: body.path,
+      course: body.course,
+      osmUrl: body.osmUrl,
+    });
+    res.status(201).json({ ok: true, id: report.commentId });
+  } catch (err) {
+    console.error('POST wiki osm-fix-report', err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+}
+
+app.post('/wiki/osm-fix-report', rateLimitByIp('osmFix', RATE_LIMIT_MAX.osmFix), handleOsmFixReport);
+app.post('/api/wiki/osm-fix-report', rateLimitByIp('osmFix', RATE_LIMIT_MAX.osmFix), handleOsmFixReport);
 
 async function handleWikiPostComment(req, res) {
   const pageId = req.params.pageId;

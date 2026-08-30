@@ -107,6 +107,25 @@ exports.handler = async (event) => {
   const method = (event.requestContext?.http?.method || event.httpMethod || 'GET').toUpperCase();
 
   try {
+    // POST /wiki/osm-fix-report (playable: OSM scenery fix notification; SNS rebuild later)
+    if (pathParts[0] === 'wiki' && pathParts[1] === 'osm-fix-report' && pathParts.length === 2 && method === 'POST') {
+      const body = getBody(event);
+      if (String(body.website || '').trim()) return json(201, { ok: true });
+      const note = String(body.note || '').trim();
+      if (note.length < 8 || note.length > 1500) {
+        return json(400, { error: 'Bad Request', message: 'note required (8–1500 characters)' });
+      }
+      const report = await store.addOsmFixReport({
+        note,
+        resort: body.resort,
+        path: body.path,
+        course: body.course,
+        osmUrl: body.osmUrl,
+      });
+      // TODO: publish to SNS to enqueue a game_scenes rebuild for body.path
+      return json(201, { ok: true, id: report.commentId });
+    }
+
     // GET /wiki/index
     if (pathParts[0] === 'wiki' && pathParts[1] === 'index') {
       const pages = await store.listPages();

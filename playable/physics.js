@@ -316,6 +316,9 @@ export function collideTrees(pos, vel, hash) {
   let hit = false;
   let impact = 0;
   let gap = Infinity;
+  let hitNx = 0;
+  let hitNz = 0;
+  let hitIdx = -1;
   const data = hash.xzr;
   for (let dx = -1; dx <= 1; dx++) {
     for (let dz = -1; dz <= 1; dz++) {
@@ -341,6 +344,9 @@ export function collideTrees(pos, vel, hash) {
         const pen = min - d;
         pos.x += nx * pen;
         pos.z += nz * pen;
+        hitNx = nx;
+        hitNz = nz;
+        hitIdx = i;
         const vn = vel.x * nx + vel.z * nz;
         if (vn < 0) {
           impact = Math.max(impact, -vn);
@@ -354,15 +360,19 @@ export function collideTrees(pos, vel, hash) {
       }
     }
   }
-  return { hit, crash: false, impact, gap };
+  return { hit, crash: false, impact, gap, nx: hitNx, nz: hitNz, idx: hitIdx };
 }
 
 function mergeHits(a, b) {
+  const npcHit = b?.npc ? b : a?.npc ? a : null;
   return {
     hit: !!(a?.hit || b?.hit),
-    crash: false,
+    crash: !!(a?.crash || b?.crash),
     impact: Math.max(a?.impact || 0, b?.impact || 0),
     gap: Math.min(a?.gap ?? Infinity, b?.gap ?? Infinity),
+    npc: npcHit?.npc || null,
+    nx: npcHit?.nx || b?.nx || a?.nx || 0,
+    nz: npcHit?.nz || b?.nz || a?.nz || 0,
   };
 }
 
@@ -383,7 +393,85 @@ export function collideCylinders(pos, vel, list) {
     }
     bin.push(i);
   }
-  return collideTrees(pos, vel, hash);
+  const r = collideTrees(pos, vel, hash);
+  if (r.hit && r.idx >= 0) {
+    const o = list[Math.floor(r.idx / 3)];
+    r.npc = o?.mesh || null;
+    r.crash = true;
+  }
+  return r;
+}
+
+const FALL_DOWN = 0.5;
+const FALL_LIE = 0.22;
+const FALL_UP = 0.48;
+const FALL_S = FALL_DOWN + FALL_LIE + FALL_UP;
+const FALL_RIDE = 0.22;
+const IFRAME_S = 1.2;
+
+export function beginFall(THREE, skier, hf, side = 1) {
+  if (!skier || skier.userData.fall) return;
+  const n = slopeNormal(THREE, hf, skier.position.x, skier.position.z, v3(THREE, _n));
+  const s = side >= 0 ? 1 : -1;
+  skier.userData.fall = {
+    t: 0,
+    side: s,
+    q0: skier.quaternion.clone(),
+  };
+  const fwd = v3(THREE, _fwd).set(0, 0, 1).applyQuaternion(skier.quaternion);
+  fwd.y = 0;
+  if (fwd.lengthSq() < 1e-8) fwd.set(n.x, 0, n.z);
+  fwd.normalize();
+  fwd.addScaledVector(n, -fwd.dot(n)).normalize();
+  const right = v3(THREE, _right).crossVectors(n, fwd);
+  if (right.lengthSq() < 1e-8) right.set(1, 0, 0);
+  else right.normalize();
+  fwd.crossVectors(right, n).normalize();
+  const bodyUp = v3(THREE, _up).copy(right).multiplyScalar(s);
+  const bodyRight = v3(THREE, _lat).crossVectors(bodyUp, fwd);
+  if (bodyRight.lengthSq() < 1e-8) bodyRight.copy(n);
+  else bodyRight.normalize();
+  bodyUp.crossVectors(fwd, bodyRight).normalize();
+  if (!_mat.m) _mat.m = new THREE.Matrix4();
+  _mat.m.makeBasis(bodyRight, bodyUp, fwd);
+  skier.userData.fall.q1 = new THREE.Quaternion().setFromRotationMatrix(_mat.m);
+}
+
+export function clearFall(skier) {
+  if (skier?.userData) skier.userData.fall = null;
+}
+
+/** Tumble, lie, then stand up. Returns true while the sequence is still playing. */
+export function tickFallPose(THREE, skier, hf, dt) {
+  const f = skier.userData.fall;
+  if (!f || !hf) return false;
+  f.t += dt;
+  const t = f.t;
+  let e = 1;
+  if (t <= FALL_DOWN) {
+    const u = Math.min(1, t / FALL_DOWN);
+    e = u * u * (3 - 2 * u);
+  } else if (t <= FALL_DOWN + FALL_LIE) {
+    e = 1;
+  } else {
+    const u = Math.min(1, (t - FALL_DOWN - FALL_LIE) / FALL_UP);
+    const s = u * u * (3 - 2 * u);
+    e = 1 - s;
+  }
+  if (f.q0 && f.q1) skier.quaternion.copy(f.q0).slerp(f.q1, e);
+  const ground = hf.sample(skier.position.x, skier.position.z);
+  skier.position.y = ground + RIDE + (FALL_RIDE - RIDE) * e;
+  return t < FALL_S;
+}
+
+export function standUp(THREE, skier, hf, vel) {
+  clearFall(skier);
+  if (!skier || !hf) return;
+  skier.userData.fallIframes = IFRAME_S;
+  const n = slopeNormal(THREE, hf, skier.position.x, skier.position.z, v3(THREE, _n));
+  const fall = fallLine(THREE, n, v3(THREE, _fall));
+  skier.position.y = hf.sample(skier.position.x, skier.position.z) + RIDE;
+  if (vel) vel.copy(fall).multiplyScalar(6.2);
 }
 
 export function makeAirState() {
@@ -435,6 +523,7 @@ function stepAir(THREE, { pos, vel, heading, keys, hf, dt, trees, air, extras })
   pos.y += air.vy * dt;
   clampToDem(pos, hf);
   const treeHit = mergeHits(collideTrees(pos, vel, trees), collideCylinders(pos, vel, extras));
+  if (treeHit.impact >= 7) treeHit.crash = true;
 
   const ground = hf.sample(pos.x, pos.z);
   air.height = Math.max(0, pos.y - RIDE - ground);
@@ -543,7 +632,9 @@ export function stepSki(THREE, { pos, vel, heading, keys, hf, dt, trees, air, on
   clampToDem(pos, hf);
   const treeHit = collideTrees(pos, vel, trees);
   const extraHit = collideCylinders(pos, vel, extras);
-  Object.assign(treeHit, mergeHits(treeHit, extraHit));
+  if (treeHit.impact >= 7) treeHit.crash = true;
+  const merged = mergeHits(treeHit, extraHit);
+  Object.assign(treeHit, merged);
   const ground = hf.sample(pos.x, pos.z);
   const climb = ground - y0;
   const step = Math.max(vel.length() * dt, 0.04);

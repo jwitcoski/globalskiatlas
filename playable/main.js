@@ -15,9 +15,13 @@ import {
   makeCamShake,
   addTrauma,
   applyCamShake,
-} from "./physics.js?v=feel11";
+  beginFall,
+  tickFallPose,
+  clearFall,
+  standUp,
+} from "./physics.js?v=feel13";
 import { featuredCourses, attachPisteDifficulty, courseFinish, createRun, tickRun, formatTime } from "./run.js?v=map4";
-import { coordsToXz, attachPiste, resetScore, tickScore, commitBestScore, formatScore, distToPolyline } from "./score.js?v=feel3";
+import { coordsToXz, attachPiste, resetScore, tickScore, commitBestScore, formatScore, distToPolyline, applyWipeout } from "./score.js?v=feel4";
 import { orientPiste, alongTrack, alongPolyline } from "./gates.js?v=vis18";
 import { addOsmWorld } from "./osm-world.js?v=island14";
 import {
@@ -35,8 +39,10 @@ import {
   setInspectAtmosphere,
 } from "./look.js?v=island4";
 import { addResortIsland, updateIslandDust } from "./island.js?v=island10";
-import { bindUi, setHud, openPanel, closePanel, updateLoading } from "./ui.js?v=vis31";
+import { bindUi, setHud, openPanel, closePanel, updateLoading, setOsmMapNote } from "./ui.js?v=vis34";
 import { atlasStatsHtml, prefetchWikiIndex } from "./atlas-stats.js?v=stats1";
+import { bindFinishChartScope, finishChartsHtml, prefetchFinishCharts } from "./finish-charts.js?v=1";
+import { bindOsmFix, osmFixHtml, osmFixContext } from "./osm-fix.js?v=1";
 import { showPickerMap, destroyPickerMap } from "./picker-map.js?v=map5";
 import { capDpr, bindPads, attachDebug } from "./debug.js?v=fix1";
 import { intentsFrom, isTurning } from "./input.js?v=feel1";
@@ -59,7 +65,7 @@ import {
   parseSkiArea,
 } from "./trail-map.js?v=zoom3";
 import { makeMinimap } from "./minimap.js?v=feel6";
-import { createNpcSkiers, clearNpcSkiers, tickNpcSkiers } from "./npc-skiers.js?v=feel4";
+import { createNpcSkiers, clearNpcSkiers, tickNpcSkiers } from "./npc-skiers.js?v=feel6";
 import { updateTraffic } from "./traffic.js?v=vis16";
 import {
   TRAILER,
@@ -84,6 +90,8 @@ let readySeq = 0;
 const STEP = 1 / 60;
 
 const ui = bindUi();
+bindFinishChartScope();
+bindOsmFix();
 const LEGAL =
   "OpenStreetMap + Mapzen Skadi. Chairlift: Poly by Google (CC-BY). Not an official map, not affiliated with any ski area, not for navigation or safety.";
 
@@ -225,6 +233,30 @@ function currentCatalogResort() {
   );
 }
 
+let endSeq = 0;
+
+function currentOsmFix(compact = false) {
+  return osmFixHtml(
+    osmFixContext(currentCatalogResort(), activeCourse, scenePathFromUrl()),
+    compact,
+  );
+}
+
+function openRunEnd(kind, extra) {
+  const seq = ++endSeq;
+  const catalog = currentCatalogResort();
+  openPanel(ui, kind, {
+    ...extra,
+    osmFixHtml: currentOsmFix(),
+    chartsHtml: finishChartsHtml(activeCourse, catalog),
+  });
+  prefetchFinishCharts().then(() => {
+    if (seq !== endSeq || run?.phase !== kind) return;
+    const slot = ui.panel?.querySelector(".sf-finish-slot");
+    if (slot) slot.innerHTML = finishChartsHtml(activeCourse, catalog);
+  });
+}
+
 function showReady() {
   if (TRAILER) {
     closePanel(ui);
@@ -241,8 +273,10 @@ function showReady() {
     diffLabel: d.label,
     legend: difficultyLegendHtml(),
     changeMountain: !!catalogHub,
+    osmFixHtml: currentOsmFix(),
   };
   openPanel(ui, "ready", payload);
+  setOsmMapNote(ui, currentOsmFix(true));
   const seq = ++readySeq;
   const catalog = currentCatalogResort();
   const hint = {
@@ -254,7 +288,7 @@ function showReady() {
   atlasStatsHtml(hint)
     .then((html) => {
       if (!html || seq !== readySeq || run?.phase !== "ready") return;
-      openPanel(ui, "ready", { ...payload, atlasStats: html });
+      openPanel(ui, "ready", { ...payload, atlasStats: html, osmFixHtml: currentOsmFix() });
     })
     .catch(() => {});
 }
@@ -443,6 +477,9 @@ function placeSkier() {
   spawnXZ.x = skier.position.x;
   spawnXZ.z = skier.position.z;
   resetAirState(air);
+  clearFall(skier);
+  skier.userData.fallIframes = 0;
+  skier.visible = true;
   shake.trauma = 0;
   camera.position.set(0, 0, 0);
   orientSkier(THREE, skier, skier.position, heading, vel, hf);
@@ -518,6 +555,7 @@ function resetRun(opts = {}) {
   acc = 0;
   finishedShown = false;
   dnfShown = false;
+  run.dnfReason = "";
   if (opts.lobby === false) {
     closePanel(ui);
     exitLobby();
@@ -746,6 +784,7 @@ async function loadMountain() {
 
 async function bootScene() {
   prefetchWikiIndex();
+  prefetchFinishCharts();
   catalogHub = await fetchCatalog();
   const path = scenePathFromUrl();
   if (path) {
@@ -779,6 +818,7 @@ try {
 
 addEventListener("keydown", (e) => {
   if (!run) return;
+  if (e.target.closest?.("input, textarea, select, [contenteditable]")) return;
   if (e.code === "Escape") {
     if (run.phase === "running") {
       run.phase = "paused";
@@ -871,6 +911,20 @@ function tick(now) {
       let steps = 0;
       if (TRAILER) steerTrailer(keys, run, skier, heading, !orbit.enabled);
       const turning = isTurning(keys);
+      const tumbling = !!skier.userData.fall;
+      if (tumbling) {
+        acc = 0;
+        vel.set(0, 0, 0);
+        const still = tickFallPose(THREE, skier, hf, frameDt);
+        if (run.clocked && run.phase === "running") run.time += frameDt;
+        if (!TRAILER) {
+          tickNpcSkiers(THREE, npcPack, frameDt, skier.position, hf, alongTrack(run.pistePts, skier.position.x, skier.position.z).along);
+        }
+        if (!still) standUp(THREE, skier, hf, vel);
+      } else {
+      if ((skier.userData.fallIframes || 0) > 0) {
+        skier.userData.fallIframes = Math.max(0, skier.userData.fallIframes - frameDt);
+      }
       while (acc >= STEP && steps < 5) {
         const extras = TRAILER ? [] : tickNpcSkiers(THREE, npcPack, STEP, skier.position, hf, alongTrack(run.pistePts, skier.position.x, skier.position.z).along);
         const st = stepSki(THREE, {
@@ -892,6 +946,17 @@ function tick(now) {
         skier.userData.pole = !!st.pole;
         if (st.treeHit?.impact > 1) addTrauma(shake, Math.min(0.7, st.treeHit.impact * 0.05));
         if (st.landed > 4) addTrauma(shake, Math.min(0.55, (st.landed - 4) * 0.05));
+        const iframed = (skier.userData.fallIframes || 0) > 0;
+        if (st.treeHit?.crash && run.phase === "running" && !skier.userData.fall && !iframed) {
+          const side = (st.treeHit.nx || 0) >= 0 ? 1 : -1;
+          beginFall(THREE, skier, hf, side);
+          if (st.treeHit.npc) beginFall(THREE, st.treeHit.npc, hf, -side);
+          applyWipeout(run);
+          addTrauma(shake, 0.72);
+          vel.set(0, 0, 0);
+          acc = 0;
+          break;
+        }
         const along = alongTrack(run.pistePts, skier.position.x, skier.position.z).along;
         tickRun(run, skier.position, spawnXZ, STEP, vel.length() > 1.5, along);
         tickScore(run, skier.position, vel.length(), turning, STEP, {
@@ -907,16 +972,19 @@ function tick(now) {
         acc -= STEP;
         steps += 1;
       }
+      }
       updateTrailMarks(marksRoot, alongTrack(run.pistePts, skier.position.x, skier.position.z).along, skier.position);
       const intent = intentsFrom(keys);
-      orientSkier(THREE, skier, skier.position, heading, vel, hf, skier.userData.steer || 0, {
-        air: skier.userData.air,
-        tuck: intent.tuck && !skier.userData.pole,
-        pole: !!skier.userData.pole,
-        brake: intent.brake,
-        speed: vel.length(),
-        dt: frameDt,
-      });
+      if (!skier.userData.fall) {
+        orientSkier(THREE, skier, skier.position, heading, vel, hf, skier.userData.steer || 0, {
+          air: skier.userData.air,
+          tuck: intent.tuck && !skier.userData.pole,
+          pole: !!skier.userData.pole,
+          brake: intent.brake,
+          speed: vel.length(),
+          dt: frameDt,
+        });
+      }
       applyRunCam();
       applyCamShake(camera, shake, frameDt);
       punchFov(camera, intent.tuck, frameDt, vel.length());
@@ -926,7 +994,7 @@ function tick(now) {
         const scored = commitBestScore(run);
         if (TRAILER) {
           /* keep rolling for the sting card */
-        } else openPanel(ui, "finished", {
+        } else openRunEnd("finished", {
           course: courseName,
           time: formatTime(run.time),
           score: formatScore(scored),
@@ -938,7 +1006,7 @@ function tick(now) {
         dnfShown = true;
         acc = 0;
         if (run.dnfReason === "yeti") skier.visible = false;
-        if (!TRAILER) openPanel(ui, "dnf", {
+        if (!TRAILER) openRunEnd("dnf", {
           score: formatScore(run.score),
           time: formatTime(run.time),
           reason: run.dnfReason || "piste",

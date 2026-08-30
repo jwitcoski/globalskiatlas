@@ -1,27 +1,35 @@
-/** Other skiers beside the chevron ribbon. Hit like trees. */
+/** Other skiers on and across the chevron ribbon. Hit like trees. */
 
 import { makeSkier, orientSkier } from "./physics.js?v=feel11";
 import { alongPolyline, polylineLen, alongTrack } from "./gates.js?v=vis18";
+import { tickFallPose } from "./physics.js?v=feel13";
 
 const SUITS = [0x2a6fdb, 0x1f8a4c, 0x7b3fa0, 0xe07a14, 0xc45a18, 0xd8342e, 0xf2c02e];
 const SKIS = [0xf2c02e, 0x3a8fd4, 0xd8342e, 0x1f8a4c];
 const NPC_R = 0.55;
 const SEE = 280;
-/** Chevron stamps are ~7 m wide; stay outside that corridor. */
-const RIBBON = 5.6;
 
+/** Lateral offset (m) = bias + amp * sin(along / wave + phase). |amp| > |bias| so they cut the >>>> line. */
 const KINDS = [
-  { speed: 1.6, yaw: 1.15, side: 7.4 },
-  { speed: 2.4, yaw: -1.05, side: 8.2 },
-  { speed: 5.5, yaw: 0.72, side: 6.6 },
-  { speed: 8.2, yaw: -0.55, side: 7.8 },
-  { speed: 12, yaw: 0.18, side: 6.4 },
-  { speed: 16, yaw: -0.12, side: 7.1 },
-  { speed: 22, yaw: 0.08, side: 6.2 },
-  { speed: 26, yaw: -0.06, side: 8.0 },
-  { speed: 3.1, yaw: 0.95, side: -7.6 },
-  { speed: 19, yaw: 0.1, side: -6.5 },
+  { speed: 1.6, amp: 8.4, bias: 0.4, wave: 22, phase: 0.2 },
+  { speed: 2.4, amp: 9.2, bias: -0.6, wave: 18, phase: 1.4 },
+  { speed: 5.5, amp: 7.1, bias: 0.2, wave: 36, phase: 2.1 },
+  { speed: 8.2, amp: 6.6, bias: -0.3, wave: 44, phase: 0.7 },
+  { speed: 12, amp: 5.8, bias: 0, wave: 52, phase: 3.0 },
+  { speed: 16, amp: 4.8, bias: 0.8, wave: 70, phase: 1.1 },
+  { speed: 22, amp: 3.6, bias: -0.4, wave: 88, phase: 2.6 },
+  { speed: 26, amp: 2.8, bias: 0.2, wave: 110, phase: 0.4 },
+  { speed: 3.1, amp: 10.2, bias: 0, wave: 16, phase: 4.0 },
+  { speed: 19, amp: 6.4, bias: -0.5, wave: 40, phase: 5.2 },
 ];
+
+function sideAt(kind, along) {
+  return kind.bias + kind.amp * Math.sin(along / kind.wave + kind.phase);
+}
+
+function sideSlope(kind, along) {
+  return (kind.amp / kind.wave) * Math.cos(along / kind.wave + kind.phase);
+}
 
 export function createNpcSkiers(THREE, scene, lines, elevFn, _spawn, activePts) {
   const root = new THREE.Group();
@@ -37,7 +45,6 @@ export function createNpcSkiers(THREE, scene, lines, elevFn, _spawn, activePts) 
   function add(pts, along, kind, home) {
     const len = polylineLen(pts);
     if (len < 40) return;
-    const side = kind.side >= 0 ? Math.max(RIBBON, kind.side) : Math.min(-RIBBON, kind.side);
     const mesh = makeSkier(THREE, scene, {
       add: false,
       name: "npc",
@@ -52,8 +59,7 @@ export function createNpcSkiers(THREE, scene, lines, elevFn, _spawn, activePts) 
       pts,
       along: Math.max(14, Math.min(len - 18, along)),
       speed: kind.speed,
-      yaw: kind.yaw,
-      side,
+      kind,
       len,
       home: !!home,
     });
@@ -81,6 +87,11 @@ export function tickNpcSkiers(THREE, pack, dt, player, hf, playerAlong = 0) {
   const pz = player?.z ?? 0;
   const dummyVel = { length: () => 10 };
   for (const npc of pack.list) {
+    if (npc.mesh.userData.fall) {
+      tickFallPose(THREE, npc.mesh, hf, dt);
+      npc.mesh.visible = true;
+      continue;
+    }
     npc.along += npc.speed * dt;
     if (npc.home && playerAlong > 4) {
       if (npc.along < playerAlong - 22) npc.along = playerAlong + 28 + (npc.speed % 11);
@@ -90,8 +101,9 @@ export function tickNpcSkiers(THREE, pack, dt, player, hf, playerAlong = 0) {
     const p = alongPolyline(npc.pts, npc.along);
     const nx = -p.tz;
     const nz = p.tx;
-    const x = p.x + nx * npc.side;
-    const z = p.z + nz * npc.side;
+    const side = sideAt(npc.kind, npc.along);
+    const x = p.x + nx * side;
+    const z = p.z + nz * side;
     const dx = x - px;
     const dz = z - pz;
     const far = dx * dx + dz * dz > SEE * SEE;
@@ -99,13 +111,14 @@ export function tickNpcSkiers(THREE, pack, dt, player, hf, playerAlong = 0) {
     if (far) continue;
     npc.mesh.position.set(x, elev(x, z) + 0.92, z);
     dummyVel.length = () => npc.speed;
-    const heading = Math.atan2(p.tx, p.tz) + npc.yaw;
-    orientSkier(THREE, npc.mesh, npc.mesh.position, heading, dummyVel, hf, npc.yaw, {
+    const cut = Math.atan2(sideSlope(npc.kind, npc.along), 1);
+    const heading = Math.atan2(p.tx, p.tz) + cut;
+    orientSkier(THREE, npc.mesh, npc.mesh.position, heading, dummyVel, hf, cut, {
       speed: npc.speed,
       dt,
       brake: npc.speed < 4,
     });
-    extras.push({ x, z, r: NPC_R });
+    extras.push({ x, z, r: NPC_R, mesh: npc.mesh });
   }
   return extras;
 }

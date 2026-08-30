@@ -171,6 +171,13 @@
       width: min(420px, 92vw); background: rgba(255,255,255,.78); color: #2a3238; padding: 22px 24px; border-radius: 4px;
       border: 1px solid rgba(255,255,255,.9);
     }
+    #overlay.finish #panel {
+      width: min(720px, 94vw);
+      max-height: min(86vh, 920px);
+      overflow: auto;
+    }
+    #panel .sf-finish-slot { margin-top: 12px; }
+    #overlay.finish .sf-chart-block { background: rgba(255,255,255,.55); }
     #panel h2 { margin: 0 0 10px; font-size: 22px; font-weight: 600; }
     #panel .kicker { margin: 0 0 6px; color: #6a5a28; font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
     #panel .big { font-size: clamp(28px, 6vw, 36px); font-variant-numeric: tabular-nums; }
@@ -286,6 +293,33 @@
     body.lobby #clock, body.lobby #score-box, body.lobby #dist-read, body.lobby #piste,
     body.lobby #speed-box, body.lobby #obj, body.lobby #pause-btn, body.lobby #pov-btn,
     body.lobby #pads, body.lobby #nav-arrow, body.lobby #combo-read, body.lobby #air-shout { display: none !important; }
+    #osm-map-note {
+      position: absolute; z-index: 5; pointer-events: auto;
+      right: var(--pad-r); bottom: var(--pad-b);
+      width: min(380px, 42vw);
+      padding: 10px 12px; border-radius: 4px;
+      background: rgba(255,255,255,.78); color: #2a3238;
+      border: 1px solid rgba(255,255,255,.9);
+      font-size: 12px; line-height: 1.35;
+    }
+    #osm-map-note[hidden] { display: none !important; }
+    .osm-fix { margin: 10px 0 4px; }
+    .osm-fix-copy { margin: 0 0 8px; font-size: 12px; line-height: 1.4; opacity: .88; }
+    .osm-fix-acts { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .osm-fix-link, .osm-fix-notify {
+      font-size: 12px; font-weight: 700; color: #0f766e; background: none; border: 0;
+      padding: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 2px;
+    }
+    .osm-fix-form { margin-top: 8px; display: grid; gap: 6px; }
+    .osm-fix-form[hidden] { display: none !important; }
+    .osm-fix-form label { font-size: 11px; font-weight: 700; }
+    .osm-fix-form textarea {
+      width: 100%; min-height: 72px; resize: vertical; padding: 8px;
+      border: 1px solid rgba(42,50,56,.28); border-radius: 4px; font: inherit;
+    }
+    .osm-fix-hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+    .osm-fix-status { margin: 0; font-size: 12px; color: #0f766e; }
+    .osm-fix-compact .osm-fix-copy { font-size: 11px; }
     body.trailer #pause-btn, body.trailer #pov-btn, body.trailer #pads, body.trailer #dbg { display: none !important; }
     #overlay.picker {
       align-items: stretch; justify-content: stretch;
@@ -402,12 +436,13 @@
     </div>
   </div>
   <div id="rotate-lock" hidden>Turn the screen sideways to ski</div>
+  <div id="osm-map-note" hidden></div>
   <div id="overlay"><div id="panel"><p class="kicker">Loading</p><h2>Fetching the mountain</h2><p>DEM + OSM scene…</p></div></div>
   <script defer src="https://cdn.maptiler.com/maptiler-sdk-js/v3.10.2/maptiler-sdk.umd.min.js"></script>
   <script type="importmap">
     { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
                    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }
   </script>
-  <script type="module" src="./main.js?v=loop10"></script>
+  <script type="module" src="./main.js?v=loop15"></script>
 </body>
 </html>

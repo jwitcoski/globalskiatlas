@@ -100,6 +100,18 @@ function flash(run, text, hold = FLASH_S) {
   run.flashT = hold;
 }
 
+const WIPEOUT_PENALTY = 280;
+
+export function applyWipeout(run) {
+  if (!run) return 0;
+  const hit = Math.min(WIPEOUT_PENALTY, Math.max(0, Math.round(run.score || 0)));
+  run.score = Math.max(0, (run.score || 0) - hit);
+  run.combo = 1;
+  run.styleMult = 1;
+  flash(run, hit ? `WIPEOUT −${hit}` : "WIPEOUT", 1.35);
+  return hit;
+}
+
 function tickNearMiss(run, gap, grazed, speed, dt) {
   run.nearCool = Math.max(0, (run.nearCool || 0) - dt);
   if (grazed || speed < NEAR_MISS_SPD) return;

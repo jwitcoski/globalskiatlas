@@ -20,6 +20,7 @@ export function bindUi() {
     povBtn: document.getElementById("pov-btn"),
     combo: document.getElementById("combo-read"),
     shout: document.getElementById("air-shout"),
+    osmMapNote: document.getElementById("osm-map-note"),
   };
 }
 
@@ -172,8 +173,10 @@ export function openPanel(ui, kind, data) {
   ui.overlay.hidden = false;
   ui.overlay.classList.toggle("lobby", kind === "ready");
   ui.overlay.classList.toggle("picker", kind === "mountains");
+  ui.overlay.classList.toggle("finish", kind === "finished" || kind === "dnf");
   document.body.classList.toggle("lobby", kind === "ready");
   document.body.classList.toggle("picker", kind === "mountains");
+  if (kind !== "ready") setOsmMapNote(ui, "");
   if (kind === "loading") {
     ui.overlay.dataset.loading = "1";
     ui.panel.innerHTML = `<p class="kicker">Loading</p>
@@ -198,6 +201,7 @@ export function openPanel(ui, kind, data) {
     ui.panel.innerHTML = `<p class="kicker">Pick a trail</p>
       <h2>${data.course}</h2>
       ${trailMeta(data)}
+      ${data.osmFixHtml || ""}
       ${lobbyDetailsHtml(data)}
       ${actions(
         data.changeMountain
@@ -227,6 +231,8 @@ export function openPanel(ui, kind, data) {
       <p>${data.course}</p>
       <p>Score ${data.score} · best ${data.bestScore}</p>
       <p class="fine">Best time ${data.bestTime}</p>
+      ${data.osmFixHtml || ""}
+      <div class="sf-finish-slot">${data.chartsHtml || ""}</div>
       ${actions([
         ["restart", "Ski again", "primary"],
         ["lobby", "Other trail", "ghost"],
@@ -236,10 +242,13 @@ export function openPanel(ui, kind, data) {
   if (kind === "dnf") {
     const yeti = data.reason === "yeti";
     const tree = data.reason === "tree";
-    ui.panel.innerHTML = `<p class="kicker">${yeti ? "Eaten" : tree ? "Wipeout" : "DNF"}</p>
-      <h2>${yeti ? "Abominable snowman" : tree ? "Tree" : "Stopped"}</h2>
-      <p>${yeti ? "It hunted you down before the finish." : tree ? "You hit a tree." : "Run ended."}</p>
+    const skierHit = data.reason === "skier";
+    ui.panel.innerHTML = `<p class="kicker">${yeti ? "Eaten" : tree || skierHit ? "Wipeout" : "DNF"}</p>
+      <h2>${yeti ? "Abominable snowman" : skierHit ? "Skier" : tree ? "Tree" : "Stopped"}</h2>
+      <p>${yeti ? "It hunted you down before the finish." : skierHit ? "You hit another skier." : tree ? "You hit a tree." : "Run ended."}</p>
       <p>Score ${data.score} · ${data.time}</p>
+      ${data.osmFixHtml || ""}
+      <div class="sf-finish-slot">${data.chartsHtml || ""}</div>
       ${actions([
         ["restart", "Restart", "primary"],
         ["lobby", "Other trail", "ghost"],
@@ -250,10 +259,18 @@ export function openPanel(ui, kind, data) {
     ${data.changeMountain ? actions([["mountains", "Other mountains", "ghost"]]) : ""}`;
 }
 
+export function setOsmMapNote(ui, html) {
+  if (!ui.osmMapNote) return;
+  const show = !!html;
+  ui.osmMapNote.hidden = !show;
+  if (show) ui.osmMapNote.innerHTML = html;
+}
+
 export function closePanel(ui) {
   if (ui.overlay) {
     ui.overlay.hidden = true;
-    ui.overlay.classList.remove("lobby", "picker");
+    ui.overlay.classList.remove("lobby", "picker", "finish");
   }
   document.body.classList.remove("lobby", "picker");
+  setOsmMapNote(ui, "");
 }
