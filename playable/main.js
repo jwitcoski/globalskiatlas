@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { makeHeightfield } from "./heightfield.js?v=cam2";
 import {
@@ -200,9 +201,15 @@ async function loadJSON(rel) {
   return r.json();
 }
 
+const dracoLoader = new DRACOLoader();
+dracoLoader.setDecoderPath("https://www.gstatic.com/draco/versioned/decoders/1.5.7/");
+dracoLoader.setDecoderConfig({ type: "wasm" });
+
 function loadGltf(url, onProgress) {
+  const loader = new GLTFLoader();
+  loader.setDRACOLoader(dracoLoader);
   return new Promise((resolve, reject) => {
-    new GLTFLoader().load(
+    loader.load(
       url,
       resolve,
       (ev) => {

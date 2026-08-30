@@ -25,6 +25,7 @@
     import * as THREE from 'three';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+    import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
     import { addOsmWorld } from './osm-world.js?v=island11';
 
     const PUBLIC_SCENES =
@@ -120,7 +121,11 @@
         <div>elev ${zmin}–${zmax} m · CRS ${crs}</div>
         <div>OSM polygons (pistes, woods, buildings) + roads + ski-area boundary draped on the DEM.</div>`
 
+      const dracoLoader = new DRACOLoader();
+      dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.7/');
+      dracoLoader.setDecoderConfig({ type: 'wasm' });
       const loader = new GLTFLoader();
+      loader.setDRACOLoader(dracoLoader);
       loader.load(
         new URL(manifest.terrain.mesh, root).href,
         (gltf) => {
