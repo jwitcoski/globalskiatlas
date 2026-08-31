@@ -40,7 +40,7 @@ import {
   setInspectAtmosphere,
 } from "./look.js?v=mob1";
 import { addResortIsland, updateIslandDust } from "./island.js?v=island10";
-import { bindUi, setHud, openPanel, closePanel, updateLoading, setOsmMapNote, compactUi } from "./ui.js?v=mob2";
+import { bindUi, setHud, openPanel, closePanel, updateLoading, setOsmMapNote, setResortTitle, compactUi } from "./ui.js?v=mapctrl1";
 import { atlasStatsHtml, prefetchWikiIndex } from "./atlas-stats.js?v=stats1";
 import { bindFinishChartScope, finishChartsHtml, prefetchFinishCharts } from "./finish-charts.js?v=1";
 import { bindOsmFix, osmFixHtml, osmFixContext } from "./osm-fix.js?v=1";
@@ -58,13 +58,14 @@ import {
   pickTrailOnMap,
   frameTrailOverview,
   fitLobbyClip,
+  clampLobbyOrbit,
   fitPlayClip,
   updateTrailMapLod,
   difficultyLegendHtml,
   classifyDifficulty,
   markerSvg,
   parseSkiArea,
-} from "./trail-map.js?v=zoom3";
+} from "./trail-map.js?v=mapctrl1";
 import { makeMinimap } from "./minimap.js?v=feel6";
 import { createNpcSkiers, clearNpcSkiers, tickNpcSkiers } from "./npc-skiers.js?v=feel6";
 import { updateTraffic } from "./traffic.js?v=vis16";
@@ -123,13 +124,18 @@ const look = addSkyAndLights(THREE, scene, renderer);
 const orbit = new OrbitControls(camera, renderer.domElement);
 orbit.enabled = false;
 orbit.enableDamping = true;
-orbit.dampingFactor = 0.1;
-orbit.rotateSpeed = 0.72;
-orbit.panSpeed = 0.7;
-orbit.zoomSpeed = 0.7;
+orbit.dampingFactor = 0.08;
+orbit.rotateSpeed = 0.48;
+orbit.panSpeed = 0.55;
+orbit.zoomSpeed = 0.9;
 orbit.zoomToCursor = false;
 orbit.screenSpacePanning = true;
+// Custom wheel/pinch zoom — avoid OrbitControls fighting the lobby dolly.
+orbit.enableZoom = false;
+orbit.minPolarAngle = 0.22;
+orbit.maxPolarAngle = Math.PI * 0.52;
 let lobbyZoomTo = 0;
+let lobbyPinch = null;
 const raycaster = new THREE.Raycaster();
 const ndc = new THREE.Vector2();
 let pointerDown = null;
@@ -138,7 +144,8 @@ function wheelPixels(e) {
   let dy = e.deltaY;
   if (e.deltaMode === 1) dy *= 16;
   else if (e.deltaMode === 2) dy *= Math.max(400, innerHeight);
-  return Math.max(-64, Math.min(64, dy));
+  // Trackpads send many small deltas; keep steps gentle and capped.
+  return Math.max(-28, Math.min(28, dy));
 }
 
 function applyLobbyZoom(dt) {
@@ -152,26 +159,86 @@ function applyLobbyZoom(dt) {
   const lo = orbit.minDistance || 1;
   const hi = orbit.maxDistance || dist;
   const want = Math.min(hi, Math.max(lo, lobbyZoomTo));
-  const next = dist + (want - dist) * (1 - Math.exp(-10 * dt));
+  const next = dist + (want - dist) * (1 - Math.exp(-8 * dt));
   const s = next / dist;
   p.set(t.x + ox * s, t.y + oy * s, t.z + oz * s);
-  if (Math.abs(next - want) < Math.max(0.04, want * 0.0005)) lobbyZoomTo = 0;
+  if (Math.abs(next - want) < Math.max(0.05, want * 0.0008)) lobbyZoomTo = 0;
 }
 
+function bumpLobbyZoom(factor) {
+  if (!orbit.enabled || run?.phase !== "ready") return;
+  const dist = camera.position.distanceTo(orbit.target);
+  if (!lobbyZoomTo) lobbyZoomTo = dist;
+  const lo = orbit.minDistance || 1;
+  const hi = orbit.maxDistance || dist;
+  lobbyZoomTo = Math.min(hi, Math.max(lo, lobbyZoomTo * factor));
+}
+
+renderer.domElement.addEventListener(
+  "pointerdown",
+  () => {
+    if (run?.phase === "ready" && orbit.enabled) document.body.style.cursor = "grabbing";
+  },
+);
+addEventListener("pointerup", () => {
+  if (run?.phase === "ready" && orbit.enabled) document.body.style.cursor = "grab";
+});
+renderer.domElement.addEventListener("dblclick", (e) => {
+  if (!orbit.enabled || run?.phase !== "ready") return;
+  e.preventDefault();
+  lobbyZoomTo = 0;
+  frameTrailOverview(camera, orbit, trailMap, scene.userData.island);
+});
 renderer.domElement.addEventListener(
   "wheel",
   (e) => {
     if (!orbit.enabled || run?.phase !== "ready") return;
     e.preventDefault();
     e.stopImmediatePropagation();
-    const dist = camera.position.distanceTo(orbit.target);
-    if (!lobbyZoomTo) lobbyZoomTo = dist;
-    lobbyZoomTo = Math.min(
-      orbit.maxDistance,
-      Math.max(orbit.minDistance, lobbyZoomTo * Math.exp(wheelPixels(e) * 0.002)),
-    );
+    // Softer exponential dolly; factor ~1.02–1.03 per notch.
+    bumpLobbyZoom(Math.exp(wheelPixels(e) * 0.00085));
   },
   { capture: true, passive: false },
+);
+
+function lobbyTouchDist(touches) {
+  if (!touches || touches.length < 2) return 0;
+  const a = touches[0];
+  const b = touches[1];
+  return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+}
+
+renderer.domElement.addEventListener(
+  "touchstart",
+  (e) => {
+    if (!orbit.enabled || run?.phase !== "ready" || e.touches.length !== 2) {
+      lobbyPinch = null;
+      return;
+    }
+    lobbyPinch = { dist0: lobbyTouchDist(e.touches), zoom0: camera.position.distanceTo(orbit.target) };
+    lobbyZoomTo = 0;
+  },
+  { passive: true },
+);
+renderer.domElement.addEventListener(
+  "touchmove",
+  (e) => {
+    if (!lobbyPinch || !orbit.enabled || run?.phase !== "ready" || e.touches.length !== 2) return;
+    e.preventDefault();
+    const d = lobbyTouchDist(e.touches);
+    if (d < 8 || lobbyPinch.dist0 < 8) return;
+    const lo = orbit.minDistance || 1;
+    const hi = orbit.maxDistance || lobbyPinch.zoom0;
+    lobbyZoomTo = Math.min(hi, Math.max(lo, lobbyPinch.zoom0 * (lobbyPinch.dist0 / d)));
+  },
+  { passive: false },
+);
+renderer.domElement.addEventListener(
+  "touchend",
+  () => {
+    if (lobbyPinch) lobbyPinch = null;
+  },
+  { passive: true },
 );
 
 const lineMats = new Map();
@@ -264,6 +331,17 @@ function openRunEnd(kind, extra) {
   });
 }
 
+function resortTitleText() {
+  return String(lastManifest?.display_name || currentCatalogResort()?.name || "").replace(
+    /\s+[—-]\s+Prototype$/i,
+    "",
+  );
+}
+
+function syncResortTitle() {
+  setResortTitle(ui, run?.phase === "ready" ? resortTitleText() : "");
+}
+
 function showReady() {
   if (TRAILER) {
     closePanel(ui);
@@ -272,6 +350,7 @@ function showReady() {
   const d = selectedDiff();
   const payload = {
     course: courseName,
+    resortName: resortTitleText(),
     legal: LEGAL,
     trails: trailChoices,
     selectedId: activeCourse?.id,
@@ -284,6 +363,7 @@ function showReady() {
   };
   openPanel(ui, "ready", payload);
   setOsmMapNote(ui, compactUi() ? "" : currentOsmFix(true));
+  syncResortTitle();
   const seq = ++readySeq;
   const catalog = currentCatalogResort();
   const hint = {
@@ -296,6 +376,7 @@ function showReady() {
     .then((html) => {
       if (!html || seq !== readySeq || run?.phase !== "ready") return;
       openPanel(ui, "ready", { ...payload, atlasStats: html, osmFixHtml: payload.osmFixHtml });
+      syncResortTitle();
     })
     .catch(() => {});
 }
@@ -348,12 +429,14 @@ function enterLobby(reframe) {
 function exitLobby() {
   orbit.enabled = false;
   lobbyZoomTo = 0;
+  lobbyPinch = null;
   fitPlayClip(camera);
   setInspectAtmosphere(scene, look, false);
   setIslandLobby(false);
   if (trailMap) trailMap.root.visible = false;
   setPlayableVisible(true);
   document.body.style.cursor = "";
+  setResortTitle(ui, "");
   placeSkier();
   parkYetiAtStart(yeti, run, spawnXZ, hf);
 }
@@ -1072,6 +1155,7 @@ function tick(now) {
   if (run?.phase === "ready" && orbit.enabled) {
     applyLobbyZoom(frameDt);
     orbit.update();
+    clampLobbyOrbit(camera, orbit, trailMap, scene.userData.island);
     fitLobbyClip(camera, orbit);
     updateTrailMapLod(trailMap, camera);
   }

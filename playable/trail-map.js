@@ -509,8 +509,8 @@ export function pickTrailOnMap(map, raycaster, camera, ndc) {
 export function fitLobbyClip(camera, controls) {
   if (!camera || !controls) return;
   const d = camera.position.distanceTo(controls.target);
-  const near = Math.max(0.35, d * 0.014);
-  const far = Math.max(6000, d * 28, d + 2500);
+  const near = Math.min(28, Math.max(1.2, d * 0.0045));
+  const far = Math.max(9000, d * 22, d + 3200);
   const nearCh = Math.abs(camera.near - near) / near;
   const farCh = Math.abs(camera.far - far) / far;
   if (nearCh < 0.18 && farCh < 0.18) return;
@@ -539,14 +539,56 @@ export function frameTrailOverview(camera, controls, map, island) {
   camera.position.set(cx + span * 0.08, midY + dist * 0.62, cz + dist * 0.72);
   if (controls) {
     controls.target.set(cx, midY, cz);
-    controls.minDistance = Math.max(28, span * 0.03);
-    controls.maxDistance = Math.max(dist * 2.4, span * 3.6);
-    controls.minPolarAngle = 0.12;
-    controls.maxPolarAngle = 2.72;
+    // Stay above the snow: no under-terrain flip, no clipping zoom.
+    controls.minDistance = Math.max(160, span * 0.14);
+    controls.maxDistance = Math.max(dist * 1.65, span * 2.1);
+    controls.minPolarAngle = 0.22;
+    controls.maxPolarAngle = Math.PI * 0.52;
     controls.enablePan = true;
+    controls.enableZoom = false;
+    controls.screenSpacePanning = true;
     controls.update();
   }
   fitLobbyClip(camera, controls);
+}
+
+/** Keep the trail-map orbit on the ski area so zoom/pan cannot lose the mountain. */
+export function clampLobbyOrbit(camera, controls, map, island) {
+  if (!camera || !controls || !map?.bounds) return;
+  const { cx, cz, span, maxY, minY } = map.bounds;
+  const lo = Number.isFinite(minY) ? minY : 0;
+  const hi = Number.isFinite(maxY) ? maxY : lo;
+  const midY = Number.isFinite(island?.center?.y) ? island.center.y : (lo + hi) * 0.5;
+  const maxR = Math.max(100, span * 0.38);
+  const t = controls.target;
+  const dx = t.x - cx;
+  const dz = t.z - cz;
+  const r = Math.hypot(dx, dz);
+  // Soft pull-back instead of a hard snap — feels less “stuck”.
+  if (r > maxR && r > 1e-6) {
+    const over = (r - maxR) / r;
+    const pull = Math.min(1, 0.22 + over * 0.55);
+    t.x -= dx * over * pull;
+    t.z -= dz * over * pull;
+  }
+  t.y += (midY - t.y) * 0.18;
+  const p = camera.position;
+  let ox = p.x - t.x;
+  let oy = p.y - t.y;
+  let oz = p.z - t.z;
+  let dist = Math.hypot(ox, oy, oz) || 1;
+  const loD = controls.minDistance || 160;
+  const hiD = controls.maxDistance || dist;
+  if (dist < loD || dist > hiD) {
+    const want = Math.min(hiD, Math.max(loD, dist));
+    const k = want / dist;
+    p.set(t.x + ox * k, t.y + oy * k, t.z + oz * k);
+  }
+  // Keep camera above a floor so zoom never punches under the snow.
+  const floorY = midY + Math.max(40, span * 0.02);
+  if (p.y < floorY) {
+    p.y = floorY;
+  }
 }
 
 export function difficultyLegendHtml() {

@@ -21,6 +21,7 @@ export function bindUi() {
     combo: document.getElementById("combo-read"),
     shout: document.getElementById("air-shout"),
     osmMapNote: document.getElementById("osm-map-note"),
+    resortTitle: document.getElementById("resort-title"),
   };
 }
 
@@ -138,7 +139,7 @@ function lobbyDetailsHtml(data) {
         ${data.atlasStats || ""}
         ${compactUi() ? data.osmFixHtml || "" : ""}
         ${data.legend || ""}
-        <p class="hint">Click a marker on the mountain. Drag to orbit.</p>
+        <p class="hint">Drag to orbit · scroll / pinch to zoom · right-drag or two-finger to pan · double-click to reset.</p>
         <p class="fine">${data.legal}</p>
       </div>
     </details>`;
@@ -187,6 +188,7 @@ export function openPanel(ui, kind, data) {
   ui.overlay.classList.toggle("finish", kind === "finished" || kind === "dnf");
   document.body.classList.toggle("lobby", kind === "ready");
   document.body.classList.toggle("picker", kind === "mountains");
+  setResortTitle(ui, kind === "ready" ? data.resortName || "" : "");
   if (kind !== "ready") setOsmMapNote(ui, "");
   if (kind === "loading") {
     ui.overlay.dataset.loading = "1";
@@ -270,6 +272,16 @@ export function openPanel(ui, kind, data) {
     ${data.changeMountain ? actions([["mountains", "Other mountains", "ghost"]]) : ""}`;
 }
 
+export function setResortTitle(ui, name) {
+  const el = ui?.resortTitle || document.getElementById("resort-title");
+  if (!el) return;
+  const text = String(name || "").trim();
+  el.hidden = !text;
+  el.textContent = text;
+  if (text) el.setAttribute("title", text);
+  else el.removeAttribute("title");
+}
+
 export function setOsmMapNote(ui, html) {
   if (!ui.osmMapNote) return;
   const show = !!html;
@@ -283,5 +295,6 @@ export function closePanel(ui) {
     ui.overlay.classList.remove("lobby", "picker", "finish");
   }
   document.body.classList.remove("lobby", "picker");
+  setResortTitle(ui, "");
   setOsmMapNote(ui, "");
 }

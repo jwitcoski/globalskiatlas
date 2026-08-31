@@ -24,11 +24,24 @@
     html, body { margin: 0; height: 100%; height: 100dvh; height: 100svh; overflow: hidden; background: #7eb8e4; color: var(--type); font-family: "Segoe UI", system-ui, sans-serif; touch-action: none; }
     body.picker { touch-action: auto; }
     canvas { display: block; touch-action: none; }
-    #obj, #clock, #score-box, #piste, #speed-box, #dist-read, #pause-btn, #pov-btn, #load-note, #mini-wrap, #nav-arrow {
+    #obj, #clock, #score-box, #piste, #speed-box, #dist-read, #pause-btn, #pov-btn, #load-note, #mini-wrap, #nav-arrow, #resort-title {
       position: absolute; z-index: 2; pointer-events: none;
       text-shadow: 0 1px 8px rgba(40,50,60,.35);
       font-weight: 600; letter-spacing: .04em;
     }
+    #resort-title {
+      top: var(--pad); left: 50%; transform: translateX(-50%);
+      z-index: 4; max-width: min(72vw, 560px); padding: 0 12px;
+      text-align: center; font-size: clamp(18px, 3.2vw, 28px);
+      font-weight: 700; letter-spacing: .06em; line-height: 1.15;
+      color: #f4f8fb;
+      text-shadow:
+        0 1px 2px rgba(20, 28, 36, .55),
+        0 2px 18px rgba(20, 28, 36, .45);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    #resort-title[hidden] { display: none !important; }
+    body:not(.lobby) #resort-title { display: none !important; }
     #clock {
       top: var(--pad); left: 50%; transform: translateX(-50%);
       min-width: 8ch; text-align: center; font-size: clamp(16px, 2.4vw, 22px);
@@ -327,6 +340,7 @@
     body.lobby #clock, body.lobby #score-box, body.lobby #dist-read, body.lobby #piste,
     body.lobby #speed-box, body.lobby #obj, body.lobby #pause-btn, body.lobby #pov-btn,
     body.lobby #pads, body.lobby #nav-arrow, body.lobby #combo-read, body.lobby #air-shout { display: none !important; }
+    body.lobby #resort-title { display: block; }
     #osm-map-note {
       position: absolute; z-index: 5; pointer-events: auto;
       right: var(--pad-r); bottom: var(--pad-b);
@@ -465,11 +479,16 @@
       bottom: auto; top: calc(var(--pad) + 78px); left: var(--pad-l);
     }
     body.compact-ui.lobby #osm-map-note { display: none !important; }
+    body.compact-ui #resort-title {
+      max-width: min(78vw, 420px);
+      font-size: clamp(15px, 4.2vw, 22px);
+    }
     body.compact-ui #overlay.picker .map-legend-fold { max-width: min(220px, 42vw); bottom: 16px; left: 10px; }
     body.compact-ui #overlay.picker .map-legend-fold[open] .map-legend { max-height: min(38vh, 200px); }
   </style>
 </head>
 <body>
+  <div id="resort-title" hidden></div>
   <div id="obj">Loading course…</div>
   <div id="clock">0:00.00</div>
   <div id="nav-arrow" hidden role="img" aria-label="Trail ahead">
@@ -520,6 +539,6 @@
     { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
                    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }
   </script>
-  <script type="module" src="./main.js?v=mob3"></script>
+  <script type="module" src="./main.js?v=mapctrl1"></script>
 </body>
 </html>
