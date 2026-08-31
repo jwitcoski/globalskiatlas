@@ -2,47 +2,7 @@
 
 export function capDpr() {
   const coarse = matchMedia("(pointer: coarse)").matches;
-  return Math.min(devicePixelRatio || 1, coarse ? 1.5 : 2);
-}
-
-export function bindPads(keys) {
-  const root = document.getElementById("pads");
-  if (!root) return;
-  const map = {
-    left: ["KeyA", "ArrowLeft"],
-    right: ["KeyD", "ArrowRight"],
-    tuck: ["KeyW", "ArrowUp"],
-    brake: ["KeyS", "ArrowDown"],
-  };
-  const held = new Map();
-  function setCodes(codes, on) {
-    for (const c of codes) {
-      if (on) keys.add(c);
-      else keys.delete(c);
-    }
-  }
-  function release(id) {
-    const rec = held.get(id);
-    if (!rec) return;
-    setCodes(rec.codes, false);
-    rec.el.classList.remove("down");
-    held.delete(id);
-  }
-  root.addEventListener("pointerdown", (e) => {
-    const btn = e.target.closest("[data-pad]");
-    if (!btn) return;
-    e.preventDefault();
-    btn.setPointerCapture(e.pointerId);
-    const codes = map[btn.dataset.pad];
-    if (!codes) return;
-    held.set(e.pointerId, { codes, el: btn });
-    setCodes(codes, true);
-    btn.classList.add("down");
-  });
-  const up = (e) => release(e.pointerId);
-  root.addEventListener("pointerup", up);
-  root.addEventListener("pointercancel", up);
-  root.addEventListener("lostpointercapture", up);
+  return Math.min(devicePixelRatio || 1, coarse ? 1.15 : 2);
 }
 
 export function attachDebug(renderer, getSnap) {

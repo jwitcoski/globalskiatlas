@@ -1,5 +1,7 @@
 /** Arcade ski on DEM. Gravity is fall-line only (none on flats). Custom, not Rapier. */
 
+import { analogAxes } from "./input.js?v=mob1";
+
 const G_FALL = 32;
 const TURN = 0.98;
 const TURN_DAMP = 0.04;
@@ -491,10 +493,22 @@ export function resetAirState(air) {
 }
 
 function readTurn(keys) {
-  let turn = 0;
-  if (keys.has("KeyA") || keys.has("ArrowLeft")) turn += 1;
-  if (keys.has("KeyD") || keys.has("ArrowRight")) turn -= 1;
-  return turn;
+  const ax = analogAxes();
+  const keyLeft = keys.has("KeyA") || keys.has("ArrowLeft");
+  const keyRight = keys.has("KeyD") || keys.has("ArrowRight");
+  let turn = ax.steer;
+  if (keyLeft && !keyRight) turn = 1;
+  else if (keyRight && !keyLeft) turn = -1;
+  else if (keyLeft && keyRight) turn = 0;
+  return Math.max(-1, Math.min(1, turn));
+}
+
+function wantTuck(keys) {
+  return keys.has("KeyW") || keys.has("ArrowUp") || analogAxes().tuck > 0.35;
+}
+
+function wantBrake(keys) {
+  return keys.has("KeyS") || keys.has("ArrowDown") || analogAxes().brake > 0.35;
 }
 
 /** Split velocity into along-ski and sideways, then bleed only the sideways part. */
@@ -511,7 +525,7 @@ function carve(THREE, vel, fwd, edged, powder, dt) {
 
 function stepAir(THREE, { pos, vel, heading, keys, hf, dt, trees, air, extras }) {
   const turn = readTurn(keys);
-  if (turn !== 0) heading += turn * AIR_TURN * dt;
+  if (Math.abs(turn) > 0.04) heading += turn * AIR_TURN * dt;
 
   air.t += dt;
   air.vy -= G_AIR * dt;
@@ -581,7 +595,7 @@ export function stepSki(THREE, { pos, vel, heading, keys, hf, dt, trees, air, on
   const turn = readTurn(keys);
   const speed = vel.length();
   const yawRate = TURN / (1 + speed * TURN_DAMP);
-  if (turn !== 0) {
+  if (Math.abs(turn) > 0.04) {
     const yaw = turn * yawRate * dt;
     heading += yaw;
     if (speed > 0.25) {
@@ -597,10 +611,10 @@ export function stepSki(THREE, { pos, vel, heading, keys, hf, dt, trees, air, on
   fwd.normalize();
 
   const powder = !onPiste;
-  const skid = carve(THREE, vel, fwd, turn !== 0 && speed > 0.8, powder, dt);
+  const skid = carve(THREE, vel, fwd, Math.abs(turn) > 0.12 && speed > 0.8, powder, dt);
 
-  const wantFwd = keys.has("KeyW") || keys.has("ArrowUp");
-  const braking = keys.has("KeyS") || keys.has("ArrowDown");
+  const wantFwd = wantTuck(keys);
+  const braking = wantBrake(keys);
   const along = vel.dot(fwd);
   let pole = false;
   if (wantFwd && !braking && along < POLE_ENGAGE) {
@@ -656,7 +670,7 @@ export function stepSki(THREE, { pos, vel, heading, keys, hf, dt, trees, air, on
   const horiz = Math.hypot(vel.x, vel.z) || 1;
   const slopeNow = vel.y / horiz;
   const convex = slopeNow - slopeAhead;
-  const tucked = keys.has("KeyW") || keys.has("ArrowUp");
+  const tucked = wantTuck(keys);
   const tuckPop = !!(air?.tuckHeld && !tucked && vel.length() > 10 && convex > 0.04 && slopeAhead < -0.02);
   if (air) air.tuckHeld = tucked;
   const lip =
@@ -826,6 +840,7 @@ export function orientSkier(THREE, skier, pos, heading, vel, hf, steer = 0, opts
 }
 
 export function chaseCam(THREE, camera, pos, heading, vel, hf) {
+  const coarse = matchMedia("(pointer: coarse)").matches;
   const wantYaw = heading;
   let yaw = camera.userData.skiYaw;
   if (yaw == null || Number.isNaN(yaw)) yaw = wantYaw;
@@ -834,14 +849,17 @@ export function chaseCam(THREE, camera, pos, heading, vel, hf) {
   const back = v3(THREE, _fwd).set(-Math.sin(yaw), 0, -Math.cos(yaw));
   const baseY = hf?.sampleBase ? hf.sampleBase(pos.x, pos.z) : pos.y - RIDE;
   const want = v3(THREE, _want);
-  want.set(pos.x, baseY + 7.4, pos.z).addScaledVector(back, 18);
+  const camH = coarse ? 8.4 : 7.4;
+  const camBack = coarse ? 16 : 18;
+  want.set(pos.x, baseY + camH, pos.z).addScaledVector(back, camBack);
   if (hf?.sampleBase) want.y = Math.max(want.y, hf.sampleBase(want.x, want.z) + 4.2);
   const snap = !camera.userData.skiRig || camera.position.distanceToSquared(want) > 2500;
   camera.userData.skiRig = true;
   if (snap) camera.position.copy(want);
   else camera.position.lerp(want, 0.085);
   const look = v3(THREE, _look);
-  look.set(pos.x, baseY + 1.15, pos.z).addScaledVector(back, -10);
+  const lookAhead = coarse ? -14 : -10;
+  look.set(pos.x, baseY + 1.15, pos.z).addScaledVector(back, lookAhead);
   if (!camera.userData.skiLook) camera.userData.skiLook = look.clone();
   else camera.userData.skiLook.lerp(look, 0.095);
   const L = camera.userData.skiLook;
@@ -874,7 +892,8 @@ export function isoCam(THREE, camera, pos, heading, vel, hf) {
 /** Speed reads as FOV: slow is calm, fast is wide, tucking adds a little more. */
 export function punchFov(camera, tucked, dt, speed = 0) {
   const t = Math.min(1, Math.max(0, speed / MAX_SPD));
-  const target = 58 + t * 11 + (tucked ? 3 : 0);
+  const coarse = matchMedia("(pointer: coarse)").matches;
+  const target = (coarse ? 62 : 58) + t * 11 + (tucked ? 3 : 0);
   camera.fov += (target - camera.fov) * Math.min(1, dt * 5);
   camera.updateProjectionMatrix();
 }

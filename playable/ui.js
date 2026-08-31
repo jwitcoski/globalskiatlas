@@ -116,7 +116,11 @@ function actions(rows) {
     .join("")}</div>`;
 }
 
-let lobbyDetailsOpen = true;
+export function compactUi() {
+  return matchMedia("(pointer: coarse)").matches || innerWidth < 720 || innerHeight < 520;
+}
+
+let lobbyDetailsUser = null;
 
 function trailMeta(data) {
   const t = (data.trails || []).find((r) => r.id === data.selectedId) || {};
@@ -127,11 +131,12 @@ function trailMeta(data) {
 }
 
 function lobbyDetailsHtml(data) {
-  const open = lobbyDetailsOpen ? " open" : "";
+  const open = (lobbyDetailsUser ?? !compactUi()) ? " open" : "";
   return `<details class="lobby-details"${open}>
       <summary>Resort details</summary>
       <div class="lobby-details-body">
         ${data.atlasStats || ""}
+        ${compactUi() ? data.osmFixHtml || "" : ""}
         ${data.legend || ""}
         <p class="hint">Click a marker on the mountain. Drag to orbit.</p>
         <p class="fine">${data.legal}</p>
@@ -143,7 +148,7 @@ function bindLobbyDetails(ui) {
   const el = ui.panel?.querySelector(".lobby-details");
   if (!el) return;
   el.addEventListener("toggle", () => {
-    lobbyDetailsOpen = el.open;
+    lobbyDetailsUser = el.open;
   });
 }
 
@@ -163,8 +168,14 @@ function worldMap(resorts) {
         <input type="text" id="searchInput" placeholder="Search ${n} playable resorts and the full atlas…" autocomplete="off" />
         <div class="search-dropdown" id="searchDropdown"></div>
       </div>
-      <div id="legend" class="map-legend" style="display: none;"></div>
-      <div id="basemapControl" class="basemap-control" aria-label="Basemap options"></div>
+      <details class="map-legend-fold" id="legendFold">
+        <summary class="map-legend-toggle">Legend</summary>
+        <div id="legend" class="map-legend"></div>
+      </details>
+      <details class="basemap-fold" id="basemapFold">
+        <summary class="basemap-toggle">Map</summary>
+        <div id="basemapControl" class="basemap-control" aria-label="Basemap options"></div>
+      </details>
     </div>`;
 }
 
@@ -201,7 +212,7 @@ export function openPanel(ui, kind, data) {
     ui.panel.innerHTML = `<p class="kicker">Pick a trail</p>
       <h2>${data.course}</h2>
       ${trailMeta(data)}
-      ${data.osmFixHtml || ""}
+      ${compactUi() ? "" : data.osmFixHtml || ""}
       ${lobbyDetailsHtml(data)}
       ${actions(
         data.changeMountain

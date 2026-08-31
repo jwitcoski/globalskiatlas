@@ -64,6 +64,20 @@ export async function showPickerMap(container, resorts, onPick) {
   });
   pickerMap = map;
   initBasemapSwitcher(map, { restoreOverlays });
+  const compact = matchMedia("(pointer: coarse)").matches || innerWidth < 720 || innerHeight < 520;
+  const legendFold = document.getElementById("legendFold");
+  const basemapFold = document.getElementById("basemapFold");
+  if (legendFold) legendFold.open = !compact;
+  if (basemapFold) basemapFold.open = !compact;
+  const onFold = () => pickerMap?.resize();
+  legendFold?.addEventListener("toggle", onFold);
+  basemapFold?.addEventListener("toggle", onFold);
+  map.on?.("click", () => {
+    if (compact) {
+      if (legendFold?.open) legendFold.open = false;
+      if (basemapFold?.open) basemapFold.open = false;
+    }
+  });
   onResize = () => pickerMap?.resize();
   addEventListener("resize", onResize);
   requestAnimationFrame(() => {

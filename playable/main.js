@@ -20,7 +20,7 @@ import {
   tickFallPose,
   clearFall,
   standUp,
-} from "./physics.js?v=feel13";
+} from "./physics.js?v=mob1";
 import { featuredCourses, attachPisteDifficulty, courseFinish, createRun, tickRun, formatTime } from "./run.js?v=map4";
 import { coordsToXz, attachPiste, resetScore, tickScore, commitBestScore, formatScore, distToPolyline, applyWipeout } from "./score.js?v=feel4";
 import { orientPiste, alongTrack, alongPolyline } from "./gates.js?v=vis18";
@@ -38,16 +38,16 @@ import {
   makeFallingSnow,
   updateFallingSnow,
   setInspectAtmosphere,
-} from "./look.js?v=island4";
+} from "./look.js?v=mob1";
 import { addResortIsland, updateIslandDust } from "./island.js?v=island10";
-import { bindUi, setHud, openPanel, closePanel, updateLoading, setOsmMapNote } from "./ui.js?v=vis34";
+import { bindUi, setHud, openPanel, closePanel, updateLoading, setOsmMapNote, compactUi } from "./ui.js?v=mob1";
 import { atlasStatsHtml, prefetchWikiIndex } from "./atlas-stats.js?v=stats1";
 import { bindFinishChartScope, finishChartsHtml, prefetchFinishCharts } from "./finish-charts.js?v=1";
 import { bindOsmFix, osmFixHtml, osmFixContext } from "./osm-fix.js?v=1";
-import { showPickerMap, destroyPickerMap } from "./picker-map.js?v=map5";
-import { capDpr, bindPads, attachDebug } from "./debug.js?v=fix1";
-import { intentsFrom, isTurning } from "./input.js?v=feel1";
-import { bindMobileChrome } from "./mobile.js?v=feel1";
+import { showPickerMap, destroyPickerMap } from "./picker-map.js?v=mob1";
+import { capDpr, attachDebug } from "./debug.js?v=mob1";
+import { intentsFrom, isTurning, analogAxes } from "./input.js?v=mob1";
+import { bindMobileChrome, bindPads } from "./mobile.js?v=mob2";
 import { bakePisteSculpt, drapeSculptOnMesh } from "./piste-sculpt.js?v=feel3";
 import { addTrailMarks, clearTrailMarks, updateTrailMarks } from "./trail-marks.js?v=marks10";
 import { makeYeti, resetYeti, parkYetiAtStart, tickYeti } from "./yeti.js?v=vis16";
@@ -116,8 +116,8 @@ const renderer = new THREE.WebGLRenderer({
 });
 renderer.info.autoReset = false;
 renderer.setPixelRatio(capDpr());
-renderer.setSize(innerWidth, innerHeight);
-renderer.domElement.style.cssText = "position:fixed;inset:0;z-index:0;display:block;";
+renderer.setSize(innerWidth, innerHeight, false);
+renderer.domElement.style.cssText = "position:fixed;inset:0;z-index:0;display:block;width:100%;height:100%;";
 document.body.appendChild(renderer.domElement);
 const look = addSkyAndLights(THREE, scene, renderer);
 const orbit = new OrbitControls(camera, renderer.domElement);
@@ -280,10 +280,10 @@ function showReady() {
     diffLabel: d.label,
     legend: difficultyLegendHtml(),
     changeMountain: !!catalogHub,
-    osmFixHtml: currentOsmFix(),
+    osmFixHtml: compactUi() ? currentOsmFix(true) : currentOsmFix(),
   };
   openPanel(ui, "ready", payload);
-  setOsmMapNote(ui, currentOsmFix(true));
+  setOsmMapNote(ui, compactUi() ? "" : currentOsmFix(true));
   const seq = ++readySeq;
   const catalog = currentCatalogResort();
   const hint = {
@@ -295,7 +295,7 @@ function showReady() {
   atlasStatsHtml(hint)
     .then((html) => {
       if (!html || seq !== readySeq || run?.phase !== "ready") return;
-      openPanel(ui, "ready", { ...payload, atlasStats: html, osmFixHtml: currentOsmFix() });
+      openPanel(ui, "ready", { ...payload, atlasStats: html, osmFixHtml: payload.osmFixHtml });
     })
     .catch(() => {});
 }
@@ -409,6 +409,7 @@ function onUiAct(act, courseId) {
   }
   if (!run) return;
   if (act === "start" && run.phase === "ready") {
+    mobile.requestLandscape?.();
     closePanel(ui);
     exitLobby();
   }
@@ -420,11 +421,20 @@ function onUiAct(act, courseId) {
   if (act === "restart") resetRun({ lobby: false });
 }
 
+function viewSize() {
+  const vv = window.visualViewport;
+  if (vv && vv.width > 40 && vv.height > 40) return { w: Math.round(vv.width), h: Math.round(vv.height) };
+  return { w: innerWidth, h: innerHeight };
+}
+
 function fitRenderer() {
-  camera.aspect = innerWidth / innerHeight;
+  const { w, h } = viewSize();
+  camera.aspect = w / Math.max(1, h);
   camera.updateProjectionMatrix();
   renderer.setPixelRatio(capDpr());
-  renderer.setSize(innerWidth, innerHeight);
+  renderer.setSize(w, h, false);
+  renderer.domElement.style.width = "100%";
+  renderer.domElement.style.height = "100%";
 }
 
 const skier = makeSkier(THREE, scene);
@@ -1097,6 +1107,12 @@ function tick(now) {
 }
 requestAnimationFrame(tick);
 addEventListener("resize", fitRenderer);
+addEventListener("orientationchange", fitRenderer);
+if (window.visualViewport) {
+  visualViewport.addEventListener("resize", fitRenderer);
+  visualViewport.addEventListener("scroll", fitRenderer);
+}
+fitRenderer();
 
 armTrailer({
   renderer,
@@ -1137,6 +1153,8 @@ window.__THREE_GAME_DIAGNOSTICS__ = {
       triangles: renderer.info.render.triangles,
       drawingBuffer: [renderer.domElement.width, renderer.domElement.height],
       sceneChildren: scene.children.length,
+      steer: analogAxes().steer,
+      intent: intentsFrom(keys),
       cam: [Math.round(camera.position.x), Math.round(camera.position.y), Math.round(camera.position.z)],
       course: courseName,
     };

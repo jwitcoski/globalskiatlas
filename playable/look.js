@@ -2,6 +2,7 @@
 
 import * as THREE from "three";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
+import { intentsFrom } from "./input.js?v=mob1";
 
 const SUN_DIR = { x: 0.42, y: 0.88, z: 0.22 };
 const FOG = 0xc5dff0;
@@ -325,8 +326,9 @@ export function updateSpray(spray, skier, heading, speed, dt, keys, hf, opts = {
   spray.t += dt;
   const pos = spray.pos;
   const n = spray.n;
-  const braking = keys?.has("KeyS") || keys?.has("ArrowDown");
-  const turning = keys?.has("KeyA") || keys?.has("KeyD") || keys?.has("ArrowLeft") || keys?.has("ArrowRight");
+  const intent = keys ? intentsFrom(keys) : {};
+  const braking = !!intent.brake;
+  const turning = !!intent.left || !!intent.right;
   const powder = !!opts.powder;
   const skid = Math.min(2.2, (opts.skid || 0) * 0.28);
   const tails = skiTails(skier);
@@ -358,7 +360,7 @@ const FLAKE_SPAN = 48;
 const FLAKE_H = 28;
 
 export function makeFallingSnow(THREE, scene) {
-  const n = 280;
+  const n = matchMedia("(pointer: coarse)").matches ? 90 : 280;
   const pos = new Float32Array(n * 3);
   for (let i = 0; i < n; i++) {
     pos[i * 3] = (Math.random() - 0.5) * FLAKE_SPAN;
