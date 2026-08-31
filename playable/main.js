@@ -40,11 +40,11 @@ import {
   setInspectAtmosphere,
 } from "./look.js?v=mob1";
 import { addResortIsland, updateIslandDust } from "./island.js?v=island10";
-import { bindUi, setHud, openPanel, closePanel, updateLoading, setOsmMapNote, compactUi } from "./ui.js?v=mob1";
+import { bindUi, setHud, openPanel, closePanel, updateLoading, setOsmMapNote, compactUi } from "./ui.js?v=mob2";
 import { atlasStatsHtml, prefetchWikiIndex } from "./atlas-stats.js?v=stats1";
 import { bindFinishChartScope, finishChartsHtml, prefetchFinishCharts } from "./finish-charts.js?v=1";
 import { bindOsmFix, osmFixHtml, osmFixContext } from "./osm-fix.js?v=1";
-import { showPickerMap, destroyPickerMap } from "./picker-map.js?v=mob1";
+import { showPickerMap, destroyPickerMap } from "./picker-map.js?v=mob2";
 import { capDpr, attachDebug } from "./debug.js?v=mob1";
 import { intentsFrom, isTurning, analogAxes } from "./input.js?v=mob1";
 import { bindMobileChrome, bindPads } from "./mobile.js?v=mob2";

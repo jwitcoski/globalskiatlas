@@ -207,6 +207,7 @@ export async function initSkiResortMap(options = {}) {
     }
   }
   const playableMode = !!(gameResorts.length && onPlayablePick);
+  const playableDotsOnly = !!options.playableDotsOnly && gameResorts.length > 0;
 
   // ── Initialise MapLibre map (map-core) ──────────────────────────────────
   const { map } = await createMapLibre({
@@ -306,6 +307,7 @@ export async function initSkiResortMap(options = {}) {
     const searchText = [displayStr, en, wikiPage ? wikiPage.title : ''].filter(Boolean).join(' ').trim() || displayStr;
     const latlng = { lat, lng: lon };
     const playable = gameResorts.length ? matchPlayableResort(lon, lat, displayStr || name, properties, gameResorts) : null;
+    if (playableDotsOnly && !playable) return;
 
     resortFeatures.push({
       type: 'Feature',
@@ -337,6 +339,76 @@ export async function initSkiResortMap(options = {}) {
     }
   });
 
+  if (playableDotsOnly) {
+    const seenPaths = new Set();
+    const uniqueFeatures = [];
+    for (const f of resortFeatures) {
+      const path = f.properties._playablePath;
+      if (path) {
+        if (seenPaths.has(path)) continue;
+        seenPaths.add(path);
+      }
+      uniqueFeatures.push(f);
+    }
+    resortFeatures.length = 0;
+    resortFeatures.push(...uniqueFeatures);
+
+    const uniqueSearch = [];
+    const seenSearch = new Set();
+    for (const r of searchResorts) {
+      if (!r.playablePath || seenSearch.has(r.playablePath)) continue;
+      seenSearch.add(r.playablePath);
+      uniqueSearch.push(r);
+    }
+    searchResorts.length = 0;
+    searchResorts.push(...uniqueSearch);
+
+    for (const r of gameResorts) {
+      const path = String(r.path || '');
+      if (!path || seenPaths.has(path)) continue;
+      const lon = Number(r.lon);
+      const lat = Number(r.lat);
+      if (!Number.isFinite(lon) || !Number.isFinite(lat)) continue;
+      seenPaths.add(path);
+      const properties = {
+        name: r.name,
+        country: r.country,
+        osm_id: r.winter_sports_id || r.id
+      };
+      const tier = getMapSizeTier(properties);
+      const color = getMapTierColorForProps(properties);
+      const displayStr = String(r.name || r.id || 'Ski area');
+      const country = r.country ? String(r.country).trim() : '';
+      const countryDisp = country.match(/^united states/i) ? 'USA' : country;
+      const latlng = { lat, lng: lon };
+      resortFeatures.push({
+        type: 'Feature',
+        geometry: { type: 'Point', coordinates: [lon, lat] },
+        properties: {
+          _tier: tier,
+          _color: color,
+          _icon: getIconId(tier, color),
+          _name: displayStr,
+          _country: countryDisp,
+          _trails: 0,
+          _terrain: '',
+          _playable: 1,
+          _playablePath: path,
+          _propsJson: JSON.stringify(properties)
+        }
+      });
+      searchResorts.push({
+        name: displayStr,
+        searchText: [displayStr, r.location, country].filter(Boolean).join(' '),
+        latlng,
+        country,
+        properties,
+        wikiPage: null,
+        playablePath: path
+      });
+    }
+  }
+
   // ── Legend ───────────────────────────────────────────────────────────────
   const legendEl = document.getElementById('legend');
   if (legendEl) {
@@ -349,7 +421,9 @@ export async function initSkiResortMap(options = {}) {
       `<div class="legend-row"><span class="legend-mountain-icon">${megaMountainsSvg(MAP_TIER_COLORS.mega, 26, 16)}</span> ${MAP_TIER_LEGEND.mega}</div>` +
       `<div class="legend-row" style="margin-top:6px"><span class="legend-mountain-icon">${hillSvg('#999', 18, 12)}</span> Grey = not a downhill ski resort</div>` +
       `<div class="legend-row" style="margin-top:8px;font-size:11px;color:#64748b">Colored dots at wide zoom; mountain icons from zoom ${RESORT_ICON_MIN_ZOOM}+</div>` +
-      (playableMode
+      (playableDotsOnly
+        ? '<div class="legend-row" style="margin-top:8px"><span class="legend-swatch" style="background:#0d9488;border:2px solid #0d9488;border-radius:50%"></span> Markers = mountains with playable 3D terrain (click to ski)</div>'
+        : playableMode
         ? '<div class="legend-row" style="margin-top:8px"><span class="legend-swatch" style="background:#0d9488;border:2px solid #0d9488;border-radius:50%"></span> Teal ring = playable in Ski Game (click to ski)</div>'
         : '') +
       '<h3 style="margin-top:10px">Resort boundary (zoom 8+)</h3>' +

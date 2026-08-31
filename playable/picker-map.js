@@ -1,4 +1,4 @@
-import { initSkiResortMap } from "../scripts/ski-resort-map-ml.js?v=21";
+import { initSkiResortMap } from "../scripts/ski-resort-map-ml.js?v=22";
 import { initBasemapSwitcher } from "../scripts/basemap-switcher.js?v=1";
 
 let pickerMap = null;
@@ -60,6 +60,7 @@ export async function showPickerMap(container, resorts, onPick) {
     includeRoadTripButton: false,
     loadAds: false,
     playableResorts: resorts,
+    playableDotsOnly: true,
     onPlayablePick: onPick,
   });
   pickerMap = map;

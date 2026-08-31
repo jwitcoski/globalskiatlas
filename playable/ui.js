@@ -165,7 +165,7 @@ function worldMap(resorts) {
   return `<div class="world-stage">
       <div id="picker-map" role="application" aria-label="Ski atlas map"></div>
       <div class="search-box" id="searchBox" style="display: none;">
-        <input type="text" id="searchInput" placeholder="Search ${n} playable resorts and the full atlas…" autocomplete="off" />
+        <input type="text" id="searchInput" placeholder="Search ${n} playable resorts…" autocomplete="off" />
         <div class="search-dropdown" id="searchDropdown"></div>
       </div>
       <details class="map-legend-fold" id="legendFold">
