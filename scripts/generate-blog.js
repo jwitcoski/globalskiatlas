@@ -281,7 +281,7 @@ function generateIndexHtml(posts) {
   <main class="tw-mt-[80px] tw-flex-1 tw-px-[5%] tw-py-12 max-lg:tw-px-4">
     <div class="tw-mx-auto tw-max-w-5xl">
       <h1 class="tw-text-3xl tw-font-bold tw-text-black max-md:tw-text-2xl">Blog</h1>
-      <p class="tw-mt-3 tw-max-w-2xl tw-text-lg tw-text-gray-600">Guides and data-backed articles for skiers who want to compare resorts fairly, plan trips, and improve the open map data behind the atlas.</p>
+      <p class="tw-mt-3 tw-max-w-2xl tw-text-lg tw-text-gray-600">Guides and data-backed articles for skiers who want to compare resorts fairly, plan trips, and improve the open map data behind the atlas. Each article follows a five-paragraph essay format: introduction, three supporting points, and conclusion.</p>
       <div class="tw-mt-10 tw-grid tw-gap-6 md:tw-grid-cols-2">
       ${featuredCard}
       ${cards}

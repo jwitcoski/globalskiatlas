@@ -1,61 +1,9 @@
-Ask which US state has the most ski resorts and you'll hear Colorado, Utah, or Vermont. Those states matter — destination mountains, huge vertical, pass marketing. But **raw count** tells a different story, dominated by the Northeast and Great Lakes where local hills outnumber blockbuster destinations ten to one.
+Ask which U.S. state has the most ski resorts and most people name Colorado, Utah, or Vermont, yet raw counts from open map data tell a different story dominated by the Northeast and Great Lakes. Global Ski Atlas counts every mapped downhill area in OpenStreetMap—rope-tow hills, municipal slopes, and corporate mega-resorts alike—so state rankings reflect places you can ski, not places with the biggest ad budgets. This essay argues that American skiing is mostly local and fragmented, explains how we assign state totals, and shows why independents matter more than pass marketing suggests.
 
-We count every mapped downhill area in OSM: rope-tow community slopes, municipal parks, Midwest knolls, corporate mega-resorts. Same rules for all. [Interactive map](../mainmap.html), [resort comparison](../resort-comparison.html). Global context: [how many worldwide](how-many-ski-resorts-worldwide.html). Pass economics: [Epic vs Ikon coverage](epic-pass-vs-ikon-pass-resort-coverage.html) and [Indy strategy](epic-ikon-indy-europe-which-to-choose.html).
+We derive each entry from clustered OSM pistes, lifts, and resort boundaries, assigning state by centroid against U.S. polygons. One brand operating three nearby mountains may appear three times if mappers drew three boundaries; linked villages may merge into one polygon. The count exceeds trade-association figures because we include minimal-lift community venues excluded from “major resort” lists, with live totals on [Ski Resort Facts](../SkiResortFacts.html) and exploration on the [interactive map](../mainmap.html). New York and Michigan routinely lead or near the top, driven by Adirondack and Catskill density and Michigan’s two-peninsula long tail of local hills, while Wisconsin, Minnesota, and Pennsylvania add similar patterns of many small areas rather than one Jackson Hole-sized blob.
 
-## How we assign state
+Colorado illustrates the difference between destination fame and count leadership: fewer polygons, larger average mapped size, heavy Epic and Ikon concentration, and high mapped kilometers per area as in [largest ski resorts in the world](largest-ski-resorts-in-the-world.html), but not always the most pins on a state map. Vermont, New Hampshire, California, Oregon, and Washington combine reputation with meaningful counts; Ohio, Maine, Indiana, and Massachusetts contribute club hills absent from glossy pass brochures. Epic and Ikon cover a fraction of U.S. atlas resorts; the majority are independent operators with their own season passes and weekday tickets, which matters for skiers optimizing quantity of days over marquee names—a theme developed in [Epic vs Ikon vs Indy vs Europe](epic-ikon-indy-europe-which-to-choose.html) and [Epic vs Ikon coverage](epic-pass-vs-ikon-pass-resort-coverage.html).
 
-Clustered downhill area from OSM pistes, lifts, boundaries. One corporate brand operating three mountains = three atlas entries if mappers drew three boundaries. Two villages linked by lifts may merge into one polygon.
+Personal geography beats national leaderboards. Enter your address in [drive time map](../DriveTimeMap.html) and count hills inside one-, two-, and three-hour rings; a Chicago skier cares more about Wisconsin and Michigan than Vermont. [Trip planner](../TripPlannerMap.html) and [multi-resort road trip planner](multi-resort-ski-road-trip-planner.html) chain stops for weekend loops; [resort comparison](../resort-comparison.html) pits a hometown hill against a pass flagship on the same stats. Indy Pass explicitly targets independents in high-count states, overlapping the atlas long tail described in [how many ski resorts worldwide](how-many-ski-resorts-worldwide.html). Try the [ski game](/playable/) on a Wisconsin rope tow versus a Colorado bowl to feel how the same dataset describes different skiing cultures.
 
-State from resort centroid vs US polygons. Border weirdness near Tahoe exists; top of the ranking is stable.
-
-We include minimal-lift areas if they're clearly operated downhill venues. That's why we beat trade-association counts — we measure **places you can downhill ski**, not places with PR departments.
-
-Counts change when someone maps a forgotten rope tow or a hill closes. [Resort facts](../SkiResortFacts.html) for latest build.
-
-## Who's actually at the top
-
-**New York** — Often leads or nears #1. Adirondacks and Catskills: Gore and Whiteface down to community hills in Greene and Ulster. NYC and Albany access sustains a highland archipelago pass marketing ignores. [Drive time](../DriveTimeMap.html) from the metro — the two-hour ring is startling.
-
-**Michigan** — UP and northern LP have destination-quality areas (Boyne, Nubs Nob, Bohemia for the brave). Southern LP adds municipal and private hills that inflate the total. Michiganders rotate weekends, not one home mountain.
-
-**Wisconsin** — Granite Peak, Cascade, Devil's Head anchor reputation; long tail of feeder hills teaching Midwestern kids.
-
-**Minnesota** — Afton, Buck Hill, Lutsen at different scales; dozens of smaller areas. Twin Cities: [trip planner](../TripPlannerMap.html) across state lines.
-
-**Pennsylvania** — Poconos commerce plus Laurel Highlands steeps (Seven Springs, Hidden Valley). Eastern density + ski club history.
-
-**Colorado** — **Destination** champion, not always **count** champion. Fewer polygons, bigger average size. High mapped km per area ([largest resorts](largest-ski-resorts-in-the-world.html)), not necessarily most pins in the state.
-
-**Vermont and New Hampshire** — Mad River vs Killington vibes. Both punch above population in count and reputation. Pass and Indy territory.
-
-**California, Oregon, Washington** — Sierra giants plus coastal community areas. Bay Area or Seattle drive-time surfaces more options than ads suggest.
-
-**Ohio, Maine, Indiana, Massachusetts** — Club hills and suburban rope tows. Absent from glossy pass brochures. **American skiing is mostly local.**
-
-## Independents vs pass resorts
-
-Epic and Ikon dominate ads but cover a **fraction** of US atlas resorts. Majority are independent: family-owned, municipal, small corporate, $40 weekday tickets.
-
-Pass resorts cluster Colorado, Utah, California, select Northeast anchors. Independents cluster everywhere else. New York or Michigan skier optimizing **quantity of days** often beats a destination pass with Indy or regional cards — [Epic vs Ikon vs Indy](epic-ikon-indy-europe-which-to-choose.html).
-
-Filter the [map](../mainmap.html) by pass affiliation where tagged. Coastlines and interiors light up with unaffiliated dots — where beginners learn and locals do Tuesday night laps.
-
-## Drive time beats the leaderboard
-
-National counts are party trivia. **Personal** ranking starts at your driveway.
-
-[Drive time map](../DriveTimeMap.html) — one, two, three-hour rings. Chicago skier: Wisconsin and Michigan matter more than Vermont. Phoenix: maybe zero in-state, dozens after a flight.
-
-[Trip planner](../TripPlannerMap.html) for multi-stop loops. State bragging rights mean little if your closest hill is forty minutes away and you've ignored it for years.
-
-## Indy and the long tail
-
-[Indy Pass](https://www.indypass.com/) targets independents — overlaps high-count states on purpose. Epic sells destination dreams; Indy sells volume across small and mid hills.
-
-Live in NY, MI, WI, PA, or MN? Compare: hills in your drive rings, pass-affiliated vs not, many short days vs few long destination weeks. [Comparison tool](../resort-comparison.html) — hometown vs pass flagship. [Beginners](best-ski-resorts-for-beginners.html) for green terrain.
-
-## Play with the data
-
-Sort on the [map](../mainmap.html). [Ski game](/playable/) on a Wisconsin rope tow vs a Colorado bowl — same dataset, completely different feel.
-
-States with the most resorts aren't always the states on lift-line posters. They're where skiing stayed local, fragmented, stubbornly democratic. Count them on the atlas, plan from your driveway, give independents the attention destination marketing steals by default.
+States with the most ski resorts are not always the states on lift-line posters; they are where skiing stayed local, fragmented, and stubbornly democratic. Count them on the atlas, plan from your driveway, and give independents the attention destination marketing steals by default—then improve OSM where your home hill is missing via [how to tag a ski resort in OpenStreetMap](how-to-tag-a-ski-resort-in-openstreetmap.html).

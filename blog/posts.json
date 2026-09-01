@@ -5,7 +5,7 @@
     "description": "Step-by-step OSM tagging for downhill ski areas: boundaries, pistes, lifts, and common mistakes that keep resorts out of Global Ski Atlas.",
     "pillar": "Improve the data",
     "date": "2026-09-01",
-    "readTime": 12,
+    "readTime": 6,
     "featured": true,
     "related": ["ski-resort-stats-explained", "how-many-ski-resorts-worldwide", "ski-lift-types-explained"]
   },
@@ -15,7 +15,7 @@
     "description": "A data-driven count of downhill ski areas worldwide, how we measure them, and where OpenStreetMap coverage is strong or thin.",
     "pillar": "Reveal the dataset",
     "date": "2026-09-01",
-    "readTime": 8,
+    "readTime": 6,
     "related": ["ski-resort-stats-explained", "us-states-most-ski-resorts", "how-to-tag-a-ski-resort-in-openstreetmap"]
   },
   {
@@ -24,7 +24,7 @@
     "description": "Vertical drop, skiable acres, trail counts, and lift totals — and why mapped OpenStreetMap data often differs from resort marketing.",
     "pillar": "Improve the data",
     "date": "2026-09-01",
-    "readTime": 7,
+    "readTime": 6,
     "related": ["how-to-choose-a-ski-resort", "largest-ski-resorts-in-the-world", "how-to-tag-a-ski-resort-in-openstreetmap"]
   },
   {
@@ -33,7 +33,7 @@
     "description": "A step-by-step framework for picking where to ski using comparable stats, drive time, and side-by-side resort comparison.",
     "pillar": "Help skiers decide",
     "date": "2026-09-01",
-    "readTime": 10,
+    "readTime": 6,
     "related": ["epic-ikon-indy-europe-which-to-choose", "best-ski-resorts-for-beginners", "ski-resort-stats-explained"]
   },
   {
@@ -42,7 +42,7 @@
     "description": "The biggest downhill ski areas ranked by mapped skiable terrain from OpenStreetMap — not resort marketing brochures.",
     "pillar": "Reveal the dataset",
     "date": "2026-09-01",
-    "readTime": 9,
+    "readTime": 6,
     "related": ["ski-resort-stats-explained", "how-many-ski-resorts-worldwide", "how-to-choose-a-ski-resort"]
   },
   {
@@ -51,7 +51,7 @@
     "description": "What beginners actually need on the mountain, how we score green terrain and learning lifts, and regional picks in the US and Europe.",
     "pillar": "Help skiers decide",
     "date": "2026-09-01",
-    "readTime": 8,
+    "readTime": 6,
     "related": ["how-to-read-ski-trail-map", "ski-lift-types-explained", "how-to-choose-a-ski-resort"]
   },
   {
@@ -60,7 +60,7 @@
     "description": "Every US state ranked by downhill ski area count from our global dataset — including the independents Epic and Ikon never mention.",
     "pillar": "Reveal the dataset",
     "date": "2026-09-01",
-    "readTime": 8,
+    "readTime": 6,
     "related": ["epic-ikon-indy-europe-which-to-choose", "multi-resort-ski-road-trip-planner", "how-many-ski-resorts-worldwide"]
   },
   {
@@ -69,7 +69,7 @@
     "description": "Every major lift type, what it feels like on the hill, global counts from our dataset, and common OSM tagging mistakes.",
     "pillar": "Improve the data",
     "date": "2026-09-01",
-    "readTime": 8,
+    "readTime": 6,
     "related": ["how-to-tag-a-ski-resort-in-openstreetmap", "best-ski-resorts-for-beginners", "ski-resort-stats-explained"]
   },
   {
@@ -78,7 +78,7 @@
     "description": "Trail colors, lift symbols, and vertical — US vs Europe — plus how to preview terrain in the Global Ski Atlas before you go.",
     "pillar": "Improve the data",
     "date": "2026-09-01",
-    "readTime": 7,
+    "readTime": 6,
     "related": ["best-ski-resorts-for-beginners", "ski-resort-stats-explained", "how-to-tag-a-ski-resort-in-openstreetmap"]
   },
   {
@@ -87,7 +87,7 @@
     "description": "Sample road-trip itineraries, how many days per stop, and how to build routes in the Global Ski Atlas trip planner.",
     "pillar": "Help skiers decide",
     "date": "2026-09-01",
-    "readTime": 9,
+    "readTime": 6,
     "related": ["us-states-most-ski-resorts", "epic-ikon-indy-europe-which-to-choose", "how-to-choose-a-ski-resort"]
   },
   {
@@ -96,7 +96,7 @@
     "description": "How many atlas resorts each pass includes, where they overlap, and what thousands of independent hills are left out.",
     "pillar": "Help skiers decide",
     "date": "2026-09-01",
-    "readTime": 8,
+    "readTime": 6,
     "related": ["epic-ikon-indy-europe-which-to-choose", "us-states-most-ski-resorts", "how-to-choose-a-ski-resort"]
   },
   {
@@ -105,7 +105,7 @@
     "description": "Four different skiing strategies — destination passes, partner networks, independent discovery, and Alpine trips — and how to pick yours.",
     "pillar": "Help skiers decide",
     "date": "2026-09-01",
-    "readTime": 11,
+    "readTime": 6,
     "related": ["epic-pass-vs-ikon-pass-resort-coverage", "multi-resort-ski-road-trip-planner", "how-to-choose-a-ski-resort"]
   },
   {
@@ -114,7 +114,7 @@
     "description": "The geographic extremes of downhill skiing — Arctic Scandinavia to Patagonia — from latitude-sorted atlas data.",
     "pillar": "Reveal the dataset",
     "date": "2026-09-01",
-    "readTime": 7,
+    "readTime": 6,
     "related": ["how-many-ski-resorts-worldwide", "how-to-choose-a-ski-resort", "how-to-tag-a-ski-resort-in-openstreetmap"]
   }
 ]
