@@ -32,7 +32,11 @@
 }
 
 .blog-prose p {
-  margin-top: 1rem;
+  margin-top: 1.25rem;
+}
+
+.blog-prose p:first-child {
+  margin-top: 0;
 }
 
 .blog-prose a {

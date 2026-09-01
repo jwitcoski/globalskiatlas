@@ -1,81 +1,9 @@
-First-timers don't need the steepest cliff in the Alps. They need a forgiving pitch, sensible lifts, and enough green terrain that one icy mishap doesn't strand them on a cat track above their ability.
+First-time skiers do not need the steepest cliff in the Alps; they need forgiving pitch, sensible lifts, and enough green terrain that one mishap does not strand them above their ability. Every resort claims to be family-friendly, but OpenStreetMap lets Global Ski Atlas score beginner-friendliness from trail difficulty tags, learning lifts like magic carpets, and layout signals instead of brochure adjectives. This essay states that data-backed green terrain and lift mix beat marketing for narrowing a continent to a short list, and it explains how we score hills, where OSM caveats apply, and how to compare finalists before booking lessons.
 
-Every resort says "great for families." The details differ. We score beginner-friendliness from **open map data** — share of easy/novice trails, magic carpets and short surface lifts, vertical that doesn't force expert egress on the way home.
+Our beginner score blends the share of mapped piste length tagged easy or novice, the presence of surface lifts and magic carpets near base areas, and heuristics that flag resorts whose green networks cross dangerous expert egress. A single long green from summit to base can inflate green percentages, so we cross-check lift topology; resorts above roughly twenty-five to thirty percent easy length tend to feel genuinely beginner-oriented rather than expert mountains with a token nursery slope. Scores update as OSM improves—a new carpet nobody tagged yet makes a hill look worse in data than on snow—so rankings are guidance, not gospel, with difficulty quirks detailed in [ski resort stats explained](ski-resort-stats-explained.html) and lift context in [ski lift types explained](ski-lift-types-explained.html).
 
-Planning tool, not ski school. Lessons and snow still matter. But to narrow a continent before reading ten resort websites, data beats hype. [Interactive map](../mainmap.html), then [resort comparison](../resort-comparison.html).
+Regional patterns help beginners choose climate and travel trade-offs after data narrows the field. In the US East, areas like Bretton Woods, Jiminy Peak, Holiday Valley, and Snowshoe combine approachable pitch with reasonable drive access from major metros via [drive time map](../DriveTimeMap.html). In the US West, Beaver Creek, Northstar, Deer Valley, and Mt. Bachelor separate learning pods from high-alpine drama, but a huge resort with fifteen percent greens loses to a medium hill with thirty-five percent. In Europe, Lech, Serre Chevalier, La Plagne, and Baqueira Beret illustrate strong beginner networks inside larger Alpine domains, though French blues do not ski like US blues—read [how to read a ski trail map](how-to-read-ski-trail-map.html) before assuming color parity.
 
-Full framework: [how to choose a resort](how-to-choose-a-ski-resort.html). Trail colors: [how to read a trail map](how-to-read-ski-trail-map.html).
+Comparison tools turn scores into decisions. Select two or three candidates in [resort comparison](../resort-comparison.html), sort by green percentage and carpet count, preview pitch on the [interactive map](../mainmap.html), and optionally lap an easy run in the [ski game](/playable/) to feel whether virtual steepness matches your comfort. Pass strategy for a learning year belongs in [Epic vs Ikon vs Indy vs Europe](epic-ikon-indy-europe-which-to-choose.html); the atlas does not sell tickets but helps you avoid destination prices for hills smaller than nearby alternatives listed in [which U.S. states have the most ski resorts](us-states-most-ski-resorts.html).
 
-## How we score it
-
-Weighted blend of mapped features inside each boundary:
-
-**Green/novice trail share** — percentage of piste length tagged easy or novice. Above ~25–30% usually means genuinely beginner-oriented, not an expert mountain with a token nursery. One long green from summit to base can inflate percentages; we cross-check lift topology.
-
-**Learning lifts** — `aerialway=magic_carpet`, rope tows near base. Keeps novices off fast chairs.
-
-**Egress risk** — where mapped, we flag layouts where greens don't cross blues/blacks to get home. Heuristic, not perfect.
-
-**Vertical** — 300–600 m (1,000–2,000 ft) summit-to-base often feels better for day one than 1,000 m glacier descents.
-
-Scores update as OSM improves. New carpets nobody tagged yet = resort looks worse in data than on snow. [Stats explained](ski-resort-stats-explained.html) for difficulty quirks.
-
-## OSM difficulty isn't universal
-
-US: `easy` (green), `intermediate` (blue), `advanced`/`expert` (black/double).
-
-Europe: `novice` and `easy` split nursery from mellow blues; national colors don't always map cleanly.
-
-Japan: bilingual tagging sometimes duplicates the same run.
-
-Mappers mis-tag steep pitches as `easy` because they're wide. Grooming changes; OSM lags. **Verify** with current resort maps and instructors.
-
-Untagged runs land in "unknown." Zoom the [map](../mainmap.html) or [trail facts](../SkiTrailFacts.html). [Lift types](ski-lift-types-explained.html) — T-bars day one are rougher than carpets.
-
-## US East — approachable, close to cities
-
-**Bretton Woods, NH** — wide groomers, gentle reputation, strong green share in our Northeast data.
-
-**Jiminy Peak, MA** — learning pods, multiple surface lifts. Boston/Albany drive markets; [drive time](../DriveTimeMap.html).
-
-**Holiday Valley, NY** — segregated beginner zones, clear carpet coverage in tags.
-
-**Snowshoe, WV** — ridge layout, highest point in a warm region. Compare greens in [comparison](../resort-comparison.html).
-
-East pattern: lower elevation than Rockies, more ice days, shorter drives from dense population. [Road trip post](multi-resort-ski-road-trip-planner.html) for two-hill weekends.
-
-## US West — big mountains, learning pods
-
-**Beaver Creek, CO** — segregated learning, carpets, greens that avoid expert choke points.
-
-**Northstar, CA** — family positioning, green network without glacier-download day one.
-
-**Deer Valley, UT** — ski-only, groomed, premium. No snowboards.
-
-**Mt. Bachelor, OR** — cone layout, beginners on the front side.
-
-West pattern: drive farther, better snow, but **pick right** — 15% greens at a huge resort loses to 35% at a medium hill.
-
-## Europe — nursery sectors and ski school culture
-
-**Lech/Zürs area, Austria** — expert-famous Arlberg, but Lech's beginner blues are extensive and well-mapped.
-
-**Serre Chevalier, France** — sunny villages, long gentle blues.
-
-**La Plagne, France** — plateau sectors for families vs steeper Belle Plagne reputation.
-
-**Baqueira Beret, Spain** — Pyrenees, strong green share vs bigger Alpine names.
-
-Europe pattern: trail colors ≠ US. Trust local schools. [Trail facts](../SkiTrailFacts.html) once you pick a village.
-
-## Compare before you book
-
-Two or three candidates in [resort comparison](../resort-comparison.html). Green %, carpet count, base elevation. [AI assistant](../skiing-ai.html) for natural-language filters — then verify.
-
-Passes: [Epic vs Ikon vs Indy vs Europe](epic-ikon-indy-europe-which-to-choose.html).
-
-## Ski game preview
-
-Percentages help; **pitch** matters for beginners. [Ski game](/playable/) renders OSM trails with simplified physics. Easy-rated run feels steep in-game? Budget an extra lesson day.
-
-Best beginner resort = abundant green, learning lifts near the lodge, layout that doesn't funnel novices onto expert exits. Shortlist with atlas scores, book lessons — not bragging rights.
+The best beginner resort offers abundant green terrain, learning lifts near the lodge, and a layout that does not funnel novices onto expert exits. Use atlas scores to build a short list, verify with instructors and current grooming reports, and book lessons rather than bragging rights. Data narrows the field; snow and teaching close the deal—and better OSM tags from [how to tag a ski resort in OpenStreetMap](how-to-tag-a-ski-resort-in-openstreetmap.html) help the next family choose fairly.

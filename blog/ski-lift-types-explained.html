@@ -96,88 +96,13 @@
     <article class="tw-mx-auto tw-max-w-3xl">
       <p class="blog-pillar">Improve the data</p>
       <h1 class="tw-mt-2 tw-text-3xl tw-font-bold tw-text-black max-md:tw-text-2xl">Chairlifts, Gondolas, and T-Bars: Ski Lift Types Explained</h1>
-      <p class="blog-meta tw-mt-3">September 1, 2026 · 8 min read</p>
+      <p class="blog-meta tw-mt-3">September 1, 2026 · 6 min read</p>
       <p class="tw-mt-4 tw-text-lg tw-leading-relaxed tw-text-gray-600">Every major lift type, what it feels like on the hill, global counts from our dataset, and common OSM tagging mistakes.</p>
-      <div class="blog-prose tw-mt-8"><p>Lift type shapes your day as much as trail color. Ten high-speed quads make a resort feel smaller than three slow doubles serving the same acreage. Beginners panic on T-bars; families love gondolas in wind.</p>
-<p>We catalog every mapped <code>aerialway</code> in OSM — per resort and country. <a href="../SkiLiftFacts.html" rel="noopener noreferrer" target="_blank">Lift facts</a>, <a href="../mainmap.html" rel="noopener noreferrer" target="_blank">map</a>, <a href="../resort-comparison.html" rel="noopener noreferrer" target="_blank">comparison</a>. Trail symbology: <a href="how-to-read-ski-trail-map.html" rel="noopener noreferrer" target="_blank">how to read a trail map</a>. Mappers: <a href="how-to-tag-a-ski-resort-in-openstreetmap.html" rel="noopener noreferrer" target="_blank">tagging guide</a>.</p>
-<h3 id="osm-vocabulary-what-we-actually-count">OSM vocabulary (what we actually count)</h3>
-<table>
-<thead>
-<tr>
-<th>OSM value</th>
-<th>Skier name</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>chair_lift</code></td>
-<td>Fixed-grip chair</td>
-</tr>
-<tr>
-<td><code>detachable</code></td>
-<td>High-speed chair</td>
-</tr>
-<tr>
-<td><code>gondola</code></td>
-<td>Enclosed cabin</td>
-</tr>
-<tr>
-<td><code>cable_car</code></td>
-<td>Big tram (two cabins)</td>
-</tr>
-<tr>
-<td><code>mixed_lift</code></td>
-<td>Chondola</td>
-</tr>
-<tr>
-<td><code>t-bar</code>, <code>j-bar</code>, <code>platter</code></td>
-<td>Surface drags</td>
-</tr>
-<tr>
-<td><code>rope_tow</code></td>
-<td>Rope tow</td>
-</tr>
-<tr>
-<td><code>magic_carpet</code></td>
-<td>Conveyor</td>
-</tr>
-<tr>
-<td><code>drag_lift</code></td>
-<td>Generic drag</td>
-</tr>
-</tbody>
-</table>
-<p><code>aerialway:occupancy</code>, <code>bubble</code>, <code>heating</code> — nice when mappers add them; often missing.</p>
-<h3 id="chairs-fixed-vs-detachable">Chairs: fixed vs detachable</h3>
-<p><strong>Fixed-grip</strong> (<code>chair_lift</code>) — continuous cable, moderate speed, loading timing matters. Saturday mazes at the base.</p>
-<p><strong>Detachable</strong> — chairs slow in terminal, haul on the line. Ten minutes to summit changes lunch plans.</p>
-<p>Some mappers use <code>chair_lift</code> + <code>aerialway:detachable=yes</code> instead of primary <code>detachable</code>. Counts can run slightly low until tags harmonize.</p>
-<h3 id="gondolas-and-cable-cars">Gondolas and cable cars</h3>
-<p><strong>Gondola</strong> — enclosed, skis outside or in hand. Wind, whiteouts, beginners. Valley links in the Alps.</p>
-<p><strong>Cable car</strong> — Jackson Big Red scale. OSM distinguishes from gondola; skiers often say "gondola" for both.</p>
-<h3 id="surface-lifts">Surface lifts</h3>
-<p><strong>Magic carpet</strong> — beginners. Strong signal in <a href="best-ski-resorts-for-beginners.html" rel="noopener noreferrer" target="_blank">beginner scoring</a>.</p>
-<p><strong>Rope tow</strong> — Midwest and eastern classics. Miserable on steep pitches; perfect on bunny slopes.</p>
-<p><strong>T-bar / platter</strong> — Europe and the American West on narrow trails. Beginners struggle; locals don't notice.</p>
-<h3 id="global-mix-rough">Global mix (rough)</h3>
-<p>Chairs dominate worldwide, especially North America. Gondolas cluster Alps, Japan, valley-link resorts. Drags and T-bars stay common in Austria, Scandinavia, eastern Europe.</p>
-<p>Carpets skew US learning pods; older European nurseries still have rope tows.</p>
-<p><a href="../SkiLiftFacts.html" rel="noopener noreferrer" target="_blank">Lift facts</a> by country — Austria's drag density vs Colorado's quad portfolios.</p>
-<h3 id="tagging-mistakes-that-skew-data">Tagging mistakes that skew data</h3>
-<p><strong>Pylons as lifts</strong> — most common. One <code>aerialway=chair_lift</code> way along the cable; pylons optional, not counted as lifts.</p>
-<p><strong>Duplicate parallel ways</strong> — double capacity in comparison tables.</p>
-<p><strong>Wrong subtype</strong> — carpet tagged rope tow; detachable quad as fixed chair. Matters for beginners.</p>
-<p><strong>Lifts outside resort polygon</strong> — don't count toward that resort even if you ski them daily. Boundary fixes &gt; lift retagging.</p>
-<p>Edit OSM; atlas refreshes from community data.</p>
-<h3 id="explore-in-the-atlas">Explore in the atlas</h3>
-<p>Popup on <a href="../mainmap.html" rel="noopener noreferrer" target="_blank">mainmap</a> — lift count by type. <a href="../resort-comparison.html" rel="noopener noreferrer" target="_blank">Comparison</a> — Beaver Creek vs drag-heavy Austrian hill. <a href="../SkiLiftFacts.html" rel="noopener noreferrer" target="_blank">Lift facts</a> — length, elevation, records. <a href="../SkiTrailFacts.html" rel="noopener noreferrer" target="_blank">Trail facts</a> — pair endpoints with run difficulty. <a href="/playable/" rel="noopener noreferrer" target="_blank">Ski game</a> — layout echo.</p>
-<h3 id="match-lifts-to-your-group">Match lifts to your group</h3>
-<p>First-day beginners: carpets and short fixed chairs; avoid T-bar-only mountains unless lessons cover drags.</p>
-<p>Families: gondolas reduce wind meltdowns.</p>
-<p>Powder hounds: detachable quads for laps; gondolas secondary.</p>
-<p>Budget road trips: drag-lift hills often cheaper — <a href="us-states-most-ski-resorts.html" rel="noopener noreferrer" target="_blank">US states</a>.</p>
-<p><a href="how-to-choose-a-ski-resort.html" rel="noopener noreferrer" target="_blank">How to choose a resort</a> folds lift mix into the bigger picture.</p>
-<p>Lifts are plumbing. OSM's <code>aerialway</code> vocabulary works if mappers use it consistently. We expose the plumbing so you compare on facts, not one long line in 2019. Learn the types, fix tagging errors, check <a href="../SkiLiftFacts.html" rel="noopener noreferrer" target="_blank">lift facts</a> before a six-hour drive to the wrong hill.</p></div>
+      <div class="blog-prose tw-mt-8"><p>Lift technology shapes your ski day as much as trail color: ten high-speed quads make a resort feel smaller than three slow doubles serving the same acreage, and beginners panic on T-bars while families prefer gondolas in wind. Global Ski Atlas catalogs every mapped <code>aerialway</code> in OpenStreetMap and rolls counts per resort and country on <a href="../SkiLiftFacts.html" rel="noopener noreferrer" target="_blank">Ski Lift Facts</a>. This essay explains why lift type matters for resort choice, how OSM tags map to skier language, and which tagging mistakes skew the data skiers rely on when comparing mountains.</p>
+<p>OSM uses <code>aerialway=*</code> on ways following cable paths: <code>chair_lift</code> and <code>detachable</code> for chairs, <code>gondola</code> and <code>cable_car</code> for enclosed carriers, <code>t-bar</code>, <code>platter</code>, <code>rope_tow</code>, and <code>magic_carpet</code> for surface lifts, with <code>mixed_lift</code> for chondolas. Fixed-grip chairs cap throughput on busy weekends; detachables shrink a mountain psychologically by cutting ride time; gondolas protect beginners and link valleys in the Alps. Worldwide, chairs dominate North America while gondolas cluster in Europe and Japan and drags remain common in Austria and Scandinavia—patterns visible when sorting <a href="../SkiLiftFacts.html" rel="noopener noreferrer" target="_blank">lift facts</a> by country and pairing with <a href="ski-resort-stats-explained.html" rel="noopener noreferrer" target="_blank">ski resort stats explained</a> for resort-level totals.</p>
+<p>Tagging errors propagate into comparison tables until mappers fix them, which is why lift literacy matters for data quality as well as trip planning. The most frequent mistake maps lift pylons as lifts or duplicates parallel ways after remapping, inflating counts or creating phantom capacity. Wrong subtypes—carpets tagged as rope tows, detachable quads as fixed chairs—mislead beginner research tied to <a href="best-ski-resorts-for-beginners.html" rel="noopener noreferrer" target="_blank">best ski resorts for beginners</a>. Lifts drawn outside resort polygons do not count toward that resort even if skiers use them daily, so boundary fixes often matter more than retagging lines, as covered in <a href="how-to-tag-a-ski-resort-in-openstreetmap.html" rel="noopener noreferrer" target="_blank">how to tag a ski resort in OpenStreetMap</a>.</p>
+<p>Match lifts to your group when choosing where to ski. First-day beginners should prioritize magic carpets and short fixed chairs; families benefit from gondolas; powder hounds want detachable quads for lap count; budget road trippers often find cheaper tickets at drag-lift hills in high-count states from <a href="us-states-most-ski-resorts.html" rel="noopener noreferrer" target="_blank">which U.S. states have the most ski resorts</a>. Explore mixes on the <a href="../mainmap.html" rel="noopener noreferrer" target="_blank">interactive map</a>, compare Beaver Creek to a drag-heavy Austrian hill in <a href="../resort-comparison.html" rel="noopener noreferrer" target="_blank">resort comparison</a>, and preview layout in the <a href="/playable/" rel="noopener noreferrer" target="_blank">ski game</a>. <a href="how-to-choose-a-ski-resort.html" rel="noopener noreferrer" target="_blank">How to choose a ski resort</a> folds lift mix into a broader framework alongside trail maps from <a href="how-to-read-ski-trail-map.html" rel="noopener noreferrer" target="_blank">how to read a ski trail map</a>.</p>
+<p>Lifts are the plumbing of a ski area; OSM’s <code>aerialway</code> vocabulary works when mappers use it consistently. Learn the types, spot tagging errors, check <a href="../SkiLiftFacts.html" rel="noopener noreferrer" target="_blank">lift facts</a> before a six-hour drive to the wrong hill, and edit OSM when you find mistakes—the atlas refreshes from community data, and accurate lift tags make fair comparison possible across every downhill area we index.</p></div>
       <section class="blog-related" aria-label="Related articles">
           <h2 class="tw-text-xl tw-font-semibold tw-text-black">Related articles</h2>
           <ul class="tw-mt-4"><li><a href="how-to-tag-a-ski-resort-in-openstreetmap.html">How to Tag a Ski Resort in OpenStreetMap (So It Shows Up in the Atlas)</a></li>
