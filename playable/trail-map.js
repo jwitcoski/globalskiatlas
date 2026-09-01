@@ -506,16 +506,19 @@ export function pickTrailOnMap(map, raycaster, camera, ndc) {
   return hits[0]?.object?.userData?.courseId || null;
 }
 
-export function fitLobbyClip(camera, controls) {
+const CLIP_SMOOTH = 9;
+
+export function fitLobbyClip(camera, controls, dt = 1 / 60, span = 4000) {
   if (!camera || !controls) return;
   const d = camera.position.distanceTo(controls.target);
   const near = Math.min(28, Math.max(1.2, d * 0.0045));
-  const far = Math.max(9000, d * 22, d + 3200);
-  const nearCh = Math.abs(camera.near - near) / near;
-  const farCh = Math.abs(camera.far - far) / far;
-  if (nearCh < 0.18 && farCh < 0.18) return;
-  camera.near = near;
-  camera.far = far;
+  const far = Math.max(12000, span * 2.4, d * 22, d + 3200);
+  const t = 1 - Math.exp(-CLIP_SMOOTH * Math.min(dt, 0.05));
+  const nextNear = camera.near + (near - camera.near) * t;
+  const nextFar = camera.far + (far - camera.far) * t;
+  if (Math.abs(nextNear - camera.near) < 0.02 && Math.abs(nextFar - camera.far) < nextFar * 0.0004) return;
+  camera.near = nextNear;
+  camera.far = nextFar;
   camera.updateProjectionMatrix();
 }
 
@@ -549,7 +552,7 @@ export function frameTrailOverview(camera, controls, map, island) {
     controls.screenSpacePanning = true;
     controls.update();
   }
-  fitLobbyClip(camera, controls);
+  fitLobbyClip(camera, controls, 1 / 60, span);
 }
 
 /** Keep the trail-map orbit on the ski area so zoom/pan cannot lose the mountain. */

@@ -38,7 +38,7 @@ import {
   makeFallingSnow,
   updateFallingSnow,
   setInspectAtmosphere,
-} from "./look.js?v=mob1";
+} from "./look.js?v=lod1";
 import { addResortIsland, updateIslandDust } from "./island.js?v=island10";
 import { bindUi, setHud, openPanel, closePanel, updateLoading, setOsmMapNote, setResortTitle, compactUi } from "./ui.js?v=mapctrl1";
 import { atlasStatsHtml, prefetchWikiIndex } from "./atlas-stats.js?v=stats1";
@@ -65,7 +65,7 @@ import {
   classifyDifficulty,
   markerSvg,
   parseSkiArea,
-} from "./trail-map.js?v=mapctrl1";
+} from "./trail-map.js?v=lod1";
 import { makeMinimap } from "./minimap.js?v=feel6";
 import { createNpcSkiers, clearNpcSkiers, tickNpcSkiers } from "./npc-skiers.js?v=feel6";
 import { updateTraffic } from "./traffic.js?v=vis16";
@@ -386,6 +386,22 @@ function setIslandLobby(on) {
   if (dust) dust.pts.visible = on;
 }
 
+function lobbySpan() {
+  return trailMap?.bounds?.span || scene.userData.island?.span || 4000;
+}
+
+/** Lobby shows the coarse island; play shows the full Draco terrain mesh. */
+function setTerrainLobbyMode(lobby) {
+  const terrain = scene.userData.terrainRoot;
+  const island = scene.userData.island?.root;
+  if (island) {
+    island.visible = lobby;
+    if (terrain) terrain.visible = !lobby;
+  } else if (terrain) {
+    terrain.visible = true;
+  }
+}
+
 function setPistePlayMode(playing) {
   const root = scene.userData.pisteDecor;
   if (!root) return;
@@ -410,8 +426,9 @@ function enterLobby(reframe) {
   if (!run) return;
   run.phase = "ready";
   acc = 0;
-  setInspectAtmosphere(scene, look, true);
+  setInspectAtmosphere(scene, look, true, lobbySpan());
   setIslandLobby(true);
+  setTerrainLobbyMode(true);
   if (trailMap) trailMap.root.visible = true;
   setPlayableVisible(false);
   orbit.enabled = true;
@@ -433,6 +450,7 @@ function exitLobby() {
   fitPlayClip(camera);
   setInspectAtmosphere(scene, look, false);
   setIslandLobby(false);
+  setTerrainLobbyMode(false);
   if (trailMap) trailMap.root.visible = false;
   setPlayableVisible(true);
   document.body.style.cursor = "";
@@ -777,9 +795,11 @@ async function loadMountain() {
       }
     });
     terrainRoot = gltf.scene;
+    scene.userData.terrainRoot = terrainRoot;
     scene.add(gltf.scene);
   } catch (meshErr) {
     console.warn("terrain mesh failed; skiing on heightfield only", meshErr);
+    scene.userData.terrainRoot = null;
   }
 
   const graph = await loadJSON(manifest.gameplay.routes_graph);
@@ -869,6 +889,7 @@ async function loadMountain() {
     scene.remove(scene.userData.island.root);
     scene.userData.island = null;
   }
+  scene.userData.terrainRoot = terrainRoot;
   try {
     addResortIsland(THREE, scene, hf, skiArea, scene.userData.osmHull);
     if (terrainRoot) terrainRoot.visible = false;
@@ -1156,7 +1177,7 @@ function tick(now) {
     applyLobbyZoom(frameDt);
     orbit.update();
     clampLobbyOrbit(camera, orbit, trailMap, scene.userData.island);
-    fitLobbyClip(camera, orbit);
+    fitLobbyClip(camera, orbit, frameDt, lobbySpan());
     updateTrailMapLod(trailMap, camera);
   }
   if (run?.phase === "ready") updateIslandDust(scene.userData.island, frameDt);

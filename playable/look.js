@@ -168,13 +168,21 @@ const INSPECT_BG = 0x7eb8e4;
 const SKI_TOP = 0x4ea6e0;
 const SKI_HORIZON = 0xd7ebf7;
 
-/** Lobby / examine: no distance fog. Ski run keeps winter haze. */
-export function setInspectAtmosphere(scene, look, inspect) {
+/** Lobby: light haze so distant ridges fade. Ski run keeps winter haze. */
+export function setInspectAtmosphere(scene, look, inspect, span = 4000) {
   const sky = look?.sky;
   const u = sky?.material?.uniforms;
   const sun = look?.sun;
   if (inspect) {
-    scene.fog = null;
+    const fogFar = Math.max(4500, span * 2.2);
+    const fogNear = Math.max(500, span * 0.32);
+    if (!scene.userData.lobbyFog) {
+      scene.userData.lobbyFog = new THREE.Fog(INSPECT_BG, fogNear, fogFar);
+    } else {
+      scene.userData.lobbyFog.near = fogNear;
+      scene.userData.lobbyFog.far = fogFar;
+    }
+    scene.fog = scene.userData.lobbyFog;
     scene.background = new THREE.Color(INSPECT_BG);
     if (u?.uTop) u.uTop.value.setHex(INSPECT_TOP);
     if (u?.uHorizon) u.uHorizon.value.setHex(INSPECT_HORIZON);
