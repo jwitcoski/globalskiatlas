@@ -24,7 +24,7 @@ import {
 import { featuredCourses, attachPisteDifficulty, courseFinish, createRun, tickRun, formatTime } from "./run.js?v=map4";
 import { coordsToXz, attachPiste, resetScore, tickScore, commitBestScore, formatScore, distToPolyline, applyWipeout } from "./score.js?v=feel4";
 import { orientPiste, alongTrack, alongPolyline } from "./gates.js?v=vis18";
-import { addOsmWorld } from "./osm-world.js?v=island14";
+import { addOsmWorld } from "./osm-world.js?v=lod3";
 import {
   snowTerrainMaterial,
   addSkyAndLights,
@@ -38,13 +38,13 @@ import {
   makeFallingSnow,
   updateFallingSnow,
   setInspectAtmosphere,
-} from "./look.js?v=lod1";
-import { addResortIsland, updateIslandDust } from "./island.js?v=island10";
+} from "./look.js?v=lod3";
+import { addResortIsland, updateIslandDust, updateIslandLod, setIslandOpacity, resetIslandLod } from "./island.js?v=lod3";
 import { bindUi, setHud, openPanel, closePanel, updateLoading, setOsmMapNote, setResortTitle, compactUi } from "./ui.js?v=mapctrl1";
 import { atlasStatsHtml, prefetchWikiIndex } from "./atlas-stats.js?v=stats1";
 import { bindFinishChartScope, finishChartsHtml, prefetchFinishCharts } from "./finish-charts.js?v=1";
 import { bindOsmFix, osmFixHtml, osmFixContext } from "./osm-fix.js?v=1";
-import { showPickerMap, destroyPickerMap } from "./picker-map.js?v=mob2";
+import { showPickerMap, destroyPickerMap } from "./picker-map.js?v=lod3";
 import { capDpr, attachDebug } from "./debug.js?v=mob1";
 import { intentsFrom, isTurning, analogAxes } from "./input.js?v=mob1";
 import { bindMobileChrome, bindPads } from "./mobile.js?v=mob2";
@@ -65,7 +65,7 @@ import {
   classifyDifficulty,
   markerSvg,
   parseSkiArea,
-} from "./trail-map.js?v=lod1";
+} from "./trail-map.js?v=lod3";
 import { makeMinimap } from "./minimap.js?v=feel6";
 import { createNpcSkiers, clearNpcSkiers, tickNpcSkiers } from "./npc-skiers.js?v=feel6";
 import { updateTraffic } from "./traffic.js?v=vis16";
@@ -390,16 +390,99 @@ function lobbySpan() {
   return trailMap?.bounds?.span || scene.userData.island?.span || 4000;
 }
 
+const HANDOFF_SEC = 0.65;
+let lobbyHandoff = null; // { t, duration }
+
+function setRootOpacity(root, opacity) {
+  if (!root) return;
+  root.traverse((o) => {
+    if (!o.isMesh) return;
+    const mats = Array.isArray(o.material) ? o.material : [o.material];
+    for (const m of mats) {
+      if (!m) continue;
+      // Snow materials are authored fully opaque; never latch a mid-fade value.
+      if (m.userData.baseOpacity == null) m.userData.baseOpacity = 1;
+      const op = Math.max(0, Math.min(1, opacity)) * m.userData.baseOpacity;
+      m.opacity = op;
+      m.transparent = op < 0.995;
+      m.depthWrite = op > 0.55;
+      m.needsUpdate = true;
+    }
+  });
+}
+
+function finalizeTerrainOpaque(root) {
+  if (!root) return;
+  root.traverse((o) => {
+    if (!o.isMesh) return;
+    const mats = Array.isArray(o.material) ? o.material : [o.material];
+    for (const m of mats) {
+      if (!m) continue;
+      m.opacity = m.userData.baseOpacity ?? 1;
+      m.transparent = false;
+      m.depthWrite = true;
+      m.needsUpdate = true;
+    }
+  });
+}
+
 /** Lobby shows the coarse island; play shows the full Draco terrain mesh. */
 function setTerrainLobbyMode(lobby) {
+  lobbyHandoff = null;
   const terrain = scene.userData.terrainRoot;
-  const island = scene.userData.island?.root;
-  if (island) {
-    island.visible = lobby;
-    if (terrain) terrain.visible = !lobby;
+  const island = scene.userData.island;
+  if (island?.root) {
+    island.root.visible = lobby;
+    if (terrain) {
+      terrain.visible = !lobby;
+      if (!lobby) finalizeTerrainOpaque(terrain);
+      else setRootOpacity(terrain, 0);
+    }
+    if (lobby) resetIslandLod(island, camera);
+    else setIslandOpacity(island, 0);
   } else if (terrain) {
     terrain.visible = true;
+    finalizeTerrainOpaque(terrain);
   }
+}
+
+function beginLobbyHandoff() {
+  const terrain = scene.userData.terrainRoot;
+  const island = scene.userData.island;
+  // Only crossfade when leaving the lobby island view — avoid a flash on restart.
+  const fromLobby = !!(island?.root?.visible);
+  if (!terrain || !island?.root || !fromLobby) {
+    setTerrainLobbyMode(false);
+    return false;
+  }
+  island.root.visible = true;
+  terrain.visible = true;
+  setIslandOpacity(island, 1, { capture: true });
+  setRootOpacity(terrain, 0);
+  lobbyHandoff = { t: 0, duration: HANDOFF_SEC };
+  return true;
+}
+
+function tickLobbyHandoff(dt) {
+  if (!lobbyHandoff) return false;
+  lobbyHandoff.t += dt;
+  const u = Math.min(1, lobbyHandoff.t / lobbyHandoff.duration);
+  // ease-in-out
+  const e = u * u * (3 - 2 * u);
+  const island = scene.userData.island;
+  const terrain = scene.userData.terrainRoot;
+  setIslandOpacity(island, 1 - e);
+  setRootOpacity(terrain, e);
+  if (u >= 1) {
+    lobbyHandoff = null;
+    if (island?.root) island.root.visible = false;
+    if (terrain) {
+      terrain.visible = true;
+      finalizeTerrainOpaque(terrain);
+    }
+    return false;
+  }
+  return true;
 }
 
 function setPistePlayMode(playing) {
@@ -426,6 +509,7 @@ function enterLobby(reframe) {
   if (!run) return;
   run.phase = "ready";
   acc = 0;
+  lobbyHandoff = null;
   setInspectAtmosphere(scene, look, true, lobbySpan());
   setIslandLobby(true);
   setTerrainLobbyMode(true);
@@ -439,6 +523,7 @@ function enterLobby(reframe) {
   }
   setTrailMapSelection(trailMap, activeCourse?.id);
   updateTrailMapLod(trailMap, camera);
+  updateIslandLod(scene.userData.island, camera);
   document.body.style.cursor = "grab";
   showReady();
 }
@@ -450,7 +535,7 @@ function exitLobby() {
   fitPlayClip(camera);
   setInspectAtmosphere(scene, look, false);
   setIslandLobby(false);
-  setTerrainLobbyMode(false);
+  beginLobbyHandoff();
   if (trailMap) trailMap.root.visible = false;
   setPlayableVisible(true);
   document.body.style.cursor = "";
@@ -1179,7 +1264,9 @@ function tick(now) {
     clampLobbyOrbit(camera, orbit, trailMap, scene.userData.island);
     fitLobbyClip(camera, orbit, frameDt, lobbySpan());
     updateTrailMapLod(trailMap, camera);
+    updateIslandLod(scene.userData.island, camera);
   }
+  if (lobbyHandoff) tickLobbyHandoff(frameDt);
   if (run?.phase === "ready") updateIslandDust(scene.userData.island, frameDt);
   if (scene.userData.traffic && hf) updateTraffic(scene.userData.traffic, frameDt, (x, z) => hf.sample(x, z));
   if (mini && run) {

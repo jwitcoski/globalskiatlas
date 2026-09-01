@@ -249,8 +249,11 @@ function rockColor(u, n) {
   return [base[0] * s, base[1] * s, base[2] * s];
 }
 
-function buildTop(THREE, hf, poly) {
-  const stride = Math.max(1, Math.floor(Math.min(hf.rows, hf.cols) / 380));
+/** Higher quality → smaller stride → more tris. Far/coarse + near/fine (2 LODs keeps VRAM down). */
+const TOP_QUALITIES = [140, 360];
+
+function buildTop(THREE, hf, poly, quality = 380) {
+  const stride = Math.max(1, Math.floor(Math.min(hf.rows, hf.cols) / quality));
   const pos = [];
   const col = [];
   const snow = [0.96, 0.97, 0.98];
@@ -272,6 +275,26 @@ function buildTop(THREE, hf, poly) {
     }
   }
   return pos.length ? makeGeo(THREE, pos, col) : null;
+}
+
+function makeTopMaterial(THREE) {
+  return new THREE.MeshLambertMaterial({
+    color: 0xf4f7fa,
+    vertexColors: true,
+    side: THREE.DoubleSide,
+    depthWrite: true,
+    transparent: true,
+    opacity: 1,
+  });
+}
+
+function setMatOpacity(mat, opacity) {
+  if (!mat) return;
+  const op = Math.max(0, Math.min(1, opacity));
+  mat.opacity = op;
+  mat.transparent = op < 0.995;
+  mat.depthWrite = op > 0.55;
+  mat.needsUpdate = true;
 }
 
 /**
@@ -456,6 +479,87 @@ export function updateIslandDust(island, dt) {
   dust.pts.geometry.attributes.position.needsUpdate = true;
 }
 
+/**
+ * Soft LOD handoff for lobby snow tops. Level 0 = far/coarse, 1 = near/fine.
+ * Rock fades as the camera zooms in so the silhouette does not pop.
+ */
+export function updateIslandLod(island, camera) {
+  if (!island?.tops?.length || !camera || !island.center) return;
+  island._lastCam = camera;
+  if (island.handoffLock) return;
+  const c = island.center;
+  const dist = Math.hypot(camera.position.x - c.x, camera.position.y - c.y, camera.position.z - c.z);
+  const span = island.span || 4000;
+  const nearD = Math.max(420, span * 0.32);
+  const farD = Math.max(nearD + 280, span * 1.05);
+  let level = (farD - dist) / (farD - nearD);
+  if (!Number.isFinite(level)) level = 0.5;
+  level = Math.max(0, Math.min(1, level));
+  island.lodLevel = level;
+
+  const i0 = Math.floor(level);
+  const i1 = Math.min(island.tops.length - 1, i0 + 1);
+  const frac = level - i0;
+  for (let i = 0; i < island.tops.length; i++) {
+    const mesh = island.tops[i];
+    if (!mesh) continue;
+    let op = 0;
+    if (i === i0 && i === i1) op = 1;
+    else if (i === i0) op = 1 - frac;
+    else if (i === i1) op = frac;
+    mesh.visible = op > 0.02;
+    setMatOpacity(mesh.material, op);
+  }
+
+  // Rock/chunks: full at far, gone near the snow.
+  const rockOp = Math.max(0, Math.min(1, 1 - (level - 0.15) / 0.75));
+  if (island.rockMat) setMatOpacity(island.rockMat, rockOp);
+  if (island.rock) island.rock.visible = rockOp > 0.02;
+  if (island.chunks) {
+    for (const ch of island.chunks) ch.visible = rockOp > 0.05;
+  }
+}
+
+/** Fade the whole island (tops + rock) for lobby→play handoff. */
+export function setIslandOpacity(island, opacity, opts = {}) {
+  if (!island) return;
+  const op = Math.max(0, Math.min(1, opacity));
+  island.handoffLock = true;
+  if (opts.capture) {
+    for (const mesh of island.tops || []) {
+      if (!mesh) continue;
+      mesh.userData.handoffBase = mesh.visible ? mesh.material.opacity ?? 1 : 0;
+    }
+    if (island.rockMat) {
+      island.rockMat.userData.handoffBase = island.rock?.visible ? island.rockMat.opacity ?? 1 : 0;
+    }
+  }
+  for (const mesh of island.tops || []) {
+    if (!mesh) continue;
+    const base = opts.capture || mesh.userData.handoffBase != null ? mesh.userData.handoffBase ?? 1 : 1;
+    const o = base * op;
+    mesh.visible = o > 0.02;
+    setMatOpacity(mesh.material, o);
+  }
+  if (island.rockMat) {
+    const base = island.rockMat.userData.handoffBase != null ? island.rockMat.userData.handoffBase : 1;
+    const o = base * op;
+    setMatOpacity(island.rockMat, o);
+    if (island.rock) island.rock.visible = o > 0.02;
+    if (island.chunks) {
+      for (const ch of island.chunks) ch.visible = o > 0.05;
+    }
+  }
+  if (island.root) island.root.visible = op > 0.02;
+}
+
+export function resetIslandLod(island, camera) {
+  if (!island) return;
+  island.handoffLock = false;
+  if (island.root) island.root.visible = true;
+  if (camera || island._lastCam) updateIslandLod(island, camera || island._lastCam);
+}
+
 export function addResortIsland(THREE, scene, hf, skiArea, osmHull) {
   let poly = Array.isArray(osmHull) && osmHull.length >= 3 ? osmHull : null;
   if (!poly || poly.length < 3) poly = boundsPoly(hf);
@@ -479,22 +583,21 @@ export function addResortIsland(THREE, scene, hf, skiArea, osmHull) {
   const group = new THREE.Group();
   group.name = "resort-island";
 
-  const topGeo = buildTop(THREE, hf, poly);
-  if (topGeo) {
-    const top = new THREE.Mesh(
-      topGeo,
-      new THREE.MeshLambertMaterial({
-        color: 0xf4f7fa,
-        vertexColors: true,
-        side: THREE.DoubleSide,
-        depthWrite: true,
-        transparent: false,
-      }),
-    );
+  const tops = [];
+  for (let i = 0; i < TOP_QUALITIES.length; i++) {
+    const geo = buildTop(THREE, hf, poly, TOP_QUALITIES[i]);
+    if (!geo) continue;
+    const top = new THREE.Mesh(geo, makeTopMaterial(THREE));
     top.receiveShadow = true;
     top.castShadow = false;
-    top.name = "island-top";
+    top.name = `island-top-lod${i}`;
+    top.renderOrder = i;
+    // Start with the fine LOD visible; updateIslandLod will refine.
+    const show = i === TOP_QUALITIES.length - 1;
+    top.visible = show;
+    setMatOpacity(top.material, show ? 1 : 0);
     group.add(top);
+    tops.push(top);
   }
 
   const rim = resampleClosed(shrinkToward(poly, cx, cz, hf.cell * 0.75), Math.max(10, span * RIM_SPACING_FRAC));
@@ -515,7 +618,7 @@ export function addResortIsland(THREE, scene, hf, skiArea, osmHull) {
     metalness: 0,
     vertexColors: true,
     flatShading: true,
-    transparent: false,
+    transparent: true,
     opacity: 1,
     side: THREE.FrontSide,
     envMap: scene.userData.envMap || null,
@@ -527,17 +630,29 @@ export function addResortIsland(THREE, scene, hf, skiArea, osmHull) {
   fill.name = "island-rock";
   group.add(fill);
 
+  const chunks = [];
+  const before = group.children.length;
   addChunks(THREE, group, rockMat, rim, cx, cz, rock.apex, depth, baseY);
+  for (let i = before; i < group.children.length; i++) {
+    const ch = group.children[i];
+    if (ch.name === "island-chunk") chunks.push(ch);
+  }
   const dust = addDust(THREE, group, rim, cx, cz, baseY, rock.apex, depth);
 
   scene.add(group);
   scene.userData.island = {
     root: group,
+    tops,
+    rock: fill,
+    rockMat,
+    chunks,
     dust,
     hull: poly,
     center: { x: cx, y: (hf.min + hf.max) * 0.5, z: cz },
     tip: rock.apex,
     span,
+    lodLevel: 1,
+    handoffLock: false,
   };
   return group;
 }

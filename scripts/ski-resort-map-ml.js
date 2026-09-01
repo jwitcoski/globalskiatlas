@@ -11,7 +11,7 @@ import {
   ensureBoundaryLayersOnBottom,
   fetchSkiAreaCatalog,
   restoreSkiPmtilesAfterStyleChange
-} from './pmtiles-core.js';
+} from './pmtiles-core.js?v=bound2';
 import {
   getProp, escapeHtml, resortDisplayName, ENGLISH_NAME_KEYS,
   NAME_KEYS, COUNTRY_KEYS, STATE_KEYS,

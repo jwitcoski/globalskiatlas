@@ -262,7 +262,14 @@ function featureDedupeKey(f) {
 
 /** Fetch resort boundaries directly from PMTiles (works even when MapLibre protocol fails). */
 export async function syncBoundaryOverlayDirect(map) {
-  const src = map.getSource(SKI_BOUNDARY_OVERLAY_SOURCE);
+  if (!map || map.__destroyed) return 0;
+  let src;
+  try {
+    if (!map.getStyle?.()) return 0;
+    src = map.getSource(SKI_BOUNDARY_OVERLAY_SOURCE);
+  } catch {
+    return 0;
+  }
   if (!src) return 0;
 
   const z = map.getZoom();
@@ -371,7 +378,14 @@ async function mergeTileFragments(features) {
 
 /** Pull polygon boundaries from loaded vector tiles into a GeoJSON overlay (reliable vs MVT fill). */
 export async function syncBoundaryOverlay(map) {
-  const src = map.getSource(SKI_BOUNDARY_OVERLAY_SOURCE);
+  if (!map || map.__destroyed) return;
+  let src;
+  try {
+    if (!map.getStyle?.()) return;
+    src = map.getSource(SKI_BOUNDARY_OVERLAY_SOURCE);
+  } catch {
+    return;
+  }
   if (!src) return;
 
   const z = map.getZoom();
@@ -470,11 +484,16 @@ export async function restoreSkiPmtilesAfterStyleChange(map, options = {}) {
 }
 
 export function attachBoundaryOverlay(map) {
-  if (!map.getSource(SKI_BOUNDARY_OVERLAY_SOURCE)) {
-    map.addSource(SKI_BOUNDARY_OVERLAY_SOURCE, {
-      type: 'geojson',
-      data: { type: 'FeatureCollection', features: [] }
-    });
+  if (map.__destroyed) return;
+  try {
+    if (!map.getSource(SKI_BOUNDARY_OVERLAY_SOURCE)) {
+      map.addSource(SKI_BOUNDARY_OVERLAY_SOURCE, {
+        type: 'geojson',
+        data: { type: 'FeatureCollection', features: [] }
+      });
+    }
+  } catch {
+    return;
   }
 
   ensureBoundaryOverlayLayers(map);
@@ -482,25 +501,35 @@ export function attachBoundaryOverlay(map) {
   if (map.__boundarySyncAttached) return;
   map.__boundarySyncAttached = true;
 
-  let syncTimer;
   let syncInFlight = false;
   const scheduleSync = () => {
-    clearTimeout(syncTimer);
-    syncTimer = setTimeout(async () => {
-      if (syncInFlight) return;
+    if (map.__destroyed) return;
+    clearTimeout(map.__boundarySyncTimer);
+    map.__boundarySyncTimer = setTimeout(async () => {
+      if (syncInFlight || map.__destroyed) return;
+      let styleOk = false;
+      try {
+        styleOk = !!map.getStyle?.();
+      } catch {
+        return;
+      }
+      if (!styleOk) return;
       syncInFlight = true;
       try {
         let n = await syncBoundaryOverlay(map);
         let mode = 'mvt';
-        if (!n) {
+        if (!n && !map.__destroyed) {
           n = await syncBoundaryOverlayDirect(map);
           mode = 'direct';
         }
+        if (map.__destroyed) return;
         pmtilesLog('boundary overlay synced', {
           features: n,
           zoom: Number(map.getZoom().toFixed(2)),
           mode
         });
+      } catch (err) {
+        if (!map.__destroyed) pmtilesWarn('boundary overlay sync failed', err?.message || err);
       } finally {
         syncInFlight = false;
       }
@@ -509,6 +538,7 @@ export function attachBoundaryOverlay(map) {
 
   map.on('moveend', scheduleSync);
   map.on('sourcedata', (e) => {
+    if (map.__destroyed) return;
     if (e?.sourceId === SKI_PMTILES_SOURCES.overview || e?.sourceId === SKI_PMTILES_SOURCES.resort) {
       if (e.isSourceLoaded || e.tile) scheduleSync();
     }
@@ -516,6 +546,14 @@ export function attachBoundaryOverlay(map) {
   map.once('idle', scheduleSync);
 
   pmtilesLog('boundary GeoJSON overlay attached');
+}
+
+/** Cancel pending boundary sync before tearing a map down. */
+export function detachBoundaryOverlay(map) {
+  if (!map) return;
+  map.__destroyed = true;
+  clearTimeout(map.__boundarySyncTimer);
+  map.__boundarySyncTimer = null;
 }
 
 /** Style layers to stack on a MapTiler WINTER basemap (insert below labels when possible). */

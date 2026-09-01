@@ -1,5 +1,6 @@
-import { initSkiResortMap } from "../scripts/ski-resort-map-ml.js?v=22";
+import { initSkiResortMap } from "../scripts/ski-resort-map-ml.js?v=25";
 import { initBasemapSwitcher } from "../scripts/basemap-switcher.js?v=1";
+import { detachBoundaryOverlay } from "../scripts/pmtiles-core.js?v=bound2";
 
 let pickerMap = null;
 let onResize = null;
@@ -30,19 +31,29 @@ export function destroyPickerMap() {
   const tip = document.getElementById("vt-tooltip");
   if (tip) tip.remove();
   if (!map) return;
-  /* MapTiler Map.remove() calls setStyle("") and warns. Drop the GL context instead. */
+
+  /* Mark destroyed + cancel pmtiles sync BEFORE any DOM/GL teardown. */
+  try {
+    detachBoundaryOverlay(map);
+  } catch {
+    /* already gone */
+  }
   try {
     map.stop?.();
   } catch {
     /* already gone */
   }
   try {
-    const canvas = map.getCanvas?.();
-    const gl = canvas?.getContext?.("webgl2") || canvas?.getContext?.("webgl");
-    gl?.getExtension?.("WEBGL_lose_context")?.loseContext();
+    /* Remove listeners that schedule boundary sync / resize work. */
+    map._listeners = {};
+    map._oneTimeListeners = {};
   } catch {
-    /* no GL */
+    /* private fields differ by MapLibre version */
   }
+  /*
+   * Avoid WEBGL_lose_context (MapLibre logs "Unexpected loss of WebGL context").
+   * Avoid map.remove() (MapTiler setStyle("") warning). Just empty the container.
+   */
   try {
     map.getContainer?.()?.replaceChildren();
   } catch {
@@ -70,7 +81,9 @@ export async function showPickerMap(container, resorts, onPick) {
   const basemapFold = document.getElementById("basemapFold");
   if (legendFold) legendFold.open = !compact;
   if (basemapFold) basemapFold.open = !compact;
-  const onFold = () => pickerMap?.resize();
+  const onFold = () => {
+    if (pickerMap && !pickerMap.__destroyed) pickerMap.resize();
+  };
   legendFold?.addEventListener("toggle", onFold);
   basemapFold?.addEventListener("toggle", onFold);
   map.on?.("click", () => {
@@ -79,11 +92,17 @@ export async function showPickerMap(container, resorts, onPick) {
       if (basemapFold?.open) basemapFold.open = false;
     }
   });
-  onResize = () => pickerMap?.resize();
+  onResize = () => {
+    if (pickerMap && !pickerMap.__destroyed) pickerMap.resize();
+  };
   addEventListener("resize", onResize);
   requestAnimationFrame(() => {
-    map.resize();
-    requestAnimationFrame(() => map.resize());
+    if (pickerMap && !pickerMap.__destroyed) {
+      pickerMap.resize();
+      requestAnimationFrame(() => {
+        if (pickerMap && !pickerMap.__destroyed) pickerMap.resize();
+      });
+    }
   });
   return map;
 }
