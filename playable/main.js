@@ -39,8 +39,8 @@ import {
   updateFallingSnow,
   setInspectAtmosphere,
 } from "./look.js?v=lod3";
-import { addResortIsland, updateIslandDust, updateIslandLod, setIslandOpacity, resetIslandLod } from "./island.js?v=lod3";
-import { bindUi, setHud, openPanel, closePanel, updateLoading, setOsmMapNote, setResortTitle, compactUi } from "./ui.js?v=mapctrl1";
+import { addResortIsland, updateIslandDust, updateIslandLod, setIslandOpacity, resetIslandLod } from "./island.js?v=lod3b";
+import { bindUi, setHud, openPanel, closePanel, updateLoading, setOsmMapNote, setResortTitle, compactUi } from "./ui.js?v=lod3c";
 import { atlasStatsHtml, prefetchWikiIndex } from "./atlas-stats.js?v=stats1";
 import { bindFinishChartScope, finishChartsHtml, prefetchFinishCharts } from "./finish-charts.js?v=1";
 import { bindOsmFix, osmFixHtml, osmFixContext } from "./osm-fix.js?v=1";
@@ -359,10 +359,10 @@ function showReady() {
     diffLabel: d.label,
     legend: difficultyLegendHtml(),
     changeMountain: !!catalogHub,
-    osmFixHtml: compactUi() ? currentOsmFix(true) : currentOsmFix(),
+    osmFixHtml: currentOsmFix(),
   };
   openPanel(ui, "ready", payload);
-  setOsmMapNote(ui, compactUi() ? "" : currentOsmFix(true));
+  setOsmMapNote(ui, "");
   syncResortTitle();
   const seq = ++readySeq;
   const catalog = currentCatalogResort();

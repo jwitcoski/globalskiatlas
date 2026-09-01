@@ -137,7 +137,6 @@ function lobbyDetailsHtml(data) {
       <summary>Resort details</summary>
       <div class="lobby-details-body">
         ${data.atlasStats || ""}
-        ${compactUi() ? data.osmFixHtml || "" : ""}
         ${data.legend || ""}
         <p class="hint">Drag to orbit · scroll / pinch to zoom · right-drag or two-finger to pan · double-click to reset.</p>
         <p class="fine">${data.legal}</p>
@@ -145,8 +144,19 @@ function lobbyDetailsHtml(data) {
     </details>`;
 }
 
+/** Always starts closed — OSM help without cluttering the trail picker. */
+function osmFixDetailsHtml(data) {
+  if (!data.osmFixHtml) return "";
+  return `<details class="lobby-details osm-fix-details">
+      <summary>Missing trees or scenery?</summary>
+      <div class="lobby-details-body">
+        ${data.osmFixHtml}
+      </div>
+    </details>`;
+}
+
 function bindLobbyDetails(ui) {
-  const el = ui.panel?.querySelector(".lobby-details");
+  const el = ui.panel?.querySelector(".lobby-details:not(.osm-fix-details)");
   if (!el) return;
   el.addEventListener("toggle", () => {
     lobbyDetailsUser = el.open;
@@ -214,8 +224,8 @@ export function openPanel(ui, kind, data) {
     ui.panel.innerHTML = `<p class="kicker">Pick a trail</p>
       <h2>${data.course}</h2>
       ${trailMeta(data)}
-      ${compactUi() ? "" : data.osmFixHtml || ""}
       ${lobbyDetailsHtml(data)}
+      ${osmFixDetailsHtml(data)}
       ${actions(
         data.changeMountain
           ? [

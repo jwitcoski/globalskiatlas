@@ -283,7 +283,7 @@ function makeTopMaterial(THREE) {
     vertexColors: true,
     side: THREE.DoubleSide,
     depthWrite: true,
-    transparent: true,
+    transparent: false,
     opacity: 1,
   });
 }
@@ -292,8 +292,9 @@ function setMatOpacity(mat, opacity) {
   if (!mat) return;
   const op = Math.max(0, Math.min(1, opacity));
   mat.opacity = op;
+  // Fully opaque when solid — transparency lets you see the island underside.
   mat.transparent = op < 0.995;
-  mat.depthWrite = op > 0.55;
+  mat.depthWrite = op > 0.85;
   mat.needsUpdate = true;
 }
 
@@ -480,8 +481,8 @@ export function updateIslandDust(island, dt) {
 }
 
 /**
- * Soft LOD handoff for lobby snow tops. Level 0 = far/coarse, 1 = near/fine.
- * Rock fades as the camera zooms in so the silhouette does not pop.
+ * Soft LOD for lobby snow tops. Level 0 = far/coarse, 1 = near/fine.
+ * Swaps meshes (no alpha blend) so the mountain stays solid — no see-through underside.
  */
 export function updateIslandLod(island, camera) {
   if (!island?.tops?.length || !camera || !island.center) return;
@@ -497,26 +498,31 @@ export function updateIslandLod(island, camera) {
   level = Math.max(0, Math.min(1, level));
   island.lodLevel = level;
 
-  const i0 = Math.floor(level);
-  const i1 = Math.min(island.tops.length - 1, i0 + 1);
-  const frac = level - i0;
+  // Hysteresis so the swap does not flicker at the midpoint.
+  const prev = island.lodPick ?? (level < 0.5 ? 0 : 1);
+  let pick = prev;
+  if (level < 0.42) pick = 0;
+  else if (level > 0.58) pick = Math.min(island.tops.length - 1, 1);
+  island.lodPick = pick;
+
   for (let i = 0; i < island.tops.length; i++) {
     const mesh = island.tops[i];
     if (!mesh) continue;
-    let op = 0;
-    if (i === i0 && i === i1) op = 1;
-    else if (i === i0) op = 1 - frac;
-    else if (i === i1) op = frac;
-    mesh.visible = op > 0.02;
-    setMatOpacity(mesh.material, op);
+    const on = i === pick;
+    mesh.visible = on;
+    setMatOpacity(mesh.material, on ? 1 : 0);
   }
 
-  // Rock/chunks: full at far, gone near the snow.
-  const rockOp = Math.max(0, Math.min(1, 1 - (level - 0.15) / 0.75));
-  if (island.rockMat) setMatOpacity(island.rockMat, rockOp);
-  if (island.rock) island.rock.visible = rockOp > 0.02;
+  // Rock/chunks stay fully solid — never fade them in the lobby.
+  if (island.rockMat) {
+    island.rockMat.opacity = 1;
+    island.rockMat.transparent = false;
+    island.rockMat.depthWrite = true;
+    island.rockMat.needsUpdate = true;
+  }
+  if (island.rock) island.rock.visible = true;
   if (island.chunks) {
-    for (const ch of island.chunks) ch.visible = rockOp > 0.05;
+    for (const ch of island.chunks) ch.visible = true;
   }
 }
 
@@ -618,7 +624,7 @@ export function addResortIsland(THREE, scene, hf, skiArea, osmHull) {
     metalness: 0,
     vertexColors: true,
     flatShading: true,
-    transparent: true,
+    transparent: false,
     opacity: 1,
     side: THREE.FrontSide,
     envMap: scene.userData.envMap || null,
