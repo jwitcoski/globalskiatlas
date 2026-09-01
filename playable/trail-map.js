@@ -2,10 +2,128 @@
 
 const GREEN = "#1f7a38";
 const BLUE = "#1d5fb8";
+const RED = "#c02828";
 const BLACK = "#1a1a1c";
 const YELLOW = "#e6c200";
 const ORANGE = "#e36a12";
 const GRAY = "#6a7076";
+
+const HEX = {
+  [GREEN]: 0x1f7a38,
+  [BLUE]: 0x1d5fb8,
+  [RED]: 0xc02828,
+  [BLACK]: 0x1a1a1c,
+  [YELLOW]: 0xe6c200,
+  [ORANGE]: 0xe36a12,
+  [GRAY]: 0x6a7076,
+};
+
+/** Regional trail-marking palettes. OSM difficulty tags stay the same; only paint/shape change. */
+export const DIFF_SCHEMES = ["american", "european", "japanese"];
+export const DIFF_SCHEME_LABELS = {
+  american: "American",
+  european: "European",
+  japanese: "Japanese",
+};
+
+const SCHEME_STYLES = {
+  american: {
+    novice: { key: "novice", label: "Novice", shape: "circle", html: GREEN },
+    easy: { key: "easy", label: "Easy", shape: "circle", html: GREEN },
+    intermediate: { key: "intermediate", label: "Intermediate", shape: "square", html: BLUE },
+    advanced: { key: "advanced", label: "Advanced", shape: "diamond", html: BLACK },
+    expert: { key: "expert", label: "Expert", shape: "double", html: BLACK },
+    freeride: { key: "freeride", label: "Freeride", shape: "diamond", html: YELLOW },
+    extreme: { key: "extreme", label: "Extreme", shape: "extreme", html: YELLOW },
+    unrated: { key: "unrated", label: "Unrated", shape: "circle", html: GRAY },
+  },
+  // Alpine / OSM Europe column: green → blue → red → black → orange; freeride yellow.
+  european: {
+    novice: { key: "novice", label: "Novice", shape: "circle", html: GREEN },
+    easy: { key: "easy", label: "Easy", shape: "circle", html: BLUE },
+    intermediate: { key: "intermediate", label: "Intermediate", shape: "circle", html: RED },
+    advanced: { key: "advanced", label: "Advanced", shape: "circle", html: BLACK },
+    expert: { key: "expert", label: "Expert", shape: "circle", html: ORANGE },
+    freeride: { key: "freeride", label: "Freeride", shape: "circle", html: YELLOW },
+    extreme: { key: "extreme", label: "Extreme", shape: "extreme", html: ORANGE },
+    unrated: { key: "unrated", label: "Unrated", shape: "circle", html: GRAY },
+  },
+  // Japan: green / red / black (often only three bands).
+  japanese: {
+    novice: { key: "novice", label: "Beginner", shape: "circle", html: GREEN },
+    easy: { key: "easy", label: "Beginner", shape: "circle", html: GREEN },
+    intermediate: { key: "intermediate", label: "Intermediate", shape: "square", html: RED },
+    advanced: { key: "advanced", label: "Advanced", shape: "diamond", html: BLACK },
+    expert: { key: "expert", label: "Expert", shape: "diamond", html: BLACK },
+    freeride: { key: "freeride", label: "Expert", shape: "diamond", html: BLACK },
+    extreme: { key: "extreme", label: "Expert", shape: "diamond", html: BLACK },
+    unrated: { key: "unrated", label: "Unrated", shape: "circle", html: GRAY },
+  },
+};
+
+let difficultyScheme = "american";
+
+export function getDifficultyScheme() {
+  return difficultyScheme;
+}
+
+export function loadDifficultyScheme() {
+  try {
+    const s = localStorage.getItem("gsa-diff-scheme");
+    if (DIFF_SCHEMES.includes(s)) difficultyScheme = s;
+  } catch {
+    /* ignore */
+  }
+  return difficultyScheme;
+}
+
+export function setDifficultyScheme(scheme) {
+  if (!DIFF_SCHEMES.includes(scheme)) return difficultyScheme;
+  difficultyScheme = scheme;
+  try {
+    localStorage.setItem("gsa-diff-scheme", scheme);
+  } catch {
+    /* ignore */
+  }
+  return difficultyScheme;
+}
+
+function withColor(base) {
+  return { ...base, color: HEX[base.html] ?? 0x6a7076 };
+}
+
+function isPark(t) {
+  const x = String(t || "").toLowerCase();
+  return x === "snow_park" || x === "terrain_park" || x === "snowpark";
+}
+
+function difficultyKey(raw) {
+  const d = String(raw || "").toLowerCase().trim();
+  if (d === "novice") return "novice";
+  if (d === "easy" || d === "beginner") return "easy";
+  if (d === "intermediate" || d === "medium") return "intermediate";
+  if (d === "advanced") return "advanced";
+  if (d === "expert") return "expert";
+  if (d === "freeride") return "freeride";
+  if (d === "extreme") return "extreme";
+  return "unrated";
+}
+
+export function classifyDifficulty(raw, pisteType) {
+  const table = SCHEME_STYLES[difficultyScheme] || SCHEME_STYLES.american;
+  let style = withColor(table[difficultyKey(raw)] || table.unrated);
+  if (isPark(pisteType)) {
+    style = {
+      ...style,
+      key: "park",
+      label: style.key === "unrated" ? "Snow park" : `${style.label} park`,
+      html: ORANGE,
+      color: HEX[ORANGE],
+      park: true,
+    };
+  }
+  return style;
+}
 
 /**
  * Ski-area (landuse=winter_sports) in local east/north → game XZ rings + AABB.
@@ -65,42 +183,6 @@ export function parseSkiArea(fc) {
   };
 }
 
-function isPark(t) {
-  const x = String(t || "").toLowerCase();
-  return x === "snow_park" || x === "terrain_park" || x === "snowpark";
-}
-
-export function classifyDifficulty(raw, pisteType) {
-  const d = String(raw || "").toLowerCase().trim();
-  let style;
-  if (d === "novice" || d === "easy" || d === "beginner") {
-    style = { key: "easy", label: "Easy", shape: "circle", html: GREEN, color: 0x1f7a38 };
-  } else if (d === "intermediate" || d === "medium") {
-    style = { key: "intermediate", label: "Intermediate", shape: "square", html: BLUE, color: 0x1d5fb8 };
-  } else if (d === "advanced") {
-    style = { key: "advanced", label: "Advanced", shape: "diamond", html: BLACK, color: 0x1a1a1c };
-  } else if (d === "expert") {
-    style = { key: "expert", label: "Expert", shape: "double", html: BLACK, color: 0x1a1a1c };
-  } else if (d === "freeride") {
-    style = { key: "freeride", label: "Freeride", shape: "diamond", html: YELLOW, color: 0xe6c200 };
-  } else if (d === "extreme") {
-    style = { key: "extreme", label: "Extreme", shape: "extreme", html: YELLOW, color: 0xe6c200 };
-  } else {
-    style = { key: "unrated", label: "Unrated", shape: "circle", html: GRAY, color: 0x6a7076 };
-  }
-  if (isPark(pisteType)) {
-    style = {
-      ...style,
-      key: "park",
-      label: style.key === "unrated" ? "Snow park" : `${style.label} park`,
-      html: ORANGE,
-      color: 0xe36a12,
-      park: true,
-    };
-  }
-  return style;
-}
-
 export function styleForPisteFeature(f) {
   const props = f?.properties || {};
   const tags = props.tags && typeof props.tags === "object" ? props.tags : {};
@@ -115,7 +197,7 @@ export function styleForPisteFeature(f) {
     const m = /piste:type"=>"([^"]+)/.exec(ot);
     if (m) t = m[1];
   }
-  return classifyDifficulty(d, t);
+  return { ...classifyDifficulty(d, t), difficulty: d, type: t };
 }
 
 export function markerSvg(style, size = 18) {
@@ -478,6 +560,29 @@ export function setTrailMapSelection(map, courseId) {
   }
 }
 
+/** Recolor trail ribbons + badges after the regional marking scheme changes. */
+export function applyTrailMapDifficultyScheme(THREE, map) {
+  if (!THREE || !map?.picks?.length) return;
+  for (const p of map.picks) {
+    const style = classifyDifficulty(p.course.piste_difficulty, p.course.piste_type);
+    p.style = style;
+    if (p.line?.material?.color) p.line.material.color.setHex(style.color);
+    const badge = badgeTexture(THREE, style, p.course.name || p.course.id);
+    const prev = p.spr?.material?.map;
+    if (p.spr?.material) {
+      p.spr.material.map = badge.tex;
+      p.spr.material.needsUpdate = true;
+      if (prev && prev !== badge.tex) prev.dispose();
+    }
+    if (p.spr?.userData?.baseH) {
+      const h = p.spr.userData.baseH;
+      p.spr.userData.baseW = h * badge.aspect;
+      p.spr.scale.set(p.spr.userData.baseW, h, 1);
+    }
+  }
+  setTrailMapSelection(map, map.selectedId);
+}
+
 /** Keep badges readable while zooming: world size tracks camera distance. */
 export function updateTrailMapLod(map, camera) {
   if (!map?.picks?.length || !camera) return;
@@ -595,17 +700,36 @@ export function clampLobbyOrbit(camera, controls, map, island) {
 }
 
 export function difficultyLegendHtml() {
-  const items = [
-    classifyDifficulty("easy"),
-    classifyDifficulty("intermediate"),
-    classifyDifficulty("advanced"),
-    classifyDifficulty("expert"),
-    classifyDifficulty("freeride"),
-    classifyDifficulty("extreme"),
-    classifyDifficulty("intermediate", "snow_park"),
-  ];
-  items[items.length - 1].label = "Snow park";
-  return `<ul class="legend">${items
-    .map((st) => `<li>${markerSvg(st, 16)}<span>${st.label}</span></li>`)
-    .join("")}</ul>`;
+  const scheme = difficultyScheme;
+  const keys =
+    scheme === "japanese"
+      ? ["easy", "intermediate", "advanced", "park"]
+      : ["novice", "easy", "intermediate", "advanced", "expert", "freeride", "extreme", "park"];
+  const items = keys.map((k) => {
+    if (k === "park") {
+      const st = classifyDifficulty("intermediate", "snow_park");
+      st.label = "Snow park";
+      return st;
+    }
+    return classifyDifficulty(k);
+  });
+  // Drop duplicate labels (Japan beginner maps novice+easy the same).
+  const seen = new Set();
+  const unique = items.filter((st) => {
+    const id = `${st.label}|${st.html}|${st.shape}`;
+    if (seen.has(id)) return false;
+    seen.add(id);
+    return true;
+  });
+  const schemeBtns = DIFF_SCHEMES.map((id) => {
+    const on = id === scheme;
+    return `<button type="button" class="scheme-btn${on ? " on" : ""}" data-act="diff-scheme" data-scheme="${id}" aria-pressed="${on ? "true" : "false"}">${DIFF_SCHEME_LABELS[id]}</button>`;
+  }).join("");
+  return `<div class="diff-scheme" role="group" aria-label="Trail color system">
+      <span class="diff-scheme-label">Trail colors</span>
+      <div class="diff-scheme-btns">${schemeBtns}</div>
+    </div>
+    <ul class="legend">${unique
+      .map((st) => `<li>${markerSvg(st, 16)}<span>${st.label}</span></li>`)
+      .join("")}</ul>`;
 }

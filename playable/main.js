@@ -24,7 +24,7 @@ import {
 import { featuredCourses, attachPisteDifficulty, courseFinish, createRun, tickRun, formatTime } from "./run.js?v=map4";
 import { coordsToXz, attachPiste, resetScore, tickScore, commitBestScore, formatScore, distToPolyline, applyWipeout } from "./score.js?v=feel4";
 import { orientPiste, alongTrack, alongPolyline } from "./gates.js?v=vis18";
-import { addOsmWorld } from "./osm-world.js?v=lod3";
+import { addOsmWorld, applyPisteDecorDifficultyScheme } from "./osm-world.js?v=scheme1";
 import {
   snowTerrainMaterial,
   addSkyAndLights,
@@ -65,7 +65,10 @@ import {
   classifyDifficulty,
   markerSvg,
   parseSkiArea,
-} from "./trail-map.js?v=lod3";
+  loadDifficultyScheme,
+  setDifficultyScheme,
+  applyTrailMapDifficultyScheme,
+} from "./trail-map.js?v=scheme1";
 import { makeMinimap } from "./minimap.js?v=feel6";
 import { createNpcSkiers, clearNpcSkiers, tickNpcSkiers } from "./npc-skiers.js?v=feel6";
 import { updateTraffic } from "./traffic.js?v=vis16";
@@ -78,6 +81,8 @@ import {
   paintTrailerFrame,
 } from "./trailer.js?v=t2";
 import { createFlyby, prepFlybyTour, clearFlybyTour, tickFlybyZoom } from "./flyby.js?v=tour3";
+
+loadDifficultyScheme();
 
 /** Website CloudFront can origin-pull game_scenes; S3 is the fallback. */
 const S3_SCENES = "https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/game_scenes/";
@@ -441,7 +446,16 @@ function showReady() {
   atlasStatsHtml(hint)
     .then((html) => {
       if (!html || seq !== readySeq || run?.phase !== "ready") return;
-      openPanel(ui, "ready", { ...payload, atlasStats: html, osmFixHtml: payload.osmFixHtml });
+      const dNow = selectedDiff();
+      openPanel(ui, "ready", {
+        ...payload,
+        atlasStats: html,
+        osmFixHtml: currentOsmFix(),
+        marker: markerSvg(dNow, 18),
+        diffKey: dNow.key,
+        diffLabel: dNow.label,
+        legend: difficultyLegendHtml(),
+      });
       syncResortTitle();
     })
     .catch(() => {});
@@ -656,6 +670,13 @@ function onUiAct(act, courseId) {
   }
   if (act === "flyby") {
     enterFlyby();
+    return;
+  }
+  if (act === "diff-scheme" && courseId) {
+    setDifficultyScheme(courseId);
+    applyTrailMapDifficultyScheme(THREE, trailMap);
+    applyPisteDecorDifficultyScheme(scene);
+    if (run?.phase === "ready") showReady();
     return;
   }
   if (act === "mountain" && courseId) {
@@ -1122,7 +1143,7 @@ addEventListener("keydown", (e) => {
 
 ui.overlay?.addEventListener("click", (e) => {
   const btn = e.target.closest("[data-act]");
-  if (btn) onUiAct(btn.dataset.act, btn.dataset.course);
+  if (btn) onUiAct(btn.dataset.act, btn.dataset.course || btn.dataset.scheme);
 });
 ui.flybyBar?.addEventListener("click", (e) => {
   const btn = e.target.closest("[data-flyby]");

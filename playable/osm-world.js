@@ -2,7 +2,7 @@
 
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-import { styleForPisteFeature } from "./trail-map.js?v=vis24";
+import { styleForPisteFeature, classifyDifficulty } from "./trail-map.js?v=scheme1";
 import { addOsmTraffic } from "./traffic.js?v=vis16";
 import { alongPolyline, polylineLen } from "./gates.js?v=vis17";
 
@@ -960,22 +960,38 @@ export async function addOsmWorld(THREE, scene, sceneRoot, manifest, elevFn) {
     for (const f of pistes.features || []) {
       const g = f.geometry;
       const style = styleForPisteFeature(f);
+      const tagPaint = (mesh, kind) => {
+        if (!mesh) return;
+        mesh.userData.pisteDifficulty = style.difficulty || "";
+        mesh.userData.pisteType = style.type || "";
+        mesh.userData.pisteKind = kind;
+      };
       if (g?.type === "Polygon" || g?.type === "MultiPolygon") {
         for (const poly of polygonParts(g)) {
           const mesh = drapeSmoothFill(poly[0], poly.slice(1), elevFn, 0.04, pisteFillMat(style.color));
           if (mesh) {
             mesh.name = "piste-poly";
+            tagPaint(mesh, "fill");
             pisteRoot.add(mesh);
           }
-          for (const w of zebraWallMeshes(poly[0], elevFn, style.color, true)) pisteRoot.add(w);
+          for (const w of zebraWallMeshes(poly[0], elevFn, style.color, true)) {
+            if (w.material !== wallBlack) tagPaint(w, "wall");
+            pisteRoot.add(w);
+          }
           for (const hole of poly.slice(1)) {
-            for (const w of zebraWallMeshes(hole, elevFn, style.color, true)) pisteRoot.add(w);
+            for (const w of zebraWallMeshes(hole, elevFn, style.color, true)) {
+              if (w.material !== wallBlack) tagPaint(w, "wall");
+              pisteRoot.add(w);
+            }
           }
         }
         counts.piste_poly = (counts.piste_poly || 0) + 1;
       } else {
         for (const coords of lineParts(g)) {
-          for (const w of zebraWallMeshes(coords, elevFn, style.color, false)) pisteRoot.add(w);
+          for (const w of zebraWallMeshes(coords, elevFn, style.color, false)) {
+            if (w.material !== wallBlack) tagPaint(w, "wall");
+            pisteRoot.add(w);
+          }
         }
         counts.piste_line = (counts.piste_line || 0) + 1;
       }
@@ -1120,4 +1136,16 @@ export function addPisteEdgeScenery(THREE, scene, pistePolys, elevFn) {
   for (let i = 0; i < n; i++) xzr.push(pts[i * 3], pts[i * 3 + 1], 0.55);
   scene.userData.treeHash = buildTreeHash(xzr);
   return n;
+}
+
+/** Recolor draped piste fills + zebra walls after the regional marking scheme changes. */
+export function applyPisteDecorDifficultyScheme(scene) {
+  const root = scene?.userData?.pisteDecor;
+  if (!root) return;
+  root.traverse((obj) => {
+    const kind = obj.userData?.pisteKind;
+    if (!obj.isMesh || (kind !== "fill" && kind !== "wall")) return;
+    const style = classifyDifficulty(obj.userData.pisteDifficulty, obj.userData.pisteType);
+    obj.material = kind === "fill" ? pisteFillMat(style.color) : wallColorMat(style.color);
+  });
 }

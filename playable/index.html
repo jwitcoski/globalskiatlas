@@ -340,6 +340,24 @@
     }
     .legend li { display: flex; align-items: center; gap: 8px; }
     .legend .diff-svg { flex: 0 0 auto; }
+    .diff-scheme {
+      display: grid; gap: 6px; margin: 0 0 10px;
+    }
+    .diff-scheme-label {
+      font-size: 11px; font-weight: 700; letter-spacing: .04em;
+      text-transform: uppercase; color: #4a5660;
+    }
+    .diff-scheme-btns { display: flex; flex-wrap: wrap; gap: 6px; }
+    .scheme-btn {
+      appearance: none; border: 1px solid rgba(42,50,56,.22);
+      background: rgba(255,255,255,.55); color: #2a3238;
+      font: inherit; font-size: 11px; font-weight: 700;
+      padding: 5px 9px; border-radius: 4px; cursor: pointer;
+    }
+    .scheme-btn:hover { background: #fff; }
+    .scheme-btn.on, .scheme-btn[aria-pressed="true"] {
+      background: #2a3238; color: #f4f6f8; border-color: #2a3238;
+    }
     body.lobby #clock, body.lobby #score-box, body.lobby #dist-read, body.lobby #piste,
     body.lobby #speed-box, body.lobby #obj, body.lobby #pause-btn, body.lobby #pov-btn,
     body.lobby #pads, body.lobby #nav-arrow, body.lobby #combo-read, body.lobby #air-shout,
@@ -581,6 +599,6 @@
     { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
                    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }
   </script>
-  <script type="module" src="./main.js?v=flyby3"></script>
+  <script type="module" src="./main.js?v=scheme2"></script>
 </body>
 </html>
