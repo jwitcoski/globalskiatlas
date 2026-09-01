@@ -22,7 +22,19 @@ export function bindUi() {
     shout: document.getElementById("air-shout"),
     osmMapNote: document.getElementById("osm-map-note"),
     resortTitle: document.getElementById("resort-title"),
+    flybyBar: document.getElementById("flyby-bar"),
+    flybyAuto: document.getElementById("flyby-auto"),
   };
+}
+
+export function setFlybyChrome(ui, on, auto = false) {
+  if (ui?.flybyBar) ui.flybyBar.hidden = !on;
+  if (ui?.flybyAuto) {
+    ui.flybyAuto.setAttribute("aria-pressed", auto ? "true" : "false");
+    ui.flybyAuto.textContent = auto ? "Touring" : "Auto";
+  }
+  const hint = ui?.flybyBar?.querySelector(".flyby-hint");
+  if (hint) hint.textContent = auto ? "Orbiting the resort" : "Drag · scroll to explore";
 }
 
 export function setHud(ui, s) {
@@ -138,7 +150,7 @@ function lobbyDetailsHtml(data) {
       <div class="lobby-details-body">
         ${data.atlasStats || ""}
         ${data.legend || ""}
-        <p class="hint">Drag to orbit · scroll / pinch to zoom · right-drag or two-finger to pan · double-click to reset.</p>
+        <p class="hint">Drag to orbit · scroll / pinch to zoom · right-drag or two-finger to pan · double-click to reset. Fly-by hides the map chrome for a scenic look.</p>
         <p class="fine">${data.legal}</p>
       </div>
     </details>`;
@@ -230,9 +242,13 @@ export function openPanel(ui, kind, data) {
         data.changeMountain
           ? [
               ["start", "Ski", "primary"],
+              ["flyby", "Fly-by", "ghost"],
               ["mountains", "Change mountain", "ghost"],
             ]
-          : [["start", "Ski", "primary"]],
+          : [
+              ["start", "Ski", "primary"],
+              ["flyby", "Fly-by", "ghost"],
+            ],
       )}`;
     bindLobbyDetails(ui);
     return;

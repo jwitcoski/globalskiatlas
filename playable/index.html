@@ -342,8 +342,42 @@
     .legend .diff-svg { flex: 0 0 auto; }
     body.lobby #clock, body.lobby #score-box, body.lobby #dist-read, body.lobby #piste,
     body.lobby #speed-box, body.lobby #obj, body.lobby #pause-btn, body.lobby #pov-btn,
-    body.lobby #pads, body.lobby #nav-arrow, body.lobby #combo-read, body.lobby #air-shout { display: none !important; }
+    body.lobby #pads, body.lobby #nav-arrow, body.lobby #combo-read, body.lobby #air-shout,
+    body.lobby #mini-wrap { display: none !important; }
     body.lobby #resort-title { display: block; }
+    body.flyby #overlay { display: none !important; }
+    body.flyby #resort-title, body.flyby #osm-map-note { display: none !important; }
+    #flyby-bar {
+      position: absolute; z-index: 6; pointer-events: auto;
+      left: 50%; bottom: calc(var(--pad-b) + 14px); transform: translateX(-50%);
+      display: flex; gap: 8px; align-items: center;
+      padding: 8px 10px; border-radius: 6px;
+      background: rgba(244, 248, 250, .78);
+      border: 1px solid rgba(255, 255, 255, .88);
+      box-shadow: 0 8px 28px rgba(30, 42, 52, .16);
+      backdrop-filter: blur(8px);
+    }
+    #flyby-bar[hidden] { display: none !important; }
+    #flyby-bar .flyby-hint {
+      margin: 0 4px 0 2px; font-size: 12px; font-weight: 600; color: #3a4650;
+      white-space: nowrap; opacity: .85;
+    }
+    #flyby-bar .btn {
+      appearance: none; border: 1px solid rgba(42, 50, 56, .18);
+      background: rgba(255, 255, 255, .72); color: #243038;
+      font: inherit; font-size: 13px; font-weight: 700;
+      padding: 8px 14px; border-radius: 4px; cursor: pointer;
+    }
+    #flyby-bar .btn:hover { background: #fff; }
+    #flyby-bar .btn[aria-pressed="true"] {
+      background: #243038; color: #f4f8fb; border-color: #243038;
+    }
+    #flyby-bar .btn.ghost { background: transparent; }
+    @media (max-width: 640px) {
+      #flyby-bar { gap: 6px; padding: 7px 8px; }
+      #flyby-bar .flyby-hint { display: none; }
+      #flyby-bar .btn { padding: 8px 12px; font-size: 12px; }
+    }
     #osm-map-note {
       position: absolute; z-index: 5; pointer-events: auto;
       right: var(--pad-r); bottom: var(--pad-b);
@@ -536,12 +570,17 @@
   </div>
   <div id="rotate-lock" hidden>Turn the screen sideways to ski</div>
   <div id="osm-map-note" hidden></div>
+  <div id="flyby-bar" hidden role="toolbar" aria-label="Fly-by controls">
+    <p class="flyby-hint">Drag · scroll to explore</p>
+    <button type="button" class="btn" id="flyby-auto" data-flyby="auto" aria-pressed="false">Auto</button>
+    <button type="button" class="btn ghost" id="flyby-exit" data-flyby="exit">Back</button>
+  </div>
   <div id="overlay"><div id="panel"><p class="kicker">Loading</p><h2>Fetching the mountain</h2><p>DEM + OSM scene…</p></div></div>
   <script defer src="https://cdn.maptiler.com/maptiler-sdk-js/v3.10.2/maptiler-sdk.umd.min.js"></script>
   <script type="importmap">
     { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
                    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }
   </script>
-  <script type="module" src="./main.js?v=lod3c"></script>
+  <script type="module" src="./main.js?v=flyby3"></script>
 </body>
 </html>

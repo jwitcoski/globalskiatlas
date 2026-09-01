@@ -40,7 +40,7 @@ import {
   setInspectAtmosphere,
 } from "./look.js?v=lod3";
 import { addResortIsland, updateIslandDust, updateIslandLod, setIslandOpacity, resetIslandLod } from "./island.js?v=lod3b";
-import { bindUi, setHud, openPanel, closePanel, updateLoading, setOsmMapNote, setResortTitle, compactUi } from "./ui.js?v=lod3c";
+import { bindUi, setHud, openPanel, closePanel, updateLoading, setOsmMapNote, setResortTitle, compactUi, setFlybyChrome } from "./ui.js?v=flyby3";
 import { atlasStatsHtml, prefetchWikiIndex } from "./atlas-stats.js?v=stats1";
 import { bindFinishChartScope, finishChartsHtml, prefetchFinishCharts } from "./finish-charts.js?v=1";
 import { bindOsmFix, osmFixHtml, osmFixContext } from "./osm-fix.js?v=1";
@@ -77,6 +77,7 @@ import {
   trailerNeedsPaint,
   paintTrailerFrame,
 } from "./trailer.js?v=t2";
+import { createFlyby, prepFlybyTour, clearFlybyTour, tickFlybyZoom } from "./flyby.js?v=tour3";
 
 /** Website CloudFront can origin-pull game_scenes; S3 is the fallback. */
 const S3_SCENES = "https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/game_scenes/";
@@ -136,6 +137,7 @@ orbit.minPolarAngle = 0.22;
 orbit.maxPolarAngle = Math.PI * 0.52;
 let lobbyZoomTo = 0;
 let lobbyPinch = null;
+const flyby = createFlyby();
 const raycaster = new THREE.Raycaster();
 const ndc = new THREE.Vector2();
 let pointerDown = null;
@@ -166,7 +168,7 @@ function applyLobbyZoom(dt) {
 }
 
 function bumpLobbyZoom(factor) {
-  if (!orbit.enabled || run?.phase !== "ready") return;
+  if (!orbit.enabled || run?.phase !== "ready" || flyby.auto) return;
   const dist = camera.position.distanceTo(orbit.target);
   if (!lobbyZoomTo) lobbyZoomTo = dist;
   const lo = orbit.minDistance || 1;
@@ -184,7 +186,7 @@ addEventListener("pointerup", () => {
   if (run?.phase === "ready" && orbit.enabled) document.body.style.cursor = "grab";
 });
 renderer.domElement.addEventListener("dblclick", (e) => {
-  if (!orbit.enabled || run?.phase !== "ready") return;
+  if (!orbit.enabled || run?.phase !== "ready" || flyby.auto) return;
   e.preventDefault();
   lobbyZoomTo = 0;
   frameTrailOverview(camera, orbit, trailMap, scene.userData.island);
@@ -192,7 +194,7 @@ renderer.domElement.addEventListener("dblclick", (e) => {
 renderer.domElement.addEventListener(
   "wheel",
   (e) => {
-    if (!orbit.enabled || run?.phase !== "ready") return;
+    if (!orbit.enabled || run?.phase !== "ready" || flyby.auto) return;
     e.preventDefault();
     e.stopImmediatePropagation();
     // Softer exponential dolly; factor ~1.02–1.03 per notch.
@@ -211,7 +213,7 @@ function lobbyTouchDist(touches) {
 renderer.domElement.addEventListener(
   "touchstart",
   (e) => {
-    if (!orbit.enabled || run?.phase !== "ready" || e.touches.length !== 2) {
+    if (!orbit.enabled || run?.phase !== "ready" || flyby.auto || e.touches.length !== 2) {
       lobbyPinch = null;
       return;
     }
@@ -342,10 +344,74 @@ function syncResortTitle() {
   setResortTitle(ui, run?.phase === "ready" ? resortTitleText() : "");
 }
 
+function clearFlybyUi() {
+  clearFlybyTour(orbit);
+  flyby.auto = false;
+  flyby.active = false;
+  flyby.zoomT = 0;
+  document.body.classList.remove("flyby");
+  setFlybyChrome(ui, false, false);
+}
+
+function enterFlyby() {
+  if (!run || run.phase !== "ready" || TRAILER) return;
+  clearFlybyTour(orbit);
+  flyby.auto = false;
+  flyby.active = true;
+  flyby.zoomT = 0;
+  lobbyZoomTo = 0;
+  if (ui.overlay) {
+    ui.overlay.hidden = true;
+    ui.overlay.classList.remove("lobby", "picker", "finish");
+  }
+  document.body.classList.add("lobby", "flyby");
+  setResortTitle(ui, "");
+  setOsmMapNote(ui, "");
+  setFlybyChrome(ui, true, false);
+  if (trailMap) trailMap.root.visible = false;
+  setPistePlayMode(true);
+  orbit.enabled = true;
+  document.body.style.cursor = "grab";
+}
+
+function exitFlyby() {
+  if (!flyby.active) return;
+  clearFlybyUi();
+  if (trailMap && run?.phase === "ready") trailMap.root.visible = true;
+  if (run?.phase === "ready") setPistePlayMode(false);
+  if (run?.phase === "ready") showReady();
+}
+
+function setFlybyAuto(on) {
+  if (!flyby.active || run?.phase !== "ready") return;
+  lobbyZoomTo = 0;
+  lobbyPinch = null;
+  if (on) {
+    const ok = prepFlybyTour(camera, orbit, trailMap, scene.userData.island, frameTrailOverview);
+    if (!ok) return;
+    flyby.auto = true;
+    flyby.zoomT = 0;
+    flyby.zoomFar = true;
+    document.body.style.cursor = "";
+  } else {
+    clearFlybyTour(orbit);
+    flyby.auto = false;
+    flyby.zoomT = 0;
+    orbit.enabled = true;
+    document.body.style.cursor = "grab";
+  }
+  setFlybyChrome(ui, true, flyby.auto);
+}
+
 function showReady() {
   if (TRAILER) {
     closePanel(ui);
     return;
+  }
+  if (flyby.active) {
+    clearFlybyUi();
+    if (trailMap) trailMap.root.visible = true;
+    setPistePlayMode(false);
   }
   const d = selectedDiff();
   const payload = {
@@ -529,6 +595,7 @@ function enterLobby(reframe) {
 }
 
 function exitLobby() {
+  clearFlybyUi();
   orbit.enabled = false;
   lobbyZoomTo = 0;
   lobbyPinch = null;
@@ -585,6 +652,10 @@ function onUiAct(act, courseId) {
     u.searchParams.delete("ver");
     u.searchParams.delete("scene");
     location.assign(u);
+    return;
+  }
+  if (act === "flyby") {
+    enterFlyby();
     return;
   }
   if (act === "mountain" && courseId) {
@@ -1026,6 +1097,10 @@ addEventListener("keydown", (e) => {
   if (!run) return;
   if (e.target.closest?.("input, textarea, select, [contenteditable]")) return;
   if (e.code === "Escape") {
+    if (flyby.active) {
+      exitFlyby();
+      return;
+    }
     if (run.phase === "running") {
       run.phase = "paused";
       acc = 0;
@@ -1039,6 +1114,7 @@ addEventListener("keydown", (e) => {
     if (run.phase === "running" || run.phase === "paused") cyclePov();
   }
   if (e.code === "Enter" || e.code === "Space") {
+    if (flyby.active) return;
     if (run.phase === "ready") onUiAct("start");
     if (run.phase === "finished" || run.phase === "dnf") resetRun();
   }
@@ -1047,6 +1123,12 @@ addEventListener("keydown", (e) => {
 ui.overlay?.addEventListener("click", (e) => {
   const btn = e.target.closest("[data-act]");
   if (btn) onUiAct(btn.dataset.act, btn.dataset.course);
+});
+ui.flybyBar?.addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-flyby]");
+  if (!btn || !flyby.active) return;
+  if (btn.dataset.flyby === "exit") exitFlyby();
+  else if (btn.dataset.flyby === "auto") setFlybyAuto(!flyby.auto);
 });
 ui.pauseBtn?.addEventListener("click", () => {
   if (run?.phase === "running") {
@@ -1070,7 +1152,7 @@ renderer.domElement.addEventListener("pointerdown", (e) => {
   pointerDown = { x: e.clientX, y: e.clientY };
 });
 renderer.domElement.addEventListener("pointerup", (e) => {
-  if (run?.phase !== "ready" || !pointerDown) return;
+  if (run?.phase !== "ready" || !pointerDown || flyby.active) return;
   const moved = Math.hypot(e.clientX - pointerDown.x, e.clientY - pointerDown.y);
   pointerDown = null;
   if (moved > 7) return;
@@ -1079,7 +1161,10 @@ renderer.domElement.addEventListener("pointerup", (e) => {
   if (id) onUiAct("pick", id);
 });
 renderer.domElement.addEventListener("pointermove", (e) => {
-  if (run?.phase !== "ready") return;
+  if (run?.phase !== "ready" || flyby.active) {
+    if (flyby.active && !flyby.auto) renderer.domElement.style.cursor = "grab";
+    return;
+  }
   canvasNdc(e);
   const id = pickTrailOnMap(trailMap, raycaster, camera, ndc);
   renderer.domElement.style.cursor = id ? "pointer" : "grab";
@@ -1259,9 +1344,14 @@ function tick(now) {
     }
   }
   if (run?.phase === "ready" && orbit.enabled) {
+    if (flyby.auto) {
+      tickFlybyZoom(flyby, camera, orbit, frameDt, (d) => {
+        lobbyZoomTo = d;
+      });
+    }
     applyLobbyZoom(frameDt);
     orbit.update();
-    clampLobbyOrbit(camera, orbit, trailMap, scene.userData.island);
+    if (!flyby.auto) clampLobbyOrbit(camera, orbit, trailMap, scene.userData.island);
     fitLobbyClip(camera, orbit, frameDt, lobbySpan());
     updateTrailMapLod(trailMap, camera);
     updateIslandLod(scene.userData.island, camera);
