@@ -1,119 +1,88 @@
-Epic Pass and Ikon Pass dominate North American ski marketing, but their resort lists are moving targets. Partners change, day limits apply, and blackouts vary by product tier. Global Ski Atlas measures how pass rosters overlap with downhill areas in our open database — roughly 3,000 mapped ski areas worldwide — not how many logos fit on a poster.
+Epic and Ikon own North American ski marketing. Their resort lists move every spring — partners change, day limits, blackouts by tier. We measure how pass rosters overlap with downhill areas in our open database (~3,000 mapped worldwide), not how many logos fit on a poster.
 
-This is a data companion to [Epic vs Ikon vs Indy Pass vs Skiing in Europe: Which Path Is Right for You?](epic-ikon-indy-europe-which-to-choose.html). Here we focus on coverage philosophy, methodology, regional breakdown, overlap, and independents passes leave out. Verify every detail on official pass sites for the 2026–27 season before you buy.
+Data companion to [Epic vs Ikon vs Indy vs Europe](epic-ikon-indy-europe-which-to-choose.html) — that post is strategy; this one is coverage, methodology, overlap, and independents passes skip. **Verify everything on official pass sites for 2026–27 before you buy.**
 
-## What we mean by "coverage"
+## Two different meanings of "coverage"
 
-Pass coverage is not the same as "every ski area in America."
+**Pass roster** — Epic = Vail-owned mountains + partners; Ikon = Alterra + coalition. Unlimited home access, limited partner days, blackouts.
 
-### Pass roster coverage
+**Atlas database** — OSM downhill areas including independents, municipal hills, places too small for billboards. ~900 North America, ~900 Europe, ~900+ elsewhere per [book pitch](../bookpitch.html) regional split.
 
-Epic centers on Vail Resorts-owned mountains plus selected partners; Ikon centers on Alterra-owned destinations plus a broader partner network. Each mixes unlimited home-resort access, limited-day partner visits, and blackout windows by tier.
+When we say a pass "covers" an atlas resort, we matched a 2026–27 partner name to a downhill area by name and location. Not every lift mapped. Not unlimited access. Set intersection, not quality guarantee.
 
-### Atlas database coverage
+## Read this before quoting our numbers
 
-Global Ski Atlas maps downhill ski areas from OpenStreetMap — including independents, municipal hills, and areas too small for pass billboards. Roughly 900 areas in North America, 900 in Europe, and 900+ elsewhere, per the regional split on the [Book pitch](../bookpitch.html) page.
+Partnerships change every spring. Marketing names ≠ OSM labels.
 
-### The gap between the two
+Official sources:
 
-When we say a pass "covers" atlas resorts, we mean a named 2026–27 partner matches a downhill area in our database by name and location. We do not mean every lift is mapped or pass access is unlimited. Coverage is set intersection, not a quality guarantee.
+- [epicpass.com](https://www.epicpass.com/)
+- [ikonpass.com](https://www.ikonpass.com/)
+- [indypass.com](https://www.indypass.com/) — 300+ partners marketed for 2026–27
 
-## Methodology disclaimer — read this first
+Our figures = atlas alignment at publication time. Not legal access documents. Directional order-of-magnitude, not blackout schedules.
 
-Pass partnerships change every spring. Names differ between marketing sites and OSM labels.
+Name matching is fuzzy — false positives and negatives happen. A fully mapped independent may beat a pass icon on terrain per dollar. [Comparison](../resort-comparison.html), [stats explained](ski-resort-stats-explained.html).
 
-### Verify on official sites
+## Epic through atlas lens
 
-Before purchasing for 2026–27:
+Strongest overlap: Colorado, Utah, Tahoe, Northeast US, select international.
 
-- Epic Pass: [epicpass.com](https://www.epicpass.com/) — partners, day limits, blackouts by tier.
-- Ikon Pass: [ikonpass.com](https://www.ikonpass.com/) — destination access rules.
-- Indy Pass: [indypass.com](https://www.indypass.com/) — current 300+ partner roster.
+**CO/UT** — Vail, Beaver Creek, Breck, Keystone, Crested Butte, Park City, heavy OSM geometry.
 
-Our figures describe atlas alignment at publication time — not legal access documents.
+**Tahoe / PNW** — Heavenly, Kirkwood, Northstar; Stevens, Snoqualmie.
 
-### Season 2026–27 framing
+**Northeast** — Stowe, Mount Snow, Okemo, Hunter, Sunapee — dense Epic footprint, still fraction of all hills in [US states](us-states-most-ski-resorts.html).
 
-Partners shift annually (Deer Valley, Snowbasin, Steamboat, and others have changed networks). Treat numbers here as directional order-of-magnitude comparisons, not entitlement schedules.
+**Midwest / Mid-Atlantic** — Wilmot, Afton, Boston Mills — small trail counts, good local laps.
 
-### Name matching and mapped terrain limits
+Whistler = flagship international for many US buyers. European/Japanese partners carry day caps. Epic = vertical integration first, global passport second.
 
-We fuzzy-match partner names to atlas resorts within geographic bounds. False positives and negatives occur. A fully mapped independent may offer better terrain per dollar than a pass icon with blackout days — compare in [Resort Comparison](../resort-comparison.html) and [What Ski Resort Stats Actually Mean](ski-resort-stats-explained.html).
+## Ikon through atlas lens
 
-## Epic Pass: atlas perspective
+Alterra destinations + wider coalition — Utah, Rockies, Northeast, Canada, select international icons.
 
-Epic skews toward Vail Resorts density in Colorado, Utah, Lake Tahoe, the Northeast US, and selected international destinations.
+**Utah / Rockies** — Alta, Snowbird, Brighton, Solitude, Aspen, Jackson, Big Sky, Winter Park, Copper, Eldora.
 
-### Regional breakdown (North America)
+**Northeast / Canada** — Killington, Sugarbush, Sunday River, Loon, Stratton, Tremblant — [road trip](multi-resort-ski-road-trip-planner.html) loops.
 
-**Colorado and Utah:** Strongest atlas overlap — Vail, Beaver Creek, Breckenridge, Keystone, Crested Butte, Park City, and others with extensive OSM geometry.
+**PNW** — Crystal, Revelstoke, north-south stretch.
 
-**Lake Tahoe and West Coast:** Heavenly, Kirkwood, Northstar; Stevens Pass and Summit at Snoqualmie in the Pacific Northwest.
+Zermatt, Val d'Isère-area partners, Niseko-linked spots — strict day caps. Hundreds of non-Ikon European areas within driving distance. Variety across ownership groups; blackouts still apply.
 
-**Northeast US:** Stowe, Mount Snow, Okemo, Hunter, Sunapee — dense Epic footprint but still a fraction of all hills in [Which U.S. States Have the Most Ski Resorts?](us-states-most-ski-resorts.html).
+## Overlap
 
-**Midwest and Mid-Atlantic:** Wilmot, Afton Alps, Boston Mills/Brandywine — smaller atlas trail counts, valuable for local laps.
+Both footprints concentrate Colorado, Utah, Northeast. Plot on [map](../mainmap.html). Marketing counts partners once; atlas counts mapped areas once. Linked domains = one or several OSM polygons.
 
-### International and philosophy
+Both passes rarely break even except split households. Most skiers: one network + indie days — [decision post](epic-ikon-indy-europe-which-to-choose.html).
 
-Whistler is the flagship international Epic-aligned destination for many US buyers. European and Japanese partners carry day allocations. Epic optimizes for destination loyalty to a vertically integrated operator first, global passport second.
+## Independents passes under-represent
 
-## Ikon Pass: atlas perspective
+Hundreds of North American downhill areas outside Epic and Ikon — community hills, county ops, regional gems. Dozens of named pass destinations vs majority of state counts in [US states](us-states-most-ski-resorts.html).
 
-Ikon competes through Alterra destinations plus a wider partner coalition — strong in Utah, the Rockies, the Northeast, Canada, and select international icons.
+Indy targets this tier (300+ partners 2026–27). Modest trail counts, excellent learning terrain — [beginners](best-ski-resorts-for-beginners.html). [Wiki](../wiki/browse.html), [trail map reading](how-to-read-ski-trail-map.html).
 
-### Regional breakdown (North America)
+| | Epic | Ikon | Atlas independents |
+| --- | --- | --- | --- |
+| Strategy | Owned depth + partners | Multi-owner coalition | Pay per visit / Indy |
+| Partner scale (marketing) | ~40+ destinations | ~50+ destinations | 1,000+ NA areas in atlas |
+| Day limits | Common | Common | N/A |
+| Verify | epicpass.com | ikonpass.com | atlas tools |
 
-**Utah and Rockies:** Alta, Snowbird, Brighton, Solitude, Aspen Snowmass, Jackson Hole, Big Sky, Winter Park, Copper, Eldora, and others.
+Partner scale = public marketing order-of-magnitude, not atlas row counts.
 
-**Northeast and Canada:** Killington, Sugarbush, Sunday River, Loon, Stratton, Tremblant, and Mid-Atlantic partners — useful for [Multi-Resort Ski Road Trip Planner](multi-resort-ski-road-trip-planner.html) loops.
+## Atlas tools for pass planning
 
-**Pacific Northwest:** Crystal, Revelstoke, and others stretch north-south coverage.
+**Map** — partners + nearby indies; [drive time](../DriveTimeMap.html) for one-hour radius.
 
-### International and philosophy
+**Comparison / tier rank** — pass anchor vs indie; [tier ranking](../resort-tier-rank.html).
 
-Zermatt, Val d'Isère-area partners, Niseko-linked destinations appear with strict day caps. Hundreds of non-Ikon European atlas areas sit within driving distance. Ikon sells variety across competing ownership groups — blackouts still apply.
+**Trip planner** — chain partners and indie stops.
 
-## Overlap: where both passes touch the same atlas entries
-
-Overlap changes annually. Colorado, Utah, and the Northeast concentrate both footprints — plot partners on the [Interactive Map](../mainmap.html). Pass marketing counts each partner once; atlas counts each mapped area once. Linked domains may match one or several OSM polygons.
-
-Buying both passes rarely clears break-even except for split households. Most skiers optimize one network plus indy days — see [Epic vs Ikon vs Indy Pass vs Skiing in Europe](epic-ikon-indy-europe-which-to-choose.html).
-
-## Independents: what passes under-represent
-
-North America lists hundreds of downhill areas outside Epic and Ikon rosters — community hills, county-operated areas, and regional gems. If Epic and Ikon each align with dozens of named destinations, independents still represent the majority of state area counts in our [US states ranking](us-states-most-ski-resorts.html).
-
-Indy Pass targets this tier with 300+ partners for 2026–27. Many indies have modest trail counts but excellent learning terrain — see [Best Ski Resorts for Beginners](best-ski-resorts-for-beginners.html). Preview mapped lifts in the [Online Atlas](../wiki/browse.html) and [How to Read a Ski Trail Map](how-to-read-ski-trail-map.html).
-
-## Side-by-side comparison table (atlas-oriented)
-
-| Dimension | Epic Pass | Ikon Pass | Atlas independents |
-|-----------|-----------|-----------|-------------------|
-| Primary strategy | Owned-resort depth + partners | Multi-owner coalition | Pay per visit or Indy |
-| Approx. partner scale (2026–27) | ~40+ destinations | ~50+ destinations | 1,000+ NA areas in atlas |
-| Day limits | Common on partners | Common on partners | N/A |
-| Best for | Repeat Epic-core visits | Marquee variety | Discovery, budget, locals |
-| Verify at | epicpass.com | ikonpass.com | globalskiatlas.com tools |
-
-Partner scale follows public marketing order-of-magnitude — not atlas counts.
-
-## How to use atlas tools for pass planning
-
-**Interactive Map** — Plot pass partners and nearby independents; zoom for hills within one hour via [Drive Time Map](../DriveTimeMap.html).
-
-**Resort Comparison and Tier Ranking** — Compare pass anchors versus nearby indies; [tier ranking](../resort-tier-rank.html) shows mega versus small hill.
-
-**Trip Planner** — Chain partners and indie stops on [Trip Planner Map](../TripPlannerMap.html).
-
-**Weather Map** — Pivot on powder weekends using [Weather Map](../weather-map.html).
+**Weather** — powder pivot weekends.
 
 ## Europe and the pass illusion
 
-Both passes advertise international partners, but European skiing is a continent of ~900 atlas areas with lift tickets and village logistics — not a pass problem. Read [Epic vs Ikon vs Indy Pass vs Skiing in Europe](epic-ikon-indy-europe-which-to-choose.html) for that strategy path.
+Both advertise international partners. European skiing = ~900 atlas areas, lift tickets, village logistics — not a US pass problem. [Epic vs Ikon vs Indy vs Europe](epic-ikon-indy-europe-which-to-choose.html). Researchers: Parquet on [Download Data](../DownloadData.html).
 
-Researchers can pull parquet from [Download Data](../DownloadData.html) and join partner lists with atlas resort IDs.
-
-## Bottom line
-
-Epic and Ikon cover prominent slices of the ski world — not the ski world. Atlas data shows where partners cluster, where overlap wastes money, and where independents hide on the map. Verify 2026–27 access officially, compare terrain with our tools, then read the decision framework in [Epic vs Ikon vs Indy Pass vs Skiing in Europe](epic-ikon-indy-europe-which-to-choose.html).
+Epic and Ikon cover prominent slices — not the ski world. Atlas shows where partners cluster, where overlap wastes money, where independents hide. Verify 2026–27 officially, compare terrain with our tools, then read the decision framework in [Epic vs Ikon vs Indy vs Europe](epic-ikon-indy-europe-which-to-choose.html).

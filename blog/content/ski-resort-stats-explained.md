@@ -1,132 +1,93 @@
-## Every resort page shows numbers. Few explain them.
+Every resort page shows numbers. Few explain them.
 
-Vertical drop, skiable acres, trail count, lift total — resort websites repeat these stats until they feel objective. They are not. Marketing departments round up, count groomed connectors differently, and sometimes include terrain that is not lift-served. Global Ski Atlas publishes stats derived from the same OpenStreetMap geometry everywhere, so you can compare a Colorado mom-and-pop hill to a Tyrolean valley on equal footing.
+Vertical drop, skiable acres, trail count, lift total — websites repeat these until they feel objective. They're not. Marketing rounds up, counts connectors differently, sometimes includes terrain you can't reach from a lift.
 
-This glossary explains what each stat means in our dataset, how we compute it, where mapped data diverges from brochures, and how to use the [resort comparison](../resort-comparison.html) tool once you understand the columns.
+Global Ski Atlas publishes stats from the same OpenStreetMap geometry everywhere so you can compare a Colorado mom-and-pop to a Tyrolean valley on equal footing. What each stat means in our dataset, where mapped data diverges from brochures, and how to use [resort comparison](../resort-comparison.html) once you understand the columns.
 
-## Mapped data vs marketing data
+## Mapped vs marketing
 
-| Source | What it optimizes for | Weakness |
+| Source | Optimizes for | Weak spot |
 | --- | --- | --- |
-| Resort marketing | Impressiveness, season pass value | Inconsistent definitions |
-| Trail maps (proprietary) | Navigation | Not machine-readable, license-bound |
-| OpenStreetMap + our pipeline | Consistency, global coverage | Incomplete where untagged |
+| Resort marketing | Impressiveness, pass value | Inconsistent definitions |
+| Proprietary trail maps | Navigation | Not machine-readable |
+| OSM + our pipeline | Consistency, global coverage | Incomplete where untagged |
 
-We do not scrape PDF trail maps. We analyze tags and geometries from OSM, processed through the pipeline described on [Download Data](../DownloadData.html). That means our stats are **reproducible** — you can download GeoParquet and verify — but they may under-count a resort whose pistes are not yet mapped or over-count one with messy polygons.
+We don't scrape PDF trail maps. Tags and geometries through the pipeline on [Download Data](../DownloadData.html). Reproducible — download GeoParquet and verify — but may under-count unmapped resorts or over-count messy polygons.
 
-When in doubt, preview terrain on the [interactive map](../mainmap.html) or fly through it in the [ski game](/playable/). If the map looks thin but the brochure looks huge, the gap is usually missing OSM data, not a bug in our math. Fix tags with [How to Tag a Ski Resort in OpenStreetMap](how-to-tag-a-ski-resort-in-openstreetmap.html).
+Map looks thin, brochure looks huge? Usually missing OSM, not math bugs. Fix tags: [tagging guide](how-to-tag-a-ski-resort-in-openstreetmap.html). Or fly it in the [ski game](/playable/).
 
-## Vertical drop (elevation relief)
+## Vertical drop
 
-**What skiers think it means:** how far you descend from the highest lift-served point to the main base — the "wow" number on the poster.
+**What you think:** highest lift-served point to main base — the poster number.
 
-**What we compute:** elevation relief from analyzed terrain models and tagged feature elevations within the resort boundary — essentially the difference between high and low plausible skiing elevations derived from DEM data and OSM geometry, not from a single sign at the base lodge.
+**What we compute:** relief from DEM + tagged elevations inside the resort boundary — skiable high/low from analyzed geometry, not one sign at the lodge.
 
-**Why they differ:**
+**Why they differ:** marketing uses highest terminal to lowest base even if you can't ski that line; we may include sub-peaks inside the polygon; incomplete lift tagging skews until someone adds summit/base nodes.
 
-- Marketing often uses the highest lift terminal to the lowest public base, even if you cannot ski that full line without hiking
-- We may include sub-peaks with short pitches if they are inside the winter_sports polygon
-- Resorts with incomplete lift tagging can skew high or low until mappers add summit and base elevations
+Useful for bucket sorting (1,000 ft vs 3,000 ft), not precise bragging. Pair with trail mix before "big vertical" = "hard skiing."
 
-Vertical is useful for rough bucket sorting (1,000 ft vs 3,000 ft), not for precise bragging. Pair it with trail difficulty mix before assuming "big vertical" equals "hard skiing."
+## Skiable acres
 
-## Skiable acres (and hectares)
+**What you think:** lift-served groomed and gladed terrain you'd ski in a day.
 
-**What skiers think it means:** lift-served groomed and gladed terrain you could reasonably ski in a day.
+**What we compute:** area of mapped downhill piste geometry inside the boundary, acres from m²/hectares.
 
-**What we compute:** the area of mapped downhill piste geometry (and related skiable polygons where tagged) inside the resort boundary, converted to acres from square meters or hectares.
+**Why they differ:** marketing includes hike-to bowls, double-counts ridge sides; we count drawn `piste:type=downhill` — unmapped gladed = invisible; oversized `landuse=winter_sports` inflates acreage (tagging error).
 
-**Why they differ:**
-
-- Marketing acreage often includes non-lift-served bowls, hike-to terrain, or double-counts both sides of a ridge
-- We count what is drawn as `piste:type=downhill` (and related tags), so unmapped gladed zones do not appear
-- Over-sized `landuse=winter_sports` polygons inflate our acreage without adding trails — a tagging error, not a feature
-
-For the largest mapped areas worldwide, see [The 10 Largest Ski Resorts in the World](largest-ski-resorts-in-the-world.html). Rankings by acreage often surprise people familiar only with US destination marketing.
+[Largest resorts](largest-ski-resorts-in-the-world.html) by mapped size often surprise US-marketing natives.
 
 ## Trail count
 
-**What skiers think it means:** named runs on the paper trail map — "200 trails!"
+**What you think:** named runs on the paper map — "200 trails!"
 
-**What we compute:** the number of distinct OSM ways (or relation members) tagged `piste:type=downhill` within the resort extract, after deduplication heuristics.
+**What we compute:** distinct OSM ways tagged `piste:type=downhill` after dedup heuristics.
 
-**Why they differ:**
+**Why they differ:** one logical run split upper/lower = two; cat tracks tagged pistes; unmapped runs = zero.
 
-- Resorts split one logical run into upper/lower segments; we may count two
-- Connectors and cat tracks may be tagged as pistes in OSM but unnamed on brochures
-- Unmapped runs do not count at all
-
-Trail count drives our size categories (small, medium, mega) used in charts on [Ski Trail Facts](../SkiTrailFacts.html). A resort with 15 mapped trails is a different experience than one with 150, even if both call themselves "big."
+Drives size categories on [trail facts](../SkiTrailFacts.html). Fifteen mapped trails ≠ one hundred fifty — even if both say "big."
 
 ## Lift count
 
-**What skiers think it means:** number of chairlifts, gondolas, and surface lifts you can ride — sometimes excluding magic carpets or counting a detachable quad as one "lift" even if it has two lines.
+**What you think:** chairs, gondolas, surface lifts you ride — sometimes excluding carpets or counting one detachable quad as one "lift."
 
-**What we compute:** mapped ways tagged `aerialway=*` within the resort nearby window, grouped by type for [Ski Lift Facts](../SkiLiftFacts.html).
+**What we compute:** mapped `aerialway=*` in the resort window, typed for [lift facts](../SkiLiftFacts.html).
 
-**Why they differ:**
+**Why they differ:** rope tows/carpets inconsistently mapped; chondola one way or two; `disused:` lifts lingering in OSM.
 
-- Rope tows and carpets are inconsistently mapped
-- Gondola + chair combinations (chondola) may be one way or two
-- Closed or seasonal lifts may remain in OSM with `disused:` tags
+One lift / twenty trails vs twenty lifts / twenty trails — different day. [Lift types](ski-lift-types-explained.html).
 
-Lift count matters for throughput and beginner access — a hill with one lift and 20 trails feels very different from 20 lifts and 20 trails. Read [Ski Lift Types Explained](ski-lift-types-explained.html) for how types affect your day.
+## Elevation
 
-## Elevation (summit and base)
+Summit/base-like elevations from DEM + tagged nodes. Feed vertical and map popups. Marketing summit names sometimes peak above where lifts actually stop. We follow skiable geometry, not signage poetry.
 
-We store summit-like and base-like elevations from DEM analysis and tagged nodes. These feed vertical calculations and appear in popups on the [interactive map](../mainmap.html).
+## Trail mix
 
-Marketing summit figures sometimes use a nearby peak name while lifts stop below the true summit. Our numbers follow skiable geometry, not signage poetry.
+**What you think:** green/blue/black pie chart.
 
-## Trail mix (difficulty distribution)
+**What we compute:** distribution of `piste:difficulty` among mapped downhill pistes.
 
-**What skiers think it means:** percentage green / blue / black on the trail map pie chart.
+**Why they differ:** US vs Europe ≠ 1:1 OSM values; untagged runs in "unknown"; local grading norms — Austrian "easy" may feel US intermediate.
 
-**What we compute:** distribution of `piste:difficulty` tags among mapped downhill pistes — `novice`, `easy`, `intermediate`, `advanced`, `expert`, `freeride`, and untagged.
+Best beginner stat when well-tagged. [Beginners post](best-ski-resorts-for-beginners.html).
 
-**Why they differ:**
+## Other fields you might see
 
-- US vs Europe color conventions are not 1:1 with OSM values
-- Many runs are left untagged; untagged trails land in an "unknown" bucket
-- Resorts grade relative to local norms; an Austrian "easy" may feel like a US "intermediate"
+Country/region from admin enrichment. Lat/long for sorting ([edge of the world](northernmost-southernmost-ski-resorts.html)). Category buckets (small/medium/mega) from trail thresholds. Buffer geometry for web maps — not skiable area.
 
-Trail mix is the best stat for beginners if it is well-tagged. See [Best Ski Resorts for Beginners](best-ski-resorts-for-beginners.html) for how we score learning terrain.
+## Compare fairly
 
-## Secondary stats you may see
+[Resort comparison](../resort-comparison.html) → add candidates → sort by priority → cross-check [map](../mainmap.html) → [drive time](../DriveTimeMap.html) or [trip planner](../TripPlannerMap.html) for logistics.
 
-Depending on the view ([wiki](../wiki/browse.html), comparison table, or Parquet export), you may also encounter:
+Stats narrow shortlists; they don't replace snow reports, lessons, or village vibe. Full framework: [how to choose](how-to-choose-a-ski-resort.html).
 
-- **Country and region** — from administrative enrichment, not resort marketing
-- **Latitude / longitude** — centroid or boundary-based, for sorting extremes ([northernmost and southernmost](northernmost-southernmost-ski-resorts.html))
-- **Category labels** — derived buckets (small / medium / mega) from trail count thresholds
-- **Buffer geometry** — display polygons for web maps, not skiable area
+## When numbers look wrong
 
-## How to compare resorts fairly
+1. Check OSM — missing `piste:type=downhill` or `aerialway`
+2. Check boundary — oversized `landuse=winter_sports`
+3. Check pipeline date — lag behind live edits
+4. [Ski game](/playable/) — missing runs in-game = missing in data
+5. Contribute fixes
 
-Once you understand the columns:
+SQL-level proof: [Download Data](../DownloadData.html).
 
-1. Open [resort comparison](../resort-comparison.html)
-2. Add resorts you are considering — search works best with exact names from the atlas
-3. Sort by the stat that matches your priority (trail count for variety, vertical for leg burn, lifts for access)
-4. Cross-check terrain on the [interactive map](../mainmap.html)
-5. Use [drive time map](../DriveTimeMap.html) or [trip planner](../TripPlannerMap.html) for logistics
-
-Stats narrow a shortlist; they do not replace snow reports, lesson availability, or how you feel about a village. For a full decision framework, read [How to Choose a Ski Resort](how-to-choose-a-ski-resort.html).
-
-## When stats look wrong
-
-If numbers seem off:
-
-1. **Check OSM** — missing `piste:type=downhill` or `aerialway` tags are the usual culprit
-2. **Check the boundary** — an oversized `landuse=winter_sports` polygon inflates acreage
-3. **Check the date** — pipeline refreshes lag live OSM edits
-4. **Play the hill** in the [ski game](/playable/) — if runs are missing in-game, they are missing in data
-5. **Contribute fixes** — the atlas improves when mappers improve tags
-
-You can also inspect raw attributes via [Download Data](../DownloadData.html) if you want SQL-level proof.
-
-## The bottom line
-
-Ski resort stats are only as honest as their definitions. We choose mapped OpenStreetMap geometry so definitions stay constant across countries and seasons. Marketing numbers are useful for vibe; atlas numbers are useful for comparison.
-
-Learn the vocabulary once, compare everywhere, and when brochures and maps disagree, trust the reproducible source — then fix OSM so the next pipeline run tells a truer story.
+Definitions stay constant across countries because we chose mapped OSM geometry. Marketing numbers = vibe. Atlas numbers = comparison. When brochures and maps disagree, trust the reproducible source — then fix OSM so the next pipeline run tells a truer story.

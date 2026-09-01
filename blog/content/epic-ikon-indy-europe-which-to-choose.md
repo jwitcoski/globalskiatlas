@@ -1,144 +1,85 @@
-You already bought the pass — or you are staring at three checkout pages wondering why skiing requires a spreadsheet. Epic, Ikon, and Indy Pass are not three versions of the same product. They are three North American strategies for accessing many mountains. Skiing in Europe is a fourth strategy: regional lift tickets, trains between valleys, and roughly 900 mapped Alpine areas instead of a corporate partner list.
+You already bought a pass — or you're staring at three checkout pages wondering why skiing requires a spreadsheet. Fair. Epic, Ikon, and Indy aren't three flavors of the same thing. They're three North American strategies for getting on snow a lot. Skiing in Europe is a fourth strategy entirely: regional lift tickets, trains between valleys, and roughly 900 mapped Alpine areas that don't care which US pass you own.
 
-Global Ski Atlas exists for skiers who answer "which one next?" all season. The [Coffee Table Book](../coffee-table-book.html) and [Book pitch](../bookpitch.html) frame the core reader: multi-mountain pass holders who want a desk reference beyond marketing. Pair this decision post with [Epic Pass vs Ikon Pass: What Our Database Actually Covers](epic-pass-vs-ikon-pass-resort-coverage.html) for roster-versus-atlas numbers.
+Global Ski Atlas doesn't sell passes. We built it for people who spend the whole season asking *which one next?* — including hills they've never heard of and trips overseas. If you want raw roster numbers first, read [Epic Pass vs Ikon Pass: What Our Database Actually Covers](epic-pass-vs-ikon-pass-resort-coverage.html). This post is about picking a path.
 
 ## Four strategies, not three products
 
-### Strategy A — Epic Pass (destination loyalty)
+**Epic** is destination loyalty. You live near a Vail-owned mountain or you're willing to anchor a season in Colorado, Utah, Tahoe, or a few Northeast hubs. You accept blackout math on partners because the owned resorts are the point.
 
-Optimize for repeated visits to Vail Resorts-owned mountains and accepted blackout math on partners. Best when you live near an Epic core or plan a season anchored in Colorado, Utah, Tahoe, or specific Northeast Epic hubs.
+**Ikon** is coalition variety. Aspen, Jackson, Utah's Cottonwood canyons, eastern blockbusters, some international icons — different ownership groups under one card. Good when your hit list spans brands and you have enough ski days to beat à la carte pricing.
 
-### Strategy B — Ikon Pass (coalition variety)
+**Indy** is independent discovery. [Indy's own marketing](https://www.indypass.com/) puts the 2026–27 roster at 300+ partners, mostly smaller hills. It's built for road trips and lap count, not tram prestige.
 
-Optimize for marquee names across competing ownership groups — Aspen, Jackson Hole, Utah classics, eastern icons, select international destinations. Best when you want brand variety and accept partner day limits.
+**Europe** isn't a pass category. It's a different trip: village-linked domains, national trail colors, lift cards that cover valleys not continents. Our atlas has on the order of 900 European downhill areas. No American pass touches more than a thin slice of that.
 
-### Strategy C — Indy Pass (independent discovery)
+Most serious skiers blend strategies across years. Fewer try to optimize all four in one winter.
 
-Optimize for breadth: 300+ partner areas for 2026–27 per [Indy Pass marketing](https://www.indypass.com/), weighted toward smaller hills. Best when you road-trip frequently and value lap count over tram prestige.
+## Five questions that actually matter
 
-### Strategy D — Ski Europe (continental skiing)
+**How many days will you ski?** Ten days total? Blackout schedules can waste pass money. Forty? Pass math starts to work — if you ski the right partners.
 
-Optimize for Alpine or Scandinavian trips where North American passes are irrelevant or secondary. ~900 European areas in our atlas — a different order of magnitude than any US pass roster.
+**Where do you live?** Plot rings on the [Drive Time Map](../DriveTimeMap.html). Pass value collapses when the nearest partner is a five-hour drive.
 
-Most serious skiers blend strategies across years, not all in one season.
+**Icons or discovery?** Epic and Ikon sell the mountains on posters. Indy and the atlas long tail sell the hills between them — see [Which U.S. States Have the Most Ski Resorts?](us-states-most-ski-resorts.html).
 
-## Decision framework: five questions
+**International travel this season?** If Europe is the real trip, model lift tickets and regional cards. One Whistler week isn't the same as building a pass strategy around it.
 
-### How many days will you actually ski?
+**Does your group agree?** Use [Resort Comparison](../resort-comparison.html) before one person buys for everyone. Beginners and experts rarely want the same mountain.
 
-Ten days total? Blackout schedules can waste pass money. Forty days? Pass math improves — if you ski the right partners.
+## Who each path fits (no judgment, just patterns)
 
-### Where do you live or fly cheaply?
+**Front-Range local:** Epic or Ikon depending on whether Breckenridge repeats or Aspen + A-Basin mix wins. Run both rosters from home in the [Trip Planner](../TripPlannerMap.html).
 
-Plot home-to-resort times in [Drive Time Map](../DriveTimeMap.html). Pass value collapses without affordable access to partner clusters.
+**Northeast road warrior:** Ikon stacks Killington, Sugarbush, Sunday River. Indy fills the gaps on drives between them — pair with [Multi-Resort Ski Road Trip Planner](multi-resort-ski-road-trip-planner.html).
 
-### Do you want icons or discovery?
+**Budget lap machine:** Indy when you care about ski-day count over vertical bragging. Verify each hill's rules on the official site; partner terms change.
 
-Icons: Epic/Ikon marquee mountains. Discovery: Indy partners and atlas independents from [Which U.S. States Have the Most Ski Resorts?](us-states-most-ski-resorts.html).
+**One-week vacationer:** Five ski days? Passes often lose to bundled lodging + lift tickets. [How to Choose a Ski Resort](how-to-choose-a-ski-resort.html) beats a pass brochure here.
 
-### Will you travel internationally this season?
+**Euro-first skier:** Two weeks in Austria or France. US pass partner days overseas are a side dish, not the meal. Browse Alpine regions in the [Online Atlas](../wiki/browse.html).
 
-If Europe is the real trip, model lift tickets and regional cards. If Whistler is one trip only, compare single-destination tickets versus pass add-ons.
+## When Epic wins — and when it doesn't
 
-### Does your group agree?
+Epic rewards repeat visits to big corporate mountains. Colorado and Utah partners tend to have heavy OSM coverage — useful if you're comparing terrain in [Largest Ski Resorts in the World](largest-ski-resorts-in-the-world.html).
 
-Use [Resort Comparison](../resort-comparison.html) and [Best Ski Resorts for Beginners](best-ski-resorts-for-beginners.html) before one person buys for everyone.
+Buy Epic if you live near Epic cores and you'll actually use them. Skip it if your favorites are Ikon-only or you're flying in for one Utah week.
 
-## Personas: who each path fits
+## When Ikon wins — and when it doesn't
 
-### The Front-Range local (Epic or Ikon)
+Utah's Alta/Snowbird/Brighton/Solitude cluster alone defines a lot of buyers' seasons. Add Jackson, Aspen, Big Sky, eastern names — that's the Ikon pitch.
 
-Lives within two hours of multiple Colorado partners. Epic wins for Breckenridge/Keystone/Vail repeats; Ikon wins for Aspen, Copper, Winter Park, A-Basin mix. Run both rosters in [Trip Planner Map](../TripPlannerMap.html) from home.
+Buy Ikon if your list spans ownership groups and you have the days. Skip it if your local mountains are Epic-heavy or you mostly ski independents.
 
-### The Northeast road warrior (Ikon or Indy)
+## When Indy wins — and when it doesn't
 
-Ikon stacks Killington, Sugarbush, Sunday River, Loon. Indy fills gaps between drives — pair with [Multi-Resort Ski Road Trip Planner](multi-resort-ski-road-trip-planner.html).
+Indy is the anti-billboard pass. Partners skew small — the same geography pass marketing ignores in [How Many Ski Resorts Are There in the World?](how-many-ski-resorts-worldwide.html).
 
-### The budget lap machine (Indy)
+Buy Indy if you drive more than you fly and you like variety. Skip it if you need destination-scale terrain every trip or you ski fewer than ~7 days.
 
-Prioritizes ski-day count over vertical. Indy's 300+ partner pitch aligns with the atlas long tail. Verify each hill's rules on the official site.
+## When Europe wins — and when it isn't even comparable
 
-### The one-week vacationer (none or single-destination)
+Europe is village skiing, train transfers, and lift cards that make sense in one valley. Read [How to Read a Ski Trail Map](how-to-read-ski-trail-map.html) before assuming a French blue skis like a US blue.
 
-Five ski days? Passes often lose to bundled lodging lift tickets. Use [How to Choose a Ski Resort](how-to-choose-a-ski-resort.html).
+Buy the Europe trip if culture and snow both matter and you're planning properly. Don't pretend your Ikon partner days in the Alps replace researching hundreds of independent areas on the map.
 
-### The Euro-first skier (Strategy D)
+## Blended seasons that work in real life
 
-Two weeks in Austria or France. US pass partner days overseas are supplements, not a continent-wide plan. Browse [Online Atlas](../wiki/browse.html) Alpine regions.
+Ikon for marquee weekends, Indy for weekday laps. Epic locally, separate Alps budget. Indy all winter plus one splurge week at Whistler or Chamonix. No pass at all if you're only getting eight days — compare day-ticket hills in [Resort Comparison](../resort-comparison.html).
 
-## Comparison table: Epic vs Ikon vs Indy vs Europe
+## Atlas tools once you've picked a lane
 
-| Factor | Epic Pass | Ikon Pass | Indy Pass | Skiing Europe |
-|--------|-----------|-----------|-----------|---------------|
-| **Core pitch** | Vail Resorts ecosystem | Multi-brand coalition | Independent breadth | Continental lift culture |
-| **Typical scale (2026–27)** | ~40+ destinations | ~50+ destinations | 300+ partners | ~900 atlas areas |
-| **Day limits** | Common | Common | Verify product rules | Daily/weekly tickets |
-| **Best when** | Repeat Epic-core visits | Marquee variety | Road-trip discovery | Alps/Scandinavia focus |
-| **Official verify** | epicpass.com | ikonpass.com | indypass.com | Resort/regional sites |
-| **Atlas tools** | [Coverage post](epic-pass-vs-ikon-pass-resort-coverage.html) | [Interactive Map](../mainmap.html) | [US states data](us-states-most-ski-resorts.html) | [Online Atlas](../wiki/browse.html) |
+**Map and wiki** — Find partners two hours from your in-laws' house.
 
-Confirm partner scale on official sites before purchase.
+**Comparison and tier ranking** — [Tier Ranking](../resort-tier-rank.html) when an Indy name means nothing to you.
 
-## Epic deep dive: when it wins
+**Trip planner and weather** — Chain stops, pivot on storms.
 
-Epic rewards skiers who want one corporate ecosystem and repeat destination behavior. Owned Colorado and Utah mountains deliver high mapped trail counts — see [Largest Ski Resorts in the World](largest-ski-resorts-in-the-world.html).
+**Ski game and AI** — [Ski Game](/playable/) for a silly preview; [Skiing AI](../skiing-ai.html) for questions, then verify stats yourself.
 
-**Choose Epic if:** you live near Epic cores, accept blackouts, and repeat the same mega-resorts.
+**Coffee table book** — Same data as the site, on paper. [Book pitch](../bookpitch.html) if you're curious.
 
-**Skip Epic if:** your favorites are Ikon-only or you ski one Utah week total.
+## Before you buy for 2026–27
 
-## Ikon deep dive: when it wins
+Download partner lists from Epic, Ikon, and Indy. Mark blackouts on your calendar. Match must-ski mountains on the [Interactive Map](../mainmap.html). Run break-even math against day tickets. Read [Epic Pass vs Ikon coverage](epic-pass-vs-ikon-pass-resort-coverage.html) for what passes leave out.
 
-Utah's Alta/Snowbird/Brighton/Solitude cluster defines many buyers' seasons. Jackson Hole, Aspen, Big Sky, and eastern blockbusters fill a bucket-list roster.
-
-**Choose Ikon if:** your hit list spans multiple ownership groups with enough days to beat à la carte pricing.
-
-**Skip Ikon if:** your local mountains are Epic-heavy or you mostly ski independents.
-
-## Indy Pass deep dive: when it wins
-
-Indy is the anti-billboard strategy — partners skew smaller, matching areas pass marketing ignores in [How Many Ski Resorts Are There in the World?](how-many-ski-resorts-worldwide.html).
-
-**Choose Indy if:** you drive more than you fly and explore states with huge independent counts.
-
-**Skip Indy if:** you need destination-scale terrain every trip or ski fewer than ~7 days.
-
-## Skiing Europe deep dive: when it wins
-
-Europe is a planning paradigm: village-linked domains, train transfers, multi-resort lift cards. Read [How to Read a Ski Trail Map](how-to-read-ski-trail-map.html) before your first French blue.
-
-**Choose Europe if:** vacation aligns with Euro seasons and you value culture equal to vertical.
-
-**Do not pretend Europe is Epic:** overseas partner days are supplements, not strategy.
-
-## Blended seasons that work
-
-- **Ikon + Indy days:** Marquee weekends on Ikon, weekday indy laps.
-- **Epic + Europe trip:** Epic locally; separate Alps budget.
-- **Indy + one splurge week:** Indy all winter plus paid week at Whistler or Chamonix.
-- **No pass + atlas:** Day tickets via [Resort Comparison](../resort-comparison.html) if you ski eight days total.
-
-## Atlas tools for pass holders choosing what's next
-
-**Interactive Map and Online Atlas** — Find partners two hours from a relative's house.
-
-**Resort Comparison and Tier Ranking** — [Tier Ranking](../resort-tier-rank.html) shows mega versus small hill when Indy names are unfamiliar.
-
-**Trip Planner and Weather** — Build loops in [Trip Planner](../TripPlannerMap.html); pivot on [Weather Map](../weather-map.html).
-
-**Ski Game and AI** — Preview in [Ski Game](/playable/); ask [Skiing AI](../skiing-ai.html) then verify stats in the atlas.
-
-**Coffee Table Book** — The three-volume atlas on [Book pitch](../bookpitch.html) matches online data for pass holders who want a physical reference.
-
-## 2026–27 verification checklist
-
-1. Download partner lists from Epic, Ikon, and Indy official sites.
-2. Mark blackouts against your holiday calendar.
-3. Match must-ski mountains in [Interactive Map](../mainmap.html).
-4. Compare break-even days versus day ticket prices.
-5. Read [Epic Pass vs Ikon Pass coverage](epic-pass-vs-ikon-pass-resort-coverage.html) for independent blind spots.
-6. If Europe is on the calendar, open [Online Atlas](../wiki/browse.html) Alpine browse.
-
-## Make the call
-
-Epic owns loyalty. Ikon sells variety. Indy rewards curiosity across hundreds of partners. Europe ignores all three unless you let it be its own plan. Pick one primary strategy for 2026–27, verify officially, and use Global Ski Atlas to choose every mountain inside that strategy.
+Epic owns loyalty. Ikon sells variety. Indy rewards curiosity. Europe ignores all three unless you let it be its own plan. Pick one primary strategy, verify it officially, and use the atlas to choose every mountain inside it.

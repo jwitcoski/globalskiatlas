@@ -1,123 +1,77 @@
-Some skiers chase vertical records. Others chase latitude lines on a globe. At the northern and southern edges of lift-served skiing, seasons shorten, daylight behaves strangely, and OpenStreetMap coverage thins — exactly where atlas sorting by geography gets interesting.
+Some skiers chase vertical records. Others chase latitude lines on a globe. At the northern and southern edges of lift-served skiing, seasons shorten, daylight gets weird, and OSM coverage thins — which is exactly where sorting the atlas by geography gets interesting.
 
-Global Ski Atlas sorts downhill areas by latitude using the same open dataset behind the [Interactive Map](../mainmap.html) and [Online Atlas](../wiki/browse.html). This article tours geographic extremes: how far north and south lift-served skiing reaches, what latitude means for season length, anchor resorts at each end, and why remote areas need community mapping via [How to Tag a Ski Resort in OpenStreetMap](how-to-tag-a-ski-resort-in-openstreetmap.html).
+We sort downhill areas by latitude from the same dataset as the [Interactive Map](../mainmap.html) and [Online Atlas](../wiki/browse.html). Arctic Scandinavia to Patagonia, what latitude means for season length, anchor resorts, and why remote areas need mappers — [tagging guide](how-to-tag-a-ski-resort-in-openstreetmap.html).
 
-## Why latitude matters for ski planning
+## Why latitude matters (and what it doesn't)
 
-Latitude controls sun angle, cold persistence, and midwinter daylight hours. It does not alone determine snow quality — elevation and prevailing winds matter enormously — but it sets the outer envelope of where skiing is plausible.
+Latitude controls sun angle, cold persistence, midwinter daylight. It doesn't alone determine snow quality — elevation and wind matter enormously. But it sets the outer envelope of plausible lift-served skiing.
 
-### Arctic and sub-Arctic skiing
+Above ~66.5°N (Arctic Circle), polar night kills usable daylight for weeks. Areas near 68°N use artificial light or schedule around short sun. Riksgränsen runs spring skiing into June under midnight sun.
 
-Above the Arctic Circle (~66.5°N), polar night removes usable daylight for weeks. Areas near 68°N use artificial light or schedule around limited sun. Riksgränsen, Sweden famously runs spring skiing into June under the midnight sun.
+South of the equator, seasons flip. July in Chile = beach weather in Colorado. Southern extremes cluster Patagonia near ~54°S.
 
-### Southern Hemisphere reversal
+## How we rank
 
-South of the equator, seasons flip. July skiing in Chile shares calendar months with beach weather in Colorado. Southern extremes cluster in Patagonia near ~54°S.
+Centroid latitude from OSM-derived data. Incomplete boundaries shift centroids slightly. Mapped downhill areas only — [global count](how-many-ski-resorts-worldwide.html). Arctic and Patagonian valleys have thinner mapper communities than Colorado; rankings reflect best available open data.
 
-## How we rank northernmost and southernmost areas
+## Northern edge
 
-Atlas sorting uses resort centroid latitude from OpenStreetMap-derived data. Incomplete boundaries may shift centroids slightly. We include mapped downhill areas, not every backcountry zone — see [How Many Ski Resorts Are There in the World?](how-many-ski-resorts-worldwide.html). Arctic and Patagonian valleys have thinner mapper communities than Colorado; rankings reflect best available open data.
+**Riksgränsen, Sweden (~68.4°N)** — Among the world's northernmost with real lift service, Sweden–Norway border. Late-season fame when lower latitudes close. Modest Alpine-scale terrain; draw is latitude + midnight sun laps May–June.
 
-## Northernmost lift-served ski areas
+**Narvikfjellet, Norway (~68.4°N)** — Fjord views above town. Competes with Riksgränsen for "northernmost" depending how you measure.
 
-The northern edge clusters in Scandinavia and far-northern Russia.
+**Levi and Ylläs, Finland (~67.8°N)** — Lapland hubs with airports and lodging — visitable high-latitude skiing. [Beginners](best-ski-resorts-for-beginners.html) if teaching in the north.
 
-### Riksgränsen, Sweden (~68.4°N)
+Midwinter daylight is short; improves through spring. Coastal Norway: [weather map](../weather-map.html) for wind.
 
-Among the world's northernmost ski resorts with lift service, on the Sweden–Norway border. Famous for late-season skiing when lower latitudes close. Modest Alpine-scale terrain; the draw is latitude and midnight sun laps in May and June.
+## Southern edge
 
-**Season character:** Long spring extension; limited midwinter daylight.
+**Cerro Castor, Argentina (~54.7°S)** — Near Ushuaia, Tierra del Fuego. Marketed southernmost full-scale resort with modern lifts. Tree-lined, wind-exposed. June–September peak.
 
-### Narvikfjellet, Norway (~68.4°N)
+**Ushuaia area (~54.8°S)** — Smaller ops push latitude farther south. Some modest trail networks in OSM, not mega-resort polygons.
 
-Above-town lifts with fjord views. Competes with Riksgränsen for "northernmost" titles depending on measurement method.
+**Australia / NZ** — Perisher (~36°S), Queenstown (~45°S) are southern icons, not latitude extremes. Useful for season-flip comparisons only.
 
-**Season character:** Coastal volatility — check [Weather Map](../weather-map.html) for wind holds.
+## Latitude ≠ long season
 
-### Levi and Ylläs, Finland (~67.8°N)
+68°N in December may mean a few hours of ski daylight. Low-latitude Chilean resorts lift high for reliable snow. [Stats explained](ski-resort-stats-explained.html) for mapped vertical vs marketing.
 
-Finnish Lapland hubs with airports and lodging scale — among the most visitable high-latitude destinations. Pair beginner planning with [Best Ski Resorts for Beginners](best-ski-resorts-for-beginners.html).
+## Before you book the edge
 
-**Season character:** Cold reliable winters; short December daylight improving through spring.
+Small lift fleets — one mechanical issue closes half the mountain. [Lift facts](../SkiLiftFacts.html).
 
-## Southernmost lift-served ski areas
+Preview trails in [trail facts](../SkiTrailFacts.html) and [trail map guide](how-to-read-ski-trail-map.html).
 
-Southern skiing concentrates in the Andes — Chile and Argentina.
+Ushuaia and Riksgränsen need multi-leg travel. [Trip planner](../TripPlannerMap.html) within one continent — oceans need flights.
 
-### Cerro Castor, Argentina (~54.7°S)
+Most extremes are small/medium in [tier ranking](../resort-tier-rank.html) despite extreme coordinates.
 
-Near Ushuaia on Tierra del Fuego, marketed as the world's southernmost full-scale resort with modern lifts. Tree-lined, wind-exposed terrain.
+Patagonian wind, Arctic coastal storms — [weather map](../weather-map.html). Usually outside Epic/Ikon core value unless partner days matter — [pass decision post](epic-ikon-indy-europe-which-to-choose.html).
 
-**Season character:** June–September peak; Patagonian storms.
+## Remote OSM gaps
 
-### Ushuaia area (~54.8°S)
+Extreme resorts = mapping deserts vs Vail or Verbier. Missing boundaries, stale difficulties, seasonal infrastructure never entered.
 
-Smaller operations around Ushuaia push latitude farther south. Some appear as modest trail networks in OSM rather than mega-resort polygons.
+Ski Riksgränsen, Narvik, or Castor? Improve tags per [lift types](ski-lift-types-explained.html). Remote fixes improve latitude rankings for everyone on [Download Data](../DownloadData.html).
 
-### Australia and New Zealand (context)
+## Atlas workflow
 
-Perisher (~36°S) and Queenstown (~45°S) are southern icons but not latitude extremes — useful for season-flip comparisons only.
+Browse Scandinavia or Patagonia in [wiki](../wiki/browse.html). Confirm lifts/pistes on [map](../mainmap.html) — sparse geometry = research mode. [Comparison](../resort-comparison.html). [Ski game](/playable/) when mesh exists. Buffer days for weather — same lesson as [road trips](multi-resort-ski-road-trip-planner.html).
 
-## Latitude versus season length
-
-Higher latitude does not always mean longer seasons. At 68°N in December, usable ski daylight may be a few hours. Elevation rescues low latitudes — Chilean resorts near Santiago lift high for reliable snow. Read [What Ski Resort Stats Actually Mean](ski-resort-stats-explained.html) for mapped vertical versus marketing.
-
-## Resort facts worth checking before you go
-
-Extreme resorts punish casual planning:
-
-### Lift count and reliability
-
-Small fleets mean one mechanical issue closes half the mountain — compare [Lift Facts](../SkiLiftFacts.html).
-
-### Trail count and difficulty
-
-Preview in [Trail Facts](../SkiTrailFacts.html) and [How to Read a Ski Trail Map](how-to-read-ski-trail-map.html).
-
-### Access logistics
-
-Ushuaia and Riksgränsen require multi-leg travel. Use [Trip Planner](../TripPlannerMap.html) only within one continent — oceans need flights, not OSRM routes.
-
-### Tier category
-
-[Resort tier ranking](../resort-tier-rank.html) classifies by mapped trail count. Most latitude extremes are small or medium despite extreme coordinates.
-
-## Weather map: storms at the edges
-
-Patagonian wind and Arctic coastal storms close lifts more often than Colorado norms. [Weather Map](../weather-map.html) helps compare Lapland versus Andes trips. Most extremes sit outside Epic/Ikon core value — see [Epic vs Ikon vs Indy Pass vs Skiing in Europe](epic-ikon-indy-europe-which-to-choose.html) only when pass partner days matter.
-
-## Remote OSM gaps: help the next explorer
-
-Extreme resorts are mapping deserts versus Vail or Verbier. Common gaps: missing `leisure=ski_area` boundaries, outdated difficulty tags, seasonal-only infrastructure never entered in OSM.
-
-If you ski Riksgränsen, Narvik, or Cerro Castor, improve tags per [Ski Lift Types Explained](ski-lift-types-explained.html). Remote fixes improve latitude rankings for everyone using [Download Data](../DownloadData.html) exports.
-
-## Compare extremes in the atlas workflow
-
-1. Browse Scandinavia or Patagonia in [Online Atlas](../wiki/browse.html).
-2. Confirm lifts and pistes render in [Interactive Map](../mainmap.html) — sparse geometry signals research mode.
-3. Side-by-side compare in [Resort Comparison](../resort-comparison.html).
-4. Preview in [Ski Game](/playable/) when terrain mesh exists.
-5. Book buffer days for weather — same lesson as [Multi-Resort Ski Road Trip Planner](multi-resort-ski-road-trip-planner.html).
-
-## Northern versus southern quick reference
-
-| Region | Example area | Approx. latitude | Season peak | OSM coverage |
-|--------|--------------|------------------|-------------|--------------|
+| Region | Example | Lat | Peak season | OSM |
+| --- | --- | --- | --- | --- |
 | Arctic Sweden | Riksgränsen | ~68.4°N | Mar–Jun | Moderate |
 | Arctic Norway | Narvikfjellet | ~68.4°N | Dec–Apr | Moderate |
 | Finnish Lapland | Levi | ~67.8°N | Dec–Apr | Good |
 | Patagonia AR | Cerro Castor | ~54.7°S | Jun–Sep | Variable |
 | Tierra del Fuego | Ushuaia area | ~54.8°S | Jun–Sep | Sparse |
 
-Latitudes are approximate planning centroids — confirm in atlas popups.
+Approximate centroids — confirm in popups.
 
 ## Why extremes belong in a global atlas
 
-Pass marketing focuses on iconic centers. A global dataset also records where the sport thins toward the poles — Riksgränsen beside Vermont community hills in the same schema. That inclusivity drives the three-volume atlas on [Book pitch](../bookpitch.html).
+Pass marketing focuses on icons. A global dataset also records where the sport thins toward the poles — Riksgränsen beside Vermont community hills in the same schema. That's the [book pitch](../bookpitch.html) idea.
 
-## Ski the map edge responsibly
+Extreme latitude = cold injury risk, short daylight, travel delays. Patrolled resort skiing inside mapped boundaries only — not backcountry advice. Atlas = planning input, not safety authority.
 
-Extreme latitude skiing adds cold injury risk, short daylight, and travel delays. This article covers patrolled resort skiing within mapped boundaries — not uncontrolled backcountry. Treat atlas data as planning input, not safety authority.
-
-Sort the full atlas by latitude to find hills near you that sit unusually far north or south for their country. Explore extremes in the [Interactive Map](../mainmap.html) and fix OSM when you find a missing pole-side partner.
+Sort by latitude on the [map](../mainmap.html). Fix OSM when you find a missing pole-side partner.

@@ -1,0 +1,120 @@
+[
+  {
+    "slug": "how-to-tag-a-ski-resort-in-openstreetmap",
+    "title": "How to Tag a Ski Resort in OpenStreetMap (So It Shows Up in the Atlas)",
+    "description": "Step-by-step OSM tagging for downhill ski areas: boundaries, pistes, lifts, and common mistakes that keep resorts out of Global Ski Atlas.",
+    "pillar": "Improve the data",
+    "date": "2026-09-01",
+    "readTime": 12,
+    "featured": true,
+    "related": ["ski-resort-stats-explained", "how-many-ski-resorts-worldwide", "ski-lift-types-explained"]
+  },
+  {
+    "slug": "how-many-ski-resorts-worldwide",
+    "title": "How Many Ski Resorts Are There in the World?",
+    "description": "A data-driven count of downhill ski areas worldwide, how we measure them, and where OpenStreetMap coverage is strong or thin.",
+    "pillar": "Reveal the dataset",
+    "date": "2026-09-01",
+    "readTime": 8,
+    "related": ["ski-resort-stats-explained", "us-states-most-ski-resorts", "how-to-tag-a-ski-resort-in-openstreetmap"]
+  },
+  {
+    "slug": "ski-resort-stats-explained",
+    "title": "What Ski Resort Stats Actually Mean",
+    "description": "Vertical drop, skiable acres, trail counts, and lift totals — and why mapped OpenStreetMap data often differs from resort marketing.",
+    "pillar": "Improve the data",
+    "date": "2026-09-01",
+    "readTime": 7,
+    "related": ["how-to-choose-a-ski-resort", "largest-ski-resorts-in-the-world", "how-to-tag-a-ski-resort-in-openstreetmap"]
+  },
+  {
+    "slug": "how-to-choose-a-ski-resort",
+    "title": "How to Choose a Ski Resort (Without Reading 10 Resort Websites)",
+    "description": "A step-by-step framework for picking where to ski using comparable stats, drive time, and side-by-side resort comparison.",
+    "pillar": "Help skiers decide",
+    "date": "2026-09-01",
+    "readTime": 10,
+    "related": ["epic-ikon-indy-europe-which-to-choose", "best-ski-resorts-for-beginners", "ski-resort-stats-explained"]
+  },
+  {
+    "slug": "largest-ski-resorts-in-the-world",
+    "title": "The 10 Largest Ski Resorts in the World (By Mapped Terrain)",
+    "description": "The biggest downhill ski areas ranked by mapped skiable terrain from OpenStreetMap — not resort marketing brochures.",
+    "pillar": "Reveal the dataset",
+    "date": "2026-09-01",
+    "readTime": 9,
+    "related": ["ski-resort-stats-explained", "how-many-ski-resorts-worldwide", "how-to-choose-a-ski-resort"]
+  },
+  {
+    "slug": "best-ski-resorts-for-beginners",
+    "title": "Best Ski Resorts for Beginners (Ranked by Data, Not Hype)",
+    "description": "What beginners actually need on the mountain, how we score green terrain and learning lifts, and regional picks in the US and Europe.",
+    "pillar": "Help skiers decide",
+    "date": "2026-09-01",
+    "readTime": 8,
+    "related": ["how-to-read-ski-trail-map", "ski-lift-types-explained", "how-to-choose-a-ski-resort"]
+  },
+  {
+    "slug": "us-states-most-ski-resorts",
+    "title": "Which U.S. States Have the Most Ski Resorts?",
+    "description": "Every US state ranked by downhill ski area count from our global dataset — including the independents Epic and Ikon never mention.",
+    "pillar": "Reveal the dataset",
+    "date": "2026-09-01",
+    "readTime": 8,
+    "related": ["epic-ikon-indy-europe-which-to-choose", "multi-resort-ski-road-trip-planner", "how-many-ski-resorts-worldwide"]
+  },
+  {
+    "slug": "ski-lift-types-explained",
+    "title": "Chairlifts, Gondolas, and T-Bars: Ski Lift Types Explained",
+    "description": "Every major lift type, what it feels like on the hill, global counts from our dataset, and common OSM tagging mistakes.",
+    "pillar": "Improve the data",
+    "date": "2026-09-01",
+    "readTime": 8,
+    "related": ["how-to-tag-a-ski-resort-in-openstreetmap", "best-ski-resorts-for-beginners", "ski-resort-stats-explained"]
+  },
+  {
+    "slug": "how-to-read-ski-trail-map",
+    "title": "How to Read a Ski Trail Map (And Spot When OSM Gets It Wrong)",
+    "description": "Trail colors, lift symbols, and vertical — US vs Europe — plus how to preview terrain in the Global Ski Atlas before you go.",
+    "pillar": "Improve the data",
+    "date": "2026-09-01",
+    "readTime": 7,
+    "related": ["best-ski-resorts-for-beginners", "ski-resort-stats-explained", "how-to-tag-a-ski-resort-in-openstreetmap"]
+  },
+  {
+    "slug": "multi-resort-ski-road-trip-planner",
+    "title": "Planning a Multi-Resort Ski Road Trip Using Open Data",
+    "description": "Sample road-trip itineraries, how many days per stop, and how to build routes in the Global Ski Atlas trip planner.",
+    "pillar": "Help skiers decide",
+    "date": "2026-09-01",
+    "readTime": 9,
+    "related": ["us-states-most-ski-resorts", "epic-ikon-indy-europe-which-to-choose", "how-to-choose-a-ski-resort"]
+  },
+  {
+    "slug": "epic-pass-vs-ikon-pass-resort-coverage",
+    "title": "Epic Pass vs Ikon Pass: What Our Database Actually Covers",
+    "description": "How many atlas resorts each pass includes, where they overlap, and what thousands of independent hills are left out.",
+    "pillar": "Help skiers decide",
+    "date": "2026-09-01",
+    "readTime": 8,
+    "related": ["epic-ikon-indy-europe-which-to-choose", "us-states-most-ski-resorts", "how-to-choose-a-ski-resort"]
+  },
+  {
+    "slug": "epic-ikon-indy-europe-which-to-choose",
+    "title": "Epic vs Ikon vs Indy Pass vs Skiing in Europe: Which Path Is Right for You?",
+    "description": "Four different skiing strategies — destination passes, partner networks, independent discovery, and Alpine trips — and how to pick yours.",
+    "pillar": "Help skiers decide",
+    "date": "2026-09-01",
+    "readTime": 11,
+    "related": ["epic-pass-vs-ikon-pass-resort-coverage", "multi-resort-ski-road-trip-planner", "how-to-choose-a-ski-resort"]
+  },
+  {
+    "slug": "northernmost-southernmost-ski-resorts",
+    "title": "Skiing at the Edge of the World: Northernmost and Southernmost Ski Areas",
+    "description": "The geographic extremes of downhill skiing — Arctic Scandinavia to Patagonia — from latitude-sorted atlas data.",
+    "pillar": "Reveal the dataset",
+    "date": "2026-09-01",
+    "readTime": 7,
+    "related": ["how-many-ski-resorts-worldwide", "how-to-choose-a-ski-resort", "how-to-tag-a-ski-resort-in-openstreetmap"]
+  }
+]

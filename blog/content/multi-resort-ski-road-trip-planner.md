@@ -1,135 +1,81 @@
-One resort is a vacation. Three resorts in ten days is a philosophy — the kind of trip where you judge mountains by drive time, base-area coffee, and whether the blue runs match the brochure. Multi-resort road trips reward skiers who plan routes from data instead of Instagram reels.
+One resort is a vacation. Three in ten days is a philosophy — judging mountains by drive time, base-area coffee, and whether the blues match the brochure.
 
-Global Ski Atlas built a [Trip Planner](../TripPlannerMap.html) on top of open resort locations and OSRM driving routes. This article offers sample itineraries across the Rockies, the US Northeast, and the Alps, explains how many days to spend at each stop, walks through the planner, and shows how the [Ski Game](/playable/) helps you preview hills before you commit mileage.
+We built a [Trip Planner](../TripPlannerMap.html) on open resort locations and OSRM driving routes. Sample itineraries (Rockies, Northeast, Alps), days-per-stop guidance, planner walkthrough, and [ski game](/playable/) previews before you commit mileage.
 
-## Why plan a multi-resort trip with open data
+## Why open data for road trips
 
-Pass products like Epic and Ikon encourage hopping between partners, but thousands of independent areas never appear on pass marketing maps. Open datasets include those hills — the same inventory in [Which U.S. States Have the Most Ski Resorts?](us-states-most-ski-resorts.html) and [How Many Ski Resorts Are There in the World?](how-many-ski-resorts-worldwide.html).
+Epic and Ikon encourage hopping partners. Thousands of independents never appear on pass maps — same inventory as [US states ranking](us-states-most-ski-resorts.html) and [global count](how-many-ski-resorts-worldwide.html).
 
-Road-trip planning adds constraints passes ignore: drive hours, lodging clusters, and realistic ski days versus travel days. A good itinerary balances marquee destinations with smaller stops that break up long drives.
+Passes ignore drive hours, lodging clusters, travel vs ski days. Good itinerary = marquee anchors + small stops that break up long drives.
 
-## How many days per stop
+## Days per stop
 
-### One day — taste test
+**One day** — detour, weather backup, small hill to tick off. Vermont community area en route to something bigger.
 
-Use a single ski day when the resort is a detour, weather backup, or small hill you want to tick off — a Vermont community area en route to a larger destination, or a Utah valley hill before flying home.
+**Two days** — learn lift layout, chase sun. Minimum for 30+ mapped trails if variety matters.
 
-### Two days — proper sample
+**Three to four** — anchor resorts: big Colorado, Utah hubs, major Alpine bases. Build the trip around these.
 
-Two consecutive days let you learn lift layout and chase sun aspects. Minimum for any mountain with 30+ mapped trails if you care about terrain variety.
+**Travel days** — every fifth or sixth day should be light. Six mega-resorts in six days = you remember parking lots, not fall lines.
 
-### Three to four days — deep dive
+## Rockies sample (10 days)
 
-Assign three or four days to anchor resorts: large Colorado destinations, Utah snow hubs, major Alpine bases. Build the rest of the trip around these anchors.
+Denver in, February, mid-size rental.
 
-### Travel days count
+**Days 1–2 — Summit County** — Breck, Keystone, Copper, or A-Basin from Frisco/Silverthorne. [Comparison](../resort-comparison.html) before burning pass days.
 
-Every fifth or sixth day should be light. Skiing six mega-resorts in six days usually means you remember parking lots more than fall lines.
+**Day 3 — Indie detour** — Loveland or similar. One day for variety.
 
-## Sample itinerary: Colorado and Utah Rockies (10 days)
+**Days 4–5 — Vail or Beaver Creek** — I-70 transfer. [Weather](../weather-map.html) for wind holds.
 
-Denver arrival, February timing, mid-size rental car.
+**Days 6–7 — Wasatch** — ~4.5 hr to SLC. Alta/Snowbird or Brighton/Solitude. [Lift types](ski-lift-types-explained.html) — Alta's snowboard policy, Snowbird's tram.
 
-### Days 1–2 — Summit County anchor
+**Days 8–10 — Bonus / fly out** — Park City, Snowbasin, or back toward Denver. Keep last morning flexible. Planner warns on legs over ~6 hours driving.
 
-Drive 1.5–2 hours from Denver. Ski Breckenridge, Keystone, Copper, or A-Basin depending on pass access. Stay in Frisco or Silverthorne. Preview trail mix in [Resort Comparison](../resort-comparison.html) before burning pass days.
+## Northeast sample (8 days)
 
-### Day 3 — Independent detour
+Boston or Burlington in; resorts close together.
 
-Loveland Ski Area or similar independent — smaller footprint, fewer crowds. One day for variety.
+**Days 1–2** — Sunapee or Mount Snow, then Stratton or Okemo (Manchester/Wilmington base).
 
-### Days 4–5 — Vail or Beaver Creek
+**Days 3–4** — Mad River Glen one day; Stowe two.
 
-Transfer 1–1.5 hours on I-70. Two days for back bowls or groomers. Check [Weather Map](../weather-map.html) for wind holds.
+**Day 5** — Jay Peak (storms) or Smugglers' (families). Pick one if tight.
 
-### Days 6–7 — Utah Wasatch
+**Days 6–7** — Whiteface or Cannon in the Whites / Lake Placid orbit.
 
-Drive ~4.5 hours to Salt Lake. Ski Alta/Snowbird or Brighton/Solitude. Compare lift types in [Ski Lift Types Explained](ski-lift-types-explained.html) so your group knows Alta's snowboard policy and Snowbird's tram.
+**Day 8** — out. Mid-Atlantic driving? [Drive time](../DriveTimeMap.html) instead of flying.
 
-### Days 8–10 — Bonus and departure
+## Alps sample (12 days)
 
-Park City, Snowbasin, or return toward Denver. Keep the last morning flexible. Enter Denver as home base in the [Trip Planner](../TripPlannerMap.html) and drop any leg over six hours of driving.
+Geneva or Zurich in; tunnels, vignettes, valley parking.
 
-## Sample itinerary: US Northeast (8 days)
+**Days 1–3** — Portes du Soleil or Chamonix. [Largest resorts](largest-ski-resorts-in-the-world.html) for scale context.
 
-Boston or Burlington fly-in; dense resort spacing.
+**Days 4–5** — Verbier or 4 Vallées.
 
-### Days 1–2 — Southern VT/NH gateway
+**Days 6–7** — Zermatt (car-free — park Täsch).
 
-Base in Manchester, NH or Wilmington, VT. Sunapee or Mount Snow, then Stratton or Okemo.
+**Days 8–11** — Dolomites detour or Tyrol finish (St. Anton, Ischgl, Sölden). Keep European legs in one continental block — planner can't route oceans.
 
-### Days 3–4 — Mad River Glen and Stowe
+## Trip planner how-to
 
-One day at Mad River for character; two at Stowe for scale.
+[Trip Planner](../TripPlannerMap.html) on the road-trip map page.
 
-### Day 5 — Jay Peak or Smugglers' Notch
+Home point — address, geolocation, or airport hotel for fly-and-drive.
 
-Jay rewards storm chasers; Smugglers' suits families. Pick one if time is tight.
+Add resorts in order (max 25). Reorder; numbered markers on map.
 
-### Days 6–7 — White Mountains or Lake Placid
+End at last resort or custom end (ski Verbier, fly Geneva).
 
-Whiteface for vertical; Cannon for scrappy authenticity.
+OSRM gives drive distance/time. Cross-check [resort facts](../SkiResortFacts.html) before booking lodging. [How to choose](how-to-choose-a-ski-resort.html) for multi-day stop debates.
 
-### Day 8 — Travel out
+## Ski game preview
 
-Use [Drive Time Map](../DriveTimeMap.html) if driving from the Mid-Atlantic instead of flying.
+[Playable](/playable/) loads real geometry for a silly downhill lap. Same dataset as anchors — lift alignment, pitch, trees vs bowls. Won't teach snow conditions; teaches whether a mountain fits your style. [Tier ranking](../resort-tier-rank.html) for size categories.
 
-## Sample itinerary: French and Swiss Alps (12 days)
+## Passes and indies on one trip
 
-Geneva or Zurich arrival; plan tunnels, vignettes, and valley parking.
+Mix pass days, single tickets, indie hills. [Epic vs Ikon vs Indy vs Europe](epic-ikon-indy-europe-which-to-choose.html) for strategy; [coverage post](epic-pass-vs-ikon-pass-resort-coverage.html) for atlas alignment. Indy partners = affordable detours between marquee stops.
 
-### Days 1–3 — Portes du Soleil or Chamonix
-
-Three days for linked domains or weather flexibility. Compare terrain in [The 10 Largest Ski Resorts in the World](largest-ski-resorts-in-the-world.html).
-
-### Days 4–5 — Verbier or 4 Vallées
-
-Two days for off-piste groups; one if you prefer groomers.
-
-### Days 6–7 — Zermatt or Grindelwald
-
-Zermatt is car-free — park at Täsch. Two days minimum for high-alpine routes.
-
-### Days 8–11 — Dolomites optional, Tyrol finish
-
-Italy detour for Cortina or end in St. Anton, Ischgl, or Sölden. Keep European legs in one continental block — the Trip Planner warns when stops span oceans.
-
-## Trip planner walkthrough
-
-The [Trip Planner](../TripPlannerMap.html) lives on the road-trip map page.
-
-### Set your home point
-
-Enter a home address or use geolocation. For fly-and-drive trips, set home to first lodging or airport hotel.
-
-### Add resort stops in order
-
-Search resorts and append to the waypoint list (max 25). Reorder as needed; numbered markers appear on the map.
-
-### Choose end behavior
-
-End at the last resort or specify a custom end address — useful when you ski Verbier but fly out of Geneva.
-
-### Calculate route and cross-check stats
-
-OSRM returns driving distance and duration. Before booking lodging, compare lift and trail counts in [Resort Facts](../SkiResortFacts.html). Pair with [How to Choose a Ski Resort](how-to-choose-a-ski-resort.html) when debating multi-day stops.
-
-## Ski Game preview: test runs before real runs
-
-The [Ski Game](/playable/) loads real resort geometry for a simplified downhill lap in the browser.
-
-### Pick resorts from the same dataset
-
-Try each anchor stop — notice lift alignment, pitch, and open versus treed terrain.
-
-### Learn layout without fatigue
-
-You will not learn snow conditions, but you will learn whether a mountain suits your style. Pair with [Tier Ranking](../resort-tier-rank.html) for size categories.
-
-## Pass strategy and independents on the same trip
-
-Mix pass days, single tickets, and indie hills. Read [Epic vs Ikon vs Indy Pass vs Skiing in Europe](epic-ikon-indy-europe-which-to-choose.html) for strategy and [Epic Pass vs Ikon Pass: What Our Database Actually Covers](epic-pass-vs-ikon-pass-resort-coverage.html) for atlas alignment. Indy Pass partners excel as affordable detours between marquee stops.
-
-## Build your route this week
-
-Open the [Trip Planner](../TripPlannerMap.html), plug in one sample itinerary, and adjust for your pass and driving patience. Swap a mega-resort for an indie hill from [Which U.S. States Have the Most Ski Resorts?](us-states-most-ski-resorts.html). Preview anchors in the [Ski Game](/playable/). Leave one flex day — the best road trips find snow where you did not expect.
+Open the [planner](../TripPlannerMap.html), plug a sample itinerary, adjust for your pass and driving patience. Swap a mega for an indie from [US states](us-states-most-ski-resorts.html). Preview anchors in the [game](/playable/). Leave a flex day — best road trips find snow where you didn't expect.

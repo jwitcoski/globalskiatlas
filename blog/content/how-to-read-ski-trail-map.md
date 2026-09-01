@@ -1,115 +1,69 @@
-A ski trail map is a contract between the mountain and your legs. It promises where the green runs live, which lifts get you there, and how steep the fall line actually is. The trouble is that no two countries draw that contract the same way — and even within one resort, the paper map at the lodge and the GPS trace on your phone may disagree.
+A trail map is a contract between the mountain and your legs. It says where the greens are, which lifts get you there, and how steep the fall line actually is. Problem: no two countries sign that contract the same way — and the paper map at the lodge may disagree with your phone.
 
-This guide walks through US versus European color systems, lift and boundary symbols, how paper maps differ from digital layers, and how to preview terrain in the [Interactive Map](../mainmap.html) before you buy a lift ticket. When something looks wrong, you will know whether it is you, the resort, or OpenStreetMap — and when it is worth fixing the data yourself.
+Here's US vs European colors, lift symbols, paper vs digital, previewing in the [Interactive Map](../mainmap.html), and when OSM — not you — is wrong. Stats context: [ski resort stats explained](ski-resort-stats-explained.html).
 
-## Why trail maps matter before you arrive
+## Why bother before you buy a ticket
 
-Most skiers pick a resort from marketing photos and a vertical-feet number. That works until you stand at the top of a blue that skis like a black, or you follow a green that dead-ends at a cliff band. Trail maps encode difficulty, traffic flow, and lift logic. Reading them well means fewer wrong-turn days and less time studying signs instead of snow.
+Most people pick from marketing photos and a vertical-feet number. That works until a "blue" skis like a black, or a green dead-ends at a cliff band. Maps encode difficulty, traffic flow, lift logic. Read them well = fewer wrong-turn days.
 
-Resort brochures often round stats upward. Mapped data from OpenStreetMap tells a different story — sometimes more honest, sometimes incomplete. We explain that gap in [What Ski Resort Stats Actually Mean](ski-resort-stats-explained.html).
+Brochures round up. OSM tells a different story — sometimes more honest, sometimes incomplete.
 
-## US trail colors: the North American standard
+## US colors
 
-In the United States and Canada, difficulty is usually shown as a color and shape combination:
+**Green circle** — learning zone, wide, predictable. Clustered near base lifts.
 
-### Green circles — beginner terrain
+**Blue square** — bulk of most US mountains. A Colorado blue at 10,000 ft can feel steeper than an East Coast black after ice.
 
-Green trails are the learning zone: mellow pitch, wide berms, and predictable traffic. Resorts cluster greens near base-area lifts so beginners can lap without crossing expert fall lines.
+**Black diamond** — steeper, narrower, less groomed. Double blacks for expert chutes. Context > symbol.
 
-### Blue squares — intermediate
+**Orange / park** — features, not traditional difficulty. Atlas renders parks in orange from OSM tags — see [tagging guide](how-to-tag-a-ski-resort-in-openstreetmap.html).
 
-Blue is the bulk of most US mountains. Intermediates live here; advanced skiers use blues as connectors. A Colorado blue at 10,000 feet can feel steeper than an East Coast black after an ice storm.
+## European colors
 
-### Black diamonds — advanced
+**Blue in the Alps** often means easy intermediate — not US beginner safe.
 
-Black diamonds mark steeper, narrower, or less groomed terrain. Some resorts add double diamonds for expert-only chutes. Context matters more than the symbol.
+**Red** — main intermediate tier. **Black** — advanced.
 
-### Orange and terrain-park notation
+Scandinavia and eastern Europe vary; numbered pistes on signs while maps keep colors. Always read the legend.
 
-Many US maps use orange or a distinct icon for terrain parks. These signal features, not traditional difficulty ratings. Our atlas renders park pistes in orange using OSM tagging logic from [How to Tag a Ski Resort in OpenStreetMap](how-to-tag-a-ski-resort-in-openstreetmap.html).
+Classic mistake: American sees wide French blue, assumes US-blue difficulty, ends up on pitch that'd be solid black at home. Cross continents with [trail counts](../wiki/browse.html), not color alone.
 
-## European trail colors: numbers, reds, and blues that flip
+## Symbols beyond color
 
-Europe does not share one national standard, but Alpine countries converge on a familiar palette — with important differences from North America.
+Lift icons differ — chairs, gondolas, surface lifts, funiculars. [Lift types explained](ski-lift-types-explained.html). Match legend before committing to three lift changes.
 
-### Blue in the Alps often means "easy intermediate"
+Dashed/hatched boundaries = ski-area limits. Patrol inside; outside is different math. Remote resorts may have incomplete polygons on digital maps.
 
-French, Austrian, and Swiss maps typically use blue for runs that US skiers would call green or mild blue. Red is the main intermediate tier; black marks advanced terrain. A French blue is not automatically "beginner safe" if you learned on US greens only.
+Contours show pitch — tight lines = steep. [Map](../mainmap.html) for vertical when brochure claims 3,000 ft but lifts tell a tighter story.
 
-### Nordic and Eastern European variants
+## Paper vs digital
 
-Scandinavia uses a similar palette, but hill size and tree line change how colors feel. Eastern European areas may use numbered pistes on signage while maps retain colors. Always cross-check the legend.
+**Paper** — which lifts open *this* season, grooming routes, mid-mountain lodges. Updates for construction faster than global datasets sometimes.
 
-### The US–Europe translation problem
+**Digital** — [comparison](../resort-comparison.html), [lift facts](../SkiLiftFacts.html), spot gaps where snow exists but database doesn't.
 
-The classic mistake: an American intermediate sees a wide French blue, assumes US-blue difficulty, and ends up on a pitch that would be a solid black at home. When comparing resorts across continents, use mapped trail counts in the [Online Atlas](../wiki/browse.html) rather than color alone.
+Disagreement = resort re-rated a trail, OSM used different difficulty than signage, or new trail not mapped yet. Beginners: trust mapped green/novice but check daily grooming.
 
-## Symbols beyond color: lifts, boundaries, and hazards
+## Preview in the atlas
 
-### Lift types on the map
+Find resort on [map](../mainmap.html) or [wiki](../wiki/browse.html). Zoom until pistes render — palette from `piste:difficulty`: green easy/novice, blue intermediate, black advanced.
 
-Chairlifts, gondolas, surface lifts, and funiculars appear with different icons. Our atlas uses styling aligned with [Ski Lift Types Explained](ski-lift-types-explained.html). Match the legend before committing to a route that requires three lift changes.
+Popup for trail counts, lifts, vertical. [Beginners post](best-ski-resorts-for-beginners.html) for teaching trips. [Weather](../weather-map.html) and [drive time](../DriveTimeMap.html) for logistics.
 
-### Boundaries and out-of-bounds
+[Ski game](/playable/) — fast lap to internalize layout. Not avalanche training; useful orientation.
 
-Dashed lines or hatch marks indicate ski-area limits. Inside the boundary, patrol and avalanche control apply. Digital maps show boundaries when mappers have drawn them — remote resorts may have incomplete polygons.
+## When OSM is wrong
 
-### Elevation bands and contour lines
+Volunteer-maintained. Popular US and Alpine resorts = rich geometry. Small and remote = partial or stale.
 
-Contour spacing reveals pitch: tight contours mean steep. Digital preview in the [Interactive Map](../mainmap.html) lets you compare vertical context when a brochure claims 3,000 feet but mapped lift networks tell a tighter story.
+Gladed runs tagged intermediate because one entrance is signed that way. New chairs missing. Parks rebuilt every season, never re-tagged.
 
-## Paper maps versus digital layers
+Edit OSM or leave notes. [Tagging guide](how-to-tag-a-ski-resort-in-openstreetmap.html). Fixes feed the [book pipeline](../bookpitch.html) too.
 
-The lodge trail map simplifies glades and merges short connectors. Digital layers — our atlas pistes and [Trail Facts](../SkiTrailFacts.html) statistics — trace mapped geometry from OpenStreetMap.
+Arctic and Patagonian extremes need this most — [edge of the world](northernmost-southernmost-ski-resorts.html).
 
-### What paper does better
+## Ski day stack
 
-Paper shows which lifts are open this season, nightly grooming routes, and mid-mountain lodges. It updates for construction faster than global datasets sometimes do.
+Three layers: resort's daily map (operations truth), atlas preview (geometry + stats), willingness to adjust when signage overrides both. Start conservative first hour when translating US ↔ European colors.
 
-### What digital does better
-
-Digital maps let you compare resorts in [Resort Comparison](../resort-comparison.html), cross-reference [Lift Facts](../SkiLiftFacts.html), and spot gaps where trails exist on snow but not in the database.
-
-### When they disagree
-
-Disagreement usually means the resort re-rated a trail, OSM used a different difficulty tag than signage, or the trail is new. For beginner trips, trust mapped green/novice tags but verify with daily grooming reports.
-
-## Preview terrain in the atlas before you go
-
-### Step one: find the resort
-
-Open the [Interactive Map](../mainmap.html) or [Online Atlas](../wiki/browse.html). Zoom until pistes and lifts render. Our palette follows OSM `piste:difficulty` tags: green for easy/novice, blue for intermediate, black for advanced.
-
-### Step two: compare stats
-
-Open the resort popup for trail counts, lifts, and vertical span. Pair map preview with [Best Ski Resorts for Beginners](best-ski-resorts-for-beginners.html) when teaching new skiers.
-
-### Step three: sanity-check weather and drive time
-
-Check the [Weather Map](../weather-map.html) for temperature trends. Use [Drive Time Map](../DriveTimeMap.html) when choosing between two mountains from your lodging hub.
-
-### Try the mountain in the Ski Game
-
-The [Ski Game](/playable/) loads real resort terrain from the same pipeline. Ski a fast lap to internalize lift layout before travel — not a substitute for avalanche awareness, but useful orientation.
-
-## When OSM gets it wrong — and how to fix it
-
-OpenStreetMap is volunteer-maintained. Popular US and Alpine resorts tend to have rich geometry; smaller hills and remote areas often have partial coverage or outdated tags.
-
-### Common OSM mistakes
-
-Mappers tag gladed runs as intermediate because one entrance is signed that way. Lifts go missing after new chair installations. Snow parks get omitted when rebuilt every season.
-
-### How to report and improve data
-
-Edit OpenStreetMap directly or leave notes for local mappers. Our guide [How to Tag a Ski Resort in OpenStreetMap](how-to-tag-a-ski-resort-in-openstreetmap.html) covers `piste:type`, `piste:difficulty`, and imagery tips. Fixes feed the pipeline behind the [Book pitch](../bookpitch.html) coffee-table atlas.
-
-### The atlas feedback loop
-
-Corrected OSM data flows into parquet downloads and map tiles — improving stats for skiers using [How to Choose a Ski Resort](how-to-choose-a-ski-resort.html). Remote extremes need this most; see [Skiing at the Edge of the World](northernmost-southernmost-ski-resorts.html).
-
-## Putting it together on ski day
-
-Arrive with three layers: the resort's daily map (operations truth), your atlas preview (geometry and stats), and willingness to adjust when signage overrides both. Start conservative your first hour when translating between US and European colors.
-
-Trail maps are navigation tools with regional dialects. Learn the dialect, preview digitally, and contribute fixes when you find errors.
+Trail maps are navigation with regional dialects. Learn the dialect, preview digitally, contribute fixes when you find errors.

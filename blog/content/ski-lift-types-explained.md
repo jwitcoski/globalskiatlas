@@ -1,141 +1,79 @@
-## Why lift type matters before you buy a ticket
+Lift type shapes your day as much as trail color. Ten high-speed quads make a resort feel smaller than three slow doubles serving the same acreage. Beginners panic on T-bars; families love gondolas in wind.
 
-You have seen the icons on trail maps: detachable quads, gondola bubbles, T-bars, magic carpets. Each solves a different problem — moving beginners uphill without panic, hauling experts to ridgelines fast, or spanning valleys too wide for chairs. Lift technology shapes your ski day as much as trail difficulty. A resort with ten high-speed quads feels smaller than one with three slow doubles serving the same acreage.
+We catalog every mapped `aerialway` in OSM — per resort and country. [Lift facts](../SkiLiftFacts.html), [map](../mainmap.html), [comparison](../resort-comparison.html). Trail symbology: [how to read a trail map](how-to-read-ski-trail-map.html). Mappers: [tagging guide](how-to-tag-a-ski-resort-in-openstreetmap.html).
 
-Global Ski Atlas catalogs every mapped `aerialway` in OpenStreetMap and rolls counts up per resort and country. Browse aggregates on [lift facts](../SkiLiftFacts.html), inspect individual resorts on the [interactive map](../mainmap.html), and compare lift mixes in [resort comparison](../resort-comparison.html). This guide translates OSM tagging into skier language — and flags tagging mistakes that skew the data.
+## OSM vocabulary (what we actually count)
 
-If you are new to trail and lift symbology together, pair this article with [how to read a ski trail map](how-to-read-ski-trail-map.html). Mappers should read [how to tag a ski resort in OpenStreetMap](how-to-tag-a-ski-resort-in-openstreetmap.html).
-
-## OpenStreetMap aerialway values (the atlas vocabulary)
-
-OSM uses the `aerialway=*` key on ways and nodes. Common values in our dataset:
-
-| OSM value | What skiers call it |
-|-----------|---------------------|
-| `chair_lift` | Fixed-grip chairlift (double, triple, quad) |
-| `detachable` | High-speed (detachable) chairlift |
-| `gondola` | Enclosed cabin on a loop cable |
-| `cable_car` | Large aerial tram (two counterweighted cabins) |
-| `mixed_lift` | Chondola — chairs and cabins on one line |
-| `t-bar` | T-bar drag lift |
-| `j-bar` | J-bar drag lift |
-| `platter` | Poma / platter lift |
+| OSM value | Skier name |
+| --- | --- |
+| `chair_lift` | Fixed-grip chair |
+| `detachable` | High-speed chair |
+| `gondola` | Enclosed cabin |
+| `cable_car` | Big tram (two cabins) |
+| `mixed_lift` | Chondola |
+| `t-bar`, `j-bar`, `platter` | Surface drags |
 | `rope_tow` | Rope tow |
-| `magic_carpet` | Conveyor surface lift |
-| `drag_lift` | Generic drag when subtype unclear |
-| `zip_line` | Zip line (occasionally tagged in ski areas) |
+| `magic_carpet` | Conveyor |
+| `drag_lift` | Generic drag |
 
-Additional tags refine experience: `aerialway:occupancy` (chairs per carrier), `aerialway:duration`, `aerialway:bubble` (weather hoods), and `aerialway:heating`. Not every mapper adds them; counts default to line geometry and primary type.
+`aerialway:occupancy`, `bubble`, `heating` — nice when mappers add them; often missing.
 
-Our [lift facts](../SkiLiftFacts.html) page normalizes these values into human labels and charts global distribution — useful when you want to know whether gondolas or chairs dominate a country.
+## Chairs: fixed vs detachable
 
-## Chairlifts: fixed grip vs detachable
+**Fixed-grip** (`chair_lift`) — continuous cable, moderate speed, loading timing matters. Saturday mazes at the base.
 
-### Fixed-grip chairs (`chair_lift`)
+**Detachable** — chairs slow in terminal, haul on the line. Ten minutes to summit changes lunch plans.
 
-The workhorse: a continuous cable, chairs spaced closely, moderate speed. Loading requires timing; falling is embarrassing but common for beginners. Fixed grips cap throughput on busy weekends — you feel it in long mazes at the base.
+Some mappers use `chair_lift` + `aerialway:detachable=yes` instead of primary `detachable`. Counts can run slightly low until tags harmonize.
 
-OSM often tags older doubles and triples as `chair_lift` without distinguishing occupancy. Atlas counts still reveal **how reliant** a resort is on chairs vs surface lifts.
+## Gondolas and cable cars
 
-### Detachable high-speed chairs (`detachable`)
+**Gondola** — enclosed, skis outside or in hand. Wind, whiteouts, beginners. Valley links in the Alps.
 
-Chairs detach from the cable in the terminal, allowing slow loading and fast travel. Detachables shrink a resort psychologically — ten minutes to the summit changes where you eat lunch.
+**Cable car** — Jackson Big Red scale. OSM distinguishes from gondola; skiers often say "gondola" for both.
 
-Tagging tip: some mappers use `chair_lift` plus `aerialway:detachable=yes` instead of `detachable` as the primary value. Our pipeline checks both patterns, but inconsistencies mean resort-level detachable counts can be slightly low until tags harmonize.
+## Surface lifts
 
-## Gondolas and cable cars: weather, beginners, and valley links
+**Magic carpet** — beginners. Strong signal in [beginner scoring](best-ski-resorts-for-beginners.html).
 
-### Gondolas (`gondola`)
+**Rope tow** — Midwest and eastern classics. Miserable on steep pitches; perfect on bunny slopes.
 
-Enclosed cabins carry skis on exterior racks or require handheld gear. Gondolas shine in wind, whiteouts, and beginner transport — no load timing, less terror. Valley-to-valley links (Zermatt connectors, European village hops) are often gondolas.
+**T-bar / platter** — Europe and the American West on narrow trails. Beginners struggle; locals don't notice.
 
-Mapped gondola kilometers sometimes include summer sightseeing segments; verify winter ski operation on resort sites.
+## Global mix (rough)
 
-### Cable cars (`cable_car`)
+Chairs dominate worldwide, especially North America. Gondolas cluster Alps, Japan, valley-link resorts. Drags and T-bars stay common in Austria, Scandinavia, eastern Europe.
 
-Large trams on two fixed cables, usually one or two big cabins. Think Jackson Hole's Big Red or the Peak 2 Peak–class engineering showcases. OSM distinguishes `cable_car` from `gondola` by cabin style and counterweight systems; casual skiers use "gondola" for both, but data nerds should not.
+Carpets skew US learning pods; older European nurseries still have rope tows.
 
-## Surface and drag lifts: learning days and old-school grit
+[Lift facts](../SkiLiftFacts.html) by country — Austria's drag density vs Colorado's quad portfolios.
 
-### Magic carpets (`magic_carpet`)
+## Tagging mistakes that skew data
 
-Rubber conveyor belts for absolute beginners. The atlas treats them as first-class citizens because they signal **learning investment**. Resorts strong in beginner data ([best resorts for beginners](best-ski-resorts-for-beginners.html)) often show carpet counts disproportionate to their fame.
+**Pylons as lifts** — most common. One `aerialway=chair_lift` way along the cable; pylons optional, not counted as lifts.
 
-### Rope tows (`rope_tow`)
+**Duplicate parallel ways** — double capacity in comparison tables.
 
-Grab a rope, let it pull you uphill, try not to faceplant. Still common on Midwest hills and eastern classics. Short, cheap to operate, miserable on steep pitches — which is why you see them on bunny slopes.
+**Wrong subtype** — carpet tagged rope tow; detachable quad as fixed chair. Matters for beginners.
 
-### T-bars and J-bars (`t-bar`, `j-bar`)
+**Lifts outside resort polygon** — don't count toward that resort even if you ski them daily. Boundary fixes > lift retagging.
 
-Drag lifts with a bar between your legs or a sideways J pad. Common in Europe and the American West on narrower trails where chairs would not fit. Beginners struggle; intermediates tolerate; locals do not notice.
+Edit OSM; atlas refreshes from community data.
 
-### Platters (`platter`)
+## Explore in the atlas
 
-The Poma lift: a disc between your legs. European ski clubs swear by them; Americans increasingly replace them with carpets or chairs. OSM uses `platter`; older data may say `drag_lift` generically.
+Popup on [mainmap](../mainmap.html) — lift count by type. [Comparison](../resort-comparison.html) — Beaver Creek vs drag-heavy Austrian hill. [Lift facts](../SkiLiftFacts.html) — length, elevation, records. [Trail facts](../SkiTrailFacts.html) — pair endpoints with run difficulty. [Ski game](/playable/) — layout echo.
 
-## Mixed lifts and edge cases
+## Match lifts to your group
 
-### Chondolas (`mixed_lift`)
+First-day beginners: carpets and short fixed chairs; avoid T-bar-only mountains unless lessons cover drags.
 
-Installations that alternate chairs and cabins on one cable (e.g., some Doppelmayr mixed systems). Rare but growing. Tag as `mixed_lift` when both carrier types share infrastructure; do not duplicate the way as separate chair and gondola lines.
+Families: gondolas reduce wind meltdowns.
 
-### Generic `drag_lift`
+Powder hounds: detachable quads for laps; gondolas secondary.
 
-Catch-all when mappers know it is a drag but not the subtype. Atlas buckets these separately; improving tags to `t-bar` or `platter` sharpens resort profiles.
+Budget road trips: drag-lift hills often cheaper — [US states](us-states-most-ski-resorts.html).
 
-## Global mix: chairs dominate, gondolas cluster by geography
+[How to choose a resort](how-to-choose-a-ski-resort.html) folds lift mix into the bigger picture.
 
-Worldwide, **chair lifts** (fixed and detachable combined) account for the majority of mapped aerialways in our dataset — North America especially. **Gondolas** concentrate in the Alps, Japan, and resorts that link villages across valleys. **Drag lifts and T-bars** remain surprisingly common in Austria, Scandinavia, and eastern Europe where narrow trails and club culture persist.
-
-**Magic carpets** skew toward US beginner resorts and modern learning pods; many older European nurseries still use rope tows and platters.
-
-Open [lift facts](../SkiLiftFacts.html) and sort by country: you will see Austria's drag-lift density vs Colorado's quad-heavy portfolios. That mix changes how a resort **feels** — not just how fast you reach the summit.
-
-## Common OSM tagging mistakes (and why they matter)
-
-Volunteer mappers power the atlas. Errors propagate into lift counts, beginner scores, and comparison tables until someone fixes them.
-
-### Pylons tagged as lifts
-
-The most frequent mistake: mapping lift **towers** (`aerialway=pylon` or untagged nodes) as if they were lift lines. Result: phantom lifts, zero length, or point features inflating counts. Correct pattern: one `aerialway=chair_lift` (or other type) **way** following the cable path tower to tower; pylons optional.
-
-### Duplicated parallel ways
-
-Remapping a lift without deleting the old way creates twins. Resort comparison then shows double the real capacity. If you edit OSM, check for overlapping ways with identical names.
-
-### Wrong subtype
-
-Calling a magic carpet a `rope_tow`, or a detachable quad a fixed `chair_lift`, misleads beginners researching learning terrain. Subtype accuracy matters for [beginner scoring](best-ski-resorts-for-beginners.html).
-
-### Broken relations and resort boundaries
-
-Lifts outside resort polygons do not count toward that resort's total even if skiers use them daily. Boundary fixes often matter more than lift retagging. See [how to tag a ski resort in OpenStreetMap](how-to-tag-a-ski-resort-in-openstreetmap.html).
-
-If you spot errors, edit OSM or leave a note for local mappers. The atlas refreshes from community data.
-
-## How to explore lifts in the atlas
-
-**Resort popup** on [mainmap.html](../mainmap.html): lift count by type, named lifts where tagged.
-
-**[Resort comparison](../resort-comparison.html)**: place Beaver Creek next to a drag-lift-heavy Austrian hill and watch detachable vs T-bar mix diverge.
-
-**[Lift facts](../SkiLiftFacts.html)**: sort by length, elevation, or country; find record-holding gondolas and northernmost chairs.
-
-**[Trail facts](../SkiTrailFacts.html)**: pair lift endpoints with run difficulty for full descent planning.
-
-**[Ski game](/playable/)**: experimental terrain uses OSM geometry; trail access patterns echo real layouts.
-
-## Lift type and resort choice
-
-Match lifts to your group:
-
-- **First-day beginners**: prioritize magic carpets and short fixed chairs; avoid T-bar-only mountains unless lessons include drag-lift training.
-- **Families with tired kids**: gondolas and bubbles reduce wind exposure and meltdown risk.
-- **Powder hounds**: detachable quads maximize lap count; gondolas matter less than snow and steeps.
-- **Budget road trips**: drag-lift hills often sell cheaper tickets — see [high-count states](us-states-most-ski-resorts.html).
-
-[How to choose a ski resort](how-to-choose-a-ski-resort.html) folds lift mix into a broader decision framework.
-
-## The bottom line
-
-Lift types are the plumbing of a ski area. OSM's `aerialway` vocabulary is precise enough for global statistics if mappers use it consistently. Global Ski Atlas exposes that plumbing so you compare resorts on facts, not foggy memories of one long line in 2019. Learn the types, spot the tagging errors, check [lift facts](../SkiLiftFacts.html) before you drive six hours to the wrong hill — and thank the mapper who correctly tagged the magic carpet your kid will love.
+Lifts are plumbing. OSM's `aerialway` vocabulary works if mappers use it consistently. We expose the plumbing so you compare on facts, not one long line in 2019. Learn the types, fix tagging errors, check [lift facts](../SkiLiftFacts.html) before a six-hour drive to the wrong hill.
