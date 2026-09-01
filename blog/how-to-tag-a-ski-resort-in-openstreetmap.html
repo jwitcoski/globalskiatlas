@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-KJGNL3KJL0"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){ dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'G-KJGNL3KJL0');
+  </script>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4372859798489282" crossorigin="anonymous"></script>
+  <title>How to Tag a Ski Resort in OpenStreetMap (So It Shows Up in the Atlas) – Global Ski Atlas Blog</title>
+  <meta name="description" content="Step-by-step OSM tagging for downhill ski areas: boundaries, pistes, lifts, and common mistakes that keep resorts out of Global Ski Atlas." />
+  <meta property="og:title" content="How to Tag a Ski Resort in OpenStreetMap (So It Shows Up in the Atlas) – Global Ski Atlas" />
+  <meta property="og:description" content="Step-by-step OSM tagging for downhill ski areas: boundaries, pistes, lifts, and common mistakes that keep resorts out of Global Ski Atlas." />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://globalskiatlas.com/blog/how-to-tag-a-ski-resort-in-openstreetmap.html" />
+  <meta property="og:image" content="https://globalskiatlas.com/assets/og-banner.png" />
+  <meta property="og:site_name" content="Global Ski Atlas" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="How to Tag a Ski Resort in OpenStreetMap (So It Shows Up in the Atlas)" />
+  <meta name="twitter:description" content="Step-by-step OSM tagging for downhill ski areas: boundaries, pistes, lifts, and common mistakes that keep resorts out of Global Ski Atlas." />
+  <meta name="twitter:image" content="https://globalskiatlas.com/assets/og-banner.png" />
+  <link rel="canonical" href="https://globalskiatlas.com/blog/how-to-tag-a-ski-resort-in-openstreetmap.html" />
+  <link rel="shortcut icon" href="../assets/logo.png?v=2" type="image/x-icon" />
+  <link rel="stylesheet" href="../css/tailwind-build.css" />
+  <link rel="stylesheet" href="../css/index.css" />
+  <link rel="stylesheet" href="../css/blog.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" integrity="sha512-dPXYcDub/aeb08c63jRq/k6GaKccl256JQy/AnOq7CAnEZ9FzSL9wSbcZkMp4R26vBsMLFYH4kQ67/bbV8XaCQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"How to Tag a Ski Resort in OpenStreetMap (So It Shows Up in the Atlas)","description":"Step-by-step OSM tagging for downhill ski areas: boundaries, pistes, lifts, and common mistakes that keep resorts out of Global Ski Atlas.","datePublished":"2026-09-01","dateModified":"2026-09-01","author":{"@type":"Organization","name":"Global Ski Atlas"},"publisher":{"@type":"Organization","name":"Global Ski Atlas","logo":{"@type":"ImageObject","url":"https://globalskiatlas.com/assets/logo.png"}},"mainEntityOfPage":{"@type":"WebPage","@id":"https://globalskiatlas.com/blog/how-to-tag-a-ski-resort-in-openstreetmap.html"},"image":"https://globalskiatlas.com/assets/og-banner.png"}</script>
+</head>
+<body class="tw-flex tw-min-h-[100vh] tw-flex-col tw-bg-[#fff] tw-overflow-x-hidden">
+  <header
+    class="tw-absolute tw-top-0 tw-z-[100] tw-flex tw-h-[60px] tw-w-full tw-bg-opacity-0
+           tw-px-[5%] max-lg:tw-mr-auto max-lg:tw-px-4 lg:tw-justify-around"
+  >
+    <a class="tw-h-[50px] tw-w-[50px] tw-p-[4px]" href="../index.html" aria-label="Global Ski Atlas home">
+      <img src="../assets/logo.png?v=2" alt="Global Ski Atlas" class="tw-object tw-h-full tw-w-full" />
+    </a>
+    <div class="collapsible-header animated-collapse max-lg:tw-shadow-md" id="collapsed-header-items">
+      <div
+        class="header-nav-inner tw-flex tw-h-full tw-w-max tw-flex-wrap tw-gap-5 tw-text-base tw-text-black
+               max-lg:tw-mt-[30px] max-lg:tw-flex-col max-lg:tw-place-items-end
+               max-lg:tw-gap-5 lg:tw-mx-auto lg:tw-place-items-center"
+      >
+        <div class="header-dropdown-group">
+          <a class="header-tab header-links" href="../mainmap.html" aria-haspopup="true">Atlas <i class="bi bi-chevron-down tw-text-xs"></i></a>
+          <div class="header-dropdown" role="menu">
+            <a class="header-links" href="../coffee-table-book.html" role="menuitem">Coffee Table Book</a>
+            <a class="header-links" href="../bookpitch.html" role="menuitem">Book pitch</a>
+            <a class="header-links" href="../mainmap.html" role="menuitem">Interactive Map</a>
+            <a class="header-links" href="../wiki/browse.html" role="menuitem">Online Atlas</a>
+          </div>
+        </div>
+        <div class="header-dropdown-group">
+          <a class="header-tab header-links" href="../TripPlannerMap.html" aria-haspopup="true">Driving <i class="bi bi-chevron-down tw-text-xs"></i></a>
+          <div class="header-dropdown" role="menu">
+            <a class="header-links" href="../TripPlannerMap.html" role="menuitem">Trip Planner</a>
+            <a class="header-links" href="../DriveTimeMap.html" role="menuitem">Drive Time</a>
+          </div>
+        </div>
+        <div class="header-dropdown-group">
+          <a class="header-tab header-links" href="../SkiResortFacts.html" aria-haspopup="true">Statistics <i class="bi bi-chevron-down tw-text-xs"></i></a>
+          <div class="header-dropdown" role="menu">
+            <a class="header-links" href="../SkiResortFacts.html" role="menuitem">Resort Facts</a>
+            <a class="header-links" href="../SkiTrailFacts.html" role="menuitem">Trail Facts</a>
+            <a class="header-links" href="../SkiLiftFacts.html" role="menuitem">Lift Facts</a>
+          </div>
+        </div>
+        <div class="header-dropdown-group">
+          <a class="header-tab header-links" href="../resort-comparison.html" aria-haspopup="true">Compare <i class="bi bi-chevron-down tw-text-xs"></i></a>
+          <div class="header-dropdown" role="menu">
+            <a class="header-links" href="../resort-comparison.html" role="menuitem">Resort Comparison</a>
+            <a class="header-links" href="../resort-tier-rank.html" role="menuitem">Tier Ranking</a>
+          </div>
+        </div>
+        <a class="header-links" href="../weather-map.html">Weather</a>
+        <a class="header-links" href="/playable/">Ski Game</a>
+        <a class="header-links" href="../skiing-ai.html">AI Assistant</a>
+        <a class="header-links tw-font-semibold" href="index.html">Blog</a>
+        <a class="header-links" href="../about.html">About</a>
+      </div>
+    </div>
+    <button
+      class="bi bi-list tw-absolute tw-right-3 tw-top-3 tw-z-50 tw-text-3xl
+             tw-text-black lg:tw-hidden"
+      onclick="toggleHeader()"
+      aria-label="menu"
+      id="collapse-btn"
+    ></button>
+  </header>
+  <main class="tw-mt-[80px] tw-flex-1 tw-px-[5%] tw-py-12 max-lg:tw-px-4">
+    <article class="tw-mx-auto tw-max-w-3xl">
+      <p class="blog-pillar">Improve the data</p>
+      <h1 class="tw-mt-2 tw-text-3xl tw-font-bold tw-text-black max-md:tw-text-2xl">How to Tag a Ski Resort in OpenStreetMap (So It Shows Up in the Atlas)</h1>
+      <p class="blog-meta tw-mt-3">September 1, 2026 · 12 min read</p>
+      <p class="tw-mt-4 tw-text-lg tw-leading-relaxed tw-text-gray-600">Step-by-step OSM tagging for downhill ski areas: boundaries, pistes, lifts, and common mistakes that keep resorts out of Global Ski Atlas.</p>
+      <div class="blog-prose tw-mt-8"><p>Global Ski Atlas only works if OpenStreetMap has decent ski data. When a hill is missing from the <a href="../mainmap.html" rel="noopener noreferrer" target="_blank">interactive map</a>, it's usually because someone never drew the boundary, tagged the lifts wrong, or split one resort across features our pipeline can't merge yet.</p>
+<p>OSM is a community map. Fix tags at your local hill and you improve the atlas, the <a href="../wiki/browse.html" rel="noopener noreferrer" target="_blank">wiki</a>, the <a href="/playable/" rel="noopener noreferrer" target="_blank">ski game</a>, and the downloads on <a href="../DownloadData.html" rel="noopener noreferrer" target="_blank">Download Data</a>. This is the guide I wish every mapper had before their first edits.</p>
+<h3 id="what-we-need-for-a-resort-to-show-up">What we need for a resort to show up</h3>
+<p>Anchor polygon: <code>landuse=winter_sports</code>. Inside or near it:</p>
+<ul>
+<li><code>piste:type=downhill</code> ways (with <code>piste:difficulty</code> when you can)</li>
+<li><code>aerialway=*</code> lifts (chair, gondola, drag, carpet — not pylons)</li>
+</ul>
+<p>All three layers = a complete entry. Boundary with no pistes or lifts = stub at best. Great pistes with no winter_sports boundary = hard for us to group stats consistently.</p>
+<p>We focus on <strong>downhill</strong>. Nordic tracks (<code>piste:type=nordic</code>) are valuable OSM data but outside the core atlas unless they share a clearly tagged alpine area.</p>
+<h3 id="step-1-the-winter_sports-boundary">Step 1: the winter_sports boundary</h3>
+<p>Trace the operational ski domain in iD or JOSM — not the whole range, not just the parking lot.</p>
+<pre><code>landuse=winter_sports
+name=Example Mountain Resort
+</code></pre>
+<p>Add <code>name:en</code> when the local name isn't obvious. Big Alpine domains sometimes need <code>site=ski</code> relations or clear <code>operator</code> tags so mappers know how areas connect.</p>
+<p><strong>Common screw-up:</strong> polygon big enough to include backcountry, summer hiking, and the next valley. Our pipeline analyzes geometry inside this boundary; oversized polygons inflate acreage. <a href="ski-resort-stats-explained.html" rel="noopener noreferrer" target="_blank">Stats explained</a> for how those numbers work.</p>
+<h3 id="step-2-lifts">Step 2: lifts</h3>
+<p>One way per lift line, tower to tower:</p>
+<pre><code>aerialway=chair_lift
+aerialway=detachable
+aerialway=gondola
+aerialway=cable_car
+aerialway=drag_lift
+aerialway=t-bar
+aerialway=platter
+aerialway=magic_carpet
+</code></pre>
+<p>Add <code>name</code>, <code>oneway=yes</code> when uphill-only. Follow the cable, not the run underneath.</p>
+<p><strong>Screw-up:</strong> tagging pylons as lifts, or <code>aerialway=yes</code> with no type. Vague tags break <a href="../SkiLiftFacts.html" rel="noopener noreferrer" target="_blank">Lift Facts</a>.</p>
+<h3 id="step-3-downhill-pistes">Step 3: downhill pistes</h3>
+<p>Centerline of each run, <strong>downhill direction</strong>:</p>
+<pre><code>piste:type=downhill
+piste:difficulty=intermediate
+name=Bluebird
+</code></pre>
+<p><code>novice</code>, <code>easy</code>, <code>intermediate</code>, <code>advanced</code>, <code>expert</code>, <code>freeride</code> — OSM convention. US green/blue/black don't map 1:1 to every country; consistency within one area matters more.</p>
+<p>Optional: <code>piste:grooming</code>, <code>lit=yes</code>, <code>oneway=yes</code>.</p>
+<p><strong>Screw-up:</strong> pistes along lift lines, <code>highway=path</code> without <code>piste:type=downhill</code>, or every service road as a ski trail. Inflates counts in <a href="../resort-comparison.html" rel="noopener noreferrer" target="_blank">resort comparison</a>.</p>
+<h3 id="step-4-base-stuff-nice-to-have">Step 4: base stuff (nice to have)</h3>
+<p><code>tourism=hotel</code>, <code>amenity=restaurant</code>, <code>highway=service</code>, <code>website</code> on the area or a node. Helps orientation; not always required for inclusion.</p>
+<h3 id="step-5-sanity-check-before-upload">Step 5: sanity check before upload</h3>
+<p>Zoom out — does the polygon look like a ski area? Click each lift — right <code>aerialway</code>? Pistes — difficulties make sense relative to each other? Duplicate <code>landuse=winter_sports</code> for one resort?</p>
+<p>Preview in the <a href="/playable/" rel="noopener noreferrer" target="_blank">ski game</a>. Same OSM features we ingest. Wrong in-game usually means wrong in OSM.</p>
+<h3 id="mistakes-that-keep-resorts-out">Mistakes that keep resorts out</h3>
+<table>
+<thead>
+<tr>
+<th>Problem</th>
+<th>What happens</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>No <code>landuse=winter_sports</code></td>
+<td>Hard to identify as one unit</td>
+</tr>
+<tr>
+<td>Pistes missing <code>piste:type=downhill</code></td>
+<td>Excluded from downhill stats</td>
+</tr>
+<tr>
+<td>Lifts as paths or pipelines</td>
+<td>Lift count hits zero</td>
+</tr>
+<tr>
+<td>Indoor / dry only</td>
+<td>May not meet outdoor downhill criteria</td>
+</tr>
+</tbody>
+</table>
+<p>Abandoned areas: <code>disused:aerialway=yes</code> rather than deleting history. Active seasonal ops stay tagged.</p>
+<h3 id="how-edits-reach-the-atlas">How edits reach the atlas</h3>
+<p>We don't scrape resort PDFs. Regional OSM extracts → 11-step pipeline on <a href="../DownloadData.html" rel="noopener noreferrer" target="_blank">Download Data</a>: extract winter_sports, nearby features, lifts, pistes, enrich, analyze, GeoParquet, buffers, names, elevation, combine globally.</p>
+<p>Edits appear after the next pipeline run — not instant, but permanent and open. <a href="../wiki/browse.html" rel="noopener noreferrer" target="_blank">Wiki</a> and <a href="../mainmap.html" rel="noopener noreferrer" target="_blank">map</a> both consume the same dataset.</p>
+<h3 id="use-the-ski-game-as-a-feedback-loop">Use the ski game as a feedback loop</h3>
+<p>The <a href="/playable/" rel="noopener noreferrer" target="_blank">ski game</a> turns OSM into playable runs. Stress test for your mapping: lift missing, pistes floating, boundary framing empty wilderness = tagging gap.</p>
+<p><strong>Open in OSM</strong> jumps to the editor. <strong>I fixed it in OSM</strong> lets you tell us. Map, play, fix — that's the loop we want.</p>
+<h3 id="etiquette">Etiquette</h3>
+<p>Read the <a href="https://wiki.openstreetmap.org/wiki/Tag:landuse%3Dwinter_sports" rel="noopener noreferrer" target="_blank">OSM winter sports wiki</a>. Don't trace proprietary trail maps. One complete small resort beats rough outlines worldwide.</p>
+<p>Trail map colors: <a href="how-to-read-ski-trail-map.html" rel="noopener noreferrer" target="_blank">how to read a ski trail map</a>.</p>
+<p>Pick a hill you know. Check the <a href="../mainmap.html" rel="noopener noreferrer" target="_blank">map</a>. Missing or thin? Add boundary, lifts, pistes. Preview in the <a href="/playable/" rel="noopener noreferrer" target="_blank">game</a>. Submit changeset.</p>
+<p>Big picture: <a href="how-many-ski-resorts-worldwide.html" rel="noopener noreferrer" target="_blank">how many resorts worldwide</a>.</p></div>
+      <section class="blog-related" aria-label="Related articles">
+          <h2 class="tw-text-xl tw-font-semibold tw-text-black">Related articles</h2>
+          <ul class="tw-mt-4"><li><a href="ski-resort-stats-explained.html">What Ski Resort Stats Actually Mean</a></li>
+            <li><a href="how-many-ski-resorts-worldwide.html">How Many Ski Resorts Are There in the World?</a></li>
+            <li><a href="ski-lift-types-explained.html">Chairlifts, Gondolas, and T-Bars: Ski Lift Types Explained</a></li></ul>
+        </section>
+      <p class="tw-mt-10 tw-text-sm tw-text-gray-500"><a href="index.html" class="tw-text-blue-600 hover:tw-underline">← Back to all articles</a></p>
+    </article>
+  </main>
+  <footer
+    class="tw-mt-auto tw-flex tw-w-full tw-place-content-around tw-gap-3 tw-border-t tw-border-gray-200
+           tw-bg-gray-50 tw-py-6 tw-px-[10%] tw-text-black max-md:tw-flex-col"
+  >
+    <div class="tw-flex tw-h-full tw-w-[250px] tw-flex-col tw-place-items-center tw-gap-6 max-md:tw-w-full">
+      <img src="../assets/logo.png?v=2" alt="Global Ski Atlas" class="tw-max-w-[120px]" />
+      <div>Global Ski Atlas</div>
+      <div class="tw-mt-3 tw-text-lg tw-font-semibold">Follow us</div>
+      <div class="tw-flex tw-gap-4 tw-text-2xl">
+        <a href="javascript:void(0)" aria-label="Facebook" title="Coming soon"><i class="bi bi-facebook"></i></a>
+        <a href="https://twitter.com/@pauls_freeman" aria-label="Twitter"><i class="bi bi-twitter"></i></a>
+        <a href="https://instagram.com/" class="tw-h-[40px] tw-w-[40px]" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
+      </div>
+    </div>
+    <div class="tw-flex tw-h-full tw-w-[250px] tw-flex-col tw-gap-4">
+      <h2 class="tw-text-3xl max-md:tw-text-xl">Explore</h2>
+      <div class="tw-flex tw-flex-col tw-gap-3 max-md:tw-text-sm">
+        <a href="../coffee-table-book.html" class="footer-link">Coffee Table Book</a>
+        <a href="../mainmap.html" class="footer-link">Interactive Map</a>
+        <a href="../resort-comparison.html" class="footer-link">Compare Resorts</a>
+        <a href="/playable/" class="footer-link">Ski Game</a>
+        <a href="../skiing-ai.html" class="footer-link">AI Assistant</a>
+      </div>
+    </div>
+    <div class="tw-flex tw-h-full tw-w-[250px] tw-flex-col tw-gap-4">
+      <h2 class="tw-text-3xl max-md:tw-text-xl">Download Parquet Data</h2>
+      <div class="tw-flex tw-flex-col tw-gap-3 max-md:tw-text-sm">
+        <a href="../DownloadData.html" class="footer-link tw-inline-flex tw-items-center tw-gap-1">Data downloads &amp; how we create it <i class="bi bi-arrow-right tw-text-sm"></i></a>
+      </div>
+    </div>
+    <div class="tw-flex tw-h-full tw-w-[250px] tw-flex-col tw-gap-4">
+      <h2 class="tw-text-3xl max-md:tw-text-xl">Resources</h2>
+      <div class="tw-flex tw-flex-col tw-gap-3 max-md:tw-text-sm">
+        <a href="index.html" class="footer-link">Blog</a>
+        <a href="../about.html" class="footer-link">About</a>
+        <a href="../faq.html" class="footer-link">FAQ</a>
+        <a href="../privacy-policy.html" class="footer-link">Privacy Policy</a>
+      </div>
+    </div>
+  </footer>
+  <script src="../index.js"></script>
+</body>
+</html>

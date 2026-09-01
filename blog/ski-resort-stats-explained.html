@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-KJGNL3KJL0"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){ dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'G-KJGNL3KJL0');
+  </script>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4372859798489282" crossorigin="anonymous"></script>
+  <title>What Ski Resort Stats Actually Mean – Global Ski Atlas Blog</title>
+  <meta name="description" content="Vertical drop, skiable acres, trail counts, and lift totals — and why mapped OpenStreetMap data often differs from resort marketing." />
+  <meta property="og:title" content="What Ski Resort Stats Actually Mean – Global Ski Atlas" />
+  <meta property="og:description" content="Vertical drop, skiable acres, trail counts, and lift totals — and why mapped OpenStreetMap data often differs from resort marketing." />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://globalskiatlas.com/blog/ski-resort-stats-explained.html" />
+  <meta property="og:image" content="https://globalskiatlas.com/assets/og-banner.png" />
+  <meta property="og:site_name" content="Global Ski Atlas" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="What Ski Resort Stats Actually Mean" />
+  <meta name="twitter:description" content="Vertical drop, skiable acres, trail counts, and lift totals — and why mapped OpenStreetMap data often differs from resort marketing." />
+  <meta name="twitter:image" content="https://globalskiatlas.com/assets/og-banner.png" />
+  <link rel="canonical" href="https://globalskiatlas.com/blog/ski-resort-stats-explained.html" />
+  <link rel="shortcut icon" href="../assets/logo.png?v=2" type="image/x-icon" />
+  <link rel="stylesheet" href="../css/tailwind-build.css" />
+  <link rel="stylesheet" href="../css/index.css" />
+  <link rel="stylesheet" href="../css/blog.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" integrity="sha512-dPXYcDub/aeb08c63jRq/k6GaKccl256JQy/AnOq7CAnEZ9FzSL9wSbcZkMp4R26vBsMLFYH4kQ67/bbV8XaCQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"What Ski Resort Stats Actually Mean","description":"Vertical drop, skiable acres, trail counts, and lift totals — and why mapped OpenStreetMap data often differs from resort marketing.","datePublished":"2026-09-01","dateModified":"2026-09-01","author":{"@type":"Organization","name":"Global Ski Atlas"},"publisher":{"@type":"Organization","name":"Global Ski Atlas","logo":{"@type":"ImageObject","url":"https://globalskiatlas.com/assets/logo.png"}},"mainEntityOfPage":{"@type":"WebPage","@id":"https://globalskiatlas.com/blog/ski-resort-stats-explained.html"},"image":"https://globalskiatlas.com/assets/og-banner.png"}</script>
+</head>
+<body class="tw-flex tw-min-h-[100vh] tw-flex-col tw-bg-[#fff] tw-overflow-x-hidden">
+  <header
+    class="tw-absolute tw-top-0 tw-z-[100] tw-flex tw-h-[60px] tw-w-full tw-bg-opacity-0
+           tw-px-[5%] max-lg:tw-mr-auto max-lg:tw-px-4 lg:tw-justify-around"
+  >
+    <a class="tw-h-[50px] tw-w-[50px] tw-p-[4px]" href="../index.html" aria-label="Global Ski Atlas home">
+      <img src="../assets/logo.png?v=2" alt="Global Ski Atlas" class="tw-object tw-h-full tw-w-full" />
+    </a>
+    <div class="collapsible-header animated-collapse max-lg:tw-shadow-md" id="collapsed-header-items">
+      <div
+        class="header-nav-inner tw-flex tw-h-full tw-w-max tw-flex-wrap tw-gap-5 tw-text-base tw-text-black
+               max-lg:tw-mt-[30px] max-lg:tw-flex-col max-lg:tw-place-items-end
+               max-lg:tw-gap-5 lg:tw-mx-auto lg:tw-place-items-center"
+      >
+        <div class="header-dropdown-group">
+          <a class="header-tab header-links" href="../mainmap.html" aria-haspopup="true">Atlas <i class="bi bi-chevron-down tw-text-xs"></i></a>
+          <div class="header-dropdown" role="menu">
+            <a class="header-links" href="../coffee-table-book.html" role="menuitem">Coffee Table Book</a>
+            <a class="header-links" href="../bookpitch.html" role="menuitem">Book pitch</a>
+            <a class="header-links" href="../mainmap.html" role="menuitem">Interactive Map</a>
+            <a class="header-links" href="../wiki/browse.html" role="menuitem">Online Atlas</a>
+          </div>
+        </div>
+        <div class="header-dropdown-group">
+          <a class="header-tab header-links" href="../TripPlannerMap.html" aria-haspopup="true">Driving <i class="bi bi-chevron-down tw-text-xs"></i></a>
+          <div class="header-dropdown" role="menu">
+            <a class="header-links" href="../TripPlannerMap.html" role="menuitem">Trip Planner</a>
+            <a class="header-links" href="../DriveTimeMap.html" role="menuitem">Drive Time</a>
+          </div>
+        </div>
+        <div class="header-dropdown-group">
+          <a class="header-tab header-links" href="../SkiResortFacts.html" aria-haspopup="true">Statistics <i class="bi bi-chevron-down tw-text-xs"></i></a>
+          <div class="header-dropdown" role="menu">
+            <a class="header-links" href="../SkiResortFacts.html" role="menuitem">Resort Facts</a>
+            <a class="header-links" href="../SkiTrailFacts.html" role="menuitem">Trail Facts</a>
+            <a class="header-links" href="../SkiLiftFacts.html" role="menuitem">Lift Facts</a>
+          </div>
+        </div>
+        <div class="header-dropdown-group">
+          <a class="header-tab header-links" href="../resort-comparison.html" aria-haspopup="true">Compare <i class="bi bi-chevron-down tw-text-xs"></i></a>
+          <div class="header-dropdown" role="menu">
+            <a class="header-links" href="../resort-comparison.html" role="menuitem">Resort Comparison</a>
+            <a class="header-links" href="../resort-tier-rank.html" role="menuitem">Tier Ranking</a>
+          </div>
+        </div>
+        <a class="header-links" href="../weather-map.html">Weather</a>
+        <a class="header-links" href="/playable/">Ski Game</a>
+        <a class="header-links" href="../skiing-ai.html">AI Assistant</a>
+        <a class="header-links tw-font-semibold" href="index.html">Blog</a>
+        <a class="header-links" href="../about.html">About</a>
+      </div>
+    </div>
+    <button
+      class="bi bi-list tw-absolute tw-right-3 tw-top-3 tw-z-50 tw-text-3xl
+             tw-text-black lg:tw-hidden"
+      onclick="toggleHeader()"
+      aria-label="menu"
+      id="collapse-btn"
+    ></button>
+  </header>
+  <main class="tw-mt-[80px] tw-flex-1 tw-px-[5%] tw-py-12 max-lg:tw-px-4">
+    <article class="tw-mx-auto tw-max-w-3xl">
+      <p class="blog-pillar">Improve the data</p>
+      <h1 class="tw-mt-2 tw-text-3xl tw-font-bold tw-text-black max-md:tw-text-2xl">What Ski Resort Stats Actually Mean</h1>
+      <p class="blog-meta tw-mt-3">September 1, 2026 · 7 min read</p>
+      <p class="tw-mt-4 tw-text-lg tw-leading-relaxed tw-text-gray-600">Vertical drop, skiable acres, trail counts, and lift totals — and why mapped OpenStreetMap data often differs from resort marketing.</p>
+      <div class="blog-prose tw-mt-8"><p>Every resort page shows numbers. Few explain them.</p>
+<p>Vertical drop, skiable acres, trail count, lift total — websites repeat these until they feel objective. They're not. Marketing rounds up, counts connectors differently, sometimes includes terrain you can't reach from a lift.</p>
+<p>Global Ski Atlas publishes stats from the same OpenStreetMap geometry everywhere so you can compare a Colorado mom-and-pop to a Tyrolean valley on equal footing. What each stat means in our dataset, where mapped data diverges from brochures, and how to use <a href="../resort-comparison.html" rel="noopener noreferrer" target="_blank">resort comparison</a> once you understand the columns.</p>
+<h3 id="mapped-vs-marketing">Mapped vs marketing</h3>
+<table>
+<thead>
+<tr>
+<th>Source</th>
+<th>Optimizes for</th>
+<th>Weak spot</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Resort marketing</td>
+<td>Impressiveness, pass value</td>
+<td>Inconsistent definitions</td>
+</tr>
+<tr>
+<td>Proprietary trail maps</td>
+<td>Navigation</td>
+<td>Not machine-readable</td>
+</tr>
+<tr>
+<td>OSM + our pipeline</td>
+<td>Consistency, global coverage</td>
+<td>Incomplete where untagged</td>
+</tr>
+</tbody>
+</table>
+<p>We don't scrape PDF trail maps. Tags and geometries through the pipeline on <a href="../DownloadData.html" rel="noopener noreferrer" target="_blank">Download Data</a>. Reproducible — download GeoParquet and verify — but may under-count unmapped resorts or over-count messy polygons.</p>
+<p>Map looks thin, brochure looks huge? Usually missing OSM, not math bugs. Fix tags: <a href="how-to-tag-a-ski-resort-in-openstreetmap.html" rel="noopener noreferrer" target="_blank">tagging guide</a>. Or fly it in the <a href="/playable/" rel="noopener noreferrer" target="_blank">ski game</a>.</p>
+<h3 id="vertical-drop">Vertical drop</h3>
+<p><strong>What you think:</strong> highest lift-served point to main base — the poster number.</p>
+<p><strong>What we compute:</strong> relief from DEM + tagged elevations inside the resort boundary — skiable high/low from analyzed geometry, not one sign at the lodge.</p>
+<p><strong>Why they differ:</strong> marketing uses highest terminal to lowest base even if you can't ski that line; we may include sub-peaks inside the polygon; incomplete lift tagging skews until someone adds summit/base nodes.</p>
+<p>Useful for bucket sorting (1,000 ft vs 3,000 ft), not precise bragging. Pair with trail mix before "big vertical" = "hard skiing."</p>
+<h3 id="skiable-acres">Skiable acres</h3>
+<p><strong>What you think:</strong> lift-served groomed and gladed terrain you'd ski in a day.</p>
+<p><strong>What we compute:</strong> area of mapped downhill piste geometry inside the boundary, acres from m²/hectares.</p>
+<p><strong>Why they differ:</strong> marketing includes hike-to bowls, double-counts ridge sides; we count drawn <code>piste:type=downhill</code> — unmapped gladed = invisible; oversized <code>landuse=winter_sports</code> inflates acreage (tagging error).</p>
+<p><a href="largest-ski-resorts-in-the-world.html" rel="noopener noreferrer" target="_blank">Largest resorts</a> by mapped size often surprise US-marketing natives.</p>
+<h3 id="trail-count">Trail count</h3>
+<p><strong>What you think:</strong> named runs on the paper map — "200 trails!"</p>
+<p><strong>What we compute:</strong> distinct OSM ways tagged <code>piste:type=downhill</code> after dedup heuristics.</p>
+<p><strong>Why they differ:</strong> one logical run split upper/lower = two; cat tracks tagged pistes; unmapped runs = zero.</p>
+<p>Drives size categories on <a href="../SkiTrailFacts.html" rel="noopener noreferrer" target="_blank">trail facts</a>. Fifteen mapped trails ≠ one hundred fifty — even if both say "big."</p>
+<h3 id="lift-count">Lift count</h3>
+<p><strong>What you think:</strong> chairs, gondolas, surface lifts you ride — sometimes excluding carpets or counting one detachable quad as one "lift."</p>
+<p><strong>What we compute:</strong> mapped <code>aerialway=*</code> in the resort window, typed for <a href="../SkiLiftFacts.html" rel="noopener noreferrer" target="_blank">lift facts</a>.</p>
+<p><strong>Why they differ:</strong> rope tows/carpets inconsistently mapped; chondola one way or two; <code>disused:</code> lifts lingering in OSM.</p>
+<p>One lift / twenty trails vs twenty lifts / twenty trails — different day. <a href="ski-lift-types-explained.html" rel="noopener noreferrer" target="_blank">Lift types</a>.</p>
+<h3 id="elevation">Elevation</h3>
+<p>Summit/base-like elevations from DEM + tagged nodes. Feed vertical and map popups. Marketing summit names sometimes peak above where lifts actually stop. We follow skiable geometry, not signage poetry.</p>
+<h3 id="trail-mix">Trail mix</h3>
+<p><strong>What you think:</strong> green/blue/black pie chart.</p>
+<p><strong>What we compute:</strong> distribution of <code>piste:difficulty</code> among mapped downhill pistes.</p>
+<p><strong>Why they differ:</strong> US vs Europe ≠ 1:1 OSM values; untagged runs in "unknown"; local grading norms — Austrian "easy" may feel US intermediate.</p>
+<p>Best beginner stat when well-tagged. <a href="best-ski-resorts-for-beginners.html" rel="noopener noreferrer" target="_blank">Beginners post</a>.</p>
+<h3 id="other-fields-you-might-see">Other fields you might see</h3>
+<p>Country/region from admin enrichment. Lat/long for sorting (<a href="northernmost-southernmost-ski-resorts.html" rel="noopener noreferrer" target="_blank">edge of the world</a>). Category buckets (small/medium/mega) from trail thresholds. Buffer geometry for web maps — not skiable area.</p>
+<h3 id="compare-fairly">Compare fairly</h3>
+<p><a href="../resort-comparison.html" rel="noopener noreferrer" target="_blank">Resort comparison</a> → add candidates → sort by priority → cross-check <a href="../mainmap.html" rel="noopener noreferrer" target="_blank">map</a> → <a href="../DriveTimeMap.html" rel="noopener noreferrer" target="_blank">drive time</a> or <a href="../TripPlannerMap.html" rel="noopener noreferrer" target="_blank">trip planner</a> for logistics.</p>
+<p>Stats narrow shortlists; they don't replace snow reports, lessons, or village vibe. Full framework: <a href="how-to-choose-a-ski-resort.html" rel="noopener noreferrer" target="_blank">how to choose</a>.</p>
+<h3 id="when-numbers-look-wrong">When numbers look wrong</h3>
+<ol>
+<li>Check OSM — missing <code>piste:type=downhill</code> or <code>aerialway</code></li>
+<li>Check boundary — oversized <code>landuse=winter_sports</code></li>
+<li>Check pipeline date — lag behind live edits</li>
+<li><a href="/playable/" rel="noopener noreferrer" target="_blank">Ski game</a> — missing runs in-game = missing in data</li>
+<li>Contribute fixes</li>
+</ol>
+<p>SQL-level proof: <a href="../DownloadData.html" rel="noopener noreferrer" target="_blank">Download Data</a>.</p>
+<p>Definitions stay constant across countries because we chose mapped OSM geometry. Marketing numbers = vibe. Atlas numbers = comparison. When brochures and maps disagree, trust the reproducible source — then fix OSM so the next pipeline run tells a truer story.</p></div>
+      <section class="blog-related" aria-label="Related articles">
+          <h2 class="tw-text-xl tw-font-semibold tw-text-black">Related articles</h2>
+          <ul class="tw-mt-4"><li><a href="how-to-choose-a-ski-resort.html">How to Choose a Ski Resort (Without Reading 10 Resort Websites)</a></li>
+            <li><a href="largest-ski-resorts-in-the-world.html">The 10 Largest Ski Resorts in the World (By Mapped Terrain)</a></li>
+            <li><a href="how-to-tag-a-ski-resort-in-openstreetmap.html">How to Tag a Ski Resort in OpenStreetMap (So It Shows Up in the Atlas)</a></li></ul>
+        </section>
+      <p class="tw-mt-10 tw-text-sm tw-text-gray-500"><a href="index.html" class="tw-text-blue-600 hover:tw-underline">← Back to all articles</a></p>
+    </article>
+  </main>
+  <footer
+    class="tw-mt-auto tw-flex tw-w-full tw-place-content-around tw-gap-3 tw-border-t tw-border-gray-200
+           tw-bg-gray-50 tw-py-6 tw-px-[10%] tw-text-black max-md:tw-flex-col"
+  >
+    <div class="tw-flex tw-h-full tw-w-[250px] tw-flex-col tw-place-items-center tw-gap-6 max-md:tw-w-full">
+      <img src="../assets/logo.png?v=2" alt="Global Ski Atlas" class="tw-max-w-[120px]" />
+      <div>Global Ski Atlas</div>
+      <div class="tw-mt-3 tw-text-lg tw-font-semibold">Follow us</div>
+      <div class="tw-flex tw-gap-4 tw-text-2xl">
+        <a href="javascript:void(0)" aria-label="Facebook" title="Coming soon"><i class="bi bi-facebook"></i></a>
+        <a href="https://twitter.com/@pauls_freeman" aria-label="Twitter"><i class="bi bi-twitter"></i></a>
+        <a href="https://instagram.com/" class="tw-h-[40px] tw-w-[40px]" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
+      </div>
+    </div>
+    <div class="tw-flex tw-h-full tw-w-[250px] tw-flex-col tw-gap-4">
+      <h2 class="tw-text-3xl max-md:tw-text-xl">Explore</h2>
+      <div class="tw-flex tw-flex-col tw-gap-3 max-md:tw-text-sm">
+        <a href="../coffee-table-book.html" class="footer-link">Coffee Table Book</a>
+        <a href="../mainmap.html" class="footer-link">Interactive Map</a>
+        <a href="../resort-comparison.html" class="footer-link">Compare Resorts</a>
+        <a href="/playable/" class="footer-link">Ski Game</a>
+        <a href="../skiing-ai.html" class="footer-link">AI Assistant</a>
+      </div>
+    </div>
+    <div class="tw-flex tw-h-full tw-w-[250px] tw-flex-col tw-gap-4">
+      <h2 class="tw-text-3xl max-md:tw-text-xl">Download Parquet Data</h2>
+      <div class="tw-flex tw-flex-col tw-gap-3 max-md:tw-text-sm">
+        <a href="../DownloadData.html" class="footer-link tw-inline-flex tw-items-center tw-gap-1">Data downloads &amp; how we create it <i class="bi bi-arrow-right tw-text-sm"></i></a>
+      </div>
+    </div>
+    <div class="tw-flex tw-h-full tw-w-[250px] tw-flex-col tw-gap-4">
+      <h2 class="tw-text-3xl max-md:tw-text-xl">Resources</h2>
+      <div class="tw-flex tw-flex-col tw-gap-3 max-md:tw-text-sm">
+        <a href="index.html" class="footer-link">Blog</a>
+        <a href="../about.html" class="footer-link">About</a>
+        <a href="../faq.html" class="footer-link">FAQ</a>
+        <a href="../privacy-policy.html" class="footer-link">Privacy Policy</a>
+      </div>
+    </div>
+  </footer>
+  <script src="../index.js"></script>
+</body>
+</html>

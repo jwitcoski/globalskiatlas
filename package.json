@@ -8,6 +8,8 @@
         "serve": "cross-env PORT=3010 node server.js",
         "start:tailwind": "cross-env NODE_ENV=development tailwindcss --postcss -i css/tailwind.css -o css/tailwind-runtime.css -w",
         "build:tailwind": "cross-env NODE_ENV=production tailwindcss --postcss -i css/tailwind.css -o css/tailwind-build.css --minify",
+        "build:blog": "node scripts/generate-blog.js",
+        "patch:blog-nav": "node scripts/patch-blog-nav.js",
         "wiki:create-tables": "node scripts/wiki-create-tables.js",
         "wiki:ingest": "node scripts/wiki-ingest-parquet.js",
         "wiki:bulk-content": "node scripts/wiki-bulk-update-resort-content.js",
