@@ -22,9 +22,9 @@ import {
   standUp,
 } from "./physics.js?v=mob1";
 import { featuredCourses, attachPisteDifficulty, courseFinish, createRun, tickRun, formatTime } from "./run.js?v=map4";
-import { coordsToXz, attachPiste, resetScore, tickScore, commitBestScore, formatScore, distToPolyline, applyWipeout } from "./score.js?v=feel4";
+import { coordsToXz, attachPiste, resetScore, tickScore, commitBestScore, formatScore, applyWipeout } from "./score.js?v=feel4";
 import { orientPiste, alongTrack, alongPolyline } from "./gates.js?v=vis18";
-import { addOsmWorld, applyPisteDecorDifficultyScheme } from "./osm-world.js?v=scheme1";
+import { addOsmWorld, applyPisteDecorDifficultyScheme } from "./osm-world.js?v=mapall1";
 import {
   snowTerrainMaterial,
   addSkyAndLights,
@@ -38,9 +38,9 @@ import {
   makeFallingSnow,
   updateFallingSnow,
   setInspectAtmosphere,
-} from "./look.js?v=lod3";
+} from "./look.js?v=lod4";
 import { addResortIsland, updateIslandDust, updateIslandLod, setIslandOpacity, resetIslandLod } from "./island.js?v=lod3b";
-import { bindUi, setHud, openPanel, closePanel, updateLoading, setOsmMapNote, setResortTitle, compactUi, setFlybyChrome } from "./ui.js?v=flyby3";
+import { bindUi, setHud, openPanel, closePanel, updateLoading, setOsmMapNote, setResortTitle, compactUi, setFlybyChrome } from "./ui.js?v=flyby4";
 import { atlasStatsHtml, prefetchWikiIndex } from "./atlas-stats.js?v=stats1";
 import { bindFinishChartScope, finishChartsHtml, prefetchFinishCharts } from "./finish-charts.js?v=1";
 import { bindOsmFix, osmFixHtml, osmFixContext } from "./osm-fix.js?v=1";
@@ -68,8 +68,9 @@ import {
   loadDifficultyScheme,
   setDifficultyScheme,
   applyTrailMapDifficultyScheme,
-} from "./trail-map.js?v=scheme1";
-import { makeMinimap } from "./minimap.js?v=feel6";
+  pisteLineForCourse,
+} from "./trail-map.js?v=mapall2";
+import { makeMinimap } from "./minimap.js?v=mapall1";
 import { createNpcSkiers, clearNpcSkiers, tickNpcSkiers } from "./npc-skiers.js?v=feel6";
 import { updateTraffic } from "./traffic.js?v=vis16";
 import {
@@ -80,7 +81,7 @@ import {
   trailerNeedsPaint,
   paintTrailerFrame,
 } from "./trailer.js?v=t2";
-import { createFlyby, prepFlybyTour, clearFlybyTour, tickFlybyZoom } from "./flyby.js?v=tour3";
+import { createFlyby, prepFlybyTour, clearFlybyTour, tickFlybyZoom } from "./flyby.js?v=tour4";
 
 loadDifficultyScheme();
 
@@ -95,6 +96,38 @@ let SCENE_ROOT = new URL("./", import.meta.url);
 let catalogHub = null;
 let lastManifest = null;
 let readySeq = 0;
+/** Skip uncompressed terrain meshes that can OOM the tab (e.g. Smugglers ~140 MB). */
+const TERRAIN_MESH_MAX_BYTES = 45 * 1024 * 1024;
+
+function isLocalDev() {
+  const h = location.hostname;
+  return h === "localhost" || h === "127.0.0.1";
+}
+
+function sceneAssetsBase() {
+  if (isLocalDev()) return new URL("/game_scenes/", location.origin);
+  return new URL(PUBLIC_SCENES);
+}
+
+async function probeMeshBytes(url) {
+  try {
+    const r = await fetch(url, { headers: { Range: "bytes=0-0" } });
+    const cr = r.headers.get("content-range");
+    const m = cr && /\/(\d+)$/.exec(cr);
+    if (m) return Number(m[1]);
+    if (r.ok) return Number(r.headers.get("content-length")) || 0;
+  } catch {
+    /* Range probe blocked — try HEAD */
+  }
+  try {
+    const r = await fetch(url, { method: "HEAD" });
+    if (r.ok) return Number(r.headers.get("content-length")) || 0;
+  } catch {
+    /* ignore */
+  }
+  return 0;
+}
+
 const STEP = 1 / 60;
 
 const ui = bindUi();
@@ -353,9 +386,22 @@ function clearFlybyUi() {
   clearFlybyTour(orbit);
   flyby.auto = false;
   flyby.active = false;
+  flyby.showTrails = false;
   flyby.zoomT = 0;
   document.body.classList.remove("flyby");
-  setFlybyChrome(ui, false, false);
+  setFlybyChrome(ui, false, false, false);
+}
+
+function applyFlybyTrails() {
+  if (!trailMap || !flyby.active) return;
+  trailMap.root.visible = flyby.showTrails;
+}
+
+function setFlybyTrails(on) {
+  if (!flyby.active || run?.phase !== "ready") return;
+  flyby.showTrails = !!on;
+  applyFlybyTrails();
+  setFlybyChrome(ui, true, flyby.auto, flyby.showTrails);
 }
 
 function enterFlyby() {
@@ -363,6 +409,7 @@ function enterFlyby() {
   clearFlybyTour(orbit);
   flyby.auto = false;
   flyby.active = true;
+  flyby.showTrails = false;
   flyby.zoomT = 0;
   lobbyZoomTo = 0;
   if (ui.overlay) {
@@ -372,8 +419,8 @@ function enterFlyby() {
   document.body.classList.add("lobby", "flyby");
   setResortTitle(ui, "");
   setOsmMapNote(ui, "");
-  setFlybyChrome(ui, true, false);
-  if (trailMap) trailMap.root.visible = false;
+  setFlybyChrome(ui, true, false, false);
+  applyFlybyTrails();
   setPistePlayMode(true);
   orbit.enabled = true;
   document.body.style.cursor = "grab";
@@ -405,7 +452,7 @@ function setFlybyAuto(on) {
     orbit.enabled = true;
     document.body.style.cursor = "grab";
   }
-  setFlybyChrome(ui, true, flyby.auto);
+  setFlybyChrome(ui, true, flyby.auto, flyby.showTrails);
 }
 
 function showReady() {
@@ -511,14 +558,16 @@ function setTerrainLobbyMode(lobby) {
   lobbyHandoff = null;
   const terrain = scene.userData.terrainRoot;
   const island = scene.userData.island;
+  const islandPlay = !!(island?.root && !terrain);
   if (island?.root) {
-    island.root.visible = lobby;
+    island.root.visible = lobby || islandPlay;
     if (terrain) {
       terrain.visible = !lobby;
       if (!lobby) finalizeTerrainOpaque(terrain);
       else setRootOpacity(terrain, 0);
     }
     if (lobby) resetIslandLod(island, camera);
+    else if (islandPlay) setIslandOpacity(island, 1);
     else setIslandOpacity(island, 0);
   } else if (terrain) {
     terrain.visible = true;
@@ -796,20 +845,9 @@ function applyCourse(course) {
     finishMark.position.set(finish.x, hf.sample(finish.x, finish.z), finish.z);
   }
   run = createRun(finish);
-  const named = pisteLines.find((p) => course.name && p.name === course.name);
-  let hit = named;
-  let best = Infinity;
-  for (const p of pisteLines) {
-    if (!p.pts || p.pts.length < 2) continue;
-    const d = distToPolyline(spawnXZ.x, spawnXZ.z, p.pts) * 2 + distToPolyline(finish.x, finish.z, p.pts);
-    if (d < best) {
-      best = d;
-      hit = p;
-    }
-  }
-  if (named && distToPolyline(spawnXZ.x, spawnXZ.z, named.pts) < 40) hit = named;
+  const hit = pisteLineForCourse(course, pisteLines);
   const pistePts = orientPiste(
-    hit && hit.pts.length >= 2
+    hit?.pts?.length >= 2
       ? hit.pts
       : [
           { x: finish.startEast, z: -finish.startNorth },
@@ -883,7 +921,7 @@ function rememberScenePath(path) {
 async function openMountain(path) {
   const rel = path.replace(/^\/+|\/+$/g, "");
   rememberScenePath(rel);
-  const base = catalogHub?.base || new URL("../", import.meta.url);
+  const base = isLocalDev() ? sceneAssetsBase() : catalogHub?.base || sceneAssetsBase();
   SCENE_ROOT = new URL(`${rel}/`, base);
   pisteLines.length = 0;
   destroyPickerMap();
@@ -912,6 +950,8 @@ function catalogUrls() {
   if (custom) {
     const root = custom.endsWith("/") ? custom : `${custom}/`;
     urls.push(new URL("catalog.json", root));
+  } else if (isLocalDev()) {
+    urls.push(new URL("/game_scenes/catalog.json", location.origin));
   } else if (!localOnly) {
     urls.push(new URL("catalog.json", CF_SCENES));
     urls.push(new URL("catalog.json", S3_SCENES));
@@ -949,34 +989,51 @@ async function loadMountain() {
 
   const snowMat = snowTerrainMaterial(THREE);
   let terrainRoot = null;
+  const meshUrl = new URL(manifest.terrain.mesh, SCENE_ROOT);
+  let meshBytes = 0;
   try {
-    pushLoad({ message: "Downloading terrain mesh…", pct: 0.02 });
-    const gltf = await loadGltf(new URL(manifest.terrain.mesh, SCENE_ROOT).href, (loaded, total) => {
-      if (!total) {
+    meshBytes = await probeMeshBytes(meshUrl);
+  } catch {
+    /* proceed without size hint */
+  }
+  if (meshBytes > TERRAIN_MESH_MAX_BYTES) {
+    console.warn(
+      `terrain mesh ${(meshBytes / (1024 * 1024)).toFixed(0)} MB exceeds cap; skiing on heightfield`,
+    );
+    pushLoad({
+      message: `Terrain mesh is ${(meshBytes / (1024 * 1024)).toFixed(0)} MB — using heightfield instead…`,
+      pct: 0.15,
+    });
+  } else {
+    try {
+      pushLoad({ message: "Downloading terrain mesh…", pct: 0.02 });
+      const gltf = await loadGltf(meshUrl.href, (loaded, total) => {
+        if (!total) {
+          pushLoad({
+            message: `Downloading terrain mesh… ${(loaded / (1024 * 1024)).toFixed(0)} MB so far`,
+          });
+          return;
+        }
+        const mb = total / (1024 * 1024);
         pushLoad({
-          message: `Downloading terrain mesh… ${(loaded / (1024 * 1024)).toFixed(0)} MB so far`,
+          pct: loaded / total,
+          sizeHint: mb > 40 ? `About ${mb.toFixed(0)} MB of terrain` : `Terrain ${mb.toFixed(0)} MB`,
+          message: `Downloading terrain mesh… ${Math.round((loaded / total) * 100)}%`,
         });
-        return;
-      }
-      const mb = total / (1024 * 1024);
-      pushLoad({
-        pct: loaded / total,
-        sizeHint: mb > 40 ? `About ${mb.toFixed(0)} MB of terrain` : `Terrain ${mb.toFixed(0)} MB`,
-        message: `Downloading terrain mesh… ${Math.round((loaded / total) * 100)}%`,
       });
-    });
-    gltf.scene.traverse((o) => {
-      if (o.isMesh) {
-        o.material = snowMat;
-        o.receiveShadow = true;
-      }
-    });
-    terrainRoot = gltf.scene;
-    scene.userData.terrainRoot = terrainRoot;
-    scene.add(gltf.scene);
-  } catch (meshErr) {
-    console.warn("terrain mesh failed; skiing on heightfield only", meshErr);
-    scene.userData.terrainRoot = null;
+      gltf.scene.traverse((o) => {
+        if (o.isMesh) {
+          o.material = snowMat;
+          o.receiveShadow = true;
+        }
+      });
+      terrainRoot = gltf.scene;
+      scene.userData.terrainRoot = terrainRoot;
+      scene.add(gltf.scene);
+    } catch (meshErr) {
+      console.warn("terrain mesh failed; skiing on heightfield only", meshErr);
+      scene.userData.terrainRoot = null;
+    }
   }
 
   const graph = await loadJSON(manifest.gameplay.routes_graph);
@@ -1030,6 +1087,8 @@ async function loadMountain() {
     pisteLines.push({
       name: f.properties?.name,
       id: f.properties?.id,
+      status: f.properties?.status,
+      piste_difficulty: f.properties?.piste_difficulty,
       pts: coordsToXz(f.geometry.coordinates),
     });
   }
@@ -1150,6 +1209,7 @@ ui.flybyBar?.addEventListener("click", (e) => {
   if (!btn || !flyby.active) return;
   if (btn.dataset.flyby === "exit") exitFlyby();
   else if (btn.dataset.flyby === "auto") setFlybyAuto(!flyby.auto);
+  else if (btn.dataset.flyby === "trails") setFlybyTrails(!flyby.showTrails);
 });
 ui.pauseBtn?.addEventListener("click", () => {
   if (run?.phase === "running") {

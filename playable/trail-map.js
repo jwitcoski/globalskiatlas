@@ -330,8 +330,18 @@ function badgeTexture(THREE, style, name) {
   return { tex, aspect: w / h };
 }
 
+export function pisteLineForCourse(course, pisteLines) {
+  if (!course || !pisteLines?.length) return null;
+  const byId = pisteLines.find((p) => p.id === course.id);
+  if (byId?.pts?.length >= 2) return byId;
+  const sameName = pisteLines.filter((p) => course.name && p.name === course.name);
+  const approved = sameName.filter((p) => !p.status || p.status === "approved");
+  const hit = approved.find((p) => p.id === course.id) || approved[0] || sameName[0];
+  return hit?.pts?.length >= 2 ? hit : null;
+}
+
 function polylineForCourse(course, pisteLines) {
-  const hit = pisteLines.find((p) => course.name && p.name === course.name);
+  const hit = pisteLineForCourse(course, pisteLines);
   if (hit?.pts?.length >= 2) return hit.pts;
   const s = course.start_local || {};
   const e = course.end_local || {};
@@ -444,11 +454,30 @@ function midPoint(pts, elevFn) {
   return { x: p.x, y: elevFn(p.x, p.z) + 14, z: p.z };
 }
 
+function courseLookup(courses) {
+  const byId = new Map();
+  const byName = new Map();
+  for (const course of courses || []) {
+    byId.set(course.id, course);
+    if (course.name) byName.set(course.name, course);
+  }
+  return { byId, byName };
+}
+
+function matchCourse(pl, lookup) {
+  const byId = lookup.byId.get(pl.id);
+  if (byId) return byId;
+  if (!pl.name || (pl.status && pl.status !== "approved")) return null;
+  return lookup.byName.get(pl.name) || null;
+}
+
 export function addTrailMap(THREE, scene, courses, pisteLines, elevFn, skiArea = null) {
   const root = new THREE.Group();
   root.name = "trail-map";
   const picks = [];
-  const pending = [];
+  const allTrails = [];
+  const lookup = courseLookup(courses);
+  const seenPlayable = new Set();
   let minX = Infinity;
   let maxX = -Infinity;
   let minZ = Infinity;
@@ -456,21 +485,32 @@ export function addTrailMap(THREE, scene, courses, pisteLines, elevFn, skiArea =
   let maxY = -Infinity;
   let minY = Infinity;
 
+  function trackPt(p, yLift = 2.4) {
+    const y = elevFn(p.x, p.z) + yLift;
+    minX = Math.min(minX, p.x);
+    maxX = Math.max(maxX, p.x);
+    minZ = Math.min(minZ, p.z);
+    maxZ = Math.max(maxZ, p.z);
+    maxY = Math.max(maxY, y);
+    minY = Math.min(minY, y);
+    return new THREE.Vector3(p.x, y, p.z);
+  }
+
+  const lines = (pisteLines || []).filter((pl) => pl?.pts?.length >= 2);
   for (const course of courses || []) {
-    const pts = polylineForCourse(course, pisteLines);
-    const style = classifyDifficulty(course.piste_difficulty, course.piste_type);
-    const vecs = pts.map((p) => {
-      const y = elevFn(p.x, p.z) + 2.4;
-      minX = Math.min(minX, p.x);
-      maxX = Math.max(maxX, p.x);
-      minZ = Math.min(minZ, p.z);
-      maxZ = Math.max(maxZ, p.z);
-      maxY = Math.max(maxY, y);
-      minY = Math.min(minY, y);
-      return new THREE.Vector3(p.x, y, p.z);
-    });
-    if (vecs.length < 2) continue;
-    pending.push({ course, pts, style, vecs });
+    const hasLine = lines.some((pl) => pl.id === course.id || (course.name && pl.name === course.name));
+    if (hasLine) continue;
+    const pts = polylineForCourse(course, lines);
+    if (pts.length >= 2) {
+      lines.push({
+        id: course.id,
+        name: course.name,
+        status: "approved",
+        piste_difficulty: course.piste_difficulty,
+        piste_type: course.piste_type,
+        pts,
+      });
+    }
   }
 
   /* Prefer the winter_sports AOI so the lobby frames the mapped ski area, not the DEM pad. */
@@ -488,25 +528,44 @@ export function addTrailMap(THREE, scene, courses, pisteLines, elevFn, skiArea =
 
   for (const ring of skiArea?.rings || []) {
     if (ring.length < 3) continue;
-    const vecs = ring.map((p) => {
-      const y = elevFn(p.x, p.z) + 3.2;
-      maxY = Math.max(maxY, y);
-      minY = Math.min(minY, y);
-      return new THREE.Vector3(p.x, y, p.z);
-    });
+    const vecs = ring.map((p) => trackPt(p, 3.2));
     const edge = dashedRibbon(THREE, vecs, edgeW, 0x2a343c, 0.72, 2, 28, 20);
     edge.userData.skiBoundary = true;
     root.add(edge);
   }
 
-  for (const item of pending) {
-    const { course, pts, style, vecs } = item;
-    const glow = ribbonMesh(THREE, vecs, trailW * 1.45, 0x243038, 1, 2);
-    glow.userData.courseId = course.id;
-    const line = ribbonMesh(THREE, vecs, trailW, style.color, 1, 3);
-    line.userData.courseId = course.id;
+  const ribbonsByLineId = new Map();
 
-    const mid = midPoint(pts, elevFn);
+  for (const pl of lines) {
+    const course = matchCourse(pl, lookup);
+    const style = classifyDifficulty(course?.piste_difficulty || pl.piste_difficulty, course?.piste_type || pl.piste_type);
+    const vecs = pl.pts.map((p) => trackPt(p));
+    if (vecs.length < 2) continue;
+    const playable = !!course;
+    const status = pl.status || (playable ? "approved" : "review_needed");
+    const width = playable ? trailW : trailW * 0.62;
+    const color = playable ? style.color : status === "rejected" ? 0x6a7076 : style.color;
+    const lineOpacity = playable ? 1 : status === "rejected" ? 0.34 : 0.58;
+    const glowOpacity = playable ? 1 : status === "rejected" ? 0.22 : 0.42;
+    const glow = ribbonMesh(THREE, vecs, width * 1.35, 0x243038, glowOpacity, 2);
+    const line = ribbonMesh(THREE, vecs, width, color, lineOpacity, 3);
+    root.add(glow, line);
+    ribbonsByLineId.set(pl.id, { glow, line });
+    allTrails.push({ pts: pl.pts, style: { ...style, color }, playable, status });
+  }
+
+  for (const course of courses || []) {
+    if (seenPlayable.has(course.id)) continue;
+    const pl = pisteLineForCourse(course, lines);
+    if (!pl) continue;
+    seenPlayable.add(course.id);
+    const ribbons = ribbonsByLineId.get(pl.id);
+    if (ribbons) {
+      ribbons.glow.userData.courseId = course.id;
+      ribbons.line.userData.courseId = course.id;
+    }
+    const style = classifyDifficulty(course.piste_difficulty, course.piste_type);
+    const mid = midPoint(pl.pts, elevFn);
     const badge = badgeTexture(THREE, style, course.name || course.id);
     const spr = new THREE.Sprite(
       new THREE.SpriteMaterial({
@@ -531,8 +590,16 @@ export function addTrailMap(THREE, scene, courses, pisteLines, elevFn, skiArea =
     hit.position.copy(spr.position);
     hit.userData.courseId = course.id;
 
-    root.add(line, glow, spr, hit);
-    picks.push({ course, line, glow, spr, label: spr, style, pts });
+    root.add(spr, hit);
+    picks.push({
+      course,
+      line: ribbons?.line || null,
+      glow: ribbons?.glow || null,
+      spr,
+      label: spr,
+      style,
+      pts: pl.pts,
+    });
   }
 
   scene.add(root);
@@ -541,6 +608,7 @@ export function addTrailMap(THREE, scene, courses, pisteLines, elevFn, skiArea =
   return {
     root,
     picks,
+    allTrails,
     skiArea,
     bounds: { cx, cz, span, minY, maxY, minX, maxX, minZ, maxZ },
   };
@@ -551,12 +619,14 @@ export function setTrailMapSelection(map, courseId) {
   map.selectedId = courseId;
   for (const p of map.picks) {
     const on = p.course.id === courseId;
-    p.glow.material.opacity = on ? 1 : 0.85;
-    p.spr.material.opacity = on ? 1 : 0.9;
-    p.line.material.color.setHex(p.style.color);
-    p.line.material.opacity = 1;
-    p.line.visible = true;
-    p.glow.visible = true;
+    if (p.glow?.material) p.glow.material.opacity = on ? 1 : 0.85;
+    if (p.spr?.material) p.spr.material.opacity = on ? 1 : 0.9;
+    if (p.line?.material) {
+      p.line.material.color.setHex(p.style.color);
+      p.line.material.opacity = 1;
+      p.line.visible = true;
+    }
+    if (p.glow) p.glow.visible = true;
   }
 }
 

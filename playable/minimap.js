@@ -98,6 +98,23 @@ export function makeMinimap(canvas, trailMap) {
       ctx.setLineDash([]);
     }
 
+    for (const t of trailMap.allTrails || []) {
+      const pts = t.pts || [];
+      if (pts.length < 2 || t.playable) continue;
+      ctx.beginPath();
+      pts.forEach((pt, i) => {
+        const q = to(pt.x, pt.z, w, h, pad);
+        if (i === 0) ctx.moveTo(q.u, q.v);
+        else ctx.lineTo(q.u, q.v);
+      });
+      ctx.strokeStyle = hex(t.style?.color || 0x6a7076);
+      ctx.globalAlpha = t.status === "rejected" ? 0.28 : 0.48;
+      ctx.lineWidth = 1.8;
+      ctx.lineJoin = "round";
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+
     for (const p of trailMap.picks) {
       const pts = p.pts || [];
       if (pts.length < 2) continue;

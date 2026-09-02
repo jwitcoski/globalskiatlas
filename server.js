@@ -566,17 +566,27 @@ function proxyS3Prefix(prefix, req, res) {
   const opts = {
     hostname: GAME_SCENES_UPSTREAM,
     path: req.path,
-    method: 'GET',
+    method: req.method === 'HEAD' ? 'HEAD' : 'GET',
     headers: { 'Accept-Encoding': 'identity' },
   };
+  if (req.headers.range) opts.headers.Range = req.headers.range;
   const upstream = https.request(opts, (up) => {
     res.status(up.statusCode || 502);
-    const pass = ['content-type', 'content-length', 'etag', 'last-modified', 'cache-control'];
+    const pass = [
+      'content-type',
+      'content-length',
+      'content-range',
+      'accept-ranges',
+      'etag',
+      'last-modified',
+      'cache-control',
+    ];
     for (const h of pass) {
       if (up.headers[h]) res.setHeader(h, up.headers[h]);
     }
     res.setHeader('Access-Control-Allow-Origin', '*');
-    up.pipe(res);
+    if (req.method === 'HEAD') res.end();
+    else up.pipe(res);
   });
   upstream.on('error', (err) => {
     console.warn(`${prefix} proxy`, req.path, err.message);
@@ -586,6 +596,10 @@ function proxyS3Prefix(prefix, req, res) {
 }
 
 app.get(/^\/game_scenes\/.*/, (req, res) => {
+  proxyS3Prefix('game_scenes', req, res);
+});
+
+app.head(/^\/game_scenes\/.*/, (req, res) => {
   proxyS3Prefix('game_scenes', req, res);
 });
 

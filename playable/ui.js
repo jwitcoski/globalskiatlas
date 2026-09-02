@@ -24,14 +24,19 @@ export function bindUi() {
     resortTitle: document.getElementById("resort-title"),
     flybyBar: document.getElementById("flyby-bar"),
     flybyAuto: document.getElementById("flyby-auto"),
+    flybyTrails: document.getElementById("flyby-trails"),
   };
 }
 
-export function setFlybyChrome(ui, on, auto = false) {
+export function setFlybyChrome(ui, on, auto = false, trails = false) {
   if (ui?.flybyBar) ui.flybyBar.hidden = !on;
   if (ui?.flybyAuto) {
     ui.flybyAuto.setAttribute("aria-pressed", auto ? "true" : "false");
     ui.flybyAuto.textContent = auto ? "Touring" : "Auto";
+  }
+  if (ui?.flybyTrails) {
+    ui.flybyTrails.setAttribute("aria-pressed", trails ? "true" : "false");
+    ui.flybyTrails.textContent = trails ? "Trails on" : "Trails";
   }
   const hint = ui?.flybyBar?.querySelector(".flyby-hint");
   if (hint) hint.textContent = auto ? "Orbiting the resort" : "Drag · scroll to explore";

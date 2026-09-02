@@ -174,8 +174,9 @@ export function setInspectAtmosphere(scene, look, inspect, span = 4000) {
   const u = sky?.material?.uniforms;
   const sun = look?.sun;
   if (inspect) {
-    const fogFar = Math.max(4500, span * 2.2);
-    const fogNear = Math.max(500, span * 0.32);
+    // Wider near/far = gentler haze (doubled from prior lobby defaults = half the fog).
+    const fogFar = Math.max(9000, span * 4.4);
+    const fogNear = Math.max(1000, span * 0.64);
     if (!scene.userData.lobbyFog) {
       scene.userData.lobbyFog = new THREE.Fog(INSPECT_BG, fogNear, fogFar);
     } else {

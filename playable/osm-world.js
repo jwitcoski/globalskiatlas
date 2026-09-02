@@ -988,6 +988,12 @@ export async function addOsmWorld(THREE, scene, sceneRoot, manifest, elevFn) {
         counts.piste_poly = (counts.piste_poly || 0) + 1;
       } else {
         for (const coords of lineParts(g)) {
+          const center = drapeLine(coords, elevFn, 0.85, pisteLineMat(style.color));
+          if (center) {
+            center.renderOrder = 2;
+            tagPaint(center, "line");
+            pisteRoot.add(center);
+          }
           for (const w of zebraWallMeshes(coords, elevFn, style.color, false)) {
             if (w.material !== wallBlack) tagPaint(w, "wall");
             pisteRoot.add(w);
@@ -1144,8 +1150,9 @@ export function applyPisteDecorDifficultyScheme(scene) {
   if (!root) return;
   root.traverse((obj) => {
     const kind = obj.userData?.pisteKind;
-    if (!obj.isMesh || (kind !== "fill" && kind !== "wall")) return;
+    if ((!obj.isMesh && !obj.isLine) || (kind !== "fill" && kind !== "wall" && kind !== "line")) return;
     const style = classifyDifficulty(obj.userData.pisteDifficulty, obj.userData.pisteType);
-    obj.material = kind === "fill" ? pisteFillMat(style.color) : wallColorMat(style.color);
+    obj.material =
+      kind === "fill" ? pisteFillMat(style.color) : kind === "line" ? pisteLineMat(style.color) : wallColorMat(style.color);
   });
 }

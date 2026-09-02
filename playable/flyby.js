@@ -6,6 +6,7 @@ export function createFlyby() {
     auto: false,
     zoomT: 0,
     zoomFar: true,
+    showTrails: false,
   };
 }
 
