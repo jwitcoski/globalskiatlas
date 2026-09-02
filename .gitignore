@@ -28,7 +28,7 @@ playable/trailer.webm
 playable/trailer-status.json
 playable/trailer-frame.jpg
 
-# Local-only homepage hero (Three.js terrain mesh) — not deployed
+# Local-only multi-resort homepage_scene bundles (hero uses game_scenes/Montage)
 homepage_scene/
 scripts/hero-mountain.js
 css/index-hero-mountain.css

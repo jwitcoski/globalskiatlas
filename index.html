@@ -65,10 +65,16 @@
             crossorigin="anonymous"
             referrerpolicy="no-referrer"
         />
-        <link rel="preconnect" href="https://api.maptiler.com" crossorigin />
         <link rel="preconnect" href="https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com" crossorigin />
-        <link href="https://cdn.maptiler.com/maptiler-sdk-js/v3.10.2/maptiler-sdk.css" rel="stylesheet" />
-        <link rel="stylesheet" href="css/index-hero-map.css" />
+        <link rel="stylesheet" href="css/index-hero-montage.css" />
+        <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+        </script>
     </head>
     <body class="tw-flex tw-min-h-[100vh] tw-flex-col tw-bg-[#fff]">
         <header
@@ -169,16 +175,18 @@
                             tw-overflow-hidden max-lg:tw-max-w-[unset]"
                 >
                     <div
-                        class="hero-map-embed reveal-hero-img tw-relative tw-z-[1] tw-h-[420px] tw-w-full tw-max-w-[560px] tw-overflow-hidden tw-rounded-lg tw-shadow-lg max-lg:tw-h-[280px] max-lg:tw-max-w-[320px]"
+                        class="hero-montage-embed reveal-hero-img tw-relative tw-z-[1] tw-h-[420px] tw-w-full tw-max-w-[560px] max-lg:tw-h-[280px] max-lg:tw-max-w-[320px]"
+                        aria-label="Montage Mountain 3D clay map"
                     >
-                        <div id="map" aria-label="Interactive ski resort map"></div>
-                        <div class="search-box" id="searchBox" style="display: none;">
-                            <input type="text" id="searchInput" placeholder="Search for a resort..." autocomplete="off" />
-                            <div class="search-dropdown" id="searchDropdown"></div>
+                        <div id="hero-montage-stage" class="hero-montage-stage" aria-hidden="true"></div>
+                        <div class="hero-montage-caption">
+                            <a href="/playable/?resort=montage_mountain_pa&amp;ver=v0-107b3a77b75f" aria-label="Ski Montage Mountain in the 3D game">
+                                Montage Mountain <i class="bi bi-controller"></i>
+                            </a>
+                            <a class="secondary" href="mainmap.html" aria-label="Open full interactive atlas map">
+                                Open full map <i class="bi bi-arrow-up-right"></i>
+                            </a>
                         </div>
-                        <div id="legend" class="map-legend" style="display: none;"></div>
-                        <div id="basemapControl" class="basemap-control" aria-label="Basemap options"></div>
-                        <a href="mainmap.html" class="hero-map-open-link">Open full map <i class="bi bi-arrow-up-right"></i></a>
                     </div>
                 </div>
             </div>
@@ -832,9 +840,7 @@
         .stat-lifts-legend .lift-symbol-img { width: 100%; height: 100%; object-fit: contain; display: block; }
     </style>
 
-    <script defer src="https://cdn.maptiler.com/maptiler-sdk-js/v3.10.2/maptiler-sdk.umd.min.js"></script>
-    <script type="module" src="scripts/pmtiles-protocol-init.js"></script>
-    <script type="module" src="scripts/index-hero-map.js?v=1"></script>
+    <script type="module" src="scripts/hero-montage-map.js?v=1"></script>
     <script type="module">
         import { fetchSkiAreaCatalog, loadPmtilesLayerFeatures } from './scripts/pmtiles-core.js';
         (async function () {
