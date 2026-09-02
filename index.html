@@ -69,6 +69,15 @@
         <link rel="preconnect" href="https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com" crossorigin />
         <link href="https://cdn.maptiler.com/maptiler-sdk-js/v3.10.2/maptiler-sdk.css" rel="stylesheet" />
         <link rel="stylesheet" href="css/index-hero-map.css" />
+        <link rel="stylesheet" href="css/index-hero-mountain.css" />
+        <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+        </script>
     </head>
     <body class="tw-flex tw-min-h-[100vh] tw-flex-col tw-bg-[#fff]">
         <header
@@ -142,11 +151,19 @@
         </header>
 
         <section
-            class="tw-relative tw-flex tw-min-h-[100vh] tw-w-full tw-max-w-[100vw] tw-flex-col 
+            class="hero-section tw-relative tw-flex tw-min-h-[100vh] tw-w-full tw-max-w-[100vw] tw-flex-col 
                     tw-overflow-hidden max-lg:tw-p-4 max-md:tw-mt-[50px]"
         >
+            <div id="hero-img-bg" class="hero-mountain-stage" aria-hidden="true">
+                <div class="hero-mountain-vignette"></div>
+            </div>
+            <div class="hero-mountain-badge">
+                <a href="/playable/?resort=montage_mountain_pa&amp;ver=v0-107b3a77b75f" aria-label="Play featured resort in the ski game">
+                    Montage Mountain <i class="bi bi-controller"></i>
+                </a>
+            </div>
             <div
-                class="tw-flex tw-h-full tw-min-h-[100vh] tw-w-full tw-place-content-center 
+                class="hero-content tw-flex tw-h-full tw-min-h-[100vh] tw-w-full tw-place-content-center 
                         tw-gap-6 tw-p-[5%] max-xl:tw-place-items-center max-lg:tw-flex-col"
             >
                 <div class="tw-flex tw-flex-col tw-place-content-center">
@@ -759,6 +776,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.0/ScrollTrigger.min.js"></script>
 
     <script src="./index.js"></script>
+    <script type="module" src="scripts/hero-mountain.js?v=global1"></script>
 
     <style>
         .swiper-pagination-bullet {

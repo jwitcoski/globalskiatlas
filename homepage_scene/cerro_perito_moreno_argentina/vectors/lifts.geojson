@@ -1,0 +1,2428 @@
+{
+  "type": "FeatureCollection",
+  "coordinate_system": {
+    "kind": "local_game_meters",
+    "not_wgs84": true,
+    "axes": {
+      "geojson_x": "local_east_m",
+      "geojson_y": "local_north_m"
+    },
+    "game_axes": {
+      "x": "east_m",
+      "y": "elevation_m",
+      "z": "negative_north_m"
+    },
+    "local_origin": {
+      "easting_m": 282532.3521487523,
+      "northing_m": 5369445.26554299,
+      "longitude": -71.61745777629636,
+      "latitude": -41.797045545464776
+    },
+    "projected_crs": "EPSG:32719",
+    "note": "This is not RFC 7946 WGS84 GeoJSON. Convert X,Y to game X,Z via game_axes."
+  },
+  "attribution": "\u00a9 OpenStreetMap contributors (ODbL)",
+  "layer": "lifts",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            4398.490464640141,
+            800.6394980819896
+          ],
+          [
+            4327.861360150622,
+            837.1288477396592
+          ],
+          [
+            4257.999971361831,
+            873.2292690938339
+          ],
+          [
+            4079.669059061096,
+            965.3569686934352
+          ],
+          [
+            4000.2590645403834,
+            1006.3819467108697
+          ],
+          [
+            3901.9243768043816,
+            1057.1868714736775
+          ],
+          [
+            3888.1201892888057,
+            1064.32012633048
+          ],
+          [
+            3705.9772900220123,
+            1158.4144679587334
+          ],
+          [
+            3599.409698875621,
+            1213.4589546946809
+          ],
+          [
+            3494.3612189418054,
+            1267.7139556910843
+          ],
+          [
+            3452.282861897722,
+            1289.3137621693313
+          ]
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:259049878",
+        "osm_type": null,
+        "osm_id": "259049878",
+        "name": "Cipriano",
+        "tags": {
+          "name": "Cipriano",
+          "aerialway": "chair_lift",
+          "z_order": "0.0",
+          "other_tags": "\"aerialway:occupancy\"=>\"2\"",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            3459.2130268416367,
+            1270.950453562662
+          ],
+          [
+            3247.4955493775196,
+            1275.5263924719766
+          ]
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:331814068",
+        "osm_type": null,
+        "osm_id": "331814068",
+        "name": null,
+        "tags": {
+          "aerialway": "platter",
+          "z_order": "0.0",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            979.1552262858022,
+            611.4228535508737
+          ],
+          [
+            1339.9416651735082,
+            1347.5623207492754
+          ]
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:1362140720",
+        "osm_type": null,
+        "osm_id": "1362140720",
+        "name": "Plateau Oeste",
+        "tags": {
+          "name": "Plateau Oeste",
+          "aerialway": "j-bar",
+          "z_order": "0.0",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            3469.8862349822302,
+            1173.2139982879162
+          ],
+          [
+            3331.7713767772075,
+            1174.863331711851
+          ],
+          [
+            3269.815799949458,
+            1175.5944322794676
+          ],
+          [
+            3253.6902491614455,
+            1175.7885854588822
+          ],
+          [
+            3186.6587015910773,
+            1176.588949962519
+          ],
+          [
+            3104.8660611253,
+            1177.56789995078
+          ],
+          [
+            3030.4209532528184,
+            1178.4442937169224
+          ],
+          [
+            2883.5436091597658,
+            1180.188575282693
+          ],
+          [
+            2799.5956235688063,
+            1181.1881765909493
+          ],
+          [
+            2732.580640951637,
+            1181.9736809749156
+          ],
+          [
+            2654.199077684083,
+            1182.9055993435904
+          ],
+          [
+            2581.6170471899095,
+            1183.7667037267238
+          ],
+          [
+            2505.7566890108865,
+            1184.6617399211973
+          ],
+          [
+            2422.1912392234663,
+            1185.646212624386
+          ]
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:1362140721",
+        "osm_type": null,
+        "osm_id": "1362140721",
+        "name": "Telesilla 2",
+        "tags": {
+          "name": "Telesilla 2",
+          "aerialway": "chair_lift",
+          "z_order": "0.0",
+          "other_tags": "\"aerialway:occupancy\"=>\"2\"",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            3417.1022827358684,
+            1014.5169849218801
+          ],
+          [
+            2258.2419822850497,
+            1410.173981464468
+          ]
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:1362140722",
+        "osm_type": null,
+        "osm_id": "1362140722",
+        "name": null,
+        "tags": {
+          "aerialway": "t-bar",
+          "z_order": "0.0",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            2672.7693189163692,
+            880.8353058137
+          ],
+          [
+            1806.788019173022,
+            1377.2705544568598
+          ]
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:1362379001",
+        "osm_type": null,
+        "osm_id": "1362379001",
+        "name": "Plateau Este",
+        "tags": {
+          "name": "Plateau Este",
+          "aerialway": "j-bar",
+          "z_order": "0.0",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4398.490464640141,
+          800.6394980819896
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:2643755353",
+        "osm_type": null,
+        "osm_id": "2643755353",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"station\"",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          3452.282861897722,
+          1289.3137621693313
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:2643755356",
+        "osm_type": null,
+        "osm_id": "2643755356",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"station\"",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          3843.275203897734,
+          886.0374724082649
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:2643755359",
+        "osm_type": null,
+        "osm_id": "2643755359",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"station\"",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4327.861360150622,
+          837.1288477396592
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:9457976613",
+        "osm_type": null,
+        "osm_id": "9457976613",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4257.999971361831,
+          873.2292690938339
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:9457976614",
+        "osm_type": null,
+        "osm_id": "9457976614",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4079.669059061096,
+          965.3569686934352
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:9457976615",
+        "osm_type": null,
+        "osm_id": "9457976615",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4000.2590645403834,
+          1006.3819467108697
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:9457976616",
+        "osm_type": null,
+        "osm_id": "9457976616",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          3901.924376803334,
+          1057.1868714736775
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:9458009117",
+        "osm_type": null,
+        "osm_id": "9458009117",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          3888.1201892888057,
+          1064.32012633048
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:9458009118",
+        "osm_type": null,
+        "osm_id": "9458009118",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          3705.9772900220123,
+          1158.4144679587334
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:9458009119",
+        "osm_type": null,
+        "osm_id": "9458009119",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          3599.409698875621,
+          1213.4589546946809
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:9458009120",
+        "osm_type": null,
+        "osm_id": "9458009120",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          3494.3612189418054,
+          1267.7139556910843
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:9458009121",
+        "osm_type": null,
+        "osm_id": "9458009121",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          979.1552262847545,
+          611.4228535508737
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:12611336470",
+        "osm_type": null,
+        "osm_id": "12611336470",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"station\",\"public_transport\"=>\"station\"",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1339.9416651724605,
+          1347.5623207492754
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:12611336471",
+        "osm_type": null,
+        "osm_id": "12611336471",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"station\",\"public_transport\"=>\"station\"",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          3469.8862349822302,
+          1173.2139982879162
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:12611336472",
+        "osm_type": null,
+        "osm_id": "12611336472",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"station\",\"public_transport\"=>\"station\"",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2422.1912392224185,
+          1185.646212624386
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:12611336473",
+        "osm_type": null,
+        "osm_id": "12611336473",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"station\",\"public_transport\"=>\"station\"",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          3417.1022827358684,
+          1014.5169849218801
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:12611336475",
+        "osm_type": null,
+        "osm_id": "12611336475",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"station\",\"public_transport\"=>\"station\"",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2258.2419822850497,
+          1410.173981464468
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:12611336476",
+        "osm_type": null,
+        "osm_id": "12611336476",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"station\",\"public_transport\"=>\"station\"",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2672.7693189163692,
+          880.8353058137
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:12613551321",
+        "osm_type": null,
+        "osm_id": "12613551321",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"station\",\"public_transport\"=>\"station\"",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1806.788019173022,
+          1377.2705544568598
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:12613551322",
+        "osm_type": null,
+        "osm_id": "12613551322",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"station\",\"public_transport\"=>\"station\"",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2581.6170471899095,
+          1183.7667037267238
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:12696285194",
+        "osm_type": null,
+        "osm_id": "12696285194",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2505.7566890108865,
+          1184.6617399211973
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:12696285195",
+        "osm_type": null,
+        "osm_id": "12696285195",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2732.580640951637,
+          1181.9736809749156
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:12696285196",
+        "osm_type": null,
+        "osm_id": "12696285196",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2654.199077684083,
+          1182.9055993435904
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:12696285197",
+        "osm_type": null,
+        "osm_id": "12696285197",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2799.5956235688063,
+          1181.1881765909493
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:12696285198",
+        "osm_type": null,
+        "osm_id": "12696285198",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2883.5436091597658,
+          1180.188575282693
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:12696285199",
+        "osm_type": null,
+        "osm_id": "12696285199",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          3030.4209532528184,
+          1178.4442937169224
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:12696285200",
+        "osm_type": null,
+        "osm_id": "12696285200",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          3104.8660611253,
+          1177.56789995078
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:12696333501",
+        "osm_type": null,
+        "osm_id": "12696333501",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          3186.6587015910773,
+          1176.588949962519
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:12696333502",
+        "osm_type": null,
+        "osm_id": "12696333502",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          3253.6902491614455,
+          1175.7885854588822
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:12696333503",
+        "osm_type": null,
+        "osm_id": "12696333503",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          3269.815799949458,
+          1175.5944322794676
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:12696333504",
+        "osm_type": null,
+        "osm_id": "12696333504",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          3331.7713767772075,
+          1174.863331711851
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:12696333505",
+        "osm_type": null,
+        "osm_id": "12696333505",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4398.490464640141,
+          800.6394980819896
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:2643755353",
+        "osm_type": "node",
+        "osm_id": "2643755353",
+        "name": null,
+        "tags": {
+          "aerialway": "station",
+          "winter_sports_id": "934096931",
+          "winter_sports_name": "Cerro Perito Moreno",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "station"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          3452.282861897722,
+          1289.3137621693313
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:2643755356",
+        "osm_type": "node",
+        "osm_id": "2643755356",
+        "name": null,
+        "tags": {
+          "aerialway": "station",
+          "winter_sports_id": "934096931",
+          "winter_sports_name": "Cerro Perito Moreno",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "station"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          3843.275203897734,
+          886.0374724082649
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:2643755359",
+        "osm_type": "node",
+        "osm_id": "2643755359",
+        "name": null,
+        "tags": {
+          "aerialway": "station",
+          "winter_sports_id": "934096931",
+          "winter_sports_name": "Cerro Perito Moreno",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "station"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4327.861360150622,
+          837.1288477396592
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:9457976613",
+        "osm_type": "node",
+        "osm_id": "9457976613",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "934096931",
+          "winter_sports_name": "Cerro Perito Moreno",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4257.999971361831,
+          873.2292690938339
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:9457976614",
+        "osm_type": "node",
+        "osm_id": "9457976614",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "934096931",
+          "winter_sports_name": "Cerro Perito Moreno",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4079.669059061096,
+          965.3569686934352
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:9457976615",
+        "osm_type": "node",
+        "osm_id": "9457976615",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "934096931",
+          "winter_sports_name": "Cerro Perito Moreno",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4000.2590645403834,
+          1006.3819467108697
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:9457976616",
+        "osm_type": "node",
+        "osm_id": "9457976616",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "934096931",
+          "winter_sports_name": "Cerro Perito Moreno",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          3901.924376803334,
+          1057.1868714736775
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:9458009117",
+        "osm_type": "node",
+        "osm_id": "9458009117",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "934096931",
+          "winter_sports_name": "Cerro Perito Moreno",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          3888.1201892888057,
+          1064.32012633048
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:9458009118",
+        "osm_type": "node",
+        "osm_id": "9458009118",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "934096931",
+          "winter_sports_name": "Cerro Perito Moreno",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          3705.9772900220123,
+          1158.4144679587334
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:9458009119",
+        "osm_type": "node",
+        "osm_id": "9458009119",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "934096931",
+          "winter_sports_name": "Cerro Perito Moreno",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          3599.409698875621,
+          1213.4589546946809
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:9458009120",
+        "osm_type": "node",
+        "osm_id": "9458009120",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "934096931",
+          "winter_sports_name": "Cerro Perito Moreno",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          3494.3612189418054,
+          1267.7139556910843
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:9458009121",
+        "osm_type": "node",
+        "osm_id": "9458009121",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "934096931",
+          "winter_sports_name": "Cerro Perito Moreno",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          979.1552262847545,
+          611.4228535508737
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:12611336470",
+        "osm_type": "node",
+        "osm_id": "12611336470",
+        "name": null,
+        "tags": {
+          "aerialway": "station",
+          "public_transport": "station",
+          "winter_sports_id": "934096931",
+          "winter_sports_name": "Cerro Perito Moreno",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "station"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1339.9416651724605,
+          1347.5623207492754
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:12611336471",
+        "osm_type": "node",
+        "osm_id": "12611336471",
+        "name": null,
+        "tags": {
+          "aerialway": "station",
+          "public_transport": "station",
+          "winter_sports_id": "934096931",
+          "winter_sports_name": "Cerro Perito Moreno",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "station"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          3469.8862349822302,
+          1173.2139982879162
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:12611336472",
+        "osm_type": "node",
+        "osm_id": "12611336472",
+        "name": null,
+        "tags": {
+          "aerialway": "station",
+          "public_transport": "station",
+          "winter_sports_id": "934096931",
+          "winter_sports_name": "Cerro Perito Moreno",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "station"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2422.1912392224185,
+          1185.646212624386
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:12611336473",
+        "osm_type": "node",
+        "osm_id": "12611336473",
+        "name": null,
+        "tags": {
+          "aerialway": "station",
+          "public_transport": "station",
+          "winter_sports_id": "934096931",
+          "winter_sports_name": "Cerro Perito Moreno",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "station"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          3417.1022827358684,
+          1014.5169849218801
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:12611336475",
+        "osm_type": "node",
+        "osm_id": "12611336475",
+        "name": null,
+        "tags": {
+          "aerialway": "station",
+          "public_transport": "station",
+          "winter_sports_id": "934096931",
+          "winter_sports_name": "Cerro Perito Moreno",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "station"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2258.2419822850497,
+          1410.173981464468
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:12611336476",
+        "osm_type": "node",
+        "osm_id": "12611336476",
+        "name": null,
+        "tags": {
+          "aerialway": "station",
+          "public_transport": "station",
+          "winter_sports_id": "934096931",
+          "winter_sports_name": "Cerro Perito Moreno",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "station"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2672.7693189163692,
+          880.8353058137
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:12613551321",
+        "osm_type": "node",
+        "osm_id": "12613551321",
+        "name": null,
+        "tags": {
+          "aerialway": "station",
+          "public_transport": "station",
+          "winter_sports_id": "934096931",
+          "winter_sports_name": "Cerro Perito Moreno",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "station"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1806.788019173022,
+          1377.2705544568598
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:12613551322",
+        "osm_type": "node",
+        "osm_id": "12613551322",
+        "name": null,
+        "tags": {
+          "aerialway": "station",
+          "public_transport": "station",
+          "winter_sports_id": "934096931",
+          "winter_sports_name": "Cerro Perito Moreno",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "station"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2581.6170471899095,
+          1183.7667037267238
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:12696285194",
+        "osm_type": "node",
+        "osm_id": "12696285194",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "934096931",
+          "winter_sports_name": "Cerro Perito Moreno",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2505.7566890108865,
+          1184.6617399211973
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:12696285195",
+        "osm_type": "node",
+        "osm_id": "12696285195",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "934096931",
+          "winter_sports_name": "Cerro Perito Moreno",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2732.580640951637,
+          1181.9736809749156
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:12696285196",
+        "osm_type": "node",
+        "osm_id": "12696285196",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "934096931",
+          "winter_sports_name": "Cerro Perito Moreno",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2654.199077684083,
+          1182.9055993435904
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:12696285197",
+        "osm_type": "node",
+        "osm_id": "12696285197",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "934096931",
+          "winter_sports_name": "Cerro Perito Moreno",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2799.5956235688063,
+          1181.1881765909493
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:12696285198",
+        "osm_type": "node",
+        "osm_id": "12696285198",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "934096931",
+          "winter_sports_name": "Cerro Perito Moreno",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2883.5436091597658,
+          1180.188575282693
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:12696285199",
+        "osm_type": "node",
+        "osm_id": "12696285199",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "934096931",
+          "winter_sports_name": "Cerro Perito Moreno",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          3030.4209532528184,
+          1178.4442937169224
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:12696285200",
+        "osm_type": "node",
+        "osm_id": "12696285200",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "934096931",
+          "winter_sports_name": "Cerro Perito Moreno",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          3104.8660611253,
+          1177.56789995078
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:12696333501",
+        "osm_type": "node",
+        "osm_id": "12696333501",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "934096931",
+          "winter_sports_name": "Cerro Perito Moreno",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          3186.6587015910773,
+          1176.588949962519
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:12696333502",
+        "osm_type": "node",
+        "osm_id": "12696333502",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "934096931",
+          "winter_sports_name": "Cerro Perito Moreno",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          3253.6902491614455,
+          1175.7885854588822
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:12696333503",
+        "osm_type": "node",
+        "osm_id": "12696333503",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "934096931",
+          "winter_sports_name": "Cerro Perito Moreno",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          3269.815799949458,
+          1175.5944322794676
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:12696333504",
+        "osm_type": "node",
+        "osm_id": "12696333504",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "934096931",
+          "winter_sports_name": "Cerro Perito Moreno",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          3331.7713767772075,
+          1174.863331711851
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:12696333505",
+        "osm_type": "node",
+        "osm_id": "12696333505",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "934096931",
+          "winter_sports_name": "Cerro Perito Moreno",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            4398.490464640141,
+            800.6394980819896
+          ],
+          [
+            4327.861360150622,
+            837.1288477396592
+          ],
+          [
+            4257.999971361831,
+            873.2292690938339
+          ],
+          [
+            4079.669059061096,
+            965.3569686934352
+          ],
+          [
+            4000.2590645403834,
+            1006.3819467108697
+          ],
+          [
+            3901.9243768043816,
+            1057.1868714736775
+          ],
+          [
+            3888.1201892888057,
+            1064.32012633048
+          ],
+          [
+            3705.9772900220123,
+            1158.4144679587334
+          ],
+          [
+            3599.409698875621,
+            1213.4589546946809
+          ],
+          [
+            3494.3612189418054,
+            1267.7139556910843
+          ],
+          [
+            3452.282861897722,
+            1289.3137621693313
+          ]
+        ]
+      },
+      "properties": {
+        "id": "lifts:way:259049878",
+        "osm_type": "way",
+        "osm_id": "259049878",
+        "name": "Cipriano",
+        "tags": {
+          "name": "Cipriano",
+          "aerialway": "chair_lift",
+          "z_order": "0",
+          "aerialway:occupancy": "2",
+          "winter_sports_id": "934096931",
+          "winter_sports_name": "Cerro Perito Moreno",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "chair_lift"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            3459.2130268416367,
+            1270.950453562662
+          ],
+          [
+            3247.4955493775196,
+            1275.5263924719766
+          ]
+        ]
+      },
+      "properties": {
+        "id": "lifts:way:331814068",
+        "osm_type": "way",
+        "osm_id": "331814068",
+        "name": null,
+        "tags": {
+          "aerialway": "platter",
+          "z_order": "0",
+          "winter_sports_id": "934096931",
+          "winter_sports_name": "Cerro Perito Moreno",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "platter"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            979.1552262858022,
+            611.4228535508737
+          ],
+          [
+            1339.9416651735082,
+            1347.5623207492754
+          ]
+        ]
+      },
+      "properties": {
+        "id": "lifts:way:1362140720",
+        "osm_type": "way",
+        "osm_id": "1362140720",
+        "name": "Plateau Oeste",
+        "tags": {
+          "name": "Plateau Oeste",
+          "aerialway": "j-bar",
+          "z_order": "0",
+          "winter_sports_id": "934096931",
+          "winter_sports_name": "Cerro Perito Moreno",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "j-bar"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            3469.8862349822302,
+            1173.2139982879162
+          ],
+          [
+            3331.7713767772075,
+            1174.863331711851
+          ],
+          [
+            3269.815799949458,
+            1175.5944322794676
+          ],
+          [
+            3253.6902491614455,
+            1175.7885854588822
+          ],
+          [
+            3186.6587015910773,
+            1176.588949962519
+          ],
+          [
+            3104.8660611253,
+            1177.56789995078
+          ],
+          [
+            3030.4209532528184,
+            1178.4442937169224
+          ],
+          [
+            2883.5436091597658,
+            1180.188575282693
+          ],
+          [
+            2799.5956235688063,
+            1181.1881765909493
+          ],
+          [
+            2732.580640951637,
+            1181.9736809749156
+          ],
+          [
+            2654.199077684083,
+            1182.9055993435904
+          ],
+          [
+            2581.6170471899095,
+            1183.7667037267238
+          ],
+          [
+            2505.7566890108865,
+            1184.6617399211973
+          ],
+          [
+            2422.1912392234663,
+            1185.646212624386
+          ]
+        ]
+      },
+      "properties": {
+        "id": "lifts:way:1362140721",
+        "osm_type": "way",
+        "osm_id": "1362140721",
+        "name": "Telesilla 2",
+        "tags": {
+          "name": "Telesilla 2",
+          "aerialway": "chair_lift",
+          "z_order": "0",
+          "aerialway:occupancy": "2",
+          "winter_sports_id": "934096931",
+          "winter_sports_name": "Cerro Perito Moreno",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "chair_lift"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            3417.1022827358684,
+            1014.5169849218801
+          ],
+          [
+            2258.2419822850497,
+            1410.173981464468
+          ]
+        ]
+      },
+      "properties": {
+        "id": "lifts:way:1362140722",
+        "osm_type": "way",
+        "osm_id": "1362140722",
+        "name": null,
+        "tags": {
+          "aerialway": "t-bar",
+          "z_order": "0",
+          "winter_sports_id": "934096931",
+          "winter_sports_name": "Cerro Perito Moreno",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "t-bar"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            2672.7693189163692,
+            880.8353058137
+          ],
+          [
+            1806.788019173022,
+            1377.2705544568598
+          ]
+        ]
+      },
+      "properties": {
+        "id": "lifts:way:1362379001",
+        "osm_type": "way",
+        "osm_id": "1362379001",
+        "name": "Plateau Este",
+        "tags": {
+          "name": "Plateau Este",
+          "aerialway": "j-bar",
+          "z_order": "0",
+          "winter_sports_id": "934096931",
+          "winter_sports_name": "Cerro Perito Moreno",
+          "State": "R\u00edo Negro",
+          "Country": "Argentina",
+          "Ski Area": "Cerro Perito Moreno",
+          "region": "south-america"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "j-bar"
+      }
+    }
+  ]
+}

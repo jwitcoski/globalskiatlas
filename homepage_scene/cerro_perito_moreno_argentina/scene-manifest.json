@@ -1,0 +1,48 @@
+{
+  "scene_schema_version": "0.1.0-homepage",
+  "scene_kind": "homepage_hero",
+  "scene_id": "cerro_perito_moreno_argentina",
+  "winter_sports_id": "934096931",
+  "build_timestamp_utc": "2026-09-02T04:10:18Z",
+  "display_name": "Cerro Perito Moreno",
+  "country": "Argentina",
+  "location": "R\u00edo Negro",
+  "coordinate_system": {
+    "source_crs": "EPSG:4326",
+    "projected_crs": "EPSG:32719",
+    "origin_easting_m": 282532.3521487523,
+    "origin_northing_m": 5369445.26554299,
+    "origin_longitude": -71.61745777629636,
+    "origin_latitude": -41.797045545464776,
+    "units": "meters",
+    "game_axes": {
+      "x": "east_m",
+      "y": "elevation_m",
+      "z": "negative_north_m"
+    },
+    "local_origin": {
+      "easting_m": 282532.3521487523,
+      "northing_m": 5369445.26554299,
+      "longitude": -71.61745777629636,
+      "latitude": -41.797045545464776
+    }
+  },
+  "terrain": {
+    "mesh": "terrain/terrain-mesh.glb",
+    "mesh_metadata": "terrain/terrain-metadata.json",
+    "elevation_min_m": 908.3046875,
+    "elevation_max_m": 1868.0,
+    "vertex_spacing_m": 16.2
+  },
+  "vectors": {
+    "piste_trails": "vectors/piste-trails.geojson",
+    "lifts": "vectors/lifts.geojson",
+    "tree_points": "vectors/tree-points.geojson"
+  },
+  "attribution": {
+    "osm": "\u00a9 OpenStreetMap contributors",
+    "dem": "Mapzen Skadi / AWS Terrain Tiles",
+    "license_notes": "OSM data ODbL; DEM from Mapzen Skadi. See attribution/ATTRIBUTION.md"
+  },
+  "disclaimer": "Decorative homepage terrain derived from open data. Not an official resort map, trail map, navigation tool, or safety product."
+}

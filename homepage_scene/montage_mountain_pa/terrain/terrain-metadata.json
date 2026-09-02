@@ -1,0 +1,45 @@
+{
+  "kind": "homepage_hero",
+  "source_dem": "C:\\Users\\jwitc\\Documents\\GitHub\\globalskiatlas_data\\cache\\game_export_dems\\north-america\\us\\pennsylvania\\45096232.tif",
+  "source_crs": "EPSG:4326",
+  "projected_crs": "EPSG:32618",
+  "work_resolution_m": 12.0,
+  "mesh": {
+    "file": "terrain-mesh.glb",
+    "vertex_count": 36984,
+    "triangle_count": 72070,
+    "byte_size": 500804,
+    "compression": "draco",
+    "draco_quantization_bits": 16,
+    "draco_compression_level": 5,
+    "vertex_spacing_m": 12.0,
+    "coordinate_space": "game (X east, Y elevation, Z negative north)"
+  },
+  "local_crs": {
+    "source_crs": "EPSG:4326",
+    "projected_crs": "EPSG:32618",
+    "origin_easting_m": 443705.1338582366,
+    "origin_northing_m": 4577060.134462881,
+    "origin_longitude": -75.67286687662333,
+    "origin_latitude": 41.343065953264166,
+    "units": "meters",
+    "game_axes": {
+      "x": "east_m",
+      "y": "elevation_m",
+      "z": "negative_north_m"
+    },
+    "local_origin": {
+      "easting_m": 443705.1338582366,
+      "northing_m": 4577060.134462881,
+      "longitude": -75.67286687662333,
+      "latitude": 41.343065953264166
+    }
+  },
+  "grid": {
+    "rows": 184,
+    "cols": 201,
+    "cell_m": 12.0
+  },
+  "elevation_min_m": 268.0,
+  "elevation_max_m": 602.0
+}

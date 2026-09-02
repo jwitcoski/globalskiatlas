@@ -1,0 +1,45 @@
+{
+  "kind": "homepage_hero",
+  "source_dem": "C:\\Users\\jwitc\\Documents\\GitHub\\globalskiatlas_data\\cache\\game_export_dems\\australia-oceania\\178133225-osmhull.tif",
+  "source_crs": "EPSG:4326",
+  "projected_crs": "EPSG:32755",
+  "work_resolution_m": 29.6,
+  "mesh": {
+    "file": "terrain-mesh.glb",
+    "vertex_count": 52440,
+    "triangle_count": 101068,
+    "byte_size": 703144,
+    "compression": "draco",
+    "draco_quantization_bits": 16,
+    "draco_compression_level": 5,
+    "vertex_spacing_m": 29.6,
+    "coordinate_space": "game (X east, Y elevation, Z negative north)"
+  },
+  "local_crs": {
+    "source_crs": "EPSG:4326",
+    "projected_crs": "EPSG:32755",
+    "origin_easting_m": 622275.3519675976,
+    "origin_northing_m": 5967597.845997158,
+    "origin_longitude": 148.36408010178278,
+    "origin_latitude": -36.42904674164383,
+    "units": "meters",
+    "game_axes": {
+      "x": "east_m",
+      "y": "elevation_m",
+      "z": "negative_north_m"
+    },
+    "local_origin": {
+      "easting_m": 622275.3519675976,
+      "northing_m": 5967597.845997158,
+      "longitude": 148.36408010178278,
+      "latitude": -36.42904674164383
+    }
+  },
+  "grid": {
+    "rows": 230,
+    "cols": 228,
+    "cell_m": 29.6
+  },
+  "elevation_min_m": 1278.1165771484375,
+  "elevation_max_m": 2048.50048828125
+}
