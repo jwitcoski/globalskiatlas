@@ -18,20 +18,20 @@ const S3_SCENES =
 const CF_SCENES = "https://globalskiatlas.com/game_scenes/";
 
 const HERO_SPAN = 100;
-const MAX_TREES = 420;
+const MAX_TREES = 900;
 const MAX_BUILDINGS = 48;
 const TRAIL_RADIUS = 5.2;
 
 /** Clay-model palette (matches reference: orange / chartreuse trails, forest green trees). */
 const PALETTE = {
-  bg: 0xf7f9fc,
+  bg: 0xffffff,
   snow: 0xffffff,
-  snowShade: 0xd7e6f2,
-  rock: 0xb7c4d1,
-  tree: 0x1f5c38,
-  treeDeep: 0x164a2c,
+  snowShade: 0xd2e4f2,
+  rock: 0x9aabbc,
+  tree: 0x1a5534,
+  treeDeep: 0x123f26,
   trunk: 0x5a4030,
-  building: 0xa8b6c4,
+  building: 0xa9b7c5,
   buildingRoof: 0x8fa0b0,
   water: 0x2aa6e0,
   trailWarm: 0xf07828,
@@ -74,14 +74,86 @@ function disposeObject(obj) {
   });
 }
 
-function claySnowMaterial() {
-  return new THREE.MeshStandardMaterial({
-    color: PALETTE.snow,
-    roughness: 0.92,
-    metalness: 0,
+function shadeSnowMesh(mesh) {
+  const geo = mesh.geometry;
+  if (!geo?.attributes?.position) return;
+  if (!geo.attributes.normal) geo.computeVertexNormals();
+  const pos = geo.attributes.position;
+  const nrm = geo.attributes.normal;
+  const colors = new Float32Array(pos.count * 3);
+  const white = new THREE.Color(PALETTE.snow);
+  const shade = new THREE.Color(PALETTE.snowShade);
+  const c = new THREE.Color();
+  for (let i = 0; i < pos.count; i++) {
+    const ny = Math.abs(nrm.getY(i));
+    /* Flatter = brighter snow; steeper faces pick up cool blue shade. */
+    const t = THREE.MathUtils.clamp(1 - ny * 1.15, 0, 1);
+    c.copy(white).lerp(shade, t * 0.85);
+    colors[i * 3] = c.r;
+    colors[i * 3 + 1] = c.g;
+    colors[i * 3 + 2] = c.b;
+  }
+  geo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+  mesh.material = new THREE.MeshLambertMaterial({
+    vertexColors: true,
     side: THREE.DoubleSide,
-    envMapIntensity: 0.35,
   });
+}
+
+function boundsFromFeatures(featureCollection, center, pad = 40) {
+  let minX = Infinity;
+  let maxX = -Infinity;
+  let minZ = Infinity;
+  let maxZ = -Infinity;
+  let hits = 0;
+  for (const feature of featureCollection?.features || []) {
+    const parts = [
+      ...lineParts(feature.geometry),
+      ...ringParts(feature.geometry),
+    ];
+    if (feature.geometry?.type === "Point") parts.push([feature.geometry.coordinates]);
+    for (const part of parts) {
+      for (const coord of part || []) {
+        if (!coord || coord.length < 2) continue;
+        const { x, z } = localXZ(coord[0], coord[1], center);
+        minX = Math.min(minX, x);
+        maxX = Math.max(maxX, x);
+        minZ = Math.min(minZ, z);
+        maxZ = Math.max(maxZ, z);
+        hits += 1;
+      }
+    }
+  }
+  if (!hits) return null;
+  return {
+    minX: minX - pad,
+    maxX: maxX + pad,
+    minZ: minZ - pad,
+    maxZ: maxZ + pad,
+  };
+}
+
+function cropTerrainToBounds(mesh, localBounds, center) {
+  if (!localBounds || !mesh?.geometry?.attributes?.position || !center) return;
+  const pos = mesh.geometry.attributes.position;
+  let minY = Infinity;
+  for (let i = 0; i < pos.count; i++) minY = Math.min(minY, pos.getY(i));
+  /* Mesh vertices stay in absolute game space; mesh.position shifts the group. */
+  const minX = localBounds.minX + center.x;
+  const maxX = localBounds.maxX + center.x;
+  const minZ = localBounds.minZ + center.z;
+  const maxZ = localBounds.maxZ + center.z;
+  const sink = minY - 80;
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i);
+    const z = pos.getZ(i);
+    if (x < minX || x > maxX || z < minZ || z > maxZ) {
+      pos.setY(i, sink);
+    }
+  }
+  pos.needsUpdate = true;
+  mesh.geometry.computeVertexNormals();
+  shadeSnowMesh(mesh);
 }
 
 function lineParts(geometry) {
@@ -340,7 +412,7 @@ function addTrees(parent, featureCollection, center, sample) {
     for (const coord of coords) {
       if (!coord || coord.length < 2) continue;
       /* Cluster a few cones around each OSM forest point for the dense clay look. */
-      const cluster = 3 + Math.floor(rng(seed * 1.7) * 4);
+      const cluster = 5 + Math.floor(rng(seed * 1.7) * 5);
       for (let k = 0; k < cluster; k++) {
         const jitter = 8 + rng(seed * 3.3 + k) * 16;
         const ang = rng(seed * 8.1 + k * 2.2) * Math.PI * 2;
@@ -568,24 +640,27 @@ async function loadMontageScene(base) {
   const forestUrl = new URL(manifest.vectors.forest || "vectors/forest.geojson", base);
   const buildingsUrl = new URL(manifest.vectors.buildings || "vectors/buildings.geojson", base);
   const waterUrl = new URL(manifest.vectors.water || "vectors/water.geojson", base);
+  const skiAreaUrl = new URL(manifest.vectors.ski_area || "vectors/ski-area.geojson", base);
 
-  const [gltf, routes, lifts, forest, buildings, water] = await Promise.all([
+  const [gltf, routes, lifts, forest, buildings, water, skiArea] = await Promise.all([
     getGltfLoader().loadAsync(meshUrl.href),
     fetchJson(routesUrl),
     fetchJson(liftsUrl),
     fetchJson(forestUrl).catch(() => null),
     fetchJson(buildingsUrl).catch(() => null),
     fetchJson(waterUrl).catch(() => null),
+    fetchJson(skiAreaUrl).catch(() => null),
   ]);
 
   let mesh = null;
   gltf.scene.traverse((child) => {
-    if (child.isMesh && !mesh) mesh = child;
+    if (!child.isMesh) return;
+    if (!mesh) mesh = child;
+    shadeSnowMesh(child);
+    child.castShadow = false;
+    child.receiveShadow = true;
   });
   if (!mesh) throw new Error("terrain mesh missing");
-  mesh.material = claySnowMaterial();
-  mesh.castShadow = false;
-  mesh.receiveShadow = true;
 
   const fitted = fitTerrainRoot(mesh);
   return {
@@ -595,17 +670,18 @@ async function loadMontageScene(base) {
     forest,
     buildings,
     water,
+    skiArea,
   };
 }
 
 function addLights(scene) {
-  scene.add(new THREE.AmbientLight(0xffffff, 0.72));
-  scene.add(new THREE.HemisphereLight(0xf5f8ff, 0xc5d6e6, 0.95));
-  const key = new THREE.DirectionalLight(0xfff6ea, 1.15);
-  key.position.set(70, 120, 40);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.95));
+  scene.add(new THREE.HemisphereLight(0xffffff, 0xb7d0e6, 1.15));
+  const key = new THREE.DirectionalLight(0xfff8f0, 0.85);
+  key.position.set(60, 140, 30);
   scene.add(key);
-  const fill = new THREE.DirectionalLight(0xb8d4f0, 0.55);
-  fill.position.set(-50, 40, -30);
+  const fill = new THREE.DirectionalLight(0x9ec5ea, 0.7);
+  fill.position.set(-70, 50, -40);
   scene.add(fill);
 }
 
@@ -628,6 +704,7 @@ export async function initHeroMontageMap(container) {
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PALETTE.bg);
+  scene.fog = new THREE.Fog(PALETTE.bg, 110, 210);
 
   const camera = new THREE.PerspectiveCamera(36, 1, 0.5, 600);
   const renderer = new THREE.WebGLRenderer({
@@ -638,7 +715,7 @@ export async function initHeroMontageMap(container) {
   renderer.setPixelRatio(capDpr());
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.18;
+  renderer.toneMappingExposure = 1.35;
   container.appendChild(renderer.domElement);
 
   addLights(scene);
@@ -703,16 +780,21 @@ export async function initHeroMontageMap(container) {
 
   try {
     const loaded = await loadMontageScene(sceneRoot());
-    const { root, center, mesh, routes, lifts, forest, buildings, water } = loaded;
+    const { root, center, mesh, routes, lifts, forest, buildings, water, skiArea } = loaded;
     const decor = new THREE.Group();
     decor.name = "montage-decor";
     root.add(decor);
     world.add(root);
 
+    const focusBounds =
+      boundsFromFeatures(skiArea, center, 90) ||
+      boundsFromFeatures(routes, center, 70);
+    if (focusBounds) cropTerrainToBounds(mesh, focusBounds, center);
+
     root.updateMatrixWorld(true);
     const sample = makeHeightSampler(root, mesh);
     addIslandUnderside(root, mesh);
-    addSoftShadow(root, HERO_SPAN * 0.55);
+    addSoftShadow(root, HERO_SPAN * 0.48);
     if (routes) addTrails(decor, routes, center, sample);
     if (lifts) addLifts(decor, lifts, center, sample, HERO_SPAN);
     if (forest) addTrees(decor, forest, center, sample);
@@ -720,6 +802,17 @@ export async function initHeroMontageMap(container) {
     if (water) addWaterPatches(decor, water, center, sample);
 
     bounds = boundsFromObject(root, new THREE.Vector3(0, 14, 0));
+    if (focusBounds) {
+      const s = root.scale.x || 1;
+      const cx = ((focusBounds.minX + focusBounds.maxX) * 0.5) * s;
+      const cz = ((focusBounds.minZ + focusBounds.maxZ) * 0.5) * s;
+      const rx = ((focusBounds.maxX - focusBounds.minX) * 0.5) * s;
+      const rz = ((focusBounds.maxZ - focusBounds.minZ) * 0.5) * s;
+      bounds = {
+        center: new THREE.Vector3(cx, bounds.center.y, cz),
+        radius: Math.max(rx, rz, 28),
+      };
+    }
     embed.classList.remove("is-loading");
     embed.classList.add("is-ready");
   } catch (err) {
