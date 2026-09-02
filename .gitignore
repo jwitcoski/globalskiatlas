@@ -27,3 +27,9 @@ project.local.properties
 playable/trailer.webm
 playable/trailer-status.json
 playable/trailer-frame.jpg
+
+# Local-only homepage hero (Three.js terrain mesh) — not deployed
+homepage_scene/
+scripts/hero-mountain.js
+css/index-hero-mountain.css
+scripts/index-hero-mountain.local.html-snippet
