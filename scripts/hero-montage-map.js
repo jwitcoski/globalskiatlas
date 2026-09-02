@@ -20,7 +20,7 @@ const CF_SCENES = "https://globalskiatlas.com/game_scenes/";
 const HERO_SPAN = 100;
 const MAX_TREES = 900;
 const MAX_BUILDINGS = 48;
-const TRAIL_RADIUS = 5.2;
+const TRAIL_RADIUS = 2.6;
 
 /** Clay-model palette (matches reference: orange / chartreuse trails, forest green trees). */
 const PALETTE = {
@@ -466,7 +466,7 @@ function addTrees(parent, featureCollection, center, sample) {
 
   for (let i = 0; i < picked.length; i++) {
     const t = picked[i];
-    const sc = t.scale * 1.35;
+    const sc = t.scale * 1.85;
     q.setFromAxisAngle(up, t.rot);
     p.set(t.x, t.y, t.z);
     s.set(sc, sc, sc);
