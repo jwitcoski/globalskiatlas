@@ -558,45 +558,6 @@ app.get('/wiki*', optionalCognito, async (req, res) => {
   }
 });
 
-// --- game_scenes proxy (Montage Mountain DEM + ski game assets) --------------
-const https = require('https');
-const GAME_SCENES_UPSTREAM = 'globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com';
-
-function proxyS3Prefix(prefix, req, res) {
-  const opts = {
-    hostname: GAME_SCENES_UPSTREAM,
-    path: req.path,
-    method: 'GET',
-    headers: { 'Accept-Encoding': 'identity' },
-  };
-  const upstream = https.request(opts, (up) => {
-    res.status(up.statusCode || 502);
-    const pass = ['content-type', 'content-length', 'etag', 'last-modified', 'cache-control'];
-    for (const h of pass) {
-      if (up.headers[h]) res.setHeader(h, up.headers[h]);
-    }
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    up.pipe(res);
-  });
-  upstream.on('error', (err) => {
-    console.warn(`${prefix} proxy`, req.path, err.message);
-    res.status(502).json({ error: `${prefix} proxy failed`, message: err.message });
-  });
-  upstream.end();
-}
-
-app.get(/^\/game_scenes\/.*/, (req, res) => {
-  proxyS3Prefix('game_scenes', req, res);
-});
-
-app.get(/^\/homepage_scene\/.*/, (req, res) => {
-  const localPath = path.join(__dirname, req.path.replace(/^\//, ''));
-  if (fs.existsSync(localPath) && fs.statSync(localPath).isFile()) {
-    return res.sendFile(localPath);
-  }
-  proxyS3Prefix('homepage_scene', req, res);
-});
-
 // --- Root static files (existing GlobalSkiAtlas_2 HTML/CSS/JS) --------------
 express.static.mime.define({
   'model/gltf-binary': ['glb'],
