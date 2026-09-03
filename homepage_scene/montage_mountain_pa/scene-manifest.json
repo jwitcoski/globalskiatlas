@@ -1,0 +1,49 @@
+{
+  "scene_schema_version": "0.1.0-homepage",
+  "scene_kind": "homepage_hero",
+  "scene_id": "montage_mountain_pa",
+  "winter_sports_id": "45096232",
+  "build_timestamp_utc": "2026-09-02T03:59:15Z",
+  "display_name": "Montage Mountain",
+  "country": "US",
+  "location": "Scranton, Pennsylvania",
+  "coordinate_system": {
+    "source_crs": "EPSG:4326",
+    "projected_crs": "EPSG:32618",
+    "origin_easting_m": 443705.1338582366,
+    "origin_northing_m": 4577060.134462881,
+    "origin_longitude": -75.67286687662333,
+    "origin_latitude": 41.343065953264166,
+    "units": "meters",
+    "game_axes": {
+      "x": "east_m",
+      "y": "elevation_m",
+      "z": "negative_north_m"
+    },
+    "local_origin": {
+      "easting_m": 443705.1338582366,
+      "northing_m": 4577060.134462881,
+      "longitude": -75.67286687662333,
+      "latitude": 41.343065953264166
+    }
+  },
+  "terrain": {
+    "mesh": "terrain/terrain-mesh.glb",
+    "mesh_metadata": "terrain/terrain-metadata.json",
+    "elevation_min_m": 268.0,
+    "elevation_max_m": 602.0,
+    "vertex_spacing_m": 12.0
+  },
+  "vectors": {
+    "piste_trails": "vectors/piste-trails.geojson",
+    "lifts": "vectors/lifts.geojson",
+    "tree_points": "vectors/tree-points.geojson",
+    "ski_area_buffer": "vectors/ski-area-buffer.geojson"
+  },
+  "attribution": {
+    "osm": "\u00a9 OpenStreetMap contributors",
+    "dem": "Mapzen Skadi / AWS Terrain Tiles",
+    "license_notes": "OSM data ODbL; DEM from Mapzen Skadi. See attribution/ATTRIBUTION.md"
+  },
+  "disclaimer": "Decorative homepage terrain derived from open data. Not an official resort map, trail map, navigation tool, or safety product."
+}

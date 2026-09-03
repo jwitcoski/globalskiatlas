@@ -1,4 +1,4 @@
-/* Clay-style Montage Mountain hero map — floating island, no legend */
+/* Clay-style homepage hero map — floating island resort switcher */
 
 .hero-montage-embed {
   position: relative;
@@ -27,6 +27,7 @@
   position: absolute;
   inset: 0;
   z-index: 0;
+  transition: opacity 0.25s ease;
 }
 
 .hero-montage-stage canvas {
@@ -35,13 +36,77 @@
   height: 100%;
 }
 
-.hero-montage-embed.is-loading .hero-montage-stage {
-  opacity: 0.35;
-}
-
 .hero-montage-embed.is-ready .hero-montage-stage {
   opacity: 1;
-  transition: opacity 0.55s ease;
+}
+
+.hero-montage-embed.is-loading .hero-montage-stage {
+  opacity: 0.55;
+}
+
+.hero-montage-switcher {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.92);
+  border: 1px solid rgb(148 163 184 / 0.35);
+  box-shadow: 0 4px 14px rgb(15 23 42 / 0.1);
+  backdrop-filter: blur(6px);
+}
+
+.hero-montage-switch-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #0f172a;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.hero-montage-switch-btn:hover:not(:disabled) {
+  background: rgb(15 23 42 / 0.06);
+}
+
+.hero-montage-switch-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.hero-montage-switch-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 7.5rem;
+  padding: 0 6px;
+  line-height: 1.15;
+  text-align: center;
+  pointer-events: none;
+}
+
+.hero-montage-switch-label > span:first-child {
+  color: #0f172a;
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+}
+
+.hero-montage-switch-region {
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .hero-montage-caption {
@@ -84,7 +149,24 @@
   font-weight: 600;
 }
 
+.hero-montage-caption a[hidden] {
+  display: none !important;
+}
+
 @media (max-width: 1024px) {
+  .hero-montage-switcher {
+    top: 8px;
+    right: 8px;
+  }
+
+  .hero-montage-switch-label {
+    min-width: 5.75rem;
+  }
+
+  .hero-montage-switch-label > span:first-child {
+    font-size: 11px;
+  }
+
   .hero-montage-caption {
     left: 8px;
     bottom: 8px;
@@ -98,11 +180,5 @@
 
   .hero-montage-caption a.secondary {
     display: none;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .hero-montage-embed.is-ready .hero-montage-stage {
-    transition: none;
   }
 }

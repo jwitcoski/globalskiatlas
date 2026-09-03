@@ -1,0 +1,3954 @@
+{
+  "type": "FeatureCollection",
+  "coordinate_system": {
+    "kind": "local_game_meters",
+    "not_wgs84": true,
+    "axes": {
+      "geojson_x": "local_east_m",
+      "geojson_y": "local_north_m"
+    },
+    "game_axes": {
+      "x": "east_m",
+      "y": "elevation_m",
+      "z": "negative_north_m"
+    },
+    "local_origin": {
+      "easting_m": 443705.1338582366,
+      "northing_m": 4577060.134462881,
+      "longitude": -75.67286687662333,
+      "latitude": 41.343065953264166
+    },
+    "projected_crs": "EPSG:32618",
+    "note": "This is not RFC 7946 WGS84 GeoJSON. Convert X,Y to game X,Z via game_axes."
+  },
+  "attribution": "\u00a9 OpenStreetMap contributors (ODbL)",
+  "layer": "lifts",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            606.4513483183691,
+            1659.7053776346147
+          ],
+          [
+            619.1302074879641,
+            1623.4142396692187
+          ],
+          [
+            631.8993342432077,
+            1586.8781828209758
+          ],
+          [
+            667.5140008801827,
+            1484.9181647635996
+          ],
+          [
+            705.4301150660613,
+            1376.4014123547822
+          ],
+          [
+            732.0996603324311,
+            1300.0569220408797
+          ],
+          [
+            751.76248953701,
+            1243.7726878402755
+          ],
+          [
+            765.6381448599277,
+            1204.0753630930558
+          ],
+          [
+            779.6283498517005,
+            1164.0219172416255
+          ],
+          [
+            807.085669094522,
+            1085.4623538292944
+          ],
+          [
+            824.318187068624,
+            1036.1248282212764
+          ]
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:44670021",
+        "osm_type": null,
+        "osm_id": "44670021",
+        "name": "Phoebe Snow",
+        "tags": {
+          "name": "Phoebe Snow",
+          "aerialway": "chair_lift",
+          "z_order": "0.0",
+          "other_tags": "\"aerialway:bubble\"=>\"no\",\"aerialway:heating\"=>\"no\",\"aerialway:occupancy\"=>\"4\"",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            787.3790842904709,
+            1660.838651788421
+          ],
+          [
+            876.4151699034846,
+            1581.8415509108454
+          ],
+          [
+            931.5195296491729,
+            1532.9588155075908
+          ],
+          [
+            990.8621268657153,
+            1480.3026963286102
+          ],
+          [
+            1086.982090022997,
+            1395.0258384579793
+          ],
+          [
+            1146.2771795778535,
+            1342.4269148567691
+          ],
+          [
+            1205.0994466259144,
+            1290.2428739359602
+          ],
+          [
+            1276.644538470311,
+            1226.771630381234
+          ],
+          [
+            1355.1627991104033,
+            1157.119798249565
+          ],
+          [
+            1421.5002286067465,
+            1098.2747603980824
+          ],
+          [
+            1496.3481471895357,
+            1031.87196724955
+          ],
+          [
+            1541.3058242370607,
+            991.9970003534108
+          ],
+          [
+            1596.6932878525113,
+            942.8620275156572
+          ],
+          [
+            1655.3807503215503,
+            890.8049247004092
+          ],
+          [
+            1714.0773379799211,
+            838.737144366838
+          ],
+          [
+            1765.9518029225292,
+            792.7275014640763
+          ]
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:44670029",
+        "osm_type": null,
+        "osm_id": "44670029",
+        "name": "Long Haul",
+        "tags": {
+          "name": "Long Haul",
+          "aerialway": "chair_lift",
+          "z_order": "0.0",
+          "other_tags": "\"aerialway:bubble\"=>\"no\",\"aerialway:heating\"=>\"no\",\"aerialway:occupancy\"=>\"3\"",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            1084.9167000248563,
+            1134.6576180709526
+          ],
+          [
+            1115.2990168922697,
+            1111.3446131562814
+          ],
+          [
+            1162.024647586979,
+            1075.4728549104184
+          ],
+          [
+            1215.3381747627864,
+            1034.5664215451106
+          ],
+          [
+            1271.7212492816616,
+            991.2834089072421
+          ],
+          [
+            1325.6597119051148,
+            949.8845691904426
+          ],
+          [
+            1387.492268609174,
+            902.4422192703933
+          ],
+          [
+            1437.4063374779653,
+            864.1389499492943
+          ],
+          [
+            1492.7773353828234,
+            821.642530596815
+          ],
+          [
+            1556.342058334325,
+            772.856300232932
+          ],
+          [
+            1636.8431727990974,
+            711.086506716907
+          ],
+          [
+            1697.4901830074377,
+            664.5440062424168
+          ]
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:44670030",
+        "osm_type": null,
+        "osm_id": "44670030",
+        "name": "Iron Horse Lift",
+        "tags": {
+          "name": "Iron Horse Lift",
+          "aerialway": "chair_lift",
+          "z_order": "0.0",
+          "other_tags": "\"aerialway:bubble\"=>\"no\",\"aerialway:heating\"=>\"no\",\"aerialway:occupancy\"=>\"3\"",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            919.9894404404331,
+            765.4841534411535
+          ],
+          [
+            957.8650697310222,
+            755.9357754485682
+          ],
+          [
+            1013.0336318254122,
+            742.0146993976086
+          ],
+          [
+            1072.7281977359671,
+            726.9604603340849
+          ],
+          [
+            1125.4506990683149,
+            713.6694964636117
+          ],
+          [
+            1201.8042486174963,
+            694.4150985842571
+          ],
+          [
+            1270.951999797253,
+            676.9814343322068
+          ],
+          [
+            1328.4849255601293,
+            662.4786274079233
+          ],
+          [
+            1393.7419865907286,
+            646.0193230332807
+          ],
+          [
+            1472.2345992199262,
+            626.229800327681
+          ],
+          [
+            1546.2435114358086,
+            607.5741009637713
+          ],
+          [
+            1631.0080822180607,
+            586.2068607527763
+          ],
+          [
+            1673.8873521017958,
+            575.3921968825161
+          ]
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:44670031",
+        "osm_type": null,
+        "osm_id": "44670031",
+        "name": "Shuttle Lift",
+        "tags": {
+          "name": "Shuttle Lift",
+          "aerialway": "chair_lift",
+          "z_order": "0.0",
+          "other_tags": "\"aerialway:bubble\"=>\"no\",\"aerialway:heating\"=>\"no\",\"aerialway:occupancy\"=>\"3\"",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            975.139817294199,
+            928.02396052517
+          ],
+          [
+            993.7789437051979,
+            915.9468008037657
+          ],
+          [
+            1030.1500323099317,
+            892.3879651986063
+          ],
+          [
+            1040.2812923080055,
+            885.8159068860114
+          ],
+          [
+            1051.952738079941,
+            878.25512611866
+          ]
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:44670032",
+        "osm_type": null,
+        "osm_id": "44670032",
+        "name": "Short Haul",
+        "tags": {
+          "name": "Short Haul",
+          "aerialway": "chair_lift",
+          "z_order": "0.0",
+          "other_tags": "\"aerialway:bubble\"=>\"no\",\"aerialway:heating\"=>\"no\",\"aerialway:occupancy\"=>\"2\"",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            1121.753161969944,
+            891.9127515330911
+          ],
+          [
+            1230.3834067484713,
+            770.5268460828811
+          ]
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:256656195",
+        "osm_type": null,
+        "osm_id": "256656195",
+        "name": "Magic Carpet Lift",
+        "tags": {
+          "name": "Magic Carpet Lift",
+          "aerialway": "magic_carpet",
+          "z_order": "0.0",
+          "other_tags": "\"aerialway:heating\"=>\"no\"",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1765.9518029214814,
+          792.7275014640763
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:566902967",
+        "osm_type": null,
+        "osm_id": "566902967",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"station\",\"aerialway:access\"=>\"exit\",\"public_transport\"=>\"station\"",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1084.9167000248563,
+          1134.6576180709526
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:566902970",
+        "osm_type": null,
+        "osm_id": "566902970",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"station\",\"aerialway:access\"=>\"entry\",\"public_transport\"=>\"station\"",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          919.9894404404331,
+          765.4841534411535
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:566902977",
+        "osm_type": null,
+        "osm_id": "566902977",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"station\",\"aerialway:access\"=>\"entry\",\"public_transport\"=>\"station\"",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1673.8873521017958,
+          575.3921968825161
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:566902979",
+        "osm_type": null,
+        "osm_id": "566902979",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"station\",\"aerialway:access\"=>\"exit\",\"public_transport\"=>\"station\"",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1697.4901830074377,
+          664.5440062424168
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:2622894212",
+        "osm_type": null,
+        "osm_id": "2622894212",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"station\",\"aerialway:access\"=>\"exit\",\"public_transport\"=>\"station\"",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          787.3790842904709,
+          1660.838651788421
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:2622895121",
+        "osm_type": null,
+        "osm_id": "2622895121",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"station\",\"aerialway:access\"=>\"entry\",\"public_transport\"=>\"station\"",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          606.4513483183691,
+          1659.7053776346147
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:2622895122",
+        "osm_type": null,
+        "osm_id": "2622895122",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"station\",\"aerialway:access\"=>\"entry\",\"public_transport\"=>\"station\"",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          824.318187068624,
+          1036.1248282212764
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:2622895124",
+        "osm_type": null,
+        "osm_id": "2622895124",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"station\",\"aerialway:access\"=>\"exit\",\"public_transport\"=>\"station\"",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          957.8650697310222,
+          755.9357754485682
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:8819682943",
+        "osm_type": null,
+        "osm_id": "8819682943",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1013.0336318254122,
+          742.0146993976086
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:8819682944",
+        "osm_type": null,
+        "osm_id": "8819682944",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1072.7281977359671,
+          726.9604603340849
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:8819682945",
+        "osm_type": null,
+        "osm_id": "8819682945",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1125.4506990683149,
+          713.6694964636117
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:8819682946",
+        "osm_type": null,
+        "osm_id": "8819682946",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1201.8042486164486,
+          694.4150985842571
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:8819682947",
+        "osm_type": null,
+        "osm_id": "8819682947",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1270.951999797253,
+          676.9814343322068
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:8819682948",
+        "osm_type": null,
+        "osm_id": "8819682948",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1328.4849255601293,
+          662.4786274079233
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:8819682949",
+        "osm_type": null,
+        "osm_id": "8819682949",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1393.7419865907286,
+          646.0193230332807
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:8819682950",
+        "osm_type": null,
+        "osm_id": "8819682950",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1472.2345992199262,
+          626.229800327681
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:8819682951",
+        "osm_type": null,
+        "osm_id": "8819682951",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1546.2435114358086,
+          607.5741009637713
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:8819682952",
+        "osm_type": null,
+        "osm_id": "8819682952",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1631.0080822180607,
+          586.2068607527763
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:8819682953",
+        "osm_type": null,
+        "osm_id": "8819682953",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1636.8431727990974,
+          711.086506716907
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:8819682954",
+        "osm_type": null,
+        "osm_id": "8819682954",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1556.342058334325,
+          772.856300232932
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:8819682955",
+        "osm_type": null,
+        "osm_id": "8819682955",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1492.7773353828234,
+          821.642530596815
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:8819682956",
+        "osm_type": null,
+        "osm_id": "8819682956",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1437.4063374779653,
+          864.1389499492943
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:8819682957",
+        "osm_type": null,
+        "osm_id": "8819682957",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1387.492268609174,
+          902.4422192703933
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:8819682958",
+        "osm_type": null,
+        "osm_id": "8819682958",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1325.659711904067,
+          949.8845691904426
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:8819682959",
+        "osm_type": null,
+        "osm_id": "8819682959",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1271.7212492816616,
+          991.2834089072421
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:8819682960",
+        "osm_type": null,
+        "osm_id": "8819682960",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1215.3381747627864,
+          1034.5664215451106
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:8819682961",
+        "osm_type": null,
+        "osm_id": "8819682961",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1162.024647586979,
+          1075.4728549104184
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:8819682962",
+        "osm_type": null,
+        "osm_id": "8819682962",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1115.2990168922697,
+          1111.3446131562814
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:8819682963",
+        "osm_type": null,
+        "osm_id": "8819682963",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1714.0773379799211,
+          838.737144366838
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:8819682964",
+        "osm_type": null,
+        "osm_id": "8819682964",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1596.6932878525113,
+          942.8620275156572
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:8819682965",
+        "osm_type": null,
+        "osm_id": "8819682965",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1655.3807503215503,
+          890.8049247004092
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:8819682966",
+        "osm_type": null,
+        "osm_id": "8819682966",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1541.3058242370607,
+          991.9970003534108
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:8819682967",
+        "osm_type": null,
+        "osm_id": "8819682967",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1496.3481471895357,
+          1031.87196724955
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:8819682968",
+        "osm_type": null,
+        "osm_id": "8819682968",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1421.5002286056988,
+          1098.2747603980824
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:8819682969",
+        "osm_type": null,
+        "osm_id": "8819682969",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1355.1627991104033,
+          1157.119798249565
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:8819682970",
+        "osm_type": null,
+        "osm_id": "8819682970",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1205.0994466259144,
+          1290.2428739359602
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:8819682971",
+        "osm_type": null,
+        "osm_id": "8819682971",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1146.2771795778535,
+          1342.4269148567691
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:8819682972",
+        "osm_type": null,
+        "osm_id": "8819682972",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1086.9820900219493,
+          1395.0258384579793
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:8819682973",
+        "osm_type": null,
+        "osm_id": "8819682973",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          990.8621268657153,
+          1480.3026963286102
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:8819682974",
+        "osm_type": null,
+        "osm_id": "8819682974",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          931.5195296491729,
+          1532.9588155075908
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:8819682975",
+        "osm_type": null,
+        "osm_id": "8819682975",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          876.4151699024369,
+          1581.8415509108454
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:8819682976",
+        "osm_type": null,
+        "osm_id": "8819682976",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1276.644538470311,
+          1226.771630381234
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:8819682977",
+        "osm_type": null,
+        "osm_id": "8819682977",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          779.628349849605,
+          1164.0219172416255
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:8819682978",
+        "osm_type": null,
+        "osm_id": "8819682978",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          807.085669094522,
+          1085.4623538292944
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:8819682979",
+        "osm_type": null,
+        "osm_id": "8819682979",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          765.63814485888,
+          1204.0753630930558
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:8819682980",
+        "osm_type": null,
+        "osm_id": "8819682980",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          732.0996603324311,
+          1300.0569220408797
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:8819682981",
+        "osm_type": null,
+        "osm_id": "8819682981",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          705.4301150660613,
+          1376.4014123547822
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:8819682982",
+        "osm_type": null,
+        "osm_id": "8819682982",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          619.1302074879641,
+          1623.4142396692187
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:8819682983",
+        "osm_type": null,
+        "osm_id": "8819682983",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          667.5140008801827,
+          1484.9181647635996
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:8819682984",
+        "osm_type": null,
+        "osm_id": "8819682984",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          631.8993342432077,
+          1586.8781828209758
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:8819682985",
+        "osm_type": null,
+        "osm_id": "8819682985",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          751.76248953701,
+          1243.7726878402755
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:8819682986",
+        "osm_type": null,
+        "osm_id": "8819682986",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          993.7789437051979,
+          915.9468008037657
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:8826038668",
+        "osm_type": null,
+        "osm_id": "8826038668",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1030.1500323099317,
+          892.3879651986063
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:8826038669",
+        "osm_type": null,
+        "osm_id": "8826038669",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1040.2812923080055,
+          885.8159068860114
+        ]
+      },
+      "properties": {
+        "id": "lifts:nan:8826038670",
+        "osm_type": null,
+        "osm_id": "8826038670",
+        "name": null,
+        "tags": {
+          "other_tags": "\"aerialway\"=>\"pylon\"",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1765.9518029214814,
+          792.7275014640763
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:566902967",
+        "osm_type": "node",
+        "osm_id": "566902967",
+        "name": null,
+        "tags": {
+          "aerialway": "station",
+          "aerialway:access": "exit",
+          "public_transport": "station",
+          "winter_sports_id": "45096232",
+          "winter_sports_name": "Montage Mountain Ski Area",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "station"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1084.9167000248563,
+          1134.6576180709526
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:566902970",
+        "osm_type": "node",
+        "osm_id": "566902970",
+        "name": null,
+        "tags": {
+          "aerialway": "station",
+          "aerialway:access": "entry",
+          "public_transport": "station",
+          "winter_sports_id": "45096232",
+          "winter_sports_name": "Montage Mountain Ski Area",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "station"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          919.9894404404331,
+          765.4841534411535
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:566902977",
+        "osm_type": "node",
+        "osm_id": "566902977",
+        "name": null,
+        "tags": {
+          "aerialway": "station",
+          "aerialway:access": "entry",
+          "public_transport": "station",
+          "winter_sports_id": "45096232",
+          "winter_sports_name": "Montage Mountain Ski Area",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "station"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1673.8873521017958,
+          575.3921968825161
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:566902979",
+        "osm_type": "node",
+        "osm_id": "566902979",
+        "name": null,
+        "tags": {
+          "aerialway": "station",
+          "aerialway:access": "exit",
+          "public_transport": "station",
+          "winter_sports_id": "45096232",
+          "winter_sports_name": "Montage Mountain Ski Area",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "station"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1697.4901830074377,
+          664.5440062424168
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:2622894212",
+        "osm_type": "node",
+        "osm_id": "2622894212",
+        "name": null,
+        "tags": {
+          "aerialway": "station",
+          "aerialway:access": "exit",
+          "public_transport": "station",
+          "winter_sports_id": "45096232",
+          "winter_sports_name": "Montage Mountain Ski Area",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "station"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          787.3790842904709,
+          1660.838651788421
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:2622895121",
+        "osm_type": "node",
+        "osm_id": "2622895121",
+        "name": null,
+        "tags": {
+          "aerialway": "station",
+          "aerialway:access": "entry",
+          "public_transport": "station",
+          "winter_sports_id": "45096232",
+          "winter_sports_name": "Montage Mountain Ski Area",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "station"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          606.4513483183691,
+          1659.7053776346147
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:2622895122",
+        "osm_type": "node",
+        "osm_id": "2622895122",
+        "name": null,
+        "tags": {
+          "aerialway": "station",
+          "aerialway:access": "entry",
+          "public_transport": "station",
+          "winter_sports_id": "45096232",
+          "winter_sports_name": "Montage Mountain Ski Area",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "station"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          824.318187068624,
+          1036.1248282212764
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:2622895124",
+        "osm_type": "node",
+        "osm_id": "2622895124",
+        "name": null,
+        "tags": {
+          "aerialway": "station",
+          "aerialway:access": "exit",
+          "public_transport": "station",
+          "winter_sports_id": "45096232",
+          "winter_sports_name": "Montage Mountain Ski Area",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "station"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          957.8650697310222,
+          755.9357754485682
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:8819682943",
+        "osm_type": "node",
+        "osm_id": "8819682943",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "45096232",
+          "winter_sports_name": "Montage Mountain Ski Area",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1013.0336318254122,
+          742.0146993976086
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:8819682944",
+        "osm_type": "node",
+        "osm_id": "8819682944",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "45096232",
+          "winter_sports_name": "Montage Mountain Ski Area",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1072.7281977359671,
+          726.9604603340849
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:8819682945",
+        "osm_type": "node",
+        "osm_id": "8819682945",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "45096232",
+          "winter_sports_name": "Montage Mountain Ski Area",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1125.4506990683149,
+          713.6694964636117
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:8819682946",
+        "osm_type": "node",
+        "osm_id": "8819682946",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "45096232",
+          "winter_sports_name": "Montage Mountain Ski Area",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1201.8042486164486,
+          694.4150985842571
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:8819682947",
+        "osm_type": "node",
+        "osm_id": "8819682947",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "45096232",
+          "winter_sports_name": "Montage Mountain Ski Area",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1270.951999797253,
+          676.9814343322068
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:8819682948",
+        "osm_type": "node",
+        "osm_id": "8819682948",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "45096232",
+          "winter_sports_name": "Montage Mountain Ski Area",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1328.4849255601293,
+          662.4786274079233
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:8819682949",
+        "osm_type": "node",
+        "osm_id": "8819682949",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "45096232",
+          "winter_sports_name": "Montage Mountain Ski Area",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1393.7419865907286,
+          646.0193230332807
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:8819682950",
+        "osm_type": "node",
+        "osm_id": "8819682950",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "45096232",
+          "winter_sports_name": "Montage Mountain Ski Area",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1472.2345992199262,
+          626.229800327681
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:8819682951",
+        "osm_type": "node",
+        "osm_id": "8819682951",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "45096232",
+          "winter_sports_name": "Montage Mountain Ski Area",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1546.2435114358086,
+          607.5741009637713
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:8819682952",
+        "osm_type": "node",
+        "osm_id": "8819682952",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "45096232",
+          "winter_sports_name": "Montage Mountain Ski Area",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1631.0080822180607,
+          586.2068607527763
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:8819682953",
+        "osm_type": "node",
+        "osm_id": "8819682953",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "45096232",
+          "winter_sports_name": "Montage Mountain Ski Area",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1636.8431727990974,
+          711.086506716907
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:8819682954",
+        "osm_type": "node",
+        "osm_id": "8819682954",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "45096232",
+          "winter_sports_name": "Montage Mountain Ski Area",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1556.342058334325,
+          772.856300232932
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:8819682955",
+        "osm_type": "node",
+        "osm_id": "8819682955",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "45096232",
+          "winter_sports_name": "Montage Mountain Ski Area",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1492.7773353828234,
+          821.642530596815
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:8819682956",
+        "osm_type": "node",
+        "osm_id": "8819682956",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "45096232",
+          "winter_sports_name": "Montage Mountain Ski Area",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1437.4063374779653,
+          864.1389499492943
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:8819682957",
+        "osm_type": "node",
+        "osm_id": "8819682957",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "45096232",
+          "winter_sports_name": "Montage Mountain Ski Area",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1387.492268609174,
+          902.4422192703933
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:8819682958",
+        "osm_type": "node",
+        "osm_id": "8819682958",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "45096232",
+          "winter_sports_name": "Montage Mountain Ski Area",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1325.659711904067,
+          949.8845691904426
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:8819682959",
+        "osm_type": "node",
+        "osm_id": "8819682959",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "45096232",
+          "winter_sports_name": "Montage Mountain Ski Area",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1271.7212492816616,
+          991.2834089072421
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:8819682960",
+        "osm_type": "node",
+        "osm_id": "8819682960",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "45096232",
+          "winter_sports_name": "Montage Mountain Ski Area",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1215.3381747627864,
+          1034.5664215451106
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:8819682961",
+        "osm_type": "node",
+        "osm_id": "8819682961",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "45096232",
+          "winter_sports_name": "Montage Mountain Ski Area",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1162.024647586979,
+          1075.4728549104184
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:8819682962",
+        "osm_type": "node",
+        "osm_id": "8819682962",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "45096232",
+          "winter_sports_name": "Montage Mountain Ski Area",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1115.2990168922697,
+          1111.3446131562814
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:8819682963",
+        "osm_type": "node",
+        "osm_id": "8819682963",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "45096232",
+          "winter_sports_name": "Montage Mountain Ski Area",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1714.0773379799211,
+          838.737144366838
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:8819682964",
+        "osm_type": "node",
+        "osm_id": "8819682964",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "45096232",
+          "winter_sports_name": "Montage Mountain Ski Area",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1596.6932878525113,
+          942.8620275156572
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:8819682965",
+        "osm_type": "node",
+        "osm_id": "8819682965",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "45096232",
+          "winter_sports_name": "Montage Mountain Ski Area",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1655.3807503215503,
+          890.8049247004092
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:8819682966",
+        "osm_type": "node",
+        "osm_id": "8819682966",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "45096232",
+          "winter_sports_name": "Montage Mountain Ski Area",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1541.3058242370607,
+          991.9970003534108
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:8819682967",
+        "osm_type": "node",
+        "osm_id": "8819682967",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "45096232",
+          "winter_sports_name": "Montage Mountain Ski Area",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1496.3481471895357,
+          1031.87196724955
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:8819682968",
+        "osm_type": "node",
+        "osm_id": "8819682968",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "45096232",
+          "winter_sports_name": "Montage Mountain Ski Area",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1421.5002286056988,
+          1098.2747603980824
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:8819682969",
+        "osm_type": "node",
+        "osm_id": "8819682969",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "45096232",
+          "winter_sports_name": "Montage Mountain Ski Area",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1355.1627991104033,
+          1157.119798249565
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:8819682970",
+        "osm_type": "node",
+        "osm_id": "8819682970",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "45096232",
+          "winter_sports_name": "Montage Mountain Ski Area",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1205.0994466259144,
+          1290.2428739359602
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:8819682971",
+        "osm_type": "node",
+        "osm_id": "8819682971",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "45096232",
+          "winter_sports_name": "Montage Mountain Ski Area",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1146.2771795778535,
+          1342.4269148567691
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:8819682972",
+        "osm_type": "node",
+        "osm_id": "8819682972",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "45096232",
+          "winter_sports_name": "Montage Mountain Ski Area",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1086.9820900219493,
+          1395.0258384579793
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:8819682973",
+        "osm_type": "node",
+        "osm_id": "8819682973",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "45096232",
+          "winter_sports_name": "Montage Mountain Ski Area",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          990.8621268657153,
+          1480.3026963286102
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:8819682974",
+        "osm_type": "node",
+        "osm_id": "8819682974",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "45096232",
+          "winter_sports_name": "Montage Mountain Ski Area",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          931.5195296491729,
+          1532.9588155075908
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:8819682975",
+        "osm_type": "node",
+        "osm_id": "8819682975",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "45096232",
+          "winter_sports_name": "Montage Mountain Ski Area",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          876.4151699024369,
+          1581.8415509108454
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:8819682976",
+        "osm_type": "node",
+        "osm_id": "8819682976",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "45096232",
+          "winter_sports_name": "Montage Mountain Ski Area",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1276.644538470311,
+          1226.771630381234
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:8819682977",
+        "osm_type": "node",
+        "osm_id": "8819682977",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "45096232",
+          "winter_sports_name": "Montage Mountain Ski Area",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          779.628349849605,
+          1164.0219172416255
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:8819682978",
+        "osm_type": "node",
+        "osm_id": "8819682978",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "45096232",
+          "winter_sports_name": "Montage Mountain Ski Area",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          807.085669094522,
+          1085.4623538292944
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:8819682979",
+        "osm_type": "node",
+        "osm_id": "8819682979",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "45096232",
+          "winter_sports_name": "Montage Mountain Ski Area",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          765.63814485888,
+          1204.0753630930558
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:8819682980",
+        "osm_type": "node",
+        "osm_id": "8819682980",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "45096232",
+          "winter_sports_name": "Montage Mountain Ski Area",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          732.0996603324311,
+          1300.0569220408797
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:8819682981",
+        "osm_type": "node",
+        "osm_id": "8819682981",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "45096232",
+          "winter_sports_name": "Montage Mountain Ski Area",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          705.4301150660613,
+          1376.4014123547822
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:8819682982",
+        "osm_type": "node",
+        "osm_id": "8819682982",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "45096232",
+          "winter_sports_name": "Montage Mountain Ski Area",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          619.1302074879641,
+          1623.4142396692187
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:8819682983",
+        "osm_type": "node",
+        "osm_id": "8819682983",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "45096232",
+          "winter_sports_name": "Montage Mountain Ski Area",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          667.5140008801827,
+          1484.9181647635996
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:8819682984",
+        "osm_type": "node",
+        "osm_id": "8819682984",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "45096232",
+          "winter_sports_name": "Montage Mountain Ski Area",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          631.8993342432077,
+          1586.8781828209758
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:8819682985",
+        "osm_type": "node",
+        "osm_id": "8819682985",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "45096232",
+          "winter_sports_name": "Montage Mountain Ski Area",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          751.76248953701,
+          1243.7726878402755
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:8819682986",
+        "osm_type": "node",
+        "osm_id": "8819682986",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "45096232",
+          "winter_sports_name": "Montage Mountain Ski Area",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          993.7789437051979,
+          915.9468008037657
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:8826038668",
+        "osm_type": "node",
+        "osm_id": "8826038668",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "45096232",
+          "winter_sports_name": "Montage Mountain Ski Area",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1030.1500323099317,
+          892.3879651986063
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:8826038669",
+        "osm_type": "node",
+        "osm_id": "8826038669",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "45096232",
+          "winter_sports_name": "Montage Mountain Ski Area",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1040.2812923080055,
+          885.8159068860114
+        ]
+      },
+      "properties": {
+        "id": "lifts:node:8826038670",
+        "osm_type": "node",
+        "osm_id": "8826038670",
+        "name": null,
+        "tags": {
+          "aerialway": "pylon",
+          "winter_sports_id": "45096232",
+          "winter_sports_name": "Montage Mountain Ski Area",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "pylon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            606.4513483183691,
+            1659.7053776346147
+          ],
+          [
+            619.1302074879641,
+            1623.4142396692187
+          ],
+          [
+            631.8993342432077,
+            1586.8781828209758
+          ],
+          [
+            667.5140008801827,
+            1484.9181647635996
+          ],
+          [
+            705.4301150660613,
+            1376.4014123547822
+          ],
+          [
+            732.0996603324311,
+            1300.0569220408797
+          ],
+          [
+            751.76248953701,
+            1243.7726878402755
+          ],
+          [
+            765.6381448599277,
+            1204.0753630930558
+          ],
+          [
+            779.6283498517005,
+            1164.0219172416255
+          ],
+          [
+            807.085669094522,
+            1085.4623538292944
+          ],
+          [
+            824.318187068624,
+            1036.1248282212764
+          ]
+        ]
+      },
+      "properties": {
+        "id": "lifts:way:44670021",
+        "osm_type": "way",
+        "osm_id": "44670021",
+        "name": "Phoebe Snow",
+        "tags": {
+          "name": "Phoebe Snow",
+          "aerialway": "chair_lift",
+          "z_order": "0",
+          "aerialway:bubble": "no",
+          "aerialway:heating": "no",
+          "aerialway:occupancy": "4",
+          "winter_sports_id": "45096232",
+          "winter_sports_name": "Montage Mountain Ski Area",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "chair_lift"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            787.3790842904709,
+            1660.838651788421
+          ],
+          [
+            876.4151699034846,
+            1581.8415509108454
+          ],
+          [
+            931.5195296491729,
+            1532.9588155075908
+          ],
+          [
+            990.8621268657153,
+            1480.3026963286102
+          ],
+          [
+            1086.982090022997,
+            1395.0258384579793
+          ],
+          [
+            1146.2771795778535,
+            1342.4269148567691
+          ],
+          [
+            1205.0994466259144,
+            1290.2428739359602
+          ],
+          [
+            1276.644538470311,
+            1226.771630381234
+          ],
+          [
+            1355.1627991104033,
+            1157.119798249565
+          ],
+          [
+            1421.5002286067465,
+            1098.2747603980824
+          ],
+          [
+            1496.3481471895357,
+            1031.87196724955
+          ],
+          [
+            1541.3058242370607,
+            991.9970003534108
+          ],
+          [
+            1596.6932878525113,
+            942.8620275156572
+          ],
+          [
+            1655.3807503215503,
+            890.8049247004092
+          ],
+          [
+            1714.0773379799211,
+            838.737144366838
+          ],
+          [
+            1765.9518029225292,
+            792.7275014640763
+          ]
+        ]
+      },
+      "properties": {
+        "id": "lifts:way:44670029",
+        "osm_type": "way",
+        "osm_id": "44670029",
+        "name": "Long Haul",
+        "tags": {
+          "name": "Long Haul",
+          "aerialway": "chair_lift",
+          "z_order": "0",
+          "aerialway:bubble": "no",
+          "aerialway:heating": "no",
+          "aerialway:occupancy": "3",
+          "winter_sports_id": "45096232",
+          "winter_sports_name": "Montage Mountain Ski Area",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "chair_lift"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            1084.9167000248563,
+            1134.6576180709526
+          ],
+          [
+            1115.2990168922697,
+            1111.3446131562814
+          ],
+          [
+            1162.024647586979,
+            1075.4728549104184
+          ],
+          [
+            1215.3381747627864,
+            1034.5664215451106
+          ],
+          [
+            1271.7212492816616,
+            991.2834089072421
+          ],
+          [
+            1325.6597119051148,
+            949.8845691904426
+          ],
+          [
+            1387.492268609174,
+            902.4422192703933
+          ],
+          [
+            1437.4063374779653,
+            864.1389499492943
+          ],
+          [
+            1492.7773353828234,
+            821.642530596815
+          ],
+          [
+            1556.342058334325,
+            772.856300232932
+          ],
+          [
+            1636.8431727990974,
+            711.086506716907
+          ],
+          [
+            1697.4901830074377,
+            664.5440062424168
+          ]
+        ]
+      },
+      "properties": {
+        "id": "lifts:way:44670030",
+        "osm_type": "way",
+        "osm_id": "44670030",
+        "name": "Iron Horse Lift",
+        "tags": {
+          "name": "Iron Horse Lift",
+          "aerialway": "chair_lift",
+          "z_order": "0",
+          "aerialway:bubble": "no",
+          "aerialway:heating": "no",
+          "aerialway:occupancy": "3",
+          "winter_sports_id": "45096232",
+          "winter_sports_name": "Montage Mountain Ski Area",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "chair_lift"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            919.9894404404331,
+            765.4841534411535
+          ],
+          [
+            957.8650697310222,
+            755.9357754485682
+          ],
+          [
+            1013.0336318254122,
+            742.0146993976086
+          ],
+          [
+            1072.7281977359671,
+            726.9604603340849
+          ],
+          [
+            1125.4506990683149,
+            713.6694964636117
+          ],
+          [
+            1201.8042486174963,
+            694.4150985842571
+          ],
+          [
+            1270.951999797253,
+            676.9814343322068
+          ],
+          [
+            1328.4849255601293,
+            662.4786274079233
+          ],
+          [
+            1393.7419865907286,
+            646.0193230332807
+          ],
+          [
+            1472.2345992199262,
+            626.229800327681
+          ],
+          [
+            1546.2435114358086,
+            607.5741009637713
+          ],
+          [
+            1631.0080822180607,
+            586.2068607527763
+          ],
+          [
+            1673.8873521017958,
+            575.3921968825161
+          ]
+        ]
+      },
+      "properties": {
+        "id": "lifts:way:44670031",
+        "osm_type": "way",
+        "osm_id": "44670031",
+        "name": "Shuttle Lift",
+        "tags": {
+          "name": "Shuttle Lift",
+          "aerialway": "chair_lift",
+          "z_order": "0",
+          "aerialway:bubble": "no",
+          "aerialway:heating": "no",
+          "aerialway:occupancy": "3",
+          "winter_sports_id": "45096232",
+          "winter_sports_name": "Montage Mountain Ski Area",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "chair_lift"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            975.139817294199,
+            928.02396052517
+          ],
+          [
+            993.7789437051979,
+            915.9468008037657
+          ],
+          [
+            1030.1500323099317,
+            892.3879651986063
+          ],
+          [
+            1040.2812923080055,
+            885.8159068860114
+          ],
+          [
+            1051.952738079941,
+            878.25512611866
+          ]
+        ]
+      },
+      "properties": {
+        "id": "lifts:way:44670032",
+        "osm_type": "way",
+        "osm_id": "44670032",
+        "name": "Short Haul",
+        "tags": {
+          "name": "Short Haul",
+          "aerialway": "chair_lift",
+          "z_order": "0",
+          "aerialway:bubble": "no",
+          "aerialway:heating": "no",
+          "aerialway:occupancy": "2",
+          "winter_sports_id": "45096232",
+          "winter_sports_name": "Montage Mountain Ski Area",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "chair_lift"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            1121.753161969944,
+            891.9127515330911
+          ],
+          [
+            1230.3834067484713,
+            770.5268460828811
+          ]
+        ]
+      },
+      "properties": {
+        "id": "lifts:way:256656195",
+        "osm_type": "way",
+        "osm_id": "256656195",
+        "name": "Magic Carpet Lift",
+        "tags": {
+          "name": "Magic Carpet Lift",
+          "aerialway": "magic_carpet",
+          "z_order": "0",
+          "aerialway:heating": "no",
+          "winter_sports_id": "45096232",
+          "winter_sports_name": "Montage Mountain Ski Area",
+          "State": "Pennsylvania",
+          "Country": "United States of America",
+          "Ski Area": "Montage Mountain Ski Area",
+          "region": "north-america/us/pennsylvania"
+        },
+        "source": "OpenStreetMap",
+        "source_confidence": "osm_as_mapped",
+        "coordinate_space": "local_east_m, local_north_m",
+        "aerialway": "magic_carpet"
+      }
+    }
+  ]
+}

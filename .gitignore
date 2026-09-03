@@ -28,8 +28,8 @@ playable/trailer.webm
 playable/trailer-status.json
 playable/trailer-frame.jpg
 
-# Local-only multi-resort homepage_scene bundles (hero uses game_scenes/Montage)
-homepage_scene/
+# Homepage hero scenes (lightweight meshes + vectors) — tracked in git
+# (previously ignored except Montage; all catalog resorts are shipped now)
 scripts/hero-mountain.js
 css/index-hero-mountain.css
 scripts/index-hero-mountain.local.html-snippet

@@ -1,0 +1,45 @@
+{
+  "kind": "homepage_hero",
+  "source_dem": "C:\\Users\\jwitc\\Documents\\GitHub\\globalskiatlas_data\\cache\\game_export_dems\\asia\\japan\\chubu\\773558919-osmhull.tif",
+  "source_crs": "EPSG:4326",
+  "projected_crs": "EPSG:32653",
+  "work_resolution_m": 16.2,
+  "mesh": {
+    "file": "terrain-mesh.glb",
+    "vertex_count": 60914,
+    "triangle_count": 113268,
+    "byte_size": 791812,
+    "compression": "draco",
+    "draco_quantization_bits": 16,
+    "draco_compression_level": 5,
+    "vertex_spacing_m": 16.2,
+    "coordinate_space": "game (X east, Y elevation, Z negative north)"
+  },
+  "local_crs": {
+    "source_crs": "EPSG:4326",
+    "projected_crs": "EPSG:32653",
+    "origin_easting_m": 754656.9597849031,
+    "origin_northing_m": 4071830.496376684,
+    "origin_longitude": 137.8527326822244,
+    "origin_latitude": 36.75806982606003,
+    "units": "meters",
+    "game_axes": {
+      "x": "east_m",
+      "y": "elevation_m",
+      "z": "negative_north_m"
+    },
+    "local_origin": {
+      "easting_m": 754656.9597849031,
+      "northing_m": 4071830.496376684,
+      "longitude": 137.8527326822244,
+      "latitude": 36.75806982606003
+    }
+  },
+  "grid": {
+    "rows": 229,
+    "cols": 266,
+    "cell_m": 16.2
+  },
+  "elevation_min_m": 534.0,
+  "elevation_max_m": 1651.837158203125
+}
