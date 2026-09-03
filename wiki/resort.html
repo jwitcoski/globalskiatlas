@@ -7,8 +7,17 @@
   <link rel="stylesheet" href="../css/tailwind-build.css" />
   <link rel="stylesheet" href="../css/index.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" integrity="sha512-dPXYcDub/aeb08c63jRq/k6GaKccl256JQy/AnOq7CAnEZ9FzSL9wSbcZkMp4R26vBsMLFYH4kQ67/bbV8XaCQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-  <link rel="stylesheet" href="css/style.css?v=4"/>
+  <link rel="stylesheet" href="css/style.css?v=6"/>
+  <link rel="stylesheet" href="../css/index-hero-montage.css?v=53"/>
   <link rel="stylesheet" href="https://cdn.maptiler.com/maptiler-sdk-js/v3.10.2/maptiler-sdk.css" crossorigin="">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
 </head>
 <body class="tw-flex tw-min-h-[100vh] tw-flex-col tw-bg-[#fff]">
 
@@ -146,7 +155,8 @@
       <aside class="resort-map" id="resort-map-aside" style="display:none">
         <div class="resort-map-header-row">
           <div class="resort-map-toggle" id="resort-map-toggle">
-            <button type="button" class="resort-map-tab resort-map-tab--active" id="tab-live" onclick="switchMapTab('live')">Live Map</button>
+            <button type="button" class="resort-map-tab resort-map-tab--active" id="tab-clay" onclick="switchMapTab('clay')">3D Map</button>
+            <button type="button" class="resort-map-tab" id="tab-live" onclick="switchMapTab('live')">Live Map</button>
             <button type="button" class="resort-map-tab" id="tab-static" onclick="switchMapTab('static')">Resort Map</button>
           </div>
           <button type="button" class="resort-map-expand-btn" id="resort-map-expand-btn" onclick="toggleMapExpanded()" aria-label="Expand map to full width">
@@ -154,7 +164,7 @@
             <span class="resort-map-expand-label">Expand map</span>
           </button>
         </div>
-        <div class="resort-map-gl-wrap" style="position:relative">
+        <div class="resort-map-gl-wrap" style="position:relative;display:none">
           <div id="resort-map-gl" class="resort-map-gl"></div>
           <div id="resort-map-legend" class="resort-map-legend" style="display:none"></div>
         </div>
@@ -170,6 +180,15 @@
           <figure class="resort-static-map-figure" id="resort-static-map-placeholder-wrap" hidden>
             <img id="resort-map-static-placeholder" class="resort-map-static-img" src="/wiki/assets/resort-map-placeholder.png" alt="Resort trail map placeholder"/>
           </figure>
+        </div>
+        <div id="resort-map-clay" class="resort-map-clay" aria-live="polite">
+          <div id="resort-clay-soon" class="resort-clay-soon">
+            <p class="resort-clay-soon-title">3D clay map coming soon</p>
+            <p class="resort-clay-soon-body">A floating-island preview will appear here when this resort’s scene is built.</p>
+          </div>
+          <div class="hero-montage-embed resort-clay-embed" id="resort-clay-embed" hidden>
+            <div id="resort-clay-stage" class="hero-montage-stage resort-clay-stage" aria-hidden="true"></div>
+          </div>
         </div>
       </aside>
     </div>
@@ -271,7 +290,7 @@
       window.addEventListener('resize', responsive);
     })();
   </script>
-  <script src="/wiki/js/script.js?v=4"></script>
+  <script src="/wiki/js/script.js?v=7"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       ywikiAuth.init(function () {

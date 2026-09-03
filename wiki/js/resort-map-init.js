@@ -21,7 +21,7 @@ export async function initResortMap(lat, lon, pageId, zoom) {
   if (lat == null || lon == null || typeof maptilersdk === 'undefined') {
     var tabLive = document.getElementById('tab-live');
     if (tabLive) tabLive.style.display = 'none';
-    if (typeof switchMapTab === 'function') switchMapTab('static');
+    if (typeof switchMapTab === 'function') switchMapTab('clay');
     return;
   }
 

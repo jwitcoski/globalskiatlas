@@ -1,5 +1,10 @@
 var RESORT_MAP_INSTANCE = null;
 var RESORT_STATIC_MAP_BASE = 'https://globalskiatlas-resort-maps.s3.us-east-1.amazonaws.com/';
+var RESORT_CLAY_API = null;
+var RESORT_CLAY_WINTER_ID = null;
+var RESORT_CLAY_LOADED_FOR = null;
+var RESORT_CLAY_CATALOG_PROMISE = null;
+var RESORT_CLAY_ACTIVE_TAB = 'clay';
 
 // Plan section 2.3: max main-stat rank per category (facts 12-14 yes/no; 15 = vertical drop)
 var RESORT_FACT_MAX_RANK = { small_hill: 4, ski_mountain: 10, multiple_mountains: 11, mega_resort: 14, unknown: 4 };
@@ -39,29 +44,179 @@ function formatDistanceMi(mi) {
   return mi + ' mi (' + km + ' km)';
 }
 
+function disposeResortClay() {
+  if (RESORT_CLAY_API && typeof RESORT_CLAY_API.dispose === 'function') {
+    try { RESORT_CLAY_API.dispose(); } catch (e) { /* ignore */ }
+  }
+  RESORT_CLAY_API = null;
+  RESORT_CLAY_LOADED_FOR = null;
+  var stage = document.getElementById('resort-clay-stage');
+  if (stage) stage.innerHTML = '';
+  var embed = document.getElementById('resort-clay-embed');
+  if (embed) {
+    embed.hidden = true;
+    embed.classList.remove('is-ready', 'is-loading');
+  }
+}
+
+function showResortClaySoon(show) {
+  var soon = document.getElementById('resort-clay-soon');
+  var embed = document.getElementById('resort-clay-embed');
+  if (soon) soon.hidden = !show;
+  if (show && embed) embed.hidden = true;
+}
+
+function fetchClayCatalog() {
+  if (!RESORT_CLAY_CATALOG_PROMISE) {
+    RESORT_CLAY_CATALOG_PROMISE = fetch('/clay_scenes/catalog.json')
+      .then(function (r) {
+        if (!r.ok) throw new Error('clay catalog ' + r.status);
+        return r.json();
+      })
+      .catch(function (err) {
+        console.warn('[resort-clay] catalog', err);
+        RESORT_CLAY_CATALOG_PROMISE = null;
+        return null;
+      });
+  }
+  return RESORT_CLAY_CATALOG_PROMISE;
+}
+
+function resolveClayResortId(winterSportsId) {
+  if (winterSportsId == null || winterSportsId === '') return Promise.resolve(null);
+  var ws = String(winterSportsId);
+  return fetchClayCatalog().then(function (catalog) {
+    var list = catalog && catalog.resorts ? catalog.resorts : [];
+    for (var i = 0; i < list.length; i++) {
+      var r = list[i];
+      if (r && String(r.winter_sports_id) === ws && r.id) return r.id;
+    }
+    return null;
+  });
+}
+
+/** Keep clay viewer in sync with the loaded wiki page (join key: winterSportsId). */
+function syncResortClayContext(page) {
+  var wsId = page && page.winterSportsId != null && page.winterSportsId !== ''
+    ? String(page.winterSportsId)
+    : null;
+  if (wsId !== RESORT_CLAY_WINTER_ID) {
+    disposeResortClay();
+    RESORT_CLAY_WINTER_ID = wsId;
+    showResortClaySoon(true);
+  }
+  // Default map tab is 3D Map on each page load.
+  switchMapTab('clay');
+}
+
+function ensureResortClayMounted() {
+  var wsId = RESORT_CLAY_WINTER_ID;
+  var embed = document.getElementById('resort-clay-embed');
+  var stage = document.getElementById('resort-clay-stage');
+  if (!embed || !stage) return;
+
+  if (!wsId) {
+    disposeResortClay();
+    showResortClaySoon(true);
+    return;
+  }
+
+  if (RESORT_CLAY_LOADED_FOR === wsId && RESORT_CLAY_API) {
+    showResortClaySoon(false);
+    embed.hidden = false;
+    if (typeof RESORT_CLAY_API.resize === 'function') {
+      setTimeout(function () { RESORT_CLAY_API.resize(); }, 50);
+    }
+    return;
+  }
+
+  resolveClayResortId(wsId).then(function (resortId) {
+    if (RESORT_CLAY_WINTER_ID !== wsId) return;
+    if (!resortId) {
+      disposeResortClay();
+      RESORT_CLAY_WINTER_ID = wsId;
+      showResortClaySoon(true);
+      return;
+    }
+
+    disposeResortClay();
+    RESORT_CLAY_WINTER_ID = wsId;
+    showResortClaySoon(false);
+    embed.hidden = false;
+
+    return import('/scripts/hero-montage-map.js?v=53').then(function (mod) {
+      if (RESORT_CLAY_WINTER_ID !== wsId) return null;
+      return mod.initHeroMontageMap(stage, { resortId: resortId, lockResort: true });
+    }).then(function (api) {
+      if (RESORT_CLAY_WINTER_ID !== wsId) {
+        if (api && typeof api.dispose === 'function') api.dispose();
+        return;
+      }
+      if (!api) {
+        showResortClaySoon(true);
+        return;
+      }
+      RESORT_CLAY_API = typeof api.dispose === 'function' ? api : { dispose: api };
+      RESORT_CLAY_LOADED_FOR = wsId;
+      if (typeof RESORT_CLAY_API.resize === 'function') {
+        setTimeout(function () { RESORT_CLAY_API.resize(); }, 50);
+      }
+    }).catch(function (err) {
+      console.warn('[resort-clay] mount failed', err);
+      if (RESORT_CLAY_WINTER_ID !== wsId) return;
+      disposeResortClay();
+      RESORT_CLAY_WINTER_ID = wsId;
+      showResortClaySoon(true);
+    });
+  });
+}
+
 function switchMapTab(tab) {
+  var liveWrap = document.querySelector('.resort-map-gl-wrap');
   var livePanel = document.getElementById('resort-map-gl');
   var staticPanel = document.getElementById('resort-map-static');
+  var clayPanel = document.getElementById('resort-map-clay');
   var tabLive = document.getElementById('tab-live');
   var tabStatic = document.getElementById('tab-static');
+  var tabClay = document.getElementById('tab-clay');
   var legendEl = document.getElementById('resort-map-legend');
   if (!livePanel || !staticPanel) return;
+
+  RESORT_CLAY_ACTIVE_TAB = tab;
+
+  function setTabActive(which) {
+    if (tabLive) tabLive.classList.toggle('resort-map-tab--active', which === 'live');
+    if (tabStatic) tabStatic.classList.toggle('resort-map-tab--active', which === 'static');
+    if (tabClay) tabClay.classList.toggle('resort-map-tab--active', which === 'clay');
+  }
+
   if (tab === 'live') {
+    if (liveWrap) liveWrap.style.display = '';
     livePanel.style.display = '';
     staticPanel.style.display = 'none';
-    if (tabLive) { tabLive.classList.add('resort-map-tab--active'); }
-    if (tabStatic) { tabStatic.classList.remove('resort-map-tab--active'); }
-    if (legendEl) { legendEl.style.display = ''; }
-    if (RESORT_MAP_INSTANCE) { RESORT_MAP_INSTANCE.resize(); }
-  } else {
+    if (clayPanel) clayPanel.style.display = 'none';
+    setTabActive('live');
+    if (legendEl) legendEl.style.display = '';
+    if (RESORT_MAP_INSTANCE) RESORT_MAP_INSTANCE.resize();
+  } else if (tab === 'static') {
+    if (liveWrap) liveWrap.style.display = 'none';
     livePanel.style.display = 'none';
     staticPanel.style.display = '';
-    if (tabLive) { tabLive.classList.remove('resort-map-tab--active'); }
-    if (tabStatic) { tabStatic.classList.add('resort-map-tab--active'); }
-    if (legendEl) { legendEl.style.display = 'none'; }
+    if (clayPanel) clayPanel.style.display = 'none';
+    setTabActive('static');
+    if (legendEl) legendEl.style.display = 'none';
     if (window._resortStaticMapPageId) {
       setTimeout(function () { setResortStaticMaps(window._resortStaticMapPageId); }, 0);
     }
+  } else if (tab === 'clay') {
+    if (!clayPanel) return;
+    if (liveWrap) liveWrap.style.display = 'none';
+    livePanel.style.display = 'none';
+    staticPanel.style.display = 'none';
+    clayPanel.style.display = '';
+    setTabActive('clay');
+    if (legendEl) legendEl.style.display = 'none';
+    ensureResortClayMounted();
   }
 }
 
@@ -80,9 +235,10 @@ function toggleMapExpanded() {
     icon.classList.remove('bi-arrows-fullscreen', 'bi-fullscreen-exit');
     icon.classList.add(expanded ? 'bi-fullscreen-exit' : 'bi-arrows-fullscreen');
   }
-  if (RESORT_MAP_INSTANCE && expanded) {
-    setTimeout(function () { RESORT_MAP_INSTANCE.resize(); }, 100);
-  }
+  setTimeout(function () {
+    if (RESORT_MAP_INSTANCE) RESORT_MAP_INSTANCE.resize();
+    if (RESORT_CLAY_API && typeof RESORT_CLAY_API.resize === 'function') RESORT_CLAY_API.resize();
+  }, 100);
 }
 
 /** Load landscape + portrait PNGs from S3; show each figure only when that object exists. */
@@ -692,6 +848,9 @@ function populatePage(page) {
     var statusActionsEl = document.getElementById('resort-admin-status-actions');
     if (finishedCalloutEl) finishedCalloutEl.style.display = 'none';
     if (statusActionsEl) statusActionsEl.style.display = 'none';
+    disposeResortClay();
+    RESORT_CLAY_WINTER_ID = null;
+    showResortClaySoon(true);
     return;
   }
 
@@ -764,8 +923,11 @@ function populatePage(page) {
     var regionHasCoords = regionLat != null && !isNaN(regionLat) && regionLon != null && !isNaN(regionLon);
     if (regionHasCoords && aside) {
       initResortMap(regionLat, regionLon, page.pageId || YWIKI_PATH, page.mapZoom != null ? Number(page.mapZoom) : undefined);
+      syncResortClayContext(page);
     } else if (aside) {
       aside.style.display = 'none';
+      disposeResortClay();
+      RESORT_CLAY_WINTER_ID = null;
     }
     loadRegionList(page);
     return;
@@ -897,6 +1059,7 @@ function populatePage(page) {
   var hasCoords = lat != null && !isNaN(lat) && lon != null && !isNaN(lon);
   if (hasCoords || page.pageId) {
     initResortMap(hasCoords ? lat : null, hasCoords ? lon : null, page.pageId || YWIKI_PATH);
+    syncResortClayContext(page);
     if (hasCoords && window.enhanceResortMap) {
       var enhanceParams = {
         title: page.title || YWIKI_PATH,
@@ -910,6 +1073,8 @@ function populatePage(page) {
   } else {
     var aside = document.getElementById('resort-map-aside');
     if (aside) aside.style.display = 'none';
+    disposeResortClay();
+    RESORT_CLAY_WINTER_ID = null;
   }
 }
 

@@ -603,12 +603,30 @@ app.head(/^\/game_scenes\/.*/, (req, res) => {
   proxyS3Prefix('game_scenes', req, res);
 });
 
-app.get(/^\/homepage_scene\/.*/, (req, res) => {
+app.get(/^\/clay_scenes\/.*/, (req, res) => {
   const localPath = path.join(__dirname, req.path.replace(/^\//, ''));
   if (fs.existsSync(localPath) && fs.statSync(localPath).isFile()) {
     return res.sendFile(localPath);
   }
-  proxyS3Prefix('homepage_scene', req, res);
+  proxyS3Prefix('clay_scenes', req, res);
+});
+
+app.head(/^\/clay_scenes\/.*/, (req, res) => {
+  const localPath = path.join(__dirname, req.path.replace(/^\//, ''));
+  if (fs.existsSync(localPath) && fs.statSync(localPath).isFile()) {
+    return res.sendFile(localPath);
+  }
+  proxyS3Prefix('clay_scenes', req, res);
+});
+
+/* Legacy alias while old links/caches clear. */
+app.get(/^\/homepage_scene\/.*/, (req, res) => {
+  const rewritten = req.path.replace(/^\/homepage_scene/, '/clay_scenes');
+  const localPath = path.join(__dirname, rewritten.replace(/^\//, ''));
+  if (fs.existsSync(localPath) && fs.statSync(localPath).isFile()) {
+    return res.sendFile(localPath);
+  }
+  proxyS3Prefix('clay_scenes', req, res);
 });
 
 // --- Root static files (existing GlobalSkiAtlas_2 HTML/CSS/JS) --------------

@@ -1,6 +1,6 @@
 /**
- * Homepage hero map — clay floating-island ski resorts from homepage_scene.
- * Procedural island first, then upgrades to a catalog resort; users can cycle resorts.
+ * Clay floating-island ski resorts from clay_scenes/ (homepage hero + wiki 3D Map).
+ * Procedural island first, then upgrades to a catalog resort; homepage can cycle resorts.
  */
 
 import * as THREE from "three";
@@ -50,11 +50,11 @@ const PALETTE = {
 };
 
 function sceneRoot(resortId) {
-  return new URL(`/homepage_scene/${resortId}/`, location.origin);
+  return new URL(`/clay_scenes/${resortId}/`, location.origin);
 }
 
 function catalogUrl() {
-  return new URL("/homepage_scene/catalog.json", location.origin);
+  return new URL("/clay_scenes/catalog.json", location.origin);
 }
 
 function gameSceneBase(resort) {
@@ -2408,8 +2408,11 @@ function boundsFromObject(object, fallback) {
   return { center, radius };
 }
 
-export async function initHeroMontageMap(container) {
+export async function initHeroMontageMap(container, options = {}) {
   if (!container) return null;
+
+  const preferredId = options.resortId ? String(options.resortId) : "";
+  const lockResort = Boolean(options.lockResort || preferredId);
 
   const embed = container.closest(".hero-montage-embed") || container;
 
@@ -2449,9 +2452,86 @@ export async function initHeroMontageMap(container) {
   embed.classList.add("is-ready");
 
   let running = true;
-  let angle = 0.55;
+  let az = 0.55;
+  let polar = Math.atan2(0.95, 1.72);
+  let zoom = 1;
+  let dragging = false;
+  let lastPointer = null;
+  let resumeSpinAt = 0;
+  const IDLE_RESUME_MS = 5000;
+  const SPIN_SPEED = 0.12;
+  const POLAR_MIN = 0.18;
+  const POLAR_MAX = 1.35;
+  const ZOOM_MIN = 0.45;
+  const ZOOM_MAX = 2.6;
   let lastT = performance.now();
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const canvas = renderer.domElement;
+  canvas.style.touchAction = "none";
+  canvas.style.cursor = "grab";
+  canvas.setAttribute("aria-label", "Drag to orbit the 3D map; scroll to zoom");
+
+  function markInteracted() {
+    resumeSpinAt = performance.now() + IDLE_RESUME_MS;
+  }
+
+  function syncOrbitFromBounds() {
+    const { center, radius } = bounds;
+    const targetY = center.y * 0.35;
+    const dist = Math.max(1, radius * 1.72);
+    const elev = center.y + radius * 0.95;
+    polar = THREE.MathUtils.clamp(Math.atan2(elev - targetY, dist), POLAR_MIN, POLAR_MAX);
+    az = 0.55;
+    zoom = 1;
+  }
+
+  function onPointerDown(e) {
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    dragging = true;
+    lastPointer = { x: e.clientX, y: e.clientY };
+    try {
+      canvas.setPointerCapture(e.pointerId);
+    } catch (_) { /* ignore */ }
+    canvas.style.cursor = "grabbing";
+    markInteracted();
+    e.preventDefault();
+  }
+
+  function onPointerMove(e) {
+    if (!dragging || !lastPointer) return;
+    const dx = e.clientX - lastPointer.x;
+    const dy = e.clientY - lastPointer.y;
+    lastPointer = { x: e.clientX, y: e.clientY };
+    az -= dx * 0.005;
+    polar = THREE.MathUtils.clamp(polar + dy * 0.004, POLAR_MIN, POLAR_MAX);
+    markInteracted();
+    e.preventDefault();
+  }
+
+  function onPointerUp(e) {
+    if (!dragging) return;
+    dragging = false;
+    lastPointer = null;
+    canvas.style.cursor = "grab";
+    try {
+      canvas.releasePointerCapture(e.pointerId);
+    } catch (_) { /* ignore */ }
+    markInteracted();
+  }
+
+  function onWheel(e) {
+    e.preventDefault();
+    const factor = Math.exp(e.deltaY * 0.00115);
+    zoom = THREE.MathUtils.clamp(zoom * factor, ZOOM_MIN, ZOOM_MAX);
+    markInteracted();
+  }
+
+  canvas.addEventListener("pointerdown", onPointerDown);
+  canvas.addEventListener("pointermove", onPointerMove);
+  canvas.addEventListener("pointerup", onPointerUp);
+  canvas.addEventListener("pointercancel", onPointerUp);
+  canvas.addEventListener("wheel", onWheel, { passive: false });
+  canvas.addEventListener("contextmenu", (e) => e.preventDefault());
 
   let resorts = [];
   let resortIndex = 0;
@@ -2487,9 +2567,9 @@ export async function initHeroMontageMap(container) {
         playLink.hidden = true;
       }
     }
-    if (switcher) switcher.hidden = resorts.length < 2;
-    if (prevBtn) prevBtn.disabled = loading || resorts.length < 2;
-    if (nextBtn) nextBtn.disabled = loading || resorts.length < 2;
+    if (switcher) switcher.hidden = lockResort || resorts.length < 2;
+    if (prevBtn) prevBtn.disabled = lockResort || loading || resorts.length < 2;
+    if (nextBtn) nextBtn.disabled = lockResort || loading || resorts.length < 2;
   }
 
   async function mountResort(resort) {
@@ -2566,7 +2646,7 @@ export async function initHeroMontageMap(container) {
       if (token !== loadToken) return;
 
       bounds = boundsFromObject(root, new THREE.Vector3(0, 14, 0));
-      angle = 0.55;
+      syncOrbitFromBounds();
 
       liftChairs = null;
       trailRiders = null;
@@ -2598,7 +2678,7 @@ export async function initHeroMontageMap(container) {
   }
 
   function stepResort(delta) {
-    if (!resorts.length || loading) return;
+    if (lockResort || !resorts.length || loading) return;
     resortIndex = (resortIndex + delta + resorts.length) % resorts.length;
     mountResort(currentResort());
   }
@@ -2623,15 +2703,18 @@ export async function initHeroMontageMap(container) {
 
   function frameCamera(t = 0) {
     const { center, radius } = bounds;
-    const r = radius * 1.72;
-    const elev = center.y + radius * 0.95;
-    const bob = reduceMotion ? 0 : Math.sin(t * 0.35) * radius * 0.012;
+    const targetY = center.y * 0.35;
+    const dist = Math.max(1, radius * 1.72 * zoom);
+    const autoSpin =
+      !reduceMotion && !dragging && performance.now() >= resumeSpinAt;
+    const bob = autoSpin ? Math.sin(t * 0.35) * radius * 0.012 * zoom : 0;
+    const horiz = Math.cos(polar) * dist;
     camera.position.set(
-      center.x + Math.cos(angle) * r,
-      elev + bob,
-      center.z + Math.sin(angle) * r,
+      center.x + Math.cos(az) * horiz,
+      targetY + Math.sin(polar) * dist + bob,
+      center.z + Math.sin(az) * horiz,
     );
-    camera.lookAt(center.x, center.y * 0.35, center.z);
+    camera.lookAt(center.x, targetY, center.z);
   }
 
   function tick(now) {
@@ -2639,7 +2722,9 @@ export async function initHeroMontageMap(container) {
     requestAnimationFrame(tick);
     const dt = Math.min(0.05, (now - lastT) / 1000);
     lastT = now;
-    if (!reduceMotion) angle += dt * 0.12;
+    const autoSpin =
+      !reduceMotion && !dragging && now >= resumeSpinAt;
+    if (autoSpin) az += dt * SPIN_SPEED;
     const motionDt = reduceMotion ? 0 : dt;
     if (trailRiders) updateTrailRiders(trailRiders, motionDt);
     if (liftChairs) updateLiftChairs(liftChairs, motionDt);
@@ -2664,33 +2749,54 @@ export async function initHeroMontageMap(container) {
   observer.observe(embed);
 
   (async () => {
+    const fallback = {
+      id: preferredId || "montage_mountain_pa",
+      display_name: preferredId || "Montage Mountain",
+      short_name: preferredId || "Montage",
+      playable_ver: preferredId ? null : "v0-107b3a77b75f",
+      region_label: "",
+    };
     try {
       const catalog = await fetchJson(catalogUrl());
-      resorts = (catalog?.resorts || []).filter((r) => r?.id);
-      if (!resorts.length) {
-        resorts = [{ id: "montage_mountain_pa", display_name: "Montage Mountain", short_name: "Montage", playable_ver: "v0-107b3a77b75f", region_label: "North America" }];
+      const all = (catalog?.resorts || []).filter((r) => r?.id);
+      if (preferredId) {
+        const hit = all.find((r) => r.id === preferredId);
+        resorts = hit ? [hit] : [{ ...fallback, id: preferredId }];
+        resortIndex = 0;
+      } else {
+        resorts = all.length
+          ? all
+          : [{ id: "montage_mountain_pa", display_name: "Montage Mountain", short_name: "Montage", playable_ver: "v0-107b3a77b75f", region_label: "North America" }];
+        resortIndex = Math.max(0, resorts.findIndex((r) => r.id === "montage_mountain_pa"));
+        if (resortIndex < 0) resortIndex = 0;
       }
-      resortIndex = Math.max(0, resorts.findIndex((r) => r.id === "montage_mountain_pa"));
-      if (resortIndex < 0) resortIndex = 0;
       await mountResort(currentResort());
     } catch (err) {
       console.warn("[hero-montage-map] catalog load failed", err);
-      resorts = [{ id: "montage_mountain_pa", display_name: "Montage Mountain", short_name: "Montage", playable_ver: "v0-107b3a77b75f", region_label: "North America" }];
+      resorts = [fallback];
       resortIndex = 0;
       await mountResort(currentResort());
     }
   })();
 
-  return () => {
-    running = false;
-    loadToken += 1;
-    observer.disconnect();
-    window.removeEventListener("resize", resize);
-    prevBtn?.removeEventListener("click", onPrev);
-    nextBtn?.removeEventListener("click", onNext);
-    disposeObject(world);
-    renderer.dispose();
-    if (renderer.domElement.parentNode === container) container.removeChild(renderer.domElement);
+  return {
+    resize,
+    dispose() {
+      running = false;
+      loadToken += 1;
+      observer.disconnect();
+      window.removeEventListener("resize", resize);
+      prevBtn?.removeEventListener("click", onPrev);
+      nextBtn?.removeEventListener("click", onNext);
+      canvas.removeEventListener("pointerdown", onPointerDown);
+      canvas.removeEventListener("pointermove", onPointerMove);
+      canvas.removeEventListener("pointerup", onPointerUp);
+      canvas.removeEventListener("pointercancel", onPointerUp);
+      canvas.removeEventListener("wheel", onWheel);
+      disposeObject(world);
+      renderer.dispose();
+      if (renderer.domElement.parentNode === container) container.removeChild(renderer.domElement);
+    },
   };
 }
 

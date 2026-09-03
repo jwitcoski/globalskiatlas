@@ -134,7 +134,8 @@ body {
   width: 100%;
 }
 .resort-layout.resort-map-expanded .resort-map-gl-wrap,
-.resort-layout.resort-map-expanded .resort-map-static {
+.resort-layout.resort-map-expanded .resort-map-static,
+.resort-layout.resort-map-expanded .resort-map-clay {
   min-height: 70vh;
 }
 .resort-layout.resort-map-expanded .resort-map-static {
@@ -148,7 +149,8 @@ body {
 .resort-layout.resort-map-expanded .resort-map-static .resort-map-static-img {
   max-height: min(70vh, 900px);
 }
-.resort-layout.resort-map-expanded .resort-map-gl {
+.resort-layout.resort-map-expanded .resort-map-gl,
+.resort-layout.resort-map-expanded .resort-map-clay {
   height: 70vh;
   min-height: 400px;
 }
@@ -156,7 +158,8 @@ body {
   .resort-layout {
     grid-template-columns: 1fr;
   }
-  .resort-layout.resort-map-expanded .resort-map-gl {
+  .resort-layout.resort-map-expanded .resort-map-gl,
+  .resort-layout.resort-map-expanded .resort-map-clay {
     height: 60vh;
     min-height: 320px;
   }
@@ -167,7 +170,8 @@ body {
   .resort-title {
     font-size: 1.5rem;
   }
-  .resort-map-gl {
+  .resort-map-gl,
+  .resort-map-clay {
     height: 240px;
   }
 }
@@ -344,6 +348,52 @@ body {
   border-radius: 10px;
   overflow: hidden;
   border: 1px solid var(--resort-edit-border);
+}
+
+.resort-map-clay {
+  width: 100%;
+  height: 280px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--resort-edit-border);
+  position: relative;
+  background:
+    radial-gradient(ellipse 70% 55% at 50% 58%, #ffffff 0%, #ffffff 62%, #eef3f8 100%);
+}
+
+.resort-clay-embed.hero-montage-embed {
+  max-width: none;
+  width: 100%;
+  height: 100%;
+  border-radius: 10px;
+  box-shadow: none;
+}
+
+.resort-clay-soon {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 1.25rem;
+  text-align: center;
+  color: #475569;
+}
+
+.resort-clay-soon-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.resort-clay-soon-body {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  max-width: 22rem;
 }
 
 .resort-map-static {
