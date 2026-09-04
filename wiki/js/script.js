@@ -144,7 +144,7 @@ function ensureResortClayMounted() {
     showResortClaySoon(false);
     embed.hidden = false;
 
-    return import('/scripts/hero-montage-map.js?v=53').then(function (mod) {
+    return import('/scripts/hero-montage-map.js?v=64').then(function (mod) {
       if (RESORT_CLAY_WINTER_ID !== wsId) return null;
       return mod.initHeroMontageMap(stage, { resortId: resortId, lockResort: true });
     }).then(function (api) {

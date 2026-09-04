@@ -382,6 +382,11 @@ body {
   color: #475569;
 }
 
+/* `hidden` alone loses to display:flex above — keep coming-soon from covering the 3D map. */
+.resort-clay-soon[hidden] {
+  display: none !important;
+}
+
 .resort-clay-soon-title {
   margin: 0;
   font-size: 1rem;

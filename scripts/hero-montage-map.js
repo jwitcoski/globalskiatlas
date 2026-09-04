@@ -8,9 +8,9 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 
 const HERO_SPAN = 100;
-const MAX_TREES = 650;
+const MAX_TREES = 900;
 const MAX_RIDERS = 280;
-const MAX_TRAILS = 120;
+const MAX_TRAILS = 220;
 /** Desired trail width in hero/display units (after mesh fit). Keep very thin. */
 const TRAIL_WIDTH = 0.42;
 const TREE_SCALE = 1.16;
@@ -417,13 +417,16 @@ function trailGeomScore(feature) {
   return (id.includes("way:") ? 1000 : 0) + n;
 }
 
-/** Keep ski route centerlines; drop area outlines and duplicate OSM ways. */
+/** Keep ski route centerlines; drop area outlines, snow parks, and duplicate OSM ways. */
 function selectTrailCenterlines(features) {
   const lines = (features || []).filter(
-    (f) => lineParts(f.geometry).length && !isPisteAreaOutline(f),
+    (f) => lineParts(f.geometry).length && !isPisteAreaOutline(f) && !isSnowParkFeature(f),
   );
+  // Prefer dedicated route=ski relations only when they cover most of the network.
+  // Megaresorts often have a few route=ski lines plus hundreds of piste ways — using
+  // routes alone made Killington/Jay look empty.
   const routes = lines.filter(isSkiRouteCenterline);
-  const pool = routes.length ? routes : lines;
+  const pool = routes.length && routes.length * 3 >= lines.length ? routes : lines;
   const byKey = new Map();
   for (const feature of pool) {
     const osm = featureOsmWayId(feature);
@@ -453,6 +456,45 @@ function featureAerialway(feature) {
   return String(type || "").toLowerCase().replace(/[\s-]+/g, "_").trim();
 }
 
+function featureLiftOsmId(feature) {
+  const props = feature?.properties || {};
+  const tags = props.tags && typeof props.tags === "object" ? props.tags : {};
+  if (tags.osm_way_id != null && String(tags.osm_way_id).trim()) return String(tags.osm_way_id);
+  if (props.osm_way_id != null && String(props.osm_way_id).trim()) return String(props.osm_way_id);
+  const id = String(props.id || "");
+  const m = /(?:way:|nan:|:)?(\d+)\s*$/.exec(id);
+  return m ? m[1] : "";
+}
+
+function liftGeomScore(feature) {
+  const id = String(feature?.properties?.id || "");
+  let n = 0;
+  for (const coords of lineParts(feature?.geometry)) n += coords?.length || 0;
+  return (id.includes("way:") ? 1000 : 0) + n;
+}
+
+/** Drop duplicate OSM lifts (e.g. lifts:nan:ID vs lifts:way:ID). */
+function selectLiftFeatures(features) {
+  const byKey = new Map();
+  for (const feature of features || []) {
+    if (!lineParts(feature.geometry).length) continue;
+    const type = featureAerialway(feature);
+    if (isLiftPylonOrStation(type)) continue;
+    const osm = featureLiftOsmId(feature);
+    let key = osm ? `way:${osm}` : "";
+    if (!key) {
+      const coords = lineParts(feature.geometry)[0] || [];
+      const a = coords[0];
+      const b = coords[coords.length - 1];
+      const name = feature?.properties?.name || "";
+      key = `g:${name}:${a?.[0]?.toFixed?.(0)},${a?.[1]?.toFixed?.(0)}:${b?.[0]?.toFixed?.(0)},${b?.[1]?.toFixed?.(0)}`;
+    }
+    const prev = byKey.get(key);
+    if (!prev || liftGeomScore(feature) > liftGeomScore(prev)) byKey.set(key, feature);
+  }
+  return [...byKey.values()];
+}
+
 const SURFACE_LIFT_TYPES = new Set([
   "magic_carpet",
   "t_bar",
@@ -472,8 +514,47 @@ function isSurfaceLift(type) {
   return SURFACE_LIFT_TYPES.has(type);
 }
 
+const GONDOLA_LIFT_TYPES = new Set([
+  "gondola",
+  "cable_car",
+  "cablecar",
+  "mixed_lift",
+  "funitel",
+  "tricable",
+  "detachable_gondola",
+]);
+
+function isGondolaLift(type) {
+  return GONDOLA_LIFT_TYPES.has(type);
+}
+
 function isLiftPylonOrStation(type) {
   return type === "pylon" || type === "station" || type === "goods";
+}
+
+function featurePisteType(feature) {
+  const props = feature?.properties || {};
+  const tags = props.tags && typeof props.tags === "object" ? props.tags : {};
+  /* Prefer OSM other_tags / piste:type over flattened piste_type — exports often
+   * set piste_type="downhill" even when other_tags says piste:type=snow_park. */
+  let type = tags["piste:type"] || props["piste:type"] || "";
+  if (!type) {
+    const other = featureOtherTagsBlob(feature);
+    const m = /piste:type"=>"([^"]+)/.exec(other);
+    if (m) type = m[1];
+  }
+  if (!type) type = tags.piste_type || props.piste_type || "";
+  return String(type || "")
+    .toLowerCase()
+    .replace(/[\s-]+/g, "_")
+    .trim();
+}
+
+function isSnowParkFeature(feature) {
+  const t = featurePisteType(feature);
+  if (t === "snow_park" || t === "terrain_park" || t === "snowpark") return true;
+  const name = String(feature?.properties?.name || "").toLowerCase();
+  return /\b(terrain\s*park|snow\s*park|rail\s*(fun\s*)?park|half[\s-]?pipe)\b/.test(name);
 }
 
 const TRAIL_STYLES = {
@@ -1337,7 +1418,9 @@ function addTrails(parent, featureCollection, center, sample, unitScale = 1, cli
   const features = selectTrailCenterlines(featureCollection?.features || []);
   const stride = Math.max(1, Math.ceil(features.length / MAX_TRAILS));
   const width = TRAIL_WIDTH * unitScale;
-  const lift = Math.max(0.35, 0.35 * unitScale);
+  /* Trails sit just above snow; riders use a higher path so they rest on top. */
+  const trailLift = Math.max(0.4, 0.12 * unitScale);
+  const riderLift = trailLift + Math.max(0.35, 0.1 * unitScale);
   const paths = [];
 
   for (let i = 0; i < features.length; i += stride) {
@@ -1347,8 +1430,8 @@ function addTrails(parent, featureCollection, center, sample, unitScale = 1, cli
       const pts = [];
       const ridePts = [];
       for (const coord of downsampleLine(coords, 64)) {
-        const p = gamePoint(coord[0], coord[1], center, sample, lift);
-        const r = gamePoint(coord[0], coord[1], center, sample, lift * 0.4);
+        const p = gamePoint(coord[0], coord[1], center, sample, trailLift);
+        const r = gamePoint(coord[0], coord[1], center, sample, riderLift);
         if (p) pts.push(p);
         if (r) ridePts.push(r);
       }
@@ -1369,13 +1452,207 @@ function addTrails(parent, featureCollection, center, sample, unitScale = 1, cli
       emissive: style.emissive,
       emissiveIntensity: style.intensity,
       side: THREE.DoubleSide,
+      polygonOffset: true,
+      polygonOffsetFactor: -6,
+      polygonOffsetUnits: -6,
     });
     const mesh = meshFromPositions(positions, mat);
-    if (mesh) group.add(mesh);
+    if (mesh) {
+      mesh.renderOrder = 2;
+      group.add(mesh);
+    }
   }
 
   group.userData.paths = paths;
+  group.userData.trailLift = trailLift;
+  group.userData.riderLift = riderLift;
   parent.add(group);
+  try {
+    addSnowParkJumps(parent, featureCollection, center, sample, unitScale, clipRing, trailLift);
+  } catch (err) {
+    console.warn("[hero-montage-map] snowpark jumps failed", err);
+  }
+  return group;
+}
+
+/** White clay triangle ramps along snow-park lines / inside park polygons. */
+function addSnowParkJumps(parent, featureCollection, center, sample, unitScale = 1, clipRing = null, trailLift = 0.4) {
+  const parksRaw = (featureCollection?.features || []).filter(isSnowParkFeature);
+  if (!parksRaw.length) return null;
+
+  /* Deduplicate park ways (nan: vs way: / duplicate names). */
+  const parksByKey = new Map();
+  for (const feature of parksRaw) {
+    const osm = featureOsmWayId(feature) || featureLiftOsmId(feature);
+    const name = String(feature?.properties?.name || "").toLowerCase();
+    let key = osm ? `way:${osm}` : "";
+    if (!key) {
+      const coords = lineParts(feature.geometry)[0] || polygonParts(feature.geometry)[0]?.[0] || [];
+      const a = coords[0];
+      const b = coords[coords.length - 1];
+      key = `g:${name}:${a?.[0]?.toFixed?.(0)},${a?.[1]?.toFixed?.(0)}:${b?.[0]?.toFixed?.(0)},${b?.[1]?.toFixed?.(0)}`;
+    }
+    const prev = parksByKey.get(key);
+    if (!prev || trailGeomScore(feature) > trailGeomScore(prev)) parksByKey.set(key, feature);
+  }
+  const parks = [...parksByKey.values()];
+  if (!parks.length) return null;
+
+  const group = new THREE.Group();
+  group.name = "montage-snowpark";
+  const s = Math.max(1, unitScale);
+  const jumpLift = trailLift + Math.max(0.45, 0.14 * s);
+  const sites = [];
+
+  function pushSitesAlong(run, seedBase) {
+    if (!run || run.length < 2) return;
+    const len = polylineLen(run);
+    /* A few well-spaced jumps — not a sawtooth ridge. */
+    const target = Math.max(2, Math.min(5, Math.round(len / Math.max(55, unitScale * 1.1))));
+    for (let k = 0; k < target; k++) {
+      const t = (k + 1) / (target + 1);
+      const along = alongPolyline(run, len * t);
+      if (!along) continue;
+      const ahead = alongPolyline(run, Math.min(len, len * t + Math.max(3, len * 0.05)));
+      const tan = new THREE.Vector3(
+        (ahead?.x ?? along.x) - along.x,
+        0,
+        (ahead?.z ?? along.z) - along.z,
+      );
+      if (tan.lengthSq() < 1e-6) tan.set(0, 0, 1);
+      else tan.normalize();
+      sites.push({
+        p: new THREE.Vector3(along.x, along.y, along.z),
+        tan,
+        seed: seedBase + k * 3.7,
+      });
+    }
+  }
+
+  for (const feature of parks) {
+    for (const coords of lineParts(feature.geometry)) {
+      const pts = [];
+      for (const coord of downsampleLine(coords, 48)) {
+        const p = gamePoint(coord[0], coord[1], center, sample, jumpLift);
+        if (p) pts.push(p);
+      }
+      for (const run of clipPointRuns(pts, clipRing)) {
+        pushSitesAlong(run, sites.length * 11.3);
+      }
+    }
+    for (const poly of polygonParts(feature.geometry)) {
+      const outer = poly?.[0];
+      if (!outer || outer.length < 3) continue;
+      const dens = downsampleLine(outer, 36);
+      const pts = [];
+      for (const coord of dens) {
+        const p = gamePoint(coord[0], coord[1], center, sample, jumpLift);
+        if (p) pts.push(p);
+      }
+      for (const run of clipPointRuns(pts, clipRing)) {
+        if (run.length < 3) continue;
+        let cx = 0;
+        let cz = 0;
+        for (const q of run) {
+          cx += q.x;
+          cz += q.z;
+        }
+        cx /= run.length;
+        cz /= run.length;
+        const n = Math.min(4, Math.max(2, Math.round(run.length / 8)));
+        for (let k = 0; k < n; k++) {
+          const idx = Math.min(run.length - 2, 1 + Math.floor(((k + 0.5) / n) * (run.length - 2)));
+          const p = run[idx];
+          const next = run[Math.min(run.length - 1, idx + 1)];
+          const tan = new THREE.Vector3().subVectors(next, p);
+          tan.y = 0;
+          if (tan.lengthSq() < 1e-6) tan.set(1, 0, 0);
+          else tan.normalize();
+          const inward = new THREE.Vector3(cx - p.x, 0, cz - p.z);
+          if (inward.lengthSq() > 1e-4) inward.normalize().multiplyScalar(Math.max(2, 0.2 * s));
+          sites.push({
+            p: new THREE.Vector3(p.x + inward.x, p.y, p.z + inward.z),
+            tan,
+            seed: sites.length * 5.7 + k,
+          });
+        }
+      }
+    }
+  }
+
+  if (!sites.length) return null;
+
+  const jumpW = 1.25 * s;
+  const jumpH = 2.6 * s;
+  const jumpD = 1.35 * s;
+
+  const mat = new THREE.MeshLambertMaterial({
+    color: 0xffffff,
+    emissive: 0xf8fafc,
+    emissiveIntensity: 0.35,
+    flatShading: true,
+    side: THREE.DoubleSide,
+    polygonOffset: true,
+    polygonOffsetFactor: -10,
+    polygonOffsetUnits: -10,
+  });
+  const sideMat = new THREE.MeshLambertMaterial({
+    color: 0xe2e8f0,
+    emissive: 0x94a3b8,
+    emissiveIntensity: 0.2,
+    flatShading: true,
+    side: THREE.DoubleSide,
+  });
+
+  for (let i = 0; i < sites.length && i < 28; i++) {
+    const { p, tan, seed } = sites[i];
+    const scale = 0.9 + rng(seed) * 0.55;
+    const jump = new THREE.Group();
+    /* Tall upright triangle (fin) — readable from the default elevated camera. */
+    const finGeo = new THREE.BufferGeometry();
+    const hw = jumpW * 0.5 * scale;
+    const h = jumpH * scale;
+    const d = jumpD * scale;
+    finGeo.setAttribute(
+      "position",
+      new THREE.BufferAttribute(
+        new Float32Array([
+          // left face (main visible triangle)
+          0, 0, d, 0, 0, -d, 0, h, -d * 0.2,
+          // right face (slight thickness)
+          hw * 0.15, 0, d, hw * 0.15, h, -d * 0.2, hw * 0.15, 0, -d,
+          // deck / thickness fill
+          0, 0, d, hw * 0.15, 0, d, 0, h, -d * 0.2,
+          hw * 0.15, 0, d, hw * 0.15, h, -d * 0.2, 0, h, -d * 0.2,
+        ]),
+        3,
+      ),
+    );
+    finGeo.computeVertexNormals();
+    const fin = new THREE.Mesh(finGeo, mat);
+    fin.frustumCulled = false;
+    const base = new THREE.Mesh(
+      new THREE.BoxGeometry(jumpW * 0.7 * scale, 0.12 * s, jumpD * 1.1 * scale),
+      sideMat,
+    );
+    base.position.y = 0.06 * s;
+    base.frustumCulled = false;
+    jump.add(base, fin);
+    jump.position.copy(p);
+    jump.rotation.y = Math.atan2(tan.x, tan.z);
+    jump.renderOrder = 3;
+    jump.frustumCulled = false;
+    group.add(jump);
+  }
+
+  parent.add(group);
+  try {
+    if (typeof window !== "undefined") {
+      window.__claySnowPark = { parks: parks.length, sites: sites.length, jumps: group.children.length };
+    }
+  } catch (_) {
+    /* ignore */
+  }
   return group;
 }
 
@@ -1496,6 +1773,7 @@ function makeClayRider(unitScale, board, suit, ski) {
   }
 
   g.userData.ride = 0.16 * s;
+  g.renderOrder = 4;
   g.frustumCulled = false;
   return g;
 }
@@ -1561,7 +1839,6 @@ function addTrailRiders(parent, paths, sample, unitScale = 1) {
 
 function updateTrailRiders(pack, dt) {
   if (!pack?.list?.length) return;
-  const sample = pack.sample;
   for (const rider of pack.list) {
     const pad = Math.min(rider.pad || 6, rider.len * 0.15);
     if (dt > 0) {
@@ -1578,13 +1855,13 @@ function updateTrailRiders(pack, dt) {
       (rider.bias || 0) + (rider.amp || 2) * Math.sin(rider.along / Math.max(8, rider.wave || 24) + rider.phase);
     const x = p.x + (nx / nLen) * side;
     const z = p.z + (nz / nLen) * side;
-    const y = sample?.(x, z);
-    const ground = y == null ? p.y : y;
+    /* Stay on the elevated ride path (above trail ribbons), not bare snow. */
+    const y = p.y;
     const cut = Math.atan2(
       ((rider.amp || 2) / Math.max(8, rider.wave || 24)) * Math.cos(rider.along / Math.max(8, rider.wave || 24) + rider.phase),
       1,
     );
-    rider.mesh.position.set(x, ground + (rider.mesh.userData.ride || 0.5), z);
+    rider.mesh.position.set(x, y + (rider.mesh.userData.ride || 0.5), z);
     rider.mesh.rotation.order = "YXZ";
     rider.mesh.rotation.y = Math.atan2(p.tx, p.tz) + cut * 0.65;
     rider.mesh.rotation.x = 0.12 + Math.sin(rider.along * 0.05 + rider.phase) * 0.04;
@@ -1644,20 +1921,20 @@ function buildAerialCable(ground, cableH, stationH, step) {
 function addLifts(parent, featureCollection, center, sample, unitScale = 1, clipRing = null) {
   const group = new THREE.Group();
   group.name = "montage-lifts";
-  const features = (featureCollection?.features || []).filter((feature) => {
-    if (!lineParts(feature.geometry).length) return false;
-    return !isLiftPylonOrStation(featureAerialway(feature));
-  });
+  const features = selectLiftFeatures(featureCollection?.features || []);
   if (!features.length) return null;
 
   const s = unitScale;
   const towerH = 3.4 * s;
+  const gondolaTowerH = 4.2 * s;
   const cableH = towerH * 0.92;
+  const gondolaCableH = gondolaTowerH * 0.92;
   const stationH = Math.max(0.45 * s, 1.1);
   /* Spacing is in mesh/game meters (path coords), not display units. */
   const towerStep = 210;
   const chairStep = 100;
   const hangerLen = 0.55 * s;
+  const gondolaHangerLen = 0.85 * s;
   const surfaceLift = Math.max(0.18, 0.2 * s);
   const surfaceWidth = Math.max(0.14, TRAIL_WIDTH * 0.48 * s);
 
@@ -1666,6 +1943,13 @@ function addLifts(parent, featureCollection, center, sample, unitScale = 1, clip
   const cableMat = new THREE.MeshBasicMaterial({ color: PALETTE.cable });
   const seatMat = new THREE.MeshLambertMaterial({ color: 0xd97706, flatShading: true });
   const barMat = new THREE.MeshLambertMaterial({ color: 0x374151, flatShading: true });
+  const cabinMat = new THREE.MeshLambertMaterial({
+    color: 0xe8eef4,
+    emissive: 0xcbd5e1,
+    emissiveIntensity: 0.12,
+    flatShading: true,
+  });
+  const cabinAccent = new THREE.MeshLambertMaterial({ color: 0x0f766e, flatShading: true });
   const surfaceMat = new THREE.MeshBasicMaterial({
     color: 0x171717,
     side: THREE.DoubleSide,
@@ -1673,25 +1957,41 @@ function addLifts(parent, featureCollection, center, sample, unitScale = 1, clip
 
   const poleGeo = new THREE.CylinderGeometry(0.07 * s, 0.1 * s, towerH, 5);
   poleGeo.translate(0, towerH / 2, 0);
+  const gondolaPoleGeo = new THREE.CylinderGeometry(0.11 * s, 0.16 * s, gondolaTowerH, 6);
+  gondolaPoleGeo.translate(0, gondolaTowerH / 2, 0);
   const armGeo = new THREE.BoxGeometry(0.9 * s, 0.07 * s, 0.07 * s);
   armGeo.translate(0, towerH * 0.92, 0);
+  const gondolaArmGeo = new THREE.BoxGeometry(1.4 * s, 0.1 * s, 0.1 * s);
+  gondolaArmGeo.translate(0, gondolaTowerH * 0.92, 0);
   const seatGeo = new THREE.BoxGeometry(0.42 * s, 0.08 * s, 0.28 * s);
   const backGeo = new THREE.BoxGeometry(0.42 * s, 0.22 * s, 0.06 * s);
   backGeo.translate(0, 0.12 * s, -0.11 * s);
   const hangerGeo = new THREE.CylinderGeometry(0.025 * s, 0.025 * s, hangerLen, 4);
   hangerGeo.translate(0, -hangerLen / 2, 0);
+  const gondolaHangerGeo = new THREE.CylinderGeometry(0.04 * s, 0.04 * s, gondolaHangerLen, 5);
+  gondolaHangerGeo.translate(0, -gondolaHangerLen / 2, 0);
+  const cabinGeo = new THREE.BoxGeometry(1.15 * s, 1.05 * s, 1.55 * s);
+  cabinGeo.translate(0, -gondolaHangerLen - 0.55 * s, 0);
+  const cabinRoofGeo = new THREE.BoxGeometry(1.28 * s, 0.14 * s, 1.68 * s);
+  cabinRoofGeo.translate(0, -gondolaHangerLen - 0.02 * s, 0);
 
   const towerBases = [];
+  const gondolaTowerBases = [];
   const cablePolylines = [];
   const chairLines = [];
+  const gondolaLines = [];
   const surfaceRibbons = [];
   let aerialCount = 0;
-  const MAX_CHAIRS = 72;
+  const MAX_AERIAL = 36;
+  const MAX_CHAIRS = 96;
   const chairSpeed = 4.4 * Math.max(1, Math.sqrt(Math.max(1, s)));
+  const gondolaSpeed = 3.2 * Math.max(1, Math.sqrt(Math.max(1, s)));
 
   for (const feature of features) {
-    const surface = isSurfaceLift(featureAerialway(feature));
-    if (!surface && aerialCount >= 10) continue;
+    const aw = featureAerialway(feature);
+    const surface = isSurfaceLift(aw);
+    const gondola = isGondolaLift(aw);
+    if (!surface && aerialCount >= MAX_AERIAL) continue;
 
     for (const coords of lineParts(feature.geometry)) {
       if (surface) {
@@ -1721,33 +2021,50 @@ function addLifts(parent, featureCollection, center, sample, unitScale = 1, clip
       aerialCount += 1;
 
       const liftLen = polylineLen(ground);
-      const cable = buildAerialCable(ground, cableH, stationH, Math.max(18, liftLen / 28));
+      const useCableH = gondola ? gondolaCableH : cableH;
+      const cable = buildAerialCable(ground, useCableH, stationH, Math.max(18, liftLen / 28));
       if (cable.length >= 2) {
         cablePolylines.push(cable);
         const cableLen = polylineLen(cable);
-        if (cableLen > chairStep * 0.5) {
-          /* Travel uphill so boarding → summit reads correctly. */
-          const a = cable[0];
-          const b = cable[cable.length - 1];
-          const pts = a.y <= b.y ? cable : cable.slice().reverse();
+        const a = cable[0];
+        const b = cable[cable.length - 1];
+        const pts = a.y <= b.y ? cable : cable.slice().reverse();
+        if (gondola) {
+          if (cableLen > 20) gondolaLines.push({ pts, len: cableLen });
+        } else if (cableLen > chairStep * 0.5) {
           chairLines.push({ pts, len: cableLen });
         }
       }
 
-      const towers = sampleAlongPolyline(ground, towerStep);
-      for (let i = 0; i < towers.length; i++) {
-        const p = towers[i];
-        /* No mid-line towers at the terminals — cable drops to boarding height there. */
-        const tApprox = towers.length <= 1 ? 0.5 : i / (towers.length - 1);
-        if (tApprox < 0.1 || tApprox > 0.9) continue;
-        if (cableHeightProfile(tApprox, cableH, stationH) < cableH * 0.72) continue;
-        const next = towers[Math.min(towers.length - 1, i + 1)];
-        const prev = towers[Math.max(0, i - 1)];
-        const tan = new THREE.Vector3().subVectors(next, prev);
-        tan.y = 0;
-        if (tan.lengthSq() < 1e-6) tan.set(1, 0, 0);
-        else tan.normalize();
-        towerBases.push({ p, tan });
+      if (gondola) {
+        /* Terminal pylons only — no mid-span towers. */
+        for (const end of [ground[0], ground[ground.length - 1]]) {
+          const neighbor =
+            end === ground[0]
+              ? ground[Math.min(1, ground.length - 1)]
+              : ground[Math.max(0, ground.length - 2)];
+          const along = new THREE.Vector3().subVectors(neighbor, end);
+          along.y = 0;
+          if (along.lengthSq() < 1e-6) along.set(1, 0, 0);
+          else along.normalize();
+          gondolaTowerBases.push({ p: end, tan: along });
+        }
+      } else {
+        const towers = sampleAlongPolyline(ground, towerStep);
+        for (let i = 0; i < towers.length; i++) {
+          const p = towers[i];
+          /* No mid-line towers at the terminals — cable drops to boarding height there. */
+          const tApprox = towers.length <= 1 ? 0.5 : i / (towers.length - 1);
+          if (tApprox < 0.1 || tApprox > 0.9) continue;
+          if (cableHeightProfile(tApprox, cableH, stationH) < cableH * 0.72) continue;
+          const next = towers[Math.min(towers.length - 1, i + 1)];
+          const prev = towers[Math.max(0, i - 1)];
+          const tan = new THREE.Vector3().subVectors(next, prev);
+          tan.y = 0;
+          if (tan.lengthSq() < 1e-6) tan.set(1, 0, 0);
+          else tan.normalize();
+          towerBases.push({ p, tan });
+        }
       }
     }
   }
@@ -1768,9 +2085,10 @@ function addLifts(parent, featureCollection, center, sample, unitScale = 1, clip
     group.add(mesh);
   }
 
-  if (towerBases.length) {
-    const poles = new THREE.InstancedMesh(poleGeo, poleMat, towerBases.length);
-    const arms = new THREE.InstancedMesh(armGeo, armMat, towerBases.length);
+  function placeTowerInstances(bases, pGeo, aGeo) {
+    if (!bases.length) return;
+    const poles = new THREE.InstancedMesh(pGeo, poleMat, bases.length);
+    const arms = new THREE.InstancedMesh(aGeo, armMat, bases.length);
     poles.frustumCulled = false;
     arms.frustumCulled = false;
     const m = new THREE.Matrix4();
@@ -1778,8 +2096,8 @@ function addLifts(parent, featureCollection, center, sample, unitScale = 1, clip
     const sc = new THREE.Vector3(1, 1, 1);
     const up = new THREE.Vector3(0, 1, 0);
     const side = new THREE.Vector3();
-    for (let i = 0; i < towerBases.length; i++) {
-      const { p, tan } = towerBases[i];
+    for (let i = 0; i < bases.length; i++) {
+      const { p, tan } = bases[i];
       side.crossVectors(up, tan).normalize();
       if (side.lengthSq() < 1e-6) side.set(1, 0, 0);
       q.setFromUnitVectors(new THREE.Vector3(1, 0, 0), side);
@@ -1791,6 +2109,9 @@ function addLifts(parent, featureCollection, center, sample, unitScale = 1, clip
     arms.instanceMatrix.needsUpdate = true;
     group.add(poles, arms);
   }
+
+  placeTowerInstances(towerBases, poleGeo, armGeo);
+  placeTowerInstances(gondolaTowerBases, gondolaPoleGeo, gondolaArmGeo);
 
   const chairList = [];
   for (const line of chairLines) {
@@ -1805,6 +2126,19 @@ function addLifts(parent, featureCollection, center, sample, unitScale = 1, clip
       });
     }
     if (chairList.length >= MAX_CHAIRS) break;
+  }
+
+  const gondolaList = [];
+  for (const line of gondolaLines) {
+    const n = Math.max(2, Math.min(3, Math.round(line.len / Math.max(280, line.len / 2.5))));
+    for (let k = 0; k < n; k++) {
+      gondolaList.push({
+        pts: line.pts,
+        len: line.len,
+        along: (line.len * (k + 0.2)) / Math.max(1, n),
+        speed: gondolaSpeed,
+      });
+    }
   }
 
   let chairAnim = null;
@@ -1836,8 +2170,37 @@ function addLifts(parent, featureCollection, center, sample, unitScale = 1, clip
     updateLiftChairs(chairAnim, 0);
   }
 
+  let gondolaAnim = null;
+  if (gondolaList.length) {
+    const hangers = new THREE.InstancedMesh(gondolaHangerGeo, barMat, gondolaList.length);
+    const cabins = new THREE.InstancedMesh(cabinGeo, cabinMat, gondolaList.length);
+    const roofs = new THREE.InstancedMesh(cabinRoofGeo, cabinAccent, gondolaList.length);
+    hangers.frustumCulled = false;
+    cabins.frustumCulled = false;
+    roofs.frustumCulled = false;
+    hangers.count = gondolaList.length;
+    cabins.count = gondolaList.length;
+    roofs.count = gondolaList.length;
+    group.add(hangers, cabins, roofs);
+    gondolaAnim = {
+      hangers,
+      seats: cabins,
+      backs: roofs,
+      list: gondolaList,
+      hangerLen: 0,
+      m: new THREE.Matrix4(),
+      q: new THREE.Quaternion(),
+      sc: new THREE.Vector3(1, 1, 1),
+      forward: new THREE.Vector3(),
+      seatPos: new THREE.Vector3(),
+      cablePos: new THREE.Vector3(),
+      zAxis: new THREE.Vector3(0, 0, 1),
+    };
+    updateLiftChairs(gondolaAnim, 0);
+  }
+
   parent.add(group);
-  return { group, chairAnim };
+  return { group, chairAnim, gondolaAnim };
 }
 
 function updateLiftChairs(pack, dt) {
@@ -2051,6 +2414,120 @@ function addWaterDisc(parent, x, z, y, radius) {
   return disc;
 }
 
+function waterFeatureCount(fc) {
+  return fc?.features?.length || 0;
+}
+
+/** Drape OSM water polygons + stream ribbons onto the clay terrain. */
+function addOsmWater(parent, featureCollection, center, sample, unitScale = 1, clipRing = null) {
+  const features = featureCollection?.features || [];
+  if (!features.length) return null;
+
+  const group = new THREE.Group();
+  group.name = "montage-water-osm";
+  const fillLift = Math.max(0.25, 0.06 * unitScale);
+  const lineLift = Math.max(0.35, 0.08 * unitScale);
+  const lineWidth = Math.max(0.35, TRAIL_WIDTH * 0.85 * Math.min(2.2, unitScale * 0.12));
+
+  const fillMat = new THREE.MeshLambertMaterial({
+    color: PALETTE.water,
+    emissive: PALETTE.waterEm,
+    emissiveIntensity: 0.22,
+    transparent: true,
+    opacity: 0.92,
+    side: THREE.DoubleSide,
+    depthWrite: false,
+    polygonOffset: true,
+    polygonOffsetFactor: -3,
+    polygonOffsetUnits: -3,
+  });
+  const lineMat = new THREE.MeshLambertMaterial({
+    color: PALETTE.water,
+    emissive: PALETTE.waterEm,
+    emissiveIntensity: 0.28,
+    side: THREE.DoubleSide,
+    polygonOffset: true,
+    polygonOffsetFactor: -4,
+    polygonOffsetUnits: -4,
+  });
+
+  const lineRibbons = [];
+  let added = 0;
+
+  for (const feature of features) {
+    for (const poly of polygonParts(feature.geometry)) {
+      const outer = poly?.[0];
+      if (!outer || outer.length < 3) continue;
+      const dens = downsampleLine(outer, 48);
+      const shapePts = [];
+      for (const coord of dens) {
+        const { x, z } = localXZ(coord[0], coord[1], center);
+        if (clipRing?.length && !insideIslandRing(x, z, clipRing)) continue;
+        shapePts.push(new THREE.Vector2(x, z));
+      }
+      if (shapePts.length < 3) continue;
+      const shape = new THREE.Shape(shapePts);
+      for (const hole of poly.slice(1) || []) {
+        if (!hole || hole.length < 3) continue;
+        const holePts = [];
+        for (const coord of downsampleLine(hole, 24)) {
+          const { x, z } = localXZ(coord[0], coord[1], center);
+          holePts.push(new THREE.Vector2(x, z));
+        }
+        if (holePts.length >= 3) shape.holes.push(new THREE.Path(holePts));
+      }
+      let geo;
+      try {
+        geo = new THREE.ShapeGeometry(shape);
+      } catch {
+        continue;
+      }
+      const pos = geo.attributes.position;
+      if (!pos || pos.count < 3) {
+        geo.dispose();
+        continue;
+      }
+      for (let i = 0; i < pos.count; i++) {
+        const x = pos.getX(i);
+        const z = pos.getY(i);
+        const y = sample(x, z);
+        pos.setXYZ(i, x, (y == null ? 0 : y) + fillLift, z);
+      }
+      pos.needsUpdate = true;
+      geo.computeVertexNormals();
+      const mesh = new THREE.Mesh(geo, fillMat);
+      mesh.renderOrder = 1;
+      mesh.frustumCulled = false;
+      group.add(mesh);
+      added += 1;
+    }
+
+    for (const coords of lineParts(feature.geometry)) {
+      const pts = [];
+      for (const coord of downsampleLine(coords, 64)) {
+        const p = gamePoint(coord[0], coord[1], center, sample, lineLift);
+        if (p) pts.push(p);
+      }
+      for (const run of clipPointRuns(pts, clipRing)) {
+        appendRibbon(lineRibbons, run, lineWidth);
+      }
+    }
+  }
+
+  if (lineRibbons.length) {
+    const mesh = meshFromPositions(lineRibbons, lineMat);
+    if (mesh) {
+      mesh.renderOrder = 2;
+      group.add(mesh);
+      added += 1;
+    }
+  }
+
+  if (!added) return null;
+  parent.add(group);
+  return group;
+}
+
 function prepareWaterFeature(mesh, sample, span, clipRing = null) {
   const site = findWaterSite(sample, span, clipRing);
   if (!site) return null;
@@ -2221,12 +2698,14 @@ function addProceduralTrails(parent, sample) {
   const ridePaths = [];
   for (const path of paths) {
     const pts = [];
+    const ridePts = [];
     for (const [x, z] of path.pts) {
       const y = sample(x, z);
       if (y == null) continue;
-      pts.push(new THREE.Vector3(x, y + 0.9, z));
+      pts.push(new THREE.Vector3(x, y + 0.55, z));
+      ridePts.push(new THREE.Vector3(x, y + 0.95, z));
     }
-    if (pts.length >= 2) ridePaths.push(ensureDownhillPath(pts));
+    if (ridePts.length >= 2) ridePaths.push(ensureDownhillPath(ridePts));
     appendRibbon(buckets[path.key], pts, TRAIL_WIDTH * 1.05);
   }
   for (const [key, positions] of Object.entries(buckets)) {
@@ -2236,9 +2715,15 @@ function addProceduralTrails(parent, sample) {
       emissive: style.emissive,
       emissiveIntensity: style.intensity,
       side: THREE.DoubleSide,
+      polygonOffset: true,
+      polygonOffsetFactor: -6,
+      polygonOffsetUnits: -6,
     });
     const mesh = meshFromPositions(positions, mat);
-    if (mesh) group.add(mesh);
+    if (mesh) {
+      mesh.renderOrder = 2;
+      group.add(mesh);
+    }
   }
   group.userData.paths = ridePaths;
   parent.add(group);
@@ -2343,17 +2828,29 @@ async function loadVectors(base, vectors, resort = null) {
     vectors.tree_points || vectors.forest || "vectors/tree-points.geojson",
     base,
   );
-  const bufferUrl = new URL(
-    vectors.ski_area_buffer || "vectors/ski-area-buffer.geojson",
-    base,
-  );
+  // Only fetch when advertised — missing S3 keys under clay_scenes return 403, not 404.
+  const bufferPath = vectors.ski_area_buffer || null;
+  const clayWaterPath = vectors.water || null;
+  const clayBuildingsPath = vectors.buildings || null;
+  const clayRoadsPath = vectors.roads || null;
   const gameBase = gameSceneBase(resort);
 
   const fetches = [
     fetchJson(routesUrl).catch(() => null),
     fetchJson(liftsUrl).catch(() => null),
     fetchJson(forestUrl).catch(() => null),
-    fetchJson(bufferUrl).catch(() => null),
+    bufferPath
+      ? fetchJson(new URL(bufferPath, base)).catch(() => null)
+      : Promise.resolve(null),
+    clayWaterPath
+      ? fetchJson(new URL(clayWaterPath, base)).catch(() => null)
+      : Promise.resolve(null),
+    clayBuildingsPath
+      ? fetchJson(new URL(clayBuildingsPath, base)).catch(() => null)
+      : Promise.resolve(null),
+    clayRoadsPath
+      ? fetchJson(new URL(clayRoadsPath, base)).catch(() => null)
+      : Promise.resolve(null),
   ];
   if (gameBase) {
     fetches.push(
@@ -2370,13 +2867,20 @@ async function loadVectors(base, vectors, resort = null) {
   const lifts = results[1];
   const forestHome = results[2];
   const skiAreaBuffer = results[3];
-  const buildings = gameBase ? results[4] : null;
-  const roads = gameBase ? results[5] : null;
-  const water = gameBase ? results[6] : null;
-  const skiArea = gameBase ? results[7] : null;
-  const forestGame = gameBase ? results[8] : null;
+  const clayWater = results[4];
+  const clayBuildings = results[5];
+  const clayRoads = results[6];
+  const buildingsGame = gameBase ? results[7] : null;
+  const roadsGame = gameBase ? results[8] : null;
+  const waterGame = gameBase ? results[9] : null;
+  const skiArea = gameBase ? results[10] : null;
+  const forestGame = gameBase ? results[11] : null;
 
   const forest = mergeFeatureCollections(forestGame, forestHome);
+  const buildings = mergeFeatureCollections(buildingsGame, clayBuildings);
+  const roads = mergeFeatureCollections(roadsGame, clayRoads);
+  /* Prefer game water when present; clay_scenes water covers resorts without playable_ver. */
+  const water = waterFeatureCount(waterGame) ? waterGame : clayWater;
   return { routes, lifts, forest, buildings, roads, water, skiArea, skiAreaBuffer };
 }
 
@@ -2440,6 +2944,7 @@ export async function initHeroMontageMap(container, options = {}) {
 
   let trailRiders = null;
   let liftChairs = null;
+  let liftGondolas = null;
   const procedural = buildProceduralIsland(world);
   let bounds = procedural.bounds;
   const procTrails = procedural.decor?.getObjectByName("montage-trails-proc");
@@ -2595,6 +3100,7 @@ export async function initHeroMontageMap(container, options = {}) {
 
       trailRiders = null;
       liftChairs = null;
+      liftGondolas = null;
       clearGroup(world);
       world.add(root);
 
@@ -2632,7 +3138,8 @@ export async function initHeroMontageMap(container, options = {}) {
         addSoftShadow(root, HERO_SPAN * 0.48);
       }
 
-      const water = prepareWaterFeature(mesh, sample, span, clipRing);
+      const hasOsmWater = waterFeatureCount(osm.water) > 0;
+      const water = hasOsmWater ? null : prepareWaterFeature(mesh, sample, span, clipRing);
       if (water) sample = makeHeightGrid(mesh);
       if (woodRim?.length >= 3) {
         const pos = mesh.geometry.attributes.position;
@@ -2649,6 +3156,7 @@ export async function initHeroMontageMap(container, options = {}) {
       syncOrbitFromBounds();
 
       liftChairs = null;
+      liftGondolas = null;
       trailRiders = null;
       clearGroup(decor);
       const trails = osm.routes
@@ -2657,12 +3165,17 @@ export async function initHeroMontageMap(container, options = {}) {
       if (osm.lifts) {
         const liftPack = addLifts(decor, osm.lifts, center, sample, unitScale, clipRing);
         liftChairs = liftPack?.chairAnim || null;
+        liftGondolas = liftPack?.gondolaAnim || null;
       }
       if (osm.forest) addTrees(decor, osm.forest, center, sample, unitScale, clipRing);
       else addProceduralTrees(decor, sample, unitScale);
       if (osm.buildings) addBuildings(decor, osm.buildings, center, sample, unitScale, clipRing);
       else addProceduralBuildings(decor, sample, unitScale);
-      if (water) addWaterDisc(decor, water.x, water.z, water.y, water.radius);
+      if (hasOsmWater) {
+        addOsmWater(decor, osm.water, center, sample, unitScale, clipRing);
+      } else if (water) {
+        addWaterDisc(decor, water.x, water.z, water.y, water.radius);
+      }
       trailRiders = addTrailRiders(decor, trails?.userData?.paths || [], sample, unitScale);
     } catch (err) {
       if (token === loadToken) {
@@ -2728,6 +3241,7 @@ export async function initHeroMontageMap(container, options = {}) {
     const motionDt = reduceMotion ? 0 : dt;
     if (trailRiders) updateTrailRiders(trailRiders, motionDt);
     if (liftChairs) updateLiftChairs(liftChairs, motionDt);
+    if (liftGondolas) updateLiftChairs(liftGondolas, motionDt);
     frameCamera(now * 0.001);
     renderer.render(scene, camera);
   }

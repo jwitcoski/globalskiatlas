@@ -604,6 +604,10 @@ app.head(/^\/game_scenes\/.*/, (req, res) => {
 });
 
 app.get(/^\/clay_scenes\/.*/, (req, res) => {
+  /* Always use remote catalog so a tiny local stub cannot hide S3 resorts (e.g. Killington). */
+  if (req.path === '/clay_scenes/catalog.json') {
+    return proxyS3Prefix('clay_scenes', req, res);
+  }
   const localPath = path.join(__dirname, req.path.replace(/^\//, ''));
   if (fs.existsSync(localPath) && fs.statSync(localPath).isFile()) {
     return res.sendFile(localPath);
@@ -612,6 +616,9 @@ app.get(/^\/clay_scenes\/.*/, (req, res) => {
 });
 
 app.head(/^\/clay_scenes\/.*/, (req, res) => {
+  if (req.path === '/clay_scenes/catalog.json') {
+    return proxyS3Prefix('clay_scenes', req, res);
+  }
   const localPath = path.join(__dirname, req.path.replace(/^\//, ''));
   if (fs.existsSync(localPath) && fs.statSync(localPath).isFile()) {
     return res.sendFile(localPath);
