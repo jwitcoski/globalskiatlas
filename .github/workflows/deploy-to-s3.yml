@@ -64,7 +64,7 @@ jobs:
       - name: Verify wiki assets on S3
         run: |
           aws s3api head-object --bucket globalskiatlas.com --key wiki/resort.html
-          aws s3 cp s3://globalskiatlas.com/wiki/resort.html - | grep -q 'script.js?v=4' || (echo "S3 wiki/resort.html missing expected script version" && exit 1)
+          aws s3 cp s3://globalskiatlas.com/wiki/resort.html - | grep -q 'script.js?v=17' || (echo "S3 wiki/resort.html missing expected script version" && exit 1)
 
       - name: Refresh wiki cache headers on S3
         run: |
