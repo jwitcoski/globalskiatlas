@@ -3,17 +3,17 @@
   "scene_kind": "homepage_hero",
   "scene_id": "killington_resort_united_states_of_america",
   "winter_sports_id": "1228774360",
-  "build_timestamp_utc": "2026-09-04T03:31:25Z",
+  "build_timestamp_utc": "2026-09-04T13:01:10Z",
   "display_name": "Killington Resort",
   "country": "United States of America",
   "location": "Vermont",
   "coordinate_system": {
     "source_crs": "EPSG:4326",
     "projected_crs": "EPSG:32618",
-    "origin_easting_m": 675422.0349412871,
-    "origin_northing_m": 4828388.647462899,
-    "origin_longitude": -72.8270000418769,
-    "origin_latitude": 43.58781981904106,
+    "origin_easting_m": 675122.746698341,
+    "origin_northing_m": 4828077.073251363,
+    "origin_longitude": -72.83080550732299,
+    "origin_latitude": 43.58508675768892,
     "units": "meters",
     "game_axes": {
       "x": "east_m",
@@ -21,24 +21,25 @@
       "z": "negative_north_m"
     },
     "local_origin": {
-      "easting_m": 675422.0349412871,
-      "northing_m": 4828388.647462899,
-      "longitude": -72.8270000418769,
-      "latitude": 43.58781981904106
+      "easting_m": 675122.746698341,
+      "northing_m": 4828077.073251363,
+      "longitude": -72.83080550732299,
+      "latitude": 43.58508675768892
     }
   },
   "terrain": {
     "mesh": "terrain/terrain-mesh.glb",
     "mesh_metadata": "terrain/terrain-metadata.json",
-    "elevation_min_m": 321.64508056640625,
-    "elevation_max_m": 1287.45654296875,
-    "vertex_spacing_m": 21.9
+    "elevation_min_m": 319.0,
+    "elevation_max_m": 1287.4544677734375,
+    "vertex_spacing_m": 29.6
   },
   "vectors": {
     "piste_trails": "vectors/piste-trails.geojson",
     "lifts": "vectors/lifts.geojson",
-    "forest": "vectors/forest.geojson",
+    "tree_points": "vectors/tree-points.geojson",
     "ski_area_buffer": "vectors/ski-area-buffer.geojson",
+    "buildings": "vectors/buildings.geojson",
     "water": "vectors/water.geojson"
   },
   "attribution": {

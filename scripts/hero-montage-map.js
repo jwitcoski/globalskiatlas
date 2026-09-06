@@ -14,7 +14,7 @@ const MAX_TRAILS = 220;
 /** Desired trail width in hero/display units (after mesh fit). Keep very thin. */
 const TRAIL_WIDTH = 0.42;
 const TREE_SCALE = 1.16;
-const MAX_BUILDINGS = 28;
+const MAX_BUILDINGS = 48;
 /** Buildings are authored in mesh meters; keep them tiny in the hero (~1/8 prior size). */
 const BUILDING_SHRINK = 0.12;
 const GRID_RES = 72;
@@ -930,18 +930,8 @@ function chaikinRing(ring, iterations = 2) {
 
 function prepareIslandRim(hull) {
   if (!hull?.length) return [];
-  return chaikinRing(resampleRingArc(hull, 72), 2);
-}
-
-/**
- * Convex shaping rim — projecting DEM verts onto a concave buffer causes
- * knife-edge spikes (Hakuba). Convex keeps topology sane; wood uses the detailed rim.
- */
-function prepareShapeRim(hull) {
-  if (!hull?.length) return [];
-  const convex = convexHullXZ(hull);
-  if (convex.length >= 3) return ensureCcwXZ(resampleRingArc(convex, 48));
-  return prepareIslandRim(hull);
+  /* One light Chaikin pass — two passes rounded away major ski-area bays. */
+  return chaikinRing(resampleRingArc(decimateRing(hull, 160), 96), 1);
 }
 
 function clipPointRuns(pts, ring) {
@@ -973,9 +963,9 @@ function ensureCcw(poly) {
 }
 
 /**
- * Clip DEM to the AOI with only a short lip past the wood rim.
- * Far outside verts snap onto the rim; a few meters of overhang is left.
- * Uses the (smoothed) buffer rim so Europe can't keep a half-mile shelf.
+ * Clip DEM to the (possibly concave) ski-area buffer rim.
+ * Outside / bay verts snap onto the rim at rim height — do not reshape the
+ * wood rim to a convex hull around leftover snow.
  */
 function softShapeTerrainToHull(mesh, edgeRim, sample, lipAllowM = 4) {
   if (!mesh?.geometry?.attributes?.position || !edgeRim?.length) return;
@@ -983,9 +973,8 @@ function softShapeTerrainToHull(mesh, edgeRim, sample, lipAllowM = 4) {
   const ox = mesh.position.x;
   const oy = mesh.position.y;
   const oz = mesh.position.z;
-  const tuck = 18;
-  const fade = 24;
   const lip = Math.max(2, lipAllowM);
+  const convex = ensureCcw(convexHullXZ(edgeRim));
 
   for (let i = 0; i < pos.count; i++) {
     const x = pos.getX(i) + ox;
@@ -995,14 +984,19 @@ function softShapeTerrainToHull(mesh, edgeRim, sample, lipAllowM = 4) {
     const hit = projectToHull(x, z, edgeRim);
     const rimY = sample?.(hit.x, hit.z);
     const base = rimY != null ? rimY - oy : pos.getY(i);
-    const sink = tuck + Math.min(160, outside) * 0.35 + Math.min(1, outside / fade) * 8;
-    pos.setY(i, base - sink);
-    if (outside > lip) {
+    /* Inside the convex shell but outside the buffer = concave bay / indent. */
+    const inBay = convex.length >= 3 && insideConvex(x, z, convex);
+    if (outside > lip || inBay) {
       pos.setX(i, hit.x - ox);
       pos.setZ(i, hit.z - oz);
+      /* Keep snapped rim verts at snow height — a deep tuck made vertical curtains. */
+      pos.setY(i, base);
+    } else {
+      pos.setY(i, base - Math.min(3, outside * 0.5));
     }
   }
   pos.needsUpdate = true;
+  pruneTerrainFacesOutsideRim(mesh, edgeRim);
   mesh.geometry.computeVertexNormals();
   shadeSnowGeometry(mesh.geometry);
   if (mesh.material && !Array.isArray(mesh.material)) {
@@ -1012,6 +1006,78 @@ function softShapeTerrainToHull(mesh, edgeRim, sample, lipAllowM = 4) {
     mesh.material.emissiveIntensity = 0.08;
     mesh.material.needsUpdate = true;
   }
+}
+
+/**
+ * Drop snow faces that bridge concave bays (white curtains over empty wood).
+ * Only removes faces whose XZ centroid sits outside the buffer rim — no inset,
+ * so the interior snow sheet stays closed.
+ */
+function pruneTerrainFacesOutsideRim(mesh, edgeRim) {
+  if (!mesh?.geometry?.attributes?.position || !edgeRim?.length) return;
+  const geo = mesh.geometry;
+  const pos = geo.attributes.position;
+  const ox = mesh.position.x;
+  const oz = mesh.position.z;
+  const convex = ensureCcw(convexHullXZ(edgeRim));
+
+  const centroidOutside = (i0, i1, i2) => {
+    const mx = (pos.getX(i0) + pos.getX(i1) + pos.getX(i2)) / 3 + ox;
+    const mz = (pos.getZ(i0) + pos.getZ(i1) + pos.getZ(i2)) / 3 + oz;
+    if (!insideIslandRing(mx, mz, edgeRim)) return true;
+    /* Extra: bay mouths where centroid still clips the ring but midpoints sit out. */
+    if (convex.length >= 3 && insideConvex(mx, mz, convex)) {
+      const mids = [
+        [(pos.getX(i0) + pos.getX(i1)) * 0.5 + ox, (pos.getZ(i0) + pos.getZ(i1)) * 0.5 + oz],
+        [(pos.getX(i1) + pos.getX(i2)) * 0.5 + ox, (pos.getZ(i1) + pos.getZ(i2)) * 0.5 + oz],
+        [(pos.getX(i2) + pos.getX(i0)) * 0.5 + ox, (pos.getZ(i2) + pos.getZ(i0)) * 0.5 + oz],
+      ];
+      let out = 0;
+      for (const [x, z] of mids) {
+        if (!insideIslandRing(x, z, edgeRim)) out += 1;
+      }
+      if (out >= 2) return true;
+    }
+    return false;
+  };
+
+  const index = geo.getIndex();
+  if (index) {
+    const src = index.array;
+    const next = [];
+    for (let i = 0; i < src.length; i += 3) {
+      const i0 = src[i];
+      const i1 = src[i + 1];
+      const i2 = src[i + 2];
+      if (!centroidOutside(i0, i1, i2)) next.push(i0, i1, i2);
+    }
+    if (next.length === src.length) return;
+    geo.setIndex(next);
+  } else {
+    const triCount = Math.floor(pos.count / 3);
+    const keepPos = [];
+    const color = geo.attributes.color;
+    const keepCol = color ? [] : null;
+    const uv = geo.attributes.uv;
+    const keepUv = uv ? [] : null;
+    for (let t = 0; t < triCount; t++) {
+      const i0 = t * 3;
+      const i1 = i0 + 1;
+      const i2 = i0 + 2;
+      if (centroidOutside(i0, i1, i2)) continue;
+      for (const i of [i0, i1, i2]) {
+        keepPos.push(pos.getX(i), pos.getY(i), pos.getZ(i));
+        if (keepCol) keepCol.push(color.getX(i), color.getY(i), color.getZ(i));
+        if (keepUv) keepUv.push(uv.getX(i), uv.getY(i));
+      }
+    }
+    if (keepPos.length === pos.count * 3) return;
+    geo.setAttribute("position", new THREE.Float32BufferAttribute(keepPos, 3));
+    if (keepCol) geo.setAttribute("color", new THREE.Float32BufferAttribute(keepCol, 3));
+    if (keepUv) geo.setAttribute("uv", new THREE.Float32BufferAttribute(keepUv, 2));
+  }
+  geo.computeBoundingSphere();
+  geo.computeBoundingBox();
 }
 
 function hash2(ix, iz) {
@@ -1124,14 +1190,16 @@ function addGameIslandRock(parent, hull, sample, span, snowMinY) {
     for (let i = 0; i < rim.length; i++) smoothY[i] = next[i];
   }
 
-  const lip = Math.max(8, span * 0.004) + 5;
+  const lip = Math.max(2, span * 0.0015) + 1.5;
   const floor = Math.min(
     Number.isFinite(snowMinY) ? snowMinY : minRim,
     minRim,
   ) - Math.max(24, span * 0.035);
 
   const layersN = 10;
-  const cliffFrac = 0.62;
+  /* Tall vertical cliff under the snow rim — aggressive lower taper was
+   * carving caves so snow looked like a floating shelf over empty wood. */
+  const cliffFrac = 0.78;
   const depth = Math.max(28, span * 0.08);
   const feature = Math.max(70, span * 0.1);
   const layers = [];
@@ -1150,7 +1218,7 @@ function addGameIslandRock(parent, hull, sample, span, snowMinY) {
       if (t <= cliffFrac) {
         const kT = t / cliffFrac;
         /* Keep the upper cliff nearly vertical — tiny noise only. */
-        const s = 1.0 + kT * ((n - 0.5) * 0.004);
+        const s = 1.0 + kT * ((n - 0.5) * 0.003);
         pts.push({
           x: cx + dx * s,
           y: yTop + (floor - yTop) * kT,
@@ -1160,10 +1228,10 @@ function addGameIslandRock(parent, hull, sample, span, snowMinY) {
       }
       const u = (t - cliffFrac) / (1 - cliffFrac);
       const terrace = Math.floor(u * 7) / 7;
-      const taper = 1 - Math.pow(terrace, 0.55) * 0.88;
-      const gully = (n - 0.5) * 0.12 * (1 - u * 0.35);
-      const ridge = (nv - 0.5) * 0.06;
-      const s = Math.max(0.08, taper + gully + ridge);
+      const taper = 1 - Math.pow(terrace, 0.65) * 0.32;
+      const gully = (n - 0.5) * 0.03 * (1 - u * 0.35);
+      const ridge = (nv - 0.5) * 0.025;
+      const s = Math.max(0.55, taper + gully + ridge);
       pts.push({
         x: cx + dx * s,
         y: floor - Math.pow(u, 0.88) * depth + (nv - 0.5) * depth * 0.02 * (1 - u),
@@ -2557,6 +2625,7 @@ function addClayBuilding(group, cx, cz, y0, w, d, h, yaw, wallMat, roofMat) {
   const box = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), wallMat);
   box.position.set(cx, y0 + h * 0.5, cz);
   box.rotation.y = yaw;
+  box.renderOrder = 5;
   box.frustumCulled = false;
   group.add(box);
 
@@ -2566,6 +2635,7 @@ function addClayBuilding(group, cx, cz, y0, w, d, h, yaw, wallMat, roofMat) {
   );
   roof.position.set(cx, y0 + h + Math.max(0.2, h * 0.08), cz);
   roof.rotation.y = yaw;
+  roof.renderOrder = 5;
   roof.frustumCulled = false;
   group.add(roof);
 }
@@ -2579,36 +2649,36 @@ function addBuildings(parent, featureCollection, center, sample, unitScale = 1, 
   const wallMat = new THREE.MeshLambertMaterial({
     color: PALETTE.building,
     flatShading: true,
+    polygonOffset: true,
+    polygonOffsetFactor: -4,
+    polygonOffsetUnits: -4,
   });
   const roofMat = new THREE.MeshLambertMaterial({
     color: PALETTE.buildingRoof,
     flatShading: true,
+    polygonOffset: true,
+    polygonOffsetFactor: -5,
+    polygonOffsetUnits: -5,
   });
   const s = unitScale * BUILDING_SHRINK;
+  /* Keep base-village footprints near the buffer edge; hard clip hid them under snow. */
+  const edgeSlackM = Math.max(35, 12 * unitScale);
+  const snowLift = Math.max(0.55, 0.18 * unitScale);
 
-  let count = 0;
+  const candidates = [];
   for (const feature of features) {
-    if (count >= MAX_BUILDINGS) break;
     for (const ring of ringParts(feature.geometry)) {
       if (!ring || ring.length < 3) continue;
       const xs = [];
       const zs = [];
-      let ySum = 0;
-      let yN = 0;
       for (const coord of ring) {
         const { x, z } = localXZ(coord[0], coord[1], center);
         xs.push(x);
         zs.push(z);
-        const y = sample(x, z);
-        if (y != null) {
-          ySum += y;
-          yN += 1;
-        }
       }
-      if (yN < 1) continue;
       const cx = (Math.min(...xs) + Math.max(...xs)) * 0.5;
       const cz = (Math.min(...zs) + Math.max(...zs)) * 0.5;
-      if (clipRing?.length && !insideIslandRing(cx, cz, clipRing)) continue;
+      if (clipRing?.length && distOutsideIsland(cx, cz, clipRing) > edgeSlackM) continue;
       const minX = Math.min(...xs);
       const maxX = Math.max(...xs);
       const minZ = Math.min(...zs);
@@ -2616,25 +2686,42 @@ function addBuildings(parent, featureCollection, center, sample, unitScale = 1, 
       const footW = Math.max(4, maxX - minX);
       const footD = Math.max(4, maxZ - minZ);
       if (footW > 80 || footD > 80) continue;
-      const w = Math.min(footW, 24) * s;
-      const d = Math.min(footD, 24) * s;
-      const h = Math.max(3.5, Math.min(11, Math.sqrt(footW * footD) * 0.32)) * s;
-      const yaw = rng(count * 7.1) * 0.15;
-      addClayBuilding(
-        group,
+      let y = sample(cx, cz);
+      if (y == null) {
+        let ySum = 0;
+        let yN = 0;
+        for (let i = 0; i < xs.length; i++) {
+          const sy = sample(xs[i], zs[i]);
+          if (sy == null) continue;
+          ySum += sy;
+          yN += 1;
+        }
+        if (yN < 1) continue;
+        y = ySum / yN;
+      }
+      candidates.push({
         cx,
         cz,
-        ySum / yN,
-        w,
-        d,
-        h,
-        yaw,
-        wallMat,
-        roofMat,
-      );
-      count += 1;
-      if (count >= MAX_BUILDINGS) break;
+        y: y + snowLift,
+        footW,
+        footD,
+        area: footW * footD,
+      });
     }
+  }
+
+  /* Prefer larger footprints (lodges / base villages often sit near the rim). */
+  candidates.sort((a, b) => b.area - a.area);
+
+  let count = 0;
+  for (const c of candidates) {
+    if (count >= MAX_BUILDINGS) break;
+    const w = Math.min(c.footW, 24) * s;
+    const d = Math.min(c.footD, 24) * s;
+    const h = Math.max(3.5, Math.min(11, Math.sqrt(c.area) * 0.32)) * s;
+    const yaw = rng(count * 7.1) * 0.15;
+    addClayBuilding(group, c.cx, c.cz, c.y, w, d, h, yaw, wallMat, roofMat);
+    count += 1;
   }
 
   if (!group.children.length) return addProceduralBuildings(parent, sample, unitScale);
@@ -2648,12 +2735,19 @@ function addProceduralBuildings(parent, sample, unitScale = 1) {
   const wallMat = new THREE.MeshLambertMaterial({
     color: PALETTE.building,
     flatShading: true,
+    polygonOffset: true,
+    polygonOffsetFactor: -4,
+    polygonOffsetUnits: -4,
   });
   const roofMat = new THREE.MeshLambertMaterial({
     color: PALETTE.buildingRoof,
     flatShading: true,
+    polygonOffset: true,
+    polygonOffsetFactor: -5,
+    polygonOffsetUnits: -5,
   });
   const s = unitScale * BUILDING_SHRINK;
+  const snowLift = Math.max(0.55, 0.18 * unitScale);
 
   const clusters = [
     { x: 10, z: 18, n: 5 },
@@ -2674,7 +2768,7 @@ function addProceduralBuildings(parent, sample, unitScale = 1) {
       const w = (3.5 + rng(seed * 1.4) * 4.5) * s;
       const d = (3 + rng(seed * 2.2) * 3.5) * s;
       const h = (4.5 + rng(seed * 1.8) * 5) * s;
-      addClayBuilding(group, x, z, y, w, d, h, rng(seed) * Math.PI * 0.25, wallMat, roofMat);
+      addClayBuilding(group, x, z, y + snowLift, w, d, h, rng(seed) * Math.PI * 0.25, wallMat, roofMat);
       seed += 1;
     }
   }
@@ -3119,7 +3213,7 @@ export async function initHeroMontageMap(container, options = {}) {
         if (!osm.skiAreaBuffer) {
           woodRim = ensureCcw(expandHull(woodRim, Math.max(40, span * 0.03)));
         }
-        /* ~4 m lip is fine; anything farther snaps to the buffer rim. */
+        /* Snap snow onto the concave buffer rim; wood keeps the same outline. */
         softShapeTerrainToHull(mesh, woodRim, snowHeights, 4);
         sample = makeHeightGrid(mesh);
         let hx = 0;
