@@ -2999,11 +2999,47 @@ function boundsFromObject(object, fallback) {
   const box = new THREE.Box3().setFromObject(object);
   const center = box.getCenter(new THREE.Vector3());
   const size = box.getSize(new THREE.Vector3());
-  const radius = Math.max(size.x, size.z) * 0.5;
+  /* Include height so tall peaks aren't clipped; XZ alone under-framed steep resorts. */
+  const radius = Math.max(size.x, size.y, size.z) * 0.5;
   if (!Number.isFinite(radius) || radius < 1) {
     return { center: fallback.clone(), radius: 48 };
   }
-  return { center, radius };
+  return { center, radius, size };
+}
+
+/**
+ * Frame the snow + decor, not the deep wood skirt (which pulls the AABB
+ * center down and makes sea-level vs alpine cameras look randomly zoomed).
+ */
+function framingBoundsFromRoot(root, fallback) {
+  const skipNames = new Set(["montage-island-wood", "montage-shadow", "montage-underside"]);
+  const box = new THREE.Box3();
+  let found = false;
+  root.updateMatrixWorld(true);
+  root.traverse((obj) => {
+    if (!obj.isMesh) return;
+    let p = obj;
+    while (p) {
+      if (skipNames.has(p.name)) return;
+      p = p.parent;
+    }
+    const b = new THREE.Box3().setFromObject(obj);
+    if (b.isEmpty()) return;
+    if (!found) {
+      box.copy(b);
+      found = true;
+    } else {
+      box.union(b);
+    }
+  });
+  if (!found || box.isEmpty()) return boundsFromObject(root, fallback);
+  const center = box.getCenter(new THREE.Vector3());
+  const size = box.getSize(new THREE.Vector3());
+  const radius = Math.max(size.x, size.y, size.z) * 0.5;
+  if (!Number.isFinite(radius) || radius < 1) {
+    return { center: fallback.clone(), radius: 48 };
+  }
+  return { center, radius, size };
 }
 
 export async function initHeroMontageMap(container, options = {}) {
@@ -3018,7 +3054,7 @@ export async function initHeroMontageMap(container, options = {}) {
   scene.background = new THREE.Color(PALETTE.bg);
   scene.fog = null;
 
-  const camera = new THREE.PerspectiveCamera(36, 1, 0.5, 600);
+  const camera = new THREE.PerspectiveCamera(36, 1, 0.5, 1200);
   const renderer = new THREE.WebGLRenderer({
     antialias: true,
     alpha: false,
@@ -3075,13 +3111,19 @@ export async function initHeroMontageMap(container, options = {}) {
   }
 
   function syncOrbitFromBounds() {
-    const { center, radius } = bounds;
-    const targetY = center.y * 0.35;
-    const dist = Math.max(1, radius * 1.72);
-    const elev = center.y + radius * 0.95;
-    polar = THREE.MathUtils.clamp(Math.atan2(elev - targetY, dist), POLAR_MIN, POLAR_MAX);
+    const { radius } = bounds;
+    /* Stable elevated overview — don't derive polar from AABB Y (varies with
+     * absolute elevation / wood depth / vertical relief). */
     az = 0.55;
-    zoom = 1;
+    polar = 0.78;
+    const aspect = Math.max(0.5, camera.aspect || 1);
+    const vFov = THREE.MathUtils.degToRad(camera.fov);
+    const hFov = 2 * Math.atan(Math.tan(vFov * 0.5) * aspect);
+    const fitFov = Math.min(vFov, hFov);
+    const pad = 1.18;
+    const needDist = (Math.max(1, radius) * pad) / Math.sin(fitFov * 0.5);
+    const baseDist = Math.max(1, radius * 1.72);
+    zoom = THREE.MathUtils.clamp(needDist / baseDist, ZOOM_MIN, ZOOM_MAX);
   }
 
   function onPointerDown(e) {
@@ -3246,7 +3288,8 @@ export async function initHeroMontageMap(container, options = {}) {
       await yieldFrame();
       if (token !== loadToken) return;
 
-      bounds = boundsFromObject(root, new THREE.Vector3(0, 14, 0));
+      /* Rough frame while decor loads — refined after trails/trees/buildings. */
+      bounds = framingBoundsFromRoot(root, new THREE.Vector3(0, 0, 0));
       syncOrbitFromBounds();
 
       liftChairs = null;
@@ -3271,6 +3314,8 @@ export async function initHeroMontageMap(container, options = {}) {
         addWaterDisc(decor, water.x, water.z, water.y, water.radius);
       }
       trailRiders = addTrailRiders(decor, trails?.userData?.paths || [], sample, unitScale);
+      bounds = framingBoundsFromRoot(root, new THREE.Vector3(0, 0, 0));
+      syncOrbitFromBounds();
     } catch (err) {
       if (token === loadToken) {
         console.warn("[hero-montage-map] resort load failed", resort.id, err);
@@ -3310,7 +3355,7 @@ export async function initHeroMontageMap(container, options = {}) {
 
   function frameCamera(t = 0) {
     const { center, radius } = bounds;
-    const targetY = center.y * 0.35;
+    const targetY = center.y;
     const dist = Math.max(1, radius * 1.72 * zoom);
     const autoSpin =
       !reduceMotion && !dragging && performance.now() >= resumeSpinAt;
