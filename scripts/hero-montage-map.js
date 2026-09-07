@@ -515,8 +515,24 @@ const SURFACE_LIFT_TYPES = new Set([
   "carpet",
 ]);
 
+/** Classic drag lifts rendered as overhead T-bar systems (not carpet ribbons). */
+const TBAR_LIFT_TYPES = new Set([
+  "t_bar",
+  "j_bar",
+  "platter",
+  "drag_lift",
+  "draglift",
+  "button_lift",
+  "poma",
+  "surface_lift",
+]);
+
 function isSurfaceLift(type) {
   return SURFACE_LIFT_TYPES.has(type);
+}
+
+function isTBarLift(type) {
+  return TBAR_LIFT_TYPES.has(type);
 }
 
 const GONDOLA_LIFT_TYPES = new Set([
@@ -2785,6 +2801,852 @@ function buildAerialCable(ground, cableH, stationH, step) {
   return cable;
 }
 
+/* ─── T-bar / drag-lift system ─────────────────────────────────────────── */
+
+const MAX_TBAR_LIFTS = 10;
+const MAX_TBAR_CARRIERS = 160;
+
+function createTBarAssets(unitScale = 1) {
+  const s = Math.max(1, unitScale);
+  const towerH = 2.45 * s;
+  const terminalH = 3.2 * s;
+  const laneHalf = 0.55 * s;
+  const hangerLen = 1.25 * s;
+  const cableR = Math.max(0.028 * s, 0.035);
+  const hipY = 0.52 * Math.min(11, Math.max(1.35, 0.4 * s));
+
+  const steelMat = new THREE.MeshLambertMaterial({ color: 0x2a3038, flatShading: true });
+  const steelDark = new THREE.MeshLambertMaterial({ color: 0x15191f, flatShading: true });
+  const housingMat = new THREE.MeshLambertMaterial({ color: 0x4b5563, flatShading: true });
+  const pulleyMat = new THREE.MeshLambertMaterial({ color: 0x1f2937, flatShading: true });
+  const cableMat = new THREE.MeshBasicMaterial({ color: 0x1c1917 });
+  const barMat = new THREE.MeshLambertMaterial({ color: 0x374151, flatShading: true });
+
+  const towerColGeo = new THREE.CylinderGeometry(0.09 * s, 0.13 * s, towerH, 6);
+  towerColGeo.translate(0, towerH / 2, 0);
+  const towerArmGeo = new THREE.BoxGeometry(laneHalf * 2.35, 0.1 * s, 0.1 * s);
+  towerArmGeo.translate(0, towerH * 0.92, 0);
+  const sheaveGeo = new THREE.CylinderGeometry(0.11 * s, 0.11 * s, 0.08 * s, 8);
+  sheaveGeo.rotateZ(Math.PI / 2);
+
+  const termColGeo = new THREE.CylinderGeometry(0.14 * s, 0.2 * s, terminalH, 6);
+  termColGeo.translate(0, terminalH / 2, 0);
+  const termArmGeo = new THREE.BoxGeometry(laneHalf * 2.8, 0.14 * s, 0.14 * s);
+  termArmGeo.translate(0, terminalH * 0.88, 0);
+  const housingGeo = new THREE.BoxGeometry(1.1 * s, 0.85 * s, 1.35 * s);
+  housingGeo.translate(0, 0.55 * s, -0.55 * s);
+  const pulleyGeo = new THREE.CylinderGeometry(0.42 * s, 0.42 * s, 0.18 * s, 12);
+  pulleyGeo.rotateZ(Math.PI / 2);
+  pulleyGeo.translate(0, terminalH * 0.78, 0.15 * s);
+
+  const hangerGeo = new THREE.CylinderGeometry(0.022 * s, 0.022 * s, hangerLen, 4);
+  hangerGeo.translate(0, -hangerLen / 2, 0);
+  const tStemGeo = new THREE.CylinderGeometry(0.02 * s, 0.02 * s, 0.28 * s, 4);
+  tStemGeo.translate(0, -hangerLen - 0.08 * s, 0);
+  const tBarGeo = new THREE.BoxGeometry(0.55 * s, 0.045 * s, 0.045 * s);
+  tBarGeo.translate(0, -hangerLen - 0.22 * s, 0);
+
+  return {
+    s,
+    towerH,
+    terminalH,
+    laneHalf,
+    hangerLen,
+    cableR,
+    hipY,
+    midClearance: towerH * 0.9,
+    stationClearance: Math.max(0.85 * s, hipY + 0.35 * s),
+    steelMat,
+    steelDark,
+    housingMat,
+    pulleyMat,
+    cableMat,
+    barMat,
+    towerColGeo,
+    towerArmGeo,
+    sheaveGeo,
+    termColGeo,
+    termArmGeo,
+    housingGeo,
+    pulleyGeo,
+    hangerGeo,
+    tStemGeo,
+    tBarGeo,
+  };
+}
+
+function createTBarTower(position, yaw, assets) {
+  const g = new THREE.Group();
+  g.name = "tbar-tower";
+  g.position.copy(position);
+  g.rotation.y = yaw;
+  const col = new THREE.Mesh(assets.towerColGeo, assets.steelMat);
+  const arm = new THREE.Mesh(assets.towerArmGeo, assets.steelDark);
+  const sheaveL = new THREE.Mesh(assets.sheaveGeo, assets.steelDark);
+  const sheaveR = new THREE.Mesh(assets.sheaveGeo, assets.steelDark);
+  sheaveL.position.set(-assets.laneHalf, assets.towerH * 0.92, 0);
+  sheaveR.position.set(assets.laneHalf, assets.towerH * 0.92, 0);
+  col.frustumCulled = false;
+  arm.frustumCulled = false;
+  sheaveL.frustumCulled = false;
+  sheaveR.frustumCulled = false;
+  g.add(col, arm, sheaveL, sheaveR);
+  return g;
+}
+
+function createTBarTerminal(position, yaw, type, assets) {
+  const g = new THREE.Group();
+  g.name = type === "top" ? "tbar-terminal-top" : "tbar-terminal-bottom";
+  g.position.copy(position);
+  g.rotation.y = yaw;
+  const col = new THREE.Mesh(assets.termColGeo, assets.steelMat);
+  const arm = new THREE.Mesh(assets.termArmGeo, assets.steelDark);
+  const housing = new THREE.Mesh(assets.housingGeo, assets.housingMat);
+  const pulley = new THREE.Mesh(assets.pulleyGeo, assets.pulleyMat);
+  if (type === "top") housing.position.z *= -1;
+  col.frustumCulled = false;
+  arm.frustumCulled = false;
+  housing.frustumCulled = false;
+  pulley.frustumCulled = false;
+  g.add(col, arm, housing, pulley);
+  return g;
+}
+
+function createTBarCable(points, assets) {
+  if (!points || points.length < 2) return null;
+  const curve = new THREE.CatmullRomCurve3(points, false, "catmullrom", 0.35);
+  const segs = Math.min(96, Math.max(16, points.length * 3));
+  const tube = new THREE.TubeGeometry(curve, segs, assets.cableR, 4, false);
+  const mesh = new THREE.Mesh(tube, assets.cableMat);
+  mesh.name = "tbar-cable";
+  mesh.frustumCulled = false;
+  return mesh;
+}
+
+function createTBarCarrier(assets) {
+  const g = new THREE.Group();
+  g.name = "tbar-carrier";
+  const hanger = new THREE.Mesh(assets.hangerGeo, assets.barMat);
+  const stem = new THREE.Mesh(assets.tStemGeo, assets.barMat);
+  const bar = new THREE.Mesh(assets.tBarGeo, assets.barMat);
+  hanger.frustumCulled = false;
+  stem.frustumCulled = false;
+  bar.frustumCulled = false;
+  g.add(hanger, stem, bar);
+  return g;
+}
+
+function createTBarRider(unitScale, board, suit, ski) {
+  return makeClayRider(unitScale, board, suit, ski);
+}
+
+function orientLiftGround(ground) {
+  if (!ground?.length) return ground || [];
+  if (ground[0].y <= ground[ground.length - 1].y) return ground;
+  return ground.slice().reverse();
+}
+
+function horizTangentAt(pts, i) {
+  const a = pts[Math.max(0, i - 1)];
+  const b = pts[Math.min(pts.length - 1, i + 1)];
+  const t = new THREE.Vector3(b.x - a.x, 0, b.z - a.z);
+  if (t.lengthSq() < 1e-8) t.set(1, 0, 0);
+  else t.normalize();
+  return t;
+}
+
+function sideVector(tan) {
+  const side = new THREE.Vector3().crossVectors(new THREE.Vector3(0, 1, 0), tan);
+  if (side.lengthSq() < 1e-8) side.set(1, 0, 0);
+  else side.normalize();
+  return side;
+}
+
+/** Adaptive tower spacing in mesh meters (~40–70m), tighter on steep ground. */
+function tbarTowerStep(ground, totalLen) {
+  if (!(totalLen > 1) || ground.length < 2) return 55;
+  let rise = 0;
+  let horiz = 0;
+  for (let i = 1; i < ground.length; i++) {
+    const a = ground[i - 1];
+    const b = ground[i];
+    rise += Math.abs(b.y - a.y);
+    horiz += Math.hypot(b.x - a.x, b.z - a.z);
+  }
+  const slope = horiz > 1 ? rise / horiz : 0;
+  let step = 62 - slope * 55;
+  if (totalLen < 180) step = Math.min(step, 48);
+  if (totalLen > 900) step = Math.max(step, 58);
+  return Math.max(40, Math.min(70, step));
+}
+
+function sampleTowerStations(ground, step) {
+  const total = polylineLen(ground);
+  if (!(total > step * 1.4)) return [];
+  const out = [];
+  const margin = Math.max(step * 0.55, 28);
+  let next = margin;
+  while (next < total - margin) {
+    const p = alongPolyline(ground, next);
+    if (p) out.push({ dist: next, p: new THREE.Vector3(p.x, p.y, p.z) });
+    next += step;
+  }
+  return out;
+}
+
+function buildSaggedSpan(a, b, samples, sag) {
+  const pts = [];
+  for (let k = 1; k < samples; k++) {
+    const t = k / samples;
+    const p = new THREE.Vector3().lerpVectors(a, b, t);
+    p.y -= sag * 4 * t * (1 - t);
+    pts.push(p);
+  }
+  return pts;
+}
+
+/**
+ * Closed T-bar cable loop: uphill lane → top turnaround → downhill lane → bottom turnaround.
+ * Control points include tower supports with catenary-like sag between them.
+ */
+function buildTBarCableLoop(ground, assets, towerDists) {
+  const total = polylineLen(ground);
+  if (!(total > 8) || ground.length < 2) return null;
+  const lane = assets.laneHalf;
+  const supports = [0, ...(towerDists || []), total];
+  const unique = [];
+  for (const d of supports) {
+    if (!unique.length || Math.abs(d - unique[unique.length - 1]) > 4) unique.push(d);
+  }
+  if (unique[unique.length - 1] < total - 1) unique.push(total);
+
+  function cableAt(dist, sideSign) {
+    const p = alongPolyline(ground, dist);
+    if (!p) return null;
+    const tNorm = dist / total;
+    const clear = cableHeightProfile(tNorm, assets.midClearance, assets.stationClearance);
+    const tan = new THREE.Vector3(p.tx, 0, p.tz);
+    if (tan.lengthSq() < 1e-8) tan.set(1, 0, 0);
+    else tan.normalize();
+    const side = sideVector(tan);
+    return new THREE.Vector3(p.x + side.x * lane * sideSign, p.y + clear, p.z + side.z * lane * sideSign);
+  }
+
+  function lanePoints(sideSign) {
+    const pts = [];
+    for (let i = 0; i < unique.length; i++) {
+      const a = cableAt(unique[i], sideSign);
+      if (!a) continue;
+      if (pts.length) {
+        const prev = pts[pts.length - 1];
+        const span = prev.distanceTo(a);
+        const sag = Math.min(span * 0.042, assets.s * 0.32);
+        pts.push(...buildSaggedSpan(prev, a, Math.max(3, Math.round(span / 14)), sag));
+      }
+      pts.push(a);
+    }
+    return pts;
+  }
+
+  const up = lanePoints(-1);
+  const down = lanePoints(1).reverse();
+  if (up.length < 2 || down.length < 2) return null;
+
+  function turnaround(endDist, fromSide, toSide) {
+    const p = alongPolyline(ground, endDist);
+    if (!p) return [];
+    const tan = new THREE.Vector3(p.tx, 0, p.tz);
+    if (tan.lengthSq() < 1e-8) tan.set(1, 0, 0);
+    else tan.normalize();
+    const side = sideVector(tan);
+    const clear = cableHeightProfile(endDist / total, assets.midClearance, assets.stationClearance);
+    const center = new THREE.Vector3(p.x, p.y + clear, p.z);
+    const outward = endDist > total * 0.5 ? tan.clone() : tan.clone().negate();
+    const arc = [];
+    const n = 7;
+    for (let i = 1; i < n; i++) {
+      const ang = (Math.PI * i) / n;
+      const c = Math.cos(ang);
+      const sn = Math.sin(ang);
+      const start = side.clone().multiplyScalar(fromSide * lane);
+      const out = outward.clone().multiplyScalar(lane);
+      if (fromSide === -toSide) {
+        const q = start.clone().multiplyScalar(c).addScaledVector(out, sn);
+        arc.push(new THREE.Vector3(center.x + q.x, center.y, center.z + q.z));
+      } else {
+        const end = side.clone().multiplyScalar(toSide * lane);
+        const q = start
+          .clone()
+          .multiplyScalar(1 - ang / Math.PI)
+          .addScaledVector(end, ang / Math.PI)
+          .addScaledVector(out, sn);
+        arc.push(new THREE.Vector3(center.x + q.x, center.y, center.z + q.z));
+      }
+    }
+    return arc;
+  }
+
+  const topArc = turnaround(total, -1, 1);
+  const botArc = turnaround(0, 1, -1);
+  const loop = [...up, ...topArc, ...down, ...botArc];
+  return loop.length >= 8 ? loop : null;
+}
+
+/**
+ * Build one OSM T-bar / drag lift: terminals, towers, sagged cable loop, animated carriers + riders.
+ * @param {object} liftFeature GeoJSON feature with aerialway drag_lift / t_bar / etc.
+ * @param {{center, sample, unitScale, clipRing, assets}} ctx
+ * @returns {{ group: THREE.Group, anim: object|null }|null}
+ */
+function createTBarLift(liftFeature, ctx) {
+  const { center, sample, unitScale, clipRing, assets } = ctx;
+  if (!assets) return null;
+
+  const group = new THREE.Group();
+  group.name = "tbar-lift";
+
+  let best = null;
+  for (const coords of lineParts(liftFeature.geometry)) {
+    const groundRaw = [];
+    for (const coord of downsampleLine(coords, 28)) {
+      const p = gamePoint(coord[0], coord[1], center, sample, 0);
+      if (p) groundRaw.push(p);
+    }
+    const runs = clipPointRuns(groundRaw, clipRing);
+    let ground = groundRaw;
+    if (clipRing?.length) {
+      if (!runs.length) continue;
+      ground = runs.reduce((a, b) => (b.length > a.length ? b : a));
+    }
+    ground = orientLiftGround(ground);
+    if (ground.length < 2) continue;
+    const len = polylineLen(ground);
+    if (!best || len > best.len) best = { ground, len };
+  }
+  if (!best || best.len < 35) return null;
+
+  const ground = best.ground;
+  const total = best.len;
+  const step = tbarTowerStep(ground, total);
+  const stations = sampleTowerStations(ground, step);
+  const towerDists = stations.map((s) => s.dist);
+  const loopPts = buildTBarCableLoop(ground, assets, towerDists);
+  if (!loopPts) return null;
+
+  const curve = new THREE.CatmullRomCurve3(loopPts, true, "catmullrom", 0.4);
+  const segs = Math.min(96, Math.max(24, loopPts.length * 2));
+  const tube = new THREE.TubeGeometry(curve, segs, assets.cableR, 4, true);
+  const cableMesh = new THREE.Mesh(tube, assets.cableMat);
+  cableMesh.name = "tbar-cable";
+  cableMesh.frustumCulled = false;
+  group.add(cableMesh);
+
+  const bottom = ground[0];
+  const top = ground[ground.length - 1];
+  const bottomTan = horizTangentAt(ground, 0);
+  const topTan = horizTangentAt(ground, ground.length - 1);
+  group.add(createTBarTerminal(bottom, Math.atan2(bottomTan.x, bottomTan.z), "bottom", assets));
+  group.add(createTBarTerminal(top, Math.atan2(topTan.x, topTan.z), "top", assets));
+
+  for (const st of stations) {
+    const p = alongPolyline(ground, st.dist);
+    if (!p) continue;
+    const tan = new THREE.Vector3(p.tx, 0, p.tz);
+    if (tan.lengthSq() < 1e-8) tan.set(1, 0, 0);
+    else tan.normalize();
+    group.add(createTBarTower(new THREE.Vector3(p.x, p.y, p.z), Math.atan2(tan.x, tan.z), assets));
+  }
+
+  const loopLen = curve.getLength();
+  const carrierStep = Math.max(8, Math.min(15, 11 + (total > 600 ? 2 : 0)));
+  let nCarriers = Math.max(6, Math.round(loopLen / carrierStep));
+  nCarriers = Math.min(nCarriers, 28);
+  const speed = 3.6 * Math.max(1, Math.sqrt(Math.max(1, assets.s * 0.35)));
+
+  const hangers = new THREE.InstancedMesh(assets.hangerGeo, assets.barMat, nCarriers);
+  const stems = new THREE.InstancedMesh(assets.tStemGeo, assets.barMat, nCarriers);
+  const bars = new THREE.InstancedMesh(assets.tBarGeo, assets.barMat, nCarriers);
+  hangers.frustumCulled = false;
+  stems.frustumCulled = false;
+  bars.frustumCulled = false;
+  hangers.count = nCarriers;
+  stems.count = nCarriers;
+  bars.count = nCarriers;
+  group.add(hangers, stems, bars);
+
+  const seed = snowParkFeatureSeed(liftFeature);
+  const list = [];
+  const tmp = new THREE.Vector3();
+  const tan = new THREE.Vector3();
+  for (let k = 0; k < nCarriers; k++) {
+    const u = k / nCarriers;
+    curve.getPointAt(u, tmp);
+    curve.getTangentAt(u, tan);
+    /* Uphill strand: traveling with positive elevation change along the loop. */
+    const climbing = tan.y > 0.02 || (Math.abs(tan.y) <= 0.02 && u < 0.45);
+    let rider = null;
+    if (climbing && rng(seed * 0.017 + k * 1.91) < 0.4) {
+      const board = rng(seed * 0.031 + k * 2.7) > 0.62;
+      rider = createTBarRider(
+        unitScale,
+        board,
+        RIDER_SUITS[k % RIDER_SUITS.length],
+        RIDER_SKIS[k % RIDER_SKIS.length],
+      );
+      group.add(rider);
+    }
+    list.push({
+      u,
+      climbing,
+      rider,
+      board: !!rider?.userData && rider.name?.includes("boarder"),
+    });
+  }
+
+  const anim = {
+    curve,
+    loopLen,
+    list,
+    hangers,
+    stems,
+    bars,
+    sample,
+    hangerLen: assets.hangerLen,
+    hipY: assets.hipY,
+    speed,
+    m: new THREE.Matrix4(),
+    q: new THREE.Quaternion(),
+    sc: new THREE.Vector3(1, 1, 1),
+    cablePos: new THREE.Vector3(),
+    tan: new THREE.Vector3(),
+    forward: new THREE.Vector3(),
+    zAxis: new THREE.Vector3(0, 0, 1),
+    up: new THREE.Vector3(0, 1, 0),
+  };
+  updateTBarLift(anim, 0);
+  return { group, anim };
+}
+
+function updateTBarLift(pack, dt) {
+  if (!pack?.list?.length || !pack.curve) return;
+  const {
+    curve,
+    list,
+    hangers,
+    stems,
+    bars,
+    sample,
+    hangerLen,
+    hipY,
+    speed,
+    loopLen,
+    m,
+    q,
+    sc,
+    cablePos,
+    tan,
+    forward,
+    zAxis,
+    up,
+  } = pack;
+  const du = loopLen > 1 ? (speed * dt) / loopLen : 0;
+
+  for (let i = 0; i < list.length; i++) {
+    const c = list[i];
+    if (dt > 0) {
+      c.u += du;
+      if (c.u >= 1) c.u -= 1;
+      if (c.u < 0) c.u += 1;
+    }
+    curve.getPointAt(c.u, cablePos);
+    curve.getTangentAt(c.u, tan);
+    forward.set(tan.x, 0, tan.z);
+    if (forward.lengthSq() < 1e-8) forward.set(1, 0, 0);
+    else forward.normalize();
+    /* Hang vertically — yaw only to face travel; no pitch with the slope. */
+    q.setFromUnitVectors(zAxis, forward);
+    m.compose(cablePos, q, sc);
+    hangers.setMatrixAt(i, m);
+    stems.setMatrixAt(i, m);
+    bars.setMatrixAt(i, m);
+
+    const rider = c.rider;
+    if (!rider) continue;
+    const climbing = tan.y > 0.015;
+    rider.visible = climbing;
+    if (!climbing) continue;
+    const snow = sample ? sample(cablePos.x, cablePos.z) : null;
+    const y =
+      snow != null ? snow + (rider.userData.ride || 0.4) : cablePos.y - hangerLen - hipY * 0.15;
+    /* Slightly behind the T so the bar reads at hip/back. */
+    rider.position.set(
+      cablePos.x - forward.x * hipY * 0.15,
+      y,
+      cablePos.z - forward.z * hipY * 0.15,
+    );
+    rider.rotation.order = "YXZ";
+    rider.rotation.y = Math.atan2(forward.x, forward.z);
+    rider.rotation.x = 0.08;
+    rider.rotation.z = 0;
+  }
+  hangers.instanceMatrix.needsUpdate = true;
+  stems.instanceMatrix.needsUpdate = true;
+  bars.instanceMatrix.needsUpdate = true;
+  void up;
+}
+
+function updateTBarLifts(packs, dt) {
+  if (!packs?.length) return;
+  for (const pack of packs) updateTBarLift(pack, dt);
+}
+
+/* ─── Aerial chairlift / gondola terminals + continuous cable loops ───── */
+
+function createAerialLiftAssets(unitScale = 1) {
+  const s = Math.max(1, unitScale);
+  const chairTowerH = 3.4 * s;
+  const gondolaTowerH = 4.2 * s;
+  return {
+    s,
+    chairTowerH,
+    gondolaTowerH,
+    chairCableH: chairTowerH * 0.92,
+    gondolaCableH: gondolaTowerH * 0.92,
+    stationH: Math.max(0.55 * s, 1.15),
+    chairLane: 0.72 * s,
+    gondolaLane: 1.05 * s,
+    cableR: Math.max(0.03 * s, 0.04),
+    towerMargin: Math.max(55, 9.5 * s),
+    steelMat: new THREE.MeshLambertMaterial({ color: PALETTE.lift, flatShading: true }),
+    steelDark: new THREE.MeshLambertMaterial({ color: 0x374151, flatShading: true }),
+    housingMat: new THREE.MeshLambertMaterial({ color: 0x5b6b7a, flatShading: true }),
+    housingDeep: new THREE.MeshLambertMaterial({ color: 0x3f4d5a, flatShading: true }),
+    platformMat: new THREE.MeshLambertMaterial({ color: 0x94a3b8, flatShading: true }),
+    railMat: new THREE.MeshLambertMaterial({ color: 0x1f2937, flatShading: true }),
+    roofMat: new THREE.MeshLambertMaterial({ color: 0x0f766e, flatShading: true }),
+    wheelMat: new THREE.MeshLambertMaterial({ color: 0x111827, flatShading: true }),
+    cableMat: new THREE.MeshBasicMaterial({ color: PALETTE.cable }),
+    accentMat: new THREE.MeshLambertMaterial({ color: 0xd97706, flatShading: true }),
+  };
+}
+
+function createTurnaroundWheel(assets, radius, thick) {
+  const geo = new THREE.CylinderGeometry(radius, radius, thick, 14);
+  geo.rotateZ(Math.PI / 2);
+  const mesh = new THREE.Mesh(geo, assets.wheelMat);
+  mesh.name = "lift-turnaround-wheel";
+  mesh.frustumCulled = false;
+  const hub = new THREE.Mesh(
+    new THREE.CylinderGeometry(radius * 0.22, radius * 0.22, thick * 1.35, 8),
+    assets.steelDark,
+  );
+  hub.rotation.z = Math.PI / 2;
+  hub.frustumCulled = false;
+  const g = new THREE.Group();
+  g.add(mesh, hub);
+  return g;
+}
+
+function createLoadingPlatform(assets, width, depth, height) {
+  const g = new THREE.Group();
+  g.name = "lift-loading-platform";
+  const deck = new THREE.Mesh(new THREE.BoxGeometry(width, 0.12 * assets.s, depth), assets.platformMat);
+  deck.position.y = height;
+  deck.frustumCulled = false;
+  const postGeo = new THREE.CylinderGeometry(0.06 * assets.s, 0.08 * assets.s, height, 5);
+  for (const [x, z] of [
+    [-width * 0.38, -depth * 0.35],
+    [width * 0.38, -depth * 0.35],
+    [-width * 0.38, depth * 0.35],
+    [width * 0.38, depth * 0.35],
+  ]) {
+    const post = new THREE.Mesh(postGeo, assets.steelDark);
+    post.position.set(x, height / 2, z);
+    post.frustumCulled = false;
+    g.add(post);
+  }
+  const railL = new THREE.Mesh(new THREE.BoxGeometry(0.05 * assets.s, 0.18 * assets.s, depth * 0.92), assets.railMat);
+  const railR = railL.clone();
+  railL.position.set(-width * 0.45, height + 0.12 * assets.s, 0);
+  railR.position.set(width * 0.45, height + 0.12 * assets.s, 0);
+  railL.frustumCulled = false;
+  railR.frustumCulled = false;
+  g.add(deck, railL, railR);
+  return g;
+}
+
+function createTerminalBuilding(assets, w, h, d) {
+  const g = new THREE.Group();
+  g.name = "lift-terminal-building";
+  const body = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), assets.housingMat);
+  body.position.y = h * 0.5;
+  body.frustumCulled = false;
+  const roof = new THREE.Mesh(new THREE.BoxGeometry(w * 1.08, 0.16 * assets.s, d * 1.08), assets.roofMat);
+  roof.position.y = h + 0.06 * assets.s;
+  roof.frustumCulled = false;
+  /* Open bay cut suggestion: darker inset panels on the lift face. */
+  const bay = new THREE.Mesh(new THREE.BoxGeometry(w * 0.72, h * 0.55, 0.08 * assets.s), assets.housingDeep);
+  bay.position.set(0, h * 0.42, d * 0.5 + 0.02 * assets.s);
+  bay.frustumCulled = false;
+  g.add(body, roof, bay);
+  return g;
+}
+
+function createChairliftTerminal(endpoint, direction, endType, assets) {
+  const g = new THREE.Group();
+  g.name = endType === "top" ? "chair-terminal-top" : "chair-terminal-bottom";
+  g.position.copy(endpoint);
+  const yaw = Math.atan2(direction.x, direction.z);
+  g.rotation.y = yaw;
+
+  const s = assets.s;
+  const frameH = assets.chairTowerH * 1.15;
+  const lane = assets.chairLane;
+  const outward = endType === "top" ? 1 : -1;
+
+  const colGeo = new THREE.CylinderGeometry(0.16 * s, 0.22 * s, frameH, 6);
+  for (const x of [-lane * 1.15, lane * 1.15]) {
+    const col = new THREE.Mesh(colGeo, assets.steelMat);
+    col.position.set(x, frameH / 2, 0);
+    col.frustumCulled = false;
+    g.add(col);
+  }
+  const beam = new THREE.Mesh(new THREE.BoxGeometry(lane * 2.6, 0.18 * s, 0.18 * s), assets.steelDark);
+  beam.position.y = frameH * 0.88;
+  beam.frustumCulled = false;
+  g.add(beam);
+
+  const platformH = Math.max(0.7 * s, assets.stationH * 0.85);
+  const platform = createLoadingPlatform(assets, lane * 2.8, 2.2 * s, platformH);
+  platform.position.z = outward * -0.35 * s;
+  g.add(platform);
+
+  const canopy = new THREE.Mesh(new THREE.BoxGeometry(lane * 3.0, 0.12 * s, 2.4 * s), assets.housingMat);
+  canopy.position.set(0, platformH + 1.35 * s, outward * -0.2 * s);
+  canopy.frustumCulled = false;
+  g.add(canopy);
+
+  const housing = new THREE.Mesh(new THREE.BoxGeometry(1.4 * s, 1.1 * s, 1.6 * s), assets.housingDeep);
+  housing.position.set(lane * 1.55, 0.7 * s, outward * -0.9 * s);
+  housing.frustumCulled = false;
+  g.add(housing);
+
+  const wheel = createTurnaroundWheel(assets, 0.55 * s, 0.22 * s);
+  wheel.position.set(0, assets.stationH + 0.15 * s, outward * 0.55 * s);
+  g.add(wheel);
+
+  const ramp = new THREE.Mesh(new THREE.BoxGeometry(lane * 1.6, 0.08 * s, 1.4 * s), assets.platformMat);
+  ramp.position.set(0, platformH * 0.45, outward * -1.45 * s);
+  ramp.rotation.x = outward * -0.22;
+  ramp.frustumCulled = false;
+  g.add(ramp);
+
+  return g;
+}
+
+function createGondolaTerminal(endpoint, direction, endType, assets) {
+  const g = new THREE.Group();
+  g.name = endType === "top" ? "gondola-terminal-top" : "gondola-terminal-bottom";
+  g.position.copy(endpoint);
+  g.rotation.y = Math.atan2(direction.x, direction.z);
+
+  const s = assets.s;
+  const lane = assets.gondolaLane;
+  const outward = endType === "top" ? 1 : -1;
+  const building = createTerminalBuilding(assets, 3.6 * s, 2.4 * s, 4.2 * s);
+  building.position.z = outward * -0.6 * s;
+  g.add(building);
+
+  const frameH = assets.gondolaTowerH * 1.05;
+  const colGeo = new THREE.CylinderGeometry(0.2 * s, 0.28 * s, frameH, 6);
+  for (const x of [-lane * 1.35, lane * 1.35]) {
+    const col = new THREE.Mesh(colGeo, assets.steelMat);
+    col.position.set(x, frameH / 2, outward * 0.85 * s);
+    col.frustumCulled = false;
+    g.add(col);
+  }
+  const beam = new THREE.Mesh(new THREE.BoxGeometry(lane * 3.0, 0.22 * s, 0.22 * s), assets.steelDark);
+  beam.position.set(0, frameH * 0.9, outward * 0.85 * s);
+  beam.frustumCulled = false;
+  g.add(beam);
+
+  const platformH = Math.max(0.85 * s, assets.stationH);
+  const platform = createLoadingPlatform(assets, lane * 3.2, 3.0 * s, platformH);
+  platform.position.z = outward * 0.15 * s;
+  g.add(platform);
+
+  const wheel = createTurnaroundWheel(assets, 0.78 * s, 0.28 * s);
+  wheel.position.set(0, assets.stationH + 0.35 * s, outward * 1.35 * s);
+  g.add(wheel);
+
+  const drive = new THREE.Mesh(new THREE.BoxGeometry(1.8 * s, 1.35 * s, 2.0 * s), assets.housingDeep);
+  drive.position.set(lane * 1.9, 0.85 * s, outward * -1.4 * s);
+  drive.frustumCulled = false;
+  g.add(drive);
+
+  return g;
+}
+
+/**
+ * Shared aerial terminal factory.
+ * @param {"chairlift"|"gondola"} kind
+ * @param {THREE.Vector3} endpoint terrain-sampled OSM endpoint
+ * @param {THREE.Vector3} direction horizontal unit tangent into the lift line
+ * @param {"bottom"|"top"} endType
+ */
+function createLiftTerminal(kind, endpoint, direction, endType, assets) {
+  if (kind === "gondola") return createGondolaTerminal(endpoint, direction, endType, assets);
+  return createChairliftTerminal(endpoint, direction, endType, assets);
+}
+
+/**
+ * Continuous aerial cable loop with 180° terminal turnarounds.
+ * uphill → top arc → downhill → bottom arc
+ */
+function buildAerialCableLoop(ground, cableH, stationH, laneHalf, unitScale = 1) {
+  const total = polylineLen(ground);
+  if (!(total > 12) || ground.length < 2) return null;
+  const s = Math.max(1, unitScale);
+  const samples = Math.max(18, Math.ceil(total / Math.max(16, total / 36)));
+  const supportDists = [];
+  for (let i = 0; i <= samples; i++) supportDists.push((total * i) / samples);
+
+  function cableAt(dist, sideSign) {
+    const p = alongPolyline(ground, dist);
+    if (!p) return null;
+    const tNorm = dist / total;
+    const clear = cableHeightProfile(tNorm, cableH, stationH);
+    const tan = new THREE.Vector3(p.tx, 0, p.tz);
+    if (tan.lengthSq() < 1e-8) tan.set(1, 0, 0);
+    else tan.normalize();
+    const side = sideVector(tan);
+    return new THREE.Vector3(
+      p.x + side.x * laneHalf * sideSign,
+      p.y + clear,
+      p.z + side.z * laneHalf * sideSign,
+    );
+  }
+
+  function lanePoints(sideSign) {
+    const pts = [];
+    for (let i = 0; i < supportDists.length; i++) {
+      const a = cableAt(supportDists[i], sideSign);
+      if (!a) continue;
+      if (pts.length) {
+        const prev = pts[pts.length - 1];
+        const span = prev.distanceTo(a);
+        const sag = Math.min(span * 0.028, s * 0.28);
+        pts.push(...buildSaggedSpan(prev, a, Math.max(2, Math.round(span / 22)), sag));
+      }
+      pts.push(a);
+    }
+    return pts;
+  }
+
+  const up = lanePoints(-1);
+  const down = lanePoints(1).reverse();
+  if (up.length < 2 || down.length < 2) return null;
+
+  function turnaround(endDist, fromSide, toSide) {
+    const p = alongPolyline(ground, endDist);
+    if (!p) return [];
+    const tan = new THREE.Vector3(p.tx, 0, p.tz);
+    if (tan.lengthSq() < 1e-8) tan.set(1, 0, 0);
+    else tan.normalize();
+    const side = sideVector(tan);
+    const clear = cableHeightProfile(endDist / total, cableH, stationH);
+    const center = new THREE.Vector3(p.x, p.y + clear, p.z);
+    const outward = endDist > total * 0.5 ? tan.clone() : tan.clone().negate();
+    const arc = [];
+    const n = 9;
+    for (let i = 1; i < n; i++) {
+      const ang = (Math.PI * i) / n;
+      const c = Math.cos(ang);
+      const sn = Math.sin(ang);
+      const start = side.clone().multiplyScalar(fromSide * laneHalf);
+      const out = outward.clone().multiplyScalar(laneHalf * 1.15);
+      const q = start.clone().multiplyScalar(c).addScaledVector(out, sn);
+      if (fromSide === -toSide) {
+        arc.push(new THREE.Vector3(center.x + q.x, center.y, center.z + q.z));
+      } else {
+        const end = side.clone().multiplyScalar(toSide * laneHalf);
+        const r = start
+          .clone()
+          .multiplyScalar(1 - ang / Math.PI)
+          .addScaledVector(end, ang / Math.PI)
+          .addScaledVector(out, sn);
+        arc.push(new THREE.Vector3(center.x + r.x, center.y, center.z + r.z));
+      }
+    }
+    return arc;
+  }
+
+  const topArc = turnaround(total, -1, 1);
+  const botArc = turnaround(0, 1, -1);
+  const loop = [...up, ...topArc, ...down, ...botArc];
+  if (loop.length < 10) return null;
+
+  /* Fraction along closed loop where the top terminal arc begins (after uphill). */
+  let upLen = 0;
+  for (let i = 1; i < up.length; i++) upLen += up[i - 1].distanceTo(up[i]);
+  let topLen = 0;
+  for (let i = 1; i < topArc.length; i++) topLen += topArc[i - 1].distanceTo(topArc[i]);
+  let totalLoop = 0;
+  for (let i = 1; i < loop.length; i++) totalLoop += loop[i - 1].distanceTo(loop[i]);
+  totalLoop += loop[loop.length - 1].distanceTo(loop[0]);
+  const topU = totalLoop > 1 ? (upLen + topLen * 0.5) / totalLoop : 0.5;
+
+  return { loop, topU, totalLoop };
+}
+
+function densifyClosedLoop(loopPts, step) {
+  if (!loopPts?.length) return [];
+  const curve = new THREE.CatmullRomCurve3(loopPts, true, "catmullrom", 0.4);
+  const len = curve.getLength();
+  const n = Math.max(24, Math.ceil(len / Math.max(6, step)));
+  const pts = [];
+  const p = new THREE.Vector3();
+  for (let i = 0; i < n; i++) {
+    curve.getPointAt(i / n, p);
+    pts.push(p.clone());
+  }
+  /* Close so alongPolyline / polylineLen include the final terminal return span. */
+  if (pts.length) pts.push(pts[0].clone());
+  return pts;
+}
+
+/** Slow through terminal arcs so carriers visibly pass the station. */
+function aerialTerminalSpeedScale(u, topU) {
+  const wrap = (a) => {
+    let d = Math.abs(a);
+    if (d > 0.5) d = 1 - d;
+    return d;
+  };
+  const dBot = wrap(u);
+  const dTop = wrap(u - topU);
+  const zone = 0.07;
+  let scale = 1;
+  if (dBot < zone) scale = Math.min(scale, 0.32 + 0.68 * (dBot / zone));
+  if (dTop < zone) scale = Math.min(scale, 0.32 + 0.68 * (dTop / zone));
+  return scale;
+}
+
+function endpointDirection(ground, atStart) {
+  if (!ground?.length) return new THREE.Vector3(0, 0, 1);
+  if (atStart) {
+    const a = ground[0];
+    const b = ground[Math.min(1, ground.length - 1)];
+    const t = new THREE.Vector3(b.x - a.x, 0, b.z - a.z);
+    if (t.lengthSq() < 1e-8) return new THREE.Vector3(0, 0, 1);
+    return t.normalize();
+  }
+  const a = ground[ground.length - 2] || ground[0];
+  const b = ground[ground.length - 1];
+  const t = new THREE.Vector3(b.x - a.x, 0, b.z - a.z);
+  if (t.lengthSq() < 1e-8) return new THREE.Vector3(0, 0, 1);
+  return t.normalize();
+}
+
 function addLifts(parent, featureCollection, center, sample, unitScale = 1, clipRing = null) {
   const group = new THREE.Group();
   group.name = "montage-lifts";
@@ -2821,6 +3683,51 @@ function addLifts(parent, featureCollection, center, sample, unitScale = 1, clip
     color: 0x171717,
     side: THREE.DoubleSide,
   });
+  const tbarAssets = createTBarAssets(unitScale);
+  const tbarAnims = [];
+  let tbarCount = 0;
+  let tbarCarriers = 0;
+
+  /* Prefer longer drag lifts so caps still leave readable T-bars on the mountain. */
+  const tbarFeatures = features
+    .filter((f) => isTBarLift(featureAerialway(f)))
+    .map((f) => {
+      let len = 0;
+      for (const coords of lineParts(f.geometry)) {
+        const pts = [];
+        for (const coord of downsampleLine(coords, 12)) {
+          const p = gamePoint(coord[0], coord[1], center, sample, 0);
+          if (p) pts.push(p);
+        }
+        len = Math.max(len, polylineLen(pts));
+      }
+      return { feature: f, len };
+    })
+    .filter((x) => x.len >= 35)
+    .sort((a, b) => b.len - a.len);
+
+  for (const { feature } of tbarFeatures) {
+    if (tbarCount >= MAX_TBAR_LIFTS || tbarCarriers >= MAX_TBAR_CARRIERS) break;
+    try {
+      const built = createTBarLift(feature, {
+        center,
+        sample,
+        unitScale,
+        clipRing,
+        assets: tbarAssets,
+      });
+      if (built?.group) {
+        group.add(built.group);
+        tbarCount += 1;
+        if (built.anim) {
+          tbarAnims.push(built.anim);
+          tbarCarriers += built.anim.list?.length || 0;
+        }
+      }
+    } catch (err) {
+      console.warn("[hero-montage-map] t-bar lift failed", err);
+    }
+  }
 
   const poleGeo = new THREE.CylinderGeometry(0.07 * s, 0.1 * s, towerH, 5);
   poleGeo.translate(0, towerH / 2, 0);
@@ -2842,11 +3749,10 @@ function addLifts(parent, featureCollection, center, sample, unitScale = 1, clip
   const cabinRoofGeo = new THREE.BoxGeometry(1.28 * s, 0.14 * s, 1.68 * s);
   cabinRoofGeo.translate(0, -gondolaHangerLen - 0.02 * s, 0);
 
+  const aerialAssets = createAerialLiftAssets(unitScale);
   const towerBases = [];
   const gondolaTowerBases = [];
-  const cablePolylines = [];
-  const chairLines = [];
-  const gondolaLines = [];
+  const aerialLoops = [];
   const surfaceRibbons = [];
   let aerialCount = 0;
   const MAX_AERIAL = 36;
@@ -2856,8 +3762,11 @@ function addLifts(parent, featureCollection, center, sample, unitScale = 1, clip
 
   for (const feature of features) {
     const aw = featureAerialway(feature);
-    const surface = isSurfaceLift(aw);
+    const tbar = isTBarLift(aw);
+    const surface = isSurfaceLift(aw) && !tbar;
     const gondola = isGondolaLift(aw);
+    if (tbar) continue;
+
     if (!surface && aerialCount >= MAX_AERIAL) continue;
 
     for (const coords of lineParts(feature.geometry)) {
@@ -2874,7 +3783,7 @@ function addLifts(parent, featureCollection, center, sample, unitScale = 1, clip
       }
 
       const groundRaw = [];
-      for (const coord of downsampleLine(coords, 14)) {
+      for (const coord of downsampleLine(coords, 18)) {
         const p = gamePoint(coord[0], coord[1], center, sample, 0);
         if (p) groundRaw.push(p);
       }
@@ -2885,44 +3794,67 @@ function addLifts(parent, featureCollection, center, sample, unitScale = 1, clip
         ground = groundRuns.reduce((a, b) => (b.length > a.length ? b : a));
       }
       if (ground.length < 2) continue;
+      ground = orientLiftGround(ground);
       aerialCount += 1;
 
       const liftLen = polylineLen(ground);
       const useCableH = gondola ? gondolaCableH : cableH;
-      const cable = buildAerialCable(ground, useCableH, stationH, Math.max(18, liftLen / 28));
-      if (cable.length >= 2) {
-        cablePolylines.push(cable);
-        const cableLen = polylineLen(cable);
-        const a = cable[0];
-        const b = cable[cable.length - 1];
-        const pts = a.y <= b.y ? cable : cable.slice().reverse();
-        if (gondola) {
-          if (cableLen > 20) gondolaLines.push({ pts, len: cableLen });
-        } else if (cableLen > chairStep * 0.5) {
-          chairLines.push({ pts, len: cableLen });
-        }
+      const lane = gondola ? aerialAssets.gondolaLane : aerialAssets.chairLane;
+      const built = buildAerialCableLoop(ground, useCableH, stationH, lane, s);
+      if (!built?.loop?.length) continue;
+
+      const curve = new THREE.CatmullRomCurve3(built.loop, true, "catmullrom", 0.4);
+      const segs = Math.min(120, Math.max(28, built.loop.length * 2));
+      const tube = new THREE.TubeGeometry(curve, segs, aerialAssets.cableR, 4, true);
+      const cableMesh = new THREE.Mesh(tube, cableMat);
+      cableMesh.frustumCulled = false;
+      group.add(cableMesh);
+
+      const kind = gondola ? "gondola" : "chairlift";
+      const bottomDir = endpointDirection(ground, true);
+      const topDir = endpointDirection(ground, false);
+      group.add(createLiftTerminal(kind, ground[0], bottomDir, "bottom", aerialAssets));
+      group.add(createLiftTerminal(kind, ground[ground.length - 1], topDir, "top", aerialAssets));
+
+      const loopPts = densifyClosedLoop(built.loop, Math.max(10, liftLen / 40));
+      const loopLen = polylineLen(loopPts);
+      if (loopPts.length >= 2 && loopLen > 20) {
+        aerialLoops.push({
+          pts: loopPts,
+          len: loopLen,
+          topU: built.topU,
+          gondola,
+        });
       }
 
+      const margin = aerialAssets.towerMargin;
       if (gondola) {
-        /* Terminal pylons only — no mid-span towers. */
-        for (const end of [ground[0], ground[ground.length - 1]]) {
-          const neighbor =
-            end === ground[0]
-              ? ground[Math.min(1, ground.length - 1)]
-              : ground[Math.max(0, ground.length - 2)];
-          const along = new THREE.Vector3().subVectors(neighbor, end);
-          along.y = 0;
-          if (along.lengthSq() < 1e-6) along.set(1, 0, 0);
-          else along.normalize();
-          gondolaTowerBases.push({ p: end, tan: along });
+        /* Sparse mid-span towers only — terminals own the endpoints. */
+        if (liftLen > margin * 2.8) {
+          const towers = sampleAlongPolyline(ground, Math.max(towerStep * 1.15, liftLen / 3.2));
+          for (let i = 0; i < towers.length; i++) {
+            const p = towers[i];
+            const tApprox = towers.length <= 1 ? 0.5 : i / (towers.length - 1);
+            const approxDist = tApprox * liftLen;
+            if (approxDist < margin || approxDist > liftLen - margin) continue;
+            if (cableHeightProfile(tApprox, useCableH, stationH) < useCableH * 0.72) continue;
+            const next = towers[Math.min(towers.length - 1, i + 1)];
+            const prev = towers[Math.max(0, i - 1)];
+            const tan = new THREE.Vector3().subVectors(next, prev);
+            tan.y = 0;
+            if (tan.lengthSq() < 1e-6) tan.set(1, 0, 0);
+            else tan.normalize();
+            gondolaTowerBases.push({ p, tan });
+          }
         }
       } else {
         const towers = sampleAlongPolyline(ground, towerStep);
         for (let i = 0; i < towers.length; i++) {
           const p = towers[i];
-          /* No mid-line towers at the terminals — cable drops to boarding height there. */
           const tApprox = towers.length <= 1 ? 0.5 : i / (towers.length - 1);
-          if (tApprox < 0.1 || tApprox > 0.9) continue;
+          const approxDist = tApprox * liftLen;
+          if (approxDist < margin || approxDist > liftLen - margin) continue;
+          if (tApprox < 0.12 || tApprox > 0.88) continue;
           if (cableHeightProfile(tApprox, cableH, stationH) < cableH * 0.72) continue;
           const next = towers[Math.min(towers.length - 1, i + 1)];
           const prev = towers[Math.max(0, i - 1)];
@@ -2939,17 +3871,6 @@ function addLifts(parent, featureCollection, center, sample, unitScale = 1, clip
   if (surfaceRibbons.length) {
     const mesh = meshFromPositions(surfaceRibbons, surfaceMat);
     if (mesh) group.add(mesh);
-  }
-
-  /* Cables as thin tubes along each lift. */
-  for (const cable of cablePolylines) {
-    if (cable.length < 2) continue;
-    const curve = new THREE.CatmullRomCurve3(cable);
-    const segs = Math.min(48, Math.max(8, cable.length * 2));
-    const tube = new THREE.TubeGeometry(curve, segs, Math.max(0.03 * s, 0.04), 4, false);
-    const mesh = new THREE.Mesh(tube, cableMat);
-    mesh.frustumCulled = false;
-    group.add(mesh);
   }
 
   function placeTowerInstances(bases, pGeo, aGeo) {
@@ -2981,30 +3902,33 @@ function addLifts(parent, featureCollection, center, sample, unitScale = 1, clip
   placeTowerInstances(gondolaTowerBases, gondolaPoleGeo, gondolaArmGeo);
 
   const chairList = [];
-  for (const line of chairLines) {
-    const n = Math.max(3, Math.min(14, Math.round(line.len / chairStep)));
-    for (let k = 0; k < n; k++) {
-      if (chairList.length >= MAX_CHAIRS) break;
-      chairList.push({
-        pts: line.pts,
-        len: line.len,
-        along: (line.len * (k + 0.12)) / n,
-        speed: chairSpeed,
-      });
-    }
-    if (chairList.length >= MAX_CHAIRS) break;
-  }
-
   const gondolaList = [];
-  for (const line of gondolaLines) {
-    const n = Math.max(2, Math.min(3, Math.round(line.len / Math.max(280, line.len / 2.5))));
-    for (let k = 0; k < n; k++) {
-      gondolaList.push({
-        pts: line.pts,
-        len: line.len,
-        along: (line.len * (k + 0.2)) / Math.max(1, n),
-        speed: gondolaSpeed,
-      });
+  for (const line of aerialLoops) {
+    if (line.gondola) {
+      const n = Math.max(3, Math.min(6, Math.round(line.len / Math.max(220, line.len / 4))));
+      for (let k = 0; k < n; k++) {
+        gondolaList.push({
+          pts: line.pts,
+          len: line.len,
+          along: (line.len * (k + 0.18)) / Math.max(1, n),
+          speed: gondolaSpeed,
+          baseSpeed: gondolaSpeed,
+          topU: line.topU,
+        });
+      }
+    } else {
+      const n = Math.max(4, Math.min(16, Math.round(line.len / chairStep)));
+      for (let k = 0; k < n; k++) {
+        if (chairList.length >= MAX_CHAIRS) break;
+        chairList.push({
+          pts: line.pts,
+          len: line.len,
+          along: (line.len * (k + 0.12)) / n,
+          speed: chairSpeed,
+          baseSpeed: chairSpeed,
+          topU: line.topU,
+        });
+      }
     }
   }
 
@@ -3067,7 +3991,7 @@ function addLifts(parent, featureCollection, center, sample, unitScale = 1, clip
   }
 
   parent.add(group);
-  return { group, chairAnim, gondolaAnim };
+  return { group, chairAnim, gondolaAnim, tbarAnims };
 }
 
 function updateLiftChairs(pack, dt) {
@@ -3076,7 +4000,10 @@ function updateLiftChairs(pack, dt) {
   for (let i = 0; i < list.length; i++) {
     const c = list[i];
     if (dt > 0) {
-      c.along += c.speed * dt;
+      const u = c.len > 1 ? c.along / c.len : 0;
+      const scale = aerialTerminalSpeedScale(u, c.topU ?? 0.5);
+      const spd = (c.baseSpeed ?? c.speed) * scale;
+      c.along += spd * dt;
       if (c.along >= c.len) c.along -= c.len;
       if (c.along < 0) c.along += c.len;
     }
@@ -3878,6 +4805,7 @@ export async function initHeroMontageMap(container, options = {}) {
   let parkRiders = null;
   let liftChairs = null;
   let liftGondolas = null;
+  let liftTbars = null;
   const procedural = buildProceduralIsland(world);
   let bounds = procedural.bounds;
   const procTrails = procedural.decor?.getObjectByName("montage-trails-proc");
@@ -4041,6 +4969,7 @@ export async function initHeroMontageMap(container, options = {}) {
       parkRiders = null;
       liftChairs = null;
       liftGondolas = null;
+      liftTbars = null;
       clearGroup(world);
       world.add(root);
 
@@ -4098,6 +5027,7 @@ export async function initHeroMontageMap(container, options = {}) {
 
       liftChairs = null;
       liftGondolas = null;
+      liftTbars = null;
       trailRiders = null;
       parkRiders = null;
       clearGroup(decor);
@@ -4108,6 +5038,7 @@ export async function initHeroMontageMap(container, options = {}) {
         const liftPack = addLifts(decor, osm.lifts, center, sample, unitScale, clipRing);
         liftChairs = liftPack?.chairAnim || null;
         liftGondolas = liftPack?.gondolaAnim || null;
+        liftTbars = liftPack?.tbarAnims?.length ? liftPack.tbarAnims : null;
       }
       if (osm.forest) addTrees(decor, osm.forest, center, sample, unitScale, clipRing);
       else addProceduralTrees(decor, sample, unitScale);
@@ -4209,6 +5140,7 @@ export async function initHeroMontageMap(container, options = {}) {
     if (parkRiders) updateParkRiders(parkRiders, motionDt);
     if (liftChairs) updateLiftChairs(liftChairs, motionDt);
     if (liftGondolas) updateLiftChairs(liftGondolas, motionDt);
+    if (liftTbars) updateTBarLifts(liftTbars, motionDt);
     frameCamera(now * 0.001);
     renderer.render(scene, camera);
   }
