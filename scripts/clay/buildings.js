@@ -4,9 +4,52 @@
 
 import * as THREE from "three";
 import { PALETTE, MAX_BUILDINGS, BUILDING_SHRINK } from "./config.js";
-import { rng, localXZ, ringParts, distOutsideIsland } from "./math-utils.js";
+import { rng, localXZ, polygonParts, distOutsideIsland } from "./math-utils.js";
 
-export function addClayBuilding(group, cx, cz, y0, w, d, h, yaw, wallMat, roofMat) {
+export function addClayBuilding(group, cx, cz, y0, w, d, h, yaw, wallMat, roofMat, footprint = null) {
+  if (footprint) {
+    const shape = new THREE.Shape();
+    for (const [index, point] of footprint.outer.entries()) {
+      const x = (point.x - cx) * (w / footprint.width);
+      const z = -(point.z - cz) * (d / footprint.depth);
+      if (index === 0) shape.moveTo(x, z);
+      else shape.lineTo(x, z);
+    }
+    for (const hole of footprint.holes || []) {
+      const path = new THREE.Path();
+      for (const [index, point] of hole.entries()) {
+        const x = (point.x - cx) * (w / footprint.width);
+        const z = -(point.z - cz) * (d / footprint.depth);
+        if (index === 0) path.moveTo(x, z);
+        else path.lineTo(x, z);
+      }
+      shape.holes.push(path);
+    }
+
+    let geometry;
+    let roofGeometry;
+    try {
+      geometry = new THREE.ExtrudeGeometry(shape, { depth: h, bevelEnabled: false });
+      roofGeometry = new THREE.ShapeGeometry(shape);
+    } catch {
+      return;
+    }
+    const box = new THREE.Mesh(geometry, wallMat);
+    box.position.set(cx, y0, cz);
+    box.rotation.x = -Math.PI * 0.5;
+    box.renderOrder = 5;
+    box.frustumCulled = false;
+    group.add(box);
+
+    const roof = new THREE.Mesh(roofGeometry, roofMat);
+    roof.position.set(cx, y0 + h + Math.max(0.2, h * 0.08), cz);
+    roof.rotation.x = -Math.PI * 0.5;
+    roof.renderOrder = 5;
+    roof.frustumCulled = false;
+    group.add(roof);
+    return;
+  }
+
   const box = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), wallMat);
   box.position.set(cx, y0 + h * 0.5, cz);
   box.rotation.y = yaw;
@@ -52,7 +95,8 @@ export function addBuildings(parent, featureCollection, center, sample, unitScal
 
   const candidates = [];
   for (const feature of features) {
-    for (const ring of ringParts(feature.geometry)) {
+    for (const polygon of polygonParts(feature.geometry)) {
+      const ring = polygon?.[0];
       if (!ring || ring.length < 3) continue;
       const xs = [];
       const zs = [];
@@ -91,6 +135,14 @@ export function addBuildings(parent, featureCollection, center, sample, unitScal
         footW,
         footD,
         area: footW * footD,
+        footprint: {
+          outer: ring.map((coord) => localXZ(coord[0], coord[1], center)),
+          holes: (polygon.slice(1) || []).map((hole) =>
+            hole.map((coord) => localXZ(coord[0], coord[1], center)),
+          ),
+          width: footW,
+          depth: footD,
+        },
       });
     }
   }
@@ -101,11 +153,11 @@ export function addBuildings(parent, featureCollection, center, sample, unitScal
   let count = 0;
   for (const c of candidates) {
     if (count >= MAX_BUILDINGS) break;
-    const w = Math.min(c.footW, 24) * s;
-    const d = Math.min(c.footD, 24) * s;
+    const footprintScale = Math.min(1, 24 / c.footW, 24 / c.footD) * s;
+    const w = c.footW * footprintScale;
+    const d = c.footD * footprintScale;
     const h = Math.max(3.5, Math.min(11, Math.sqrt(c.area) * 0.32)) * s;
-    const yaw = rng(count * 7.1) * 0.15;
-    addClayBuilding(group, c.cx, c.cz, c.y, w, d, h, yaw, wallMat, roofMat);
+    addClayBuilding(group, c.cx, c.cz, c.y, w, d, h, 0, wallMat, roofMat, c.footprint);
     count += 1;
   }
 

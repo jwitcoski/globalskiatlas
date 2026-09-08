@@ -3,7 +3,7 @@
  */
 
 export const HERO_SPAN = 100;
-export const MAX_TREES = 900;
+export const MAX_TREES = 420;
 export const MAX_RIDERS = 280;
 export const MAX_TRAILS = 220;
 /** Desired trail width in hero/display units (after mesh fit). Keep very thin. */
@@ -39,8 +39,8 @@ export const PALETTE = {
   trailBlackEm: 0x404040,
   water: 0x2f9fff,
   waterEm: 0x1d7fd6,
-  building: 0x9eb0c0,
-  buildingRoof: 0x7f91a3,
+  building: 0xb9784d,
+  buildingRoof: 0x496458,
   wood: 0x6b2d1a,
   woodMid: 0x4a1f12,
   woodDeep: 0x2f140c,

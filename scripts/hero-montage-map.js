@@ -59,7 +59,6 @@ import {
   makeHeightGrid,
   mountainHeight,
   addTrees,
-  addProceduralTrees,
   addBuildings,
   addProceduralBuildings,
   addTrails,
@@ -804,7 +803,6 @@ export async function initHeroMontageMap(container, options = {}) {
         liftTbars = liftPack?.tbarAnims?.length ? liftPack.tbarAnims : null;
       }
       if (osm.forest) addTrees(decor, osm.forest, center, sample, unitScale, clipRing);
-      else addProceduralTrees(decor, sample, unitScale);
       if (osm.buildings) addBuildings(decor, osm.buildings, center, sample, unitScale, clipRing);
       else addProceduralBuildings(decor, sample, unitScale);
       if (hasOsmWater) {
