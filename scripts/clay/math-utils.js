@@ -79,10 +79,37 @@ export function featureTag(feature, key) {
   return String(v || "").toLowerCase().trim();
 }
 
+export function featureOsmWayId(feature) {
+  const props = feature?.properties || {};
+  const tags = props.tags && typeof props.tags === "object" ? props.tags : {};
+  if (tags.osm_way_id != null && String(tags.osm_way_id).trim()) return String(tags.osm_way_id);
+  const id = String(props.id || "");
+  const m = /way:(\d+)/.exec(id) || /:(\d+)$/.exec(id);
+  return m ? m[1] : "";
+}
+
+export function featureLiftOsmId(feature) {
+  const props = feature?.properties || {};
+  const tags = props.tags && typeof props.tags === "object" ? props.tags : {};
+  if (tags.osm_way_id != null && String(tags.osm_way_id).trim()) return String(tags.osm_way_id);
+  if (props.osm_way_id != null && String(props.osm_way_id).trim()) return String(props.osm_way_id);
+  const id = String(props.id || "");
+  const m = /(?:way:|nan:|:)?(\d+)\s*$/.exec(id);
+  return m ? m[1] : "";
+}
+
 export function isWoodFeature(feature) {
   const natural = featureTag(feature, "natural");
   const landuse = featureTag(feature, "landuse");
   return natural === "wood" || natural === "forest" || landuse === "forest";
+}
+
+export function mergeFeatureCollections(...fcs) {
+  const features = [];
+  for (const fc of fcs) {
+    if (fc?.features?.length) features.push(...fc.features);
+  }
+  return features.length ? { type: "FeatureCollection", features } : null;
 }
 
 export function pointInRing(x, y, ring) {
@@ -527,3 +554,15 @@ export function sideVector(tan) {
   else side.normalize();
   return side;
 }
+
+export function buildSaggedSpan(a, b, samples, sag) {
+  const pts = [];
+  for (let k = 1; k < samples; k++) {
+    const t = k / samples;
+    const p = new THREE.Vector3().lerpVectors(a, b, t);
+    p.y -= sag * 4 * t * (1 - t);
+    pts.push(p);
+  }
+  return pts;
+}
+
