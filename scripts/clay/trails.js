@@ -225,11 +225,11 @@ export function addTrails(parent, featureCollection, center, sample, unitScale =
         if (p) pts.push(p);
         if (r) ridePts.push(r);
       }
-      for (const run of clipPointRuns(pts, clipRing)) {
-        appendRibbon(buckets[style.key], smoothTrailPts(run, 1), width);
+      for (const run of clipPointRuns(smoothTrailPts(pts, 1), clipRing)) {
+        appendRibbon(buckets[style.key], run, width);
       }
-      for (const run of clipPointRuns(ridePts, clipRing)) {
-        if (run.length >= 2) paths.push(ensureDownhillPath(smoothTrailPts(run, 1)));
+      for (const run of clipPointRuns(smoothTrailPts(ridePts, 1), clipRing)) {
+        if (run.length >= 2) paths.push(ensureDownhillPath(run));
       }
     }
   }

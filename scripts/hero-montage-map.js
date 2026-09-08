@@ -4,8 +4,19 @@
  */
 
 import * as THREE from "three";
-import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
+import { createOrbitController } from "./clay/orbit-controller.js";
+import { createSceneRuntime } from "./clay/scene-runtime.js";
+import {
+  loadCatalog,
+  loadHomepageMesh as loadTerrainScene,
+  loadVectors as loadSceneVectors,
+  yieldFrame as waitForFrame,
+} from "./clay/scene-loader.js";
+import {
+  addSoftShadow as addIslandShadow,
+  addIslandUnderside,
+  buildProceduralIsland as createProceduralIsland,
+} from "./clay/island.js";
 
 import {
   HERO_SPAN,
@@ -83,52 +94,6 @@ function clearGroup(group) {
     const child = group.children.pop();
     disposeObject(child);
   }
-}
-
-function exaggerateHeights(mesh, factor = HEIGHT_EXAGGERATE) {
-  if (!mesh?.geometry?.attributes?.position || !(factor > 0) || factor === 1) return;
-  const pos = mesh.geometry.attributes.position;
-  let minY = Infinity;
-  for (let i = 0; i < pos.count; i++) minY = Math.min(minY, pos.getY(i));
-  for (let i = 0; i < pos.count; i++) {
-    pos.setY(i, minY + (pos.getY(i) - minY) * factor);
-  }
-  pos.needsUpdate = true;
-  mesh.geometry.computeVertexNormals();
-}
-
-function fitTerrainRoot(mesh, targetSpan = HERO_SPAN) {
-  const root = new THREE.Group();
-  root.name = "montage-terrain-root";
-  root.add(mesh);
-
-  const box = new THREE.Box3().setFromObject(mesh);
-  const center = box.getCenter(new THREE.Vector3());
-  mesh.position.sub(center);
-  root.userData.terrainCenter = center.clone();
-
-  const sized = new THREE.Box3().setFromObject(mesh);
-  const size = sized.getSize(new THREE.Vector3());
-  const span = Math.max(size.x, size.z, 1);
-  root.scale.setScalar(targetSpan / span);
-  root.updateMatrixWorld(true);
-  return { root, center, mesh, span };
-}
-
-function addSoftShadow(parent, radius) {
-  const geo = new THREE.CircleGeometry(radius * 0.72, 32);
-  geo.rotateX(-Math.PI / 2);
-  const mat = new THREE.MeshBasicMaterial({
-    color: 0x8aa0b8,
-    transparent: true,
-    opacity: 0.22,
-    depthWrite: false,
-  });
-  const disc = new THREE.Mesh(geo, mat);
-  disc.position.y = -8;
-  disc.name = "montage-shadow";
-  parent.add(disc);
-  return disc;
 }
 
 /**
@@ -582,185 +547,6 @@ function addGameIslandRock(parent, hull, sample, span, snowMinY) {
   return group;
 }
 
-function addIslandUnderside(parent, terrainMesh) {
-  const box = new THREE.Box3().setFromObject(terrainMesh);
-  const size = box.getSize(new THREE.Vector3());
-  const center = box.getCenter(new THREE.Vector3());
-  const geo = new THREE.SphereGeometry(
-    Math.max(size.x, size.z) * 0.42,
-    28,
-    16,
-    0,
-    Math.PI * 2,
-    Math.PI * 0.45,
-    Math.PI * 0.55,
-  );
-  const mat = new THREE.MeshLambertMaterial({
-    color: PALETTE.wood,
-    flatShading: true,
-    side: THREE.DoubleSide,
-  });
-  const mesh = new THREE.Mesh(geo, mat);
-  mesh.position.set(center.x, box.min.y - Math.max(2, size.y * 0.05), center.z);
-  mesh.name = "montage-underside";
-  parent.add(mesh);
-  return mesh;
-}
-
-function buildProceduralIsland(parent) {
-  const root = new THREE.Group();
-  root.name = "montage-terrain-root";
-  const geo = new THREE.PlaneGeometry(HERO_SPAN, HERO_SPAN, 56, 56);
-  geo.rotateX(-Math.PI / 2);
-  const pos = geo.attributes.position;
-  for (let i = 0; i < pos.count; i++) {
-    const x = pos.getX(i);
-    const z = pos.getZ(i);
-    pos.setY(i, mountainHeight(x, z));
-  }
-  geo.computeVertexNormals();
-  shadeSnowGeometry(geo);
-  const mesh = new THREE.Mesh(
-    geo,
-    new THREE.MeshLambertMaterial({
-      color: 0xffffff,
-      vertexColors: true,
-      side: THREE.DoubleSide,
-    }),
-  );
-  mesh.name = "montage-terrain-proc";
-  root.add(mesh);
-
-  const decor = new THREE.Group();
-  decor.name = "montage-decor";
-  root.add(decor);
-  addIslandUnderside(root, mesh);
-  addSoftShadow(root, HERO_SPAN * 0.48);
-  addProceduralTrails(decor, mountainHeight);
-  addProceduralTrees(decor, mountainHeight);
-  addProceduralBuildings(decor, mountainHeight);
-  addWaterPond(decor, mesh, mountainHeight, HERO_SPAN);
-
-  parent.add(root);
-  return {
-    root,
-    mesh,
-    decor,
-    bounds: { center: new THREE.Vector3(2, 16, -4), radius: 46 },
-  };
-}
-
-let gltfLoader;
-function getGltfLoader() {
-  if (gltfLoader) return gltfLoader;
-  const draco = new DRACOLoader();
-  draco.setDecoderPath("https://www.gstatic.com/draco/versioned/decoders/1.5.7/");
-  gltfLoader = new GLTFLoader();
-  gltfLoader.setDRACOLoader(draco);
-  return gltfLoader;
-}
-
-async function fetchJson(url) {
-  const res = await fetch(url, { cache: "force-cache" });
-  if (!res.ok) throw new Error(`${url} ${res.status}`);
-  return res.json();
-}
-
-function yieldFrame() {
-  return new Promise((resolve) => requestAnimationFrame(() => resolve()));
-}
-
-async function loadHomepageMesh(base) {
-  const manifest = await fetchJson(new URL("scene-manifest.json", base));
-  const meshUrl = new URL(manifest.terrain.mesh, base);
-  const vectors = manifest.vectors || {};
-  const gltf = await getGltfLoader().loadAsync(meshUrl.href);
-
-  let mesh = null;
-  gltf.scene.traverse((child) => {
-    if (!child.isMesh) return;
-    if (!mesh) mesh = child;
-    exaggerateHeights(child);
-    shadeSnowMesh(child);
-    child.castShadow = false;
-    child.receiveShadow = true;
-  });
-  if (!mesh) throw new Error("terrain mesh missing");
-
-  return {
-    fitted: fitTerrainRoot(mesh),
-    vectors,
-    base,
-    manifest,
-  };
-}
-
-async function loadVectors(base, vectors, resort = null) {
-  const routesUrl = new URL(
-    vectors.piste_trails || vectors.route_centers || "vectors/piste-trails.geojson",
-    base,
-  );
-  const liftsUrl = new URL(vectors.lifts || "vectors/lifts.geojson", base);
-  const forestUrl = new URL(
-    vectors.tree_points || vectors.forest || "vectors/tree-points.geojson",
-    base,
-  );
-  // Only fetch when advertised — missing S3 keys under clay_scenes return 403, not 404.
-  const bufferPath = vectors.ski_area_buffer || null;
-  const clayWaterPath = vectors.water || null;
-  const clayBuildingsPath = vectors.buildings || null;
-  const clayRoadsPath = vectors.roads || null;
-  const gameBase = gameSceneBase(resort);
-
-  const fetches = [
-    fetchJson(routesUrl).catch(() => null),
-    fetchJson(liftsUrl).catch(() => null),
-    fetchJson(forestUrl).catch(() => null),
-    bufferPath
-      ? fetchJson(new URL(bufferPath, base)).catch(() => null)
-      : Promise.resolve(null),
-    clayWaterPath
-      ? fetchJson(new URL(clayWaterPath, base)).catch(() => null)
-      : Promise.resolve(null),
-    clayBuildingsPath
-      ? fetchJson(new URL(clayBuildingsPath, base)).catch(() => null)
-      : Promise.resolve(null),
-    clayRoadsPath
-      ? fetchJson(new URL(clayRoadsPath, base)).catch(() => null)
-      : Promise.resolve(null),
-  ];
-  if (gameBase) {
-    fetches.push(
-      fetchJson(new URL("vectors/buildings.geojson", gameBase)).catch(() => null),
-      fetchJson(new URL("vectors/roads.geojson", gameBase)).catch(() => null),
-      fetchJson(new URL("vectors/water.geojson", gameBase)).catch(() => null),
-      fetchJson(new URL("vectors/ski-area.geojson", gameBase)).catch(() => null),
-      fetchJson(new URL("vectors/forest.geojson", gameBase)).catch(() => null),
-    );
-  }
-
-  const results = await Promise.all(fetches);
-  const routes = results[0];
-  const lifts = results[1];
-  const forestHome = results[2];
-  const skiAreaBuffer = results[3];
-  const clayWater = results[4];
-  const clayBuildings = results[5];
-  const clayRoads = results[6];
-  const buildingsGame = gameBase ? results[7] : null;
-  const roadsGame = gameBase ? results[8] : null;
-  const waterGame = gameBase ? results[9] : null;
-  const skiArea = gameBase ? results[10] : null;
-  const forestGame = gameBase ? results[11] : null;
-
-  const forest = mergeFeatureCollections(forestGame, forestHome);
-  const buildings = mergeFeatureCollections(buildingsGame, clayBuildings);
-  const roads = mergeFeatureCollections(roadsGame, clayRoads);
-  /* Prefer game water when present; clay_scenes water covers resorts without playable_ver. */
-  const water = waterFeatureCount(waterGame) ? waterGame : clayWater;
-  return { routes, lifts, forest, buildings, roads, water, skiArea, skiAreaBuffer };
-}
-
 function addLights(scene) {
   scene.add(new THREE.AmbientLight(0xffffff, 0.85));
   scene.add(new THREE.HemisphereLight(0xffffff, 0xd7e0ea, 0.45));
@@ -860,7 +646,7 @@ export async function initHeroMontageMap(container, options = {}) {
   let liftChairs = null;
   let liftGondolas = null;
   let liftTbars = null;
-  const procedural = buildProceduralIsland(world);
+  const procedural = createProceduralIsland(world);
   let bounds = procedural.bounds;
   const procTrails = procedural.decor?.getObjectByName("montage-trails-proc");
   trailRiders = addTrailRiders(
@@ -871,94 +657,17 @@ export async function initHeroMontageMap(container, options = {}) {
   );
   embed.classList.add("is-ready");
 
-  let running = true;
-  let az = 0.55;
-  let polar = Math.atan2(0.95, 1.72);
-  let zoom = 1;
-  let dragging = false;
-  let lastPointer = null;
-  let resumeSpinAt = 0;
-  const IDLE_RESUME_MS = 5000;
-  const SPIN_SPEED = 0.12;
-  const POLAR_MIN = 0.18;
-  const POLAR_MAX = 1.35;
-  const ZOOM_MIN = 0.45;
-  const ZOOM_MAX = 2.6;
   let lastT = performance.now();
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const canvas = renderer.domElement;
-  canvas.style.touchAction = "none";
-  canvas.style.cursor = "grab";
-  canvas.setAttribute("aria-label", "Drag to orbit the 3D map; scroll to zoom");
-
-  function markInteracted() {
-    resumeSpinAt = performance.now() + IDLE_RESUME_MS;
-  }
-
-  function syncOrbitFromBounds() {
-    const { radius } = bounds;
-    /* Stable elevated overview — don't derive polar from AABB Y (varies with
-     * absolute elevation / wood depth / vertical relief). */
-    az = 0.55;
-    polar = 0.78;
-    const aspect = Math.max(0.5, camera.aspect || 1);
-    const vFov = THREE.MathUtils.degToRad(camera.fov);
-    const hFov = 2 * Math.atan(Math.tan(vFov * 0.5) * aspect);
-    const fitFov = Math.min(vFov, hFov);
-    const pad = 1.18;
-    const needDist = (Math.max(1, radius) * pad) / Math.sin(fitFov * 0.5);
-    const baseDist = Math.max(1, radius * 1.72);
-    zoom = THREE.MathUtils.clamp(needDist / baseDist, ZOOM_MIN, ZOOM_MAX);
-  }
-
-  function onPointerDown(e) {
-    if (e.pointerType === "mouse" && e.button !== 0) return;
-    dragging = true;
-    lastPointer = { x: e.clientX, y: e.clientY };
-    try {
-      canvas.setPointerCapture(e.pointerId);
-    } catch (_) { /* ignore */ }
-    canvas.style.cursor = "grabbing";
-    markInteracted();
-    e.preventDefault();
-  }
-
-  function onPointerMove(e) {
-    if (!dragging || !lastPointer) return;
-    const dx = e.clientX - lastPointer.x;
-    const dy = e.clientY - lastPointer.y;
-    lastPointer = { x: e.clientX, y: e.clientY };
-    az -= dx * 0.005;
-    polar = THREE.MathUtils.clamp(polar + dy * 0.004, POLAR_MIN, POLAR_MAX);
-    markInteracted();
-    e.preventDefault();
-  }
-
-  function onPointerUp(e) {
-    if (!dragging) return;
-    dragging = false;
-    lastPointer = null;
-    canvas.style.cursor = "grab";
-    try {
-      canvas.releasePointerCapture(e.pointerId);
-    } catch (_) { /* ignore */ }
-    markInteracted();
-  }
-
-  function onWheel(e) {
-    e.preventDefault();
-    const factor = Math.exp(e.deltaY * 0.00115);
-    zoom = THREE.MathUtils.clamp(zoom * factor, ZOOM_MIN, ZOOM_MAX);
-    markInteracted();
-  }
-
-  canvas.addEventListener("pointerdown", onPointerDown);
-  canvas.addEventListener("pointermove", onPointerMove);
-  canvas.addEventListener("pointerup", onPointerUp);
-  canvas.addEventListener("pointercancel", onPointerUp);
-  canvas.addEventListener("wheel", onWheel, { passive: false });
-  canvas.addEventListener("contextmenu", (e) => e.preventDefault());
-
+  const orbit = createOrbitController({
+    camera,
+    canvas,
+    container,
+    renderer,
+    getBounds: () => bounds,
+    reduceMotion,
+  });
   let resorts = [];
   let resortIndex = 0;
   let loadToken = 0;
@@ -1007,9 +716,9 @@ export async function initHeroMontageMap(container, options = {}) {
 
     try {
       const base = sceneRoot(resort.id);
-      const { fitted, vectors } = await loadHomepageMesh(base);
+      const { fitted, vectors } = await loadTerrainScene(base);
       if (token !== loadToken) return;
-      await yieldFrame();
+      await waitForFrame();
 
       const { root, center, mesh, span } = fitted;
       const decor = new THREE.Group();
@@ -1027,9 +736,9 @@ export async function initHeroMontageMap(container, options = {}) {
       clearGroup(world);
       world.add(root);
 
-      const osm = await loadVectors(base, vectors, resort);
+      const osm = await loadSceneVectors(base, vectors, resort);
       if (token !== loadToken) return;
-      await yieldFrame();
+      await waitForFrame();
 
       let clipRing = hullFromSkiAreaBuffer(osm.skiAreaBuffer, center);
       let woodRim = clipRing?.length >= 3 ? prepareIslandRim(clipRing) : null;
@@ -1055,10 +764,10 @@ export async function initHeroMontageMap(container, options = {}) {
         hz /= woodRim.length;
         let hr = 0;
         for (const p of woodRim) hr = Math.max(hr, Math.hypot(p.x - hx, p.z - hz));
-        addSoftShadow(root, hr * (HERO_SPAN / span) * 0.95);
+        addIslandShadow(root, hr * (HERO_SPAN / span) * 0.95);
       } else {
         addIslandUnderside(root, mesh);
-        addSoftShadow(root, HERO_SPAN * 0.48);
+        addIslandShadow(root, HERO_SPAN * 0.48);
       }
 
       const hasOsmWater = waterFeatureCount(osm.water) > 0;
@@ -1072,12 +781,12 @@ export async function initHeroMontageMap(container, options = {}) {
         /* Use pre-soft heights so tucked DEM verts can't spike the wood wall. */
         addGameIslandRock(root, woodRim, snowHeights, span, snowMinY);
       }
-      await yieldFrame();
+      await waitForFrame();
       if (token !== loadToken) return;
 
       /* Rough frame while decor loads — refined after trails/trees/buildings. */
       bounds = framingBoundsFromRoot(root, new THREE.Vector3(0, 0, 0));
-      syncOrbitFromBounds();
+      orbit.syncFromBounds();
 
       liftChairs = null;
       liftGondolas = null;
@@ -1127,7 +836,7 @@ export async function initHeroMontageMap(container, options = {}) {
         parkRiders = null;
       }
       bounds = framingBoundsFromRoot(root, new THREE.Vector3(0, 0, 0));
-      syncOrbitFromBounds();
+      orbit.syncFromBounds();
     } catch (err) {
       if (token === loadToken) {
         console.warn("[hero-montage-map] resort load failed", resort.id, err);
@@ -1157,63 +866,33 @@ export async function initHeroMontageMap(container, options = {}) {
   nextBtn?.addEventListener("click", onNext);
 
   function resize() {
-    const w = container.clientWidth;
-    const h = container.clientHeight;
-    if (!w || !h) return;
-    camera.aspect = w / h;
-    camera.updateProjectionMatrix();
-    renderer.setSize(w, h, false);
-  }
-
-  function frameCamera(t = 0) {
-    const { center, radius } = bounds;
-    const targetY = center.y;
-    const dist = Math.max(1, radius * 1.72 * zoom);
-    const autoSpin =
-      !reduceMotion && !dragging && performance.now() >= resumeSpinAt;
-    const bob = autoSpin ? Math.sin(t * 0.35) * radius * 0.012 * zoom : 0;
-    const horiz = Math.cos(polar) * dist;
-    camera.position.set(
-      center.x + Math.cos(az) * horiz,
-      targetY + Math.sin(polar) * dist + bob,
-      center.z + Math.sin(az) * horiz,
-    );
-    camera.lookAt(center.x, targetY, center.z);
-  }
-
-  function tick(now) {
-    if (!running) return;
-    requestAnimationFrame(tick);
-    const dt = Math.min(0.05, (now - lastT) / 1000);
-    lastT = now;
-    const autoSpin =
-      !reduceMotion && !dragging && now >= resumeSpinAt;
-    if (autoSpin) az += dt * SPIN_SPEED;
-    const motionDt = reduceMotion ? 0 : dt;
-    if (trailRiders) updateTrailRiders(trailRiders, motionDt);
-    if (parkRiders) updateParkRiders(parkRiders, motionDt);
-    if (liftChairs) updateLiftChairs(liftChairs, motionDt);
-    if (liftGondolas) updateLiftChairs(liftGondolas, motionDt);
-    if (liftTbars) updateTBarLifts(liftTbars, motionDt);
-    frameCamera(now * 0.001);
-    renderer.render(scene, camera);
+    orbit.resize();
   }
 
   resize();
   window.addEventListener("resize", resize);
-  requestAnimationFrame(tick);
-
-  const observer = new IntersectionObserver(
-    (entries) => {
-      running = entries.some((e) => e.isIntersecting);
-      if (running) {
-        lastT = performance.now();
-        requestAnimationFrame(tick);
-      }
-    },
-    { threshold: 0.05 },
-  );
-  observer.observe(embed);
+  const runtime = createSceneRuntime({
+    renderer,
+    scene,
+    controller: orbit,
+    embed,
+    getLastTime: () => lastT,
+    setLastTime: (value) => { lastT = value; },
+    getAnimations: () => ({
+      camera,
+      reduceMotion,
+      trailRiders,
+      parkRiders,
+      liftChairs,
+      liftGondolas,
+      liftTbars,
+      updateTrailRiders,
+      updateParkRiders,
+      updateLiftChairs,
+      updateTBarLifts,
+    }),
+  });
+  runtime.start();
 
   (async () => {
     const fallback = {
@@ -1224,8 +903,7 @@ export async function initHeroMontageMap(container, options = {}) {
       region_label: "",
     };
     try {
-      const catalog = await fetchJson(catalogUrl());
-      const all = (catalog?.resorts || []).filter((r) => r?.id);
+      const all = await loadCatalog(catalogUrl);
       if (preferredId) {
         const hit = all.find((r) => r.id === preferredId);
         resorts = hit ? [hit] : [{ ...fallback, id: preferredId }];
@@ -1249,17 +927,12 @@ export async function initHeroMontageMap(container, options = {}) {
   return {
     resize,
     dispose() {
-      running = false;
       loadToken += 1;
-      observer.disconnect();
+      runtime.dispose();
+      orbit.dispose();
       window.removeEventListener("resize", resize);
       prevBtn?.removeEventListener("click", onPrev);
       nextBtn?.removeEventListener("click", onNext);
-      canvas.removeEventListener("pointerdown", onPointerDown);
-      canvas.removeEventListener("pointermove", onPointerMove);
-      canvas.removeEventListener("pointerup", onPointerUp);
-      canvas.removeEventListener("pointercancel", onPointerUp);
-      canvas.removeEventListener("wheel", onWheel);
       disposeObject(world);
       renderer.dispose();
       if (renderer.domElement.parentNode === container) container.removeChild(renderer.domElement);
