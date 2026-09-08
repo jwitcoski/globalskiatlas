@@ -7,89 +7,73 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 
-const HERO_SPAN = 100;
-const MAX_TREES = 900;
-const MAX_RIDERS = 280;
-const MAX_TRAILS = 220;
-/** Desired trail width in hero/display units (after mesh fit). Keep very thin. */
-const TRAIL_WIDTH = 0.34;
-const TRAIL_STYLES = {
-  green: { color: 0x86efac, emissive: 0x22c55e, intensity: 0.1, key: "green" },
-  blue: { color: 0x93c5fd, emissive: 0x3b82f6, intensity: 0.11, key: "blue" },
-  black: { color: 0x64748b, emissive: 0x334155, intensity: 0.08, key: "black" },
-};
-const TREE_SCALE = 1.16;
-const MAX_BUILDINGS = 48;
-/** Buildings are authored in mesh meters; keep them tiny in the hero (~1/8 prior size). */
-const BUILDING_SHRINK = 0.12;
-const GRID_RES = 72;
-const HEIGHT_EXAGGERATE = 2;
-
-/** Clay island palette — white snow, green trees, blue water; US trail colors. */
-const PALETTE = {
-  bg: 0xffffff,
-  snow: 0xffffff,
-  snowShade: 0xe8eef2,
-  rock: 0xb0bac4,
-  rockDeep: 0x8a96a3,
-  rockLip: 0xc5ced6,
-  tree: 0x2f9e44,
-  treeDeep: 0x237a36,
-  trunk: 0x6b4f3a,
-  trailGreen: 0x22c55e,
-  trailGreenEm: 0x16a34a,
-  trailBlue: 0x3b82f6,
-  trailBlueEm: 0x2563eb,
-  trailBlack: 0x171717,
-  trailBlackEm: 0x404040,
-  water: 0x2f9fff,
-  waterEm: 0x1d7fd6,
-  building: 0x9eb0c0,
-  buildingRoof: 0x7f91a3,
-  wood: 0x6b2d1a,
-  woodMid: 0x4a1f12,
-  woodDeep: 0x2f140c,
-  woodHighlight: 0x8a3d24,
-  lift: 0x6b7785,
-  cable: 0x4b5563,
-};
-
-function sceneRoot(resortId) {
-  return new URL(`/clay_scenes/${resortId}/`, location.origin);
-}
-
-function catalogUrl() {
-  return new URL("/clay_scenes/catalog.json", location.origin);
-}
-
-function gameSceneBase(resort) {
-  if (!resort?.id || !resort?.playable_ver) return null;
-  const host = location.hostname;
-  const path = `game_scenes/${resort.id}/${resort.playable_ver}/`;
-  if (host === "localhost" || host === "127.0.0.1") {
-    return new URL(`/${path}`, location.origin);
-  }
-  if (host === "globalskiatlas.com" || host === "www.globalskiatlas.com") {
-    return new URL(`https://globalskiatlas.com/${path}`);
-  }
-  return new URL(
-    `https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/${path}`,
-  );
-}
-
-function playableHref(resort) {
-  if (!resort?.id || !resort?.playable_ver) return null;
-  return `/playable/?resort=${encodeURIComponent(resort.id)}&ver=${encodeURIComponent(resort.playable_ver)}`;
-}
-
-function capDpr() {
-  return Math.min(window.devicePixelRatio || 1, 1.35);
-}
-
-function rng(n) {
-  const s = Math.sin(n * 127.1) * 43758.5453;
-  return s - Math.floor(s);
-}
+import {
+  HERO_SPAN,
+  MAX_TREES,
+  MAX_RIDERS,
+  MAX_TRAILS,
+  TRAIL_WIDTH,
+  TRAIL_STYLES,
+  TREE_SCALE,
+  MAX_BUILDINGS,
+  BUILDING_SHRINK,
+  GRID_RES,
+  HEIGHT_EXAGGERATE,
+  PALETTE,
+  sceneRoot,
+  catalogUrl,
+  gameSceneBase,
+  playableHref,
+  capDpr,
+} from "./clay/config.js";
+import {
+  rng,
+  hash2,
+  valueNoise,
+  fbm,
+  localXZ,
+  lineParts,
+  ringParts,
+  polygonParts,
+  featureTag,
+  isWoodFeature,
+  pointInRing,
+  inPolygon,
+  distToRingEdges,
+  firmlyInside,
+  shoelaceArea,
+  cross2,
+  convexHullXZ,
+  expandHull,
+  insideConvex,
+  distToHullEdge,
+  distOutsideHull,
+  insideIslandRing,
+  distOutsideIsland,
+  ensureCcwXZ,
+  ensureCcw,
+  projectToHull,
+  ringCentroidXZ,
+  resampleRingArc,
+  decimateRing,
+  chaikinRing,
+  prepareIslandRim,
+  clipPointRuns,
+  resampleHull,
+  downsampleLine,
+  smoothTrailPts,
+  polylineLen,
+  alongPolyline,
+  sampleAlongPolyline,
+  horizTangentAt,
+  sideVector,
+} from "./clay/math-utils.js";
+import {
+  mountainHeight,
+  shadeSnowGeometry,
+  shadeSnowMesh,
+  makeHeightGrid,
+} from "./clay/height-grid.js";
 
 function disposeObject(obj) {
   obj.traverse((child) => {
@@ -106,162 +90,6 @@ function clearGroup(group) {
     const child = group.children.pop();
     disposeObject(child);
   }
-}
-
-function mountainHeight(x, z) {
-  const peak = Math.exp(-((x - 5) ** 2 + (z + 11) ** 2) / 110) * 48;
-  const ridge = Math.exp(-((x + 16) ** 2) / 80 - (z + 1) ** 2 / 150) * 26;
-  const bowl = Math.exp(-((x - 22) ** 2 + (z + 6) ** 2) / 260) * -5;
-  const ripple = Math.sin(x * 0.1) * 1.6 + Math.cos(z * 0.08) * 1.3;
-  return 5 + (peak + ridge + bowl + ripple) * HEIGHT_EXAGGERATE;
-}
-
-function shadeSnowGeometry(geo) {
-  if (!geo?.attributes?.position) return;
-  if (!geo.attributes.normal) geo.computeVertexNormals();
-  const pos = geo.attributes.position;
-  const nrm = geo.attributes.normal;
-  let minY = Infinity;
-  let maxY = -Infinity;
-  for (let i = 0; i < pos.count; i++) {
-    const y = pos.getY(i);
-    minY = Math.min(minY, y);
-    maxY = Math.max(maxY, y);
-  }
-  const spanY = Math.max(1, maxY - minY);
-  const colors = new Float32Array(pos.count * 3);
-  const high = new THREE.Color(0xffffff);
-  const mid = new THREE.Color(0xf6f8fb);
-  const low = new THREE.Color(0xe8eef5);
-  const slopeShade = new THREE.Color(0xdde5ee);
-  const c = new THREE.Color();
-  for (let i = 0; i < pos.count; i++) {
-    const elev = (pos.getY(i) - minY) / spanY;
-    /* Stay near snow-white; only a soft cool tint in valleys. */
-    if (elev > 0.5) c.copy(mid).lerp(high, (elev - 0.5) / 0.5);
-    else c.copy(low).lerp(mid, elev / 0.5);
-    const ny = Math.abs(nrm.getY(i));
-    const slope = THREE.MathUtils.clamp(1 - ny, 0, 1);
-    c.lerp(slopeShade, slope * 0.28);
-    colors[i * 3] = c.r;
-    colors[i * 3 + 1] = c.g;
-    colors[i * 3 + 2] = c.b;
-  }
-  geo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
-}
-
-function shadeSnowMesh(mesh) {
-  shadeSnowGeometry(mesh.geometry);
-  if (mesh.material && !Array.isArray(mesh.material)) mesh.material.dispose();
-  mesh.material = new THREE.MeshLambertMaterial({
-    color: 0xffffff,
-    emissive: 0xffffff,
-    emissiveIntensity: 0.08,
-    vertexColors: true,
-    side: THREE.DoubleSide,
-  });
-}
-
-function localXZ(east, north, center) {
-  return { x: east - center.x, z: -north - center.z };
-}
-
-function lineParts(geometry) {
-  if (!geometry) return [];
-  if (geometry.type === "LineString") return [geometry.coordinates];
-  if (geometry.type === "MultiLineString") return geometry.coordinates;
-  return [];
-}
-
-function ringParts(geometry) {
-  if (!geometry) return [];
-  if (geometry.type === "Polygon") return [geometry.coordinates?.[0]].filter(Boolean);
-  if (geometry.type === "MultiPolygon") {
-    return (geometry.coordinates || []).map((poly) => poly?.[0]).filter(Boolean);
-  }
-  return [];
-}
-
-function polygonParts(geometry) {
-  if (!geometry) return [];
-  if (geometry.type === "Polygon") return [geometry.coordinates].filter(Boolean);
-  if (geometry.type === "MultiPolygon") return geometry.coordinates || [];
-  return [];
-}
-
-function featureTag(feature, key) {
-  const props = feature?.properties || {};
-  const tags = props.tags && typeof props.tags === "object" ? props.tags : {};
-  let v = tags[key] || props[key] || "";
-  if (!v) {
-    const other = String(tags.other_tags || props.other_tags || "");
-    const m = new RegExp(`${key}"\\s*=>\\s*"([^"]+)`).exec(other);
-    if (m) v = m[1];
-  }
-  return String(v || "").toLowerCase().trim();
-}
-
-function isWoodFeature(feature) {
-  const natural = featureTag(feature, "natural");
-  const landuse = featureTag(feature, "landuse");
-  return natural === "wood" || natural === "forest" || landuse === "forest";
-}
-
-function pointInRing(x, y, ring) {
-  let inside = false;
-  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-    const xi = ring[i][0];
-    const yi = ring[i][1];
-    const xj = ring[j][0];
-    const yj = ring[j][1];
-    const hit = yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi + 1e-12) + xi;
-    if (hit) inside = !inside;
-  }
-  return inside;
-}
-
-function inPolygon(x, y, outer, holes) {
-  if (!outer || outer.length < 3 || !pointInRing(x, y, outer)) return false;
-  for (const h of holes || []) {
-    if (h.length >= 3 && pointInRing(x, y, h)) return false;
-  }
-  return true;
-}
-
-function distToRingEdges(x, y, ring) {
-  let best = Infinity;
-  for (let i = 0; i < (ring || []).length; i++) {
-    const a = ring[i];
-    const b = ring[(i + 1) % ring.length];
-    if (!a || !b || a.length < 2 || b.length < 2) continue;
-    const abx = b[0] - a[0];
-    const aby = b[1] - a[1];
-    const len2 = abx * abx + aby * aby || 1;
-    let t = ((x - a[0]) * abx + (y - a[1]) * aby) / len2;
-    t = Math.max(0, Math.min(1, t));
-    best = Math.min(best, Math.hypot(x - (a[0] + abx * t), y - (a[1] + aby * t)));
-  }
-  return best;
-}
-
-/** Strictly inside a polygon, inset from the boundary so crowns don't spill out. */
-function firmlyInside(x, y, outer, holes, margin) {
-  if (!inPolygon(x, y, outer, holes)) return false;
-  if (!(margin > 0)) return true;
-  if (distToRingEdges(x, y, outer) < margin) return false;
-  for (const h of holes || []) {
-    if (h.length >= 3 && distToRingEdges(x, y, h) < margin) return false;
-  }
-  return true;
-}
-
-function shoelaceArea(ring) {
-  if (!ring || ring.length < 3) return 0;
-  let a = 0;
-  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-    a += ring[j][0] * ring[i][1] - ring[i][0] * ring[j][1];
-  }
-  return Math.abs(a) * 0.5;
 }
 
 function collectWoodPolygons(features) {
@@ -628,107 +456,6 @@ function addSoftShadow(parent, radius) {
   return disc;
 }
 
-function cross2(ax, az, bx, bz, cx, cz) {
-  return (bx - ax) * (cz - az) - (bz - az) * (cx - ax);
-}
-
-function convexHullXZ(points) {
-  const pts = (points || []).filter((p) => p && Number.isFinite(p.x) && Number.isFinite(p.z));
-  if (pts.length < 3) return [];
-  const sorted = pts.slice().sort((a, b) => a.x - b.x || a.z - b.z);
-  const lower = [];
-  for (const p of sorted) {
-    while (lower.length >= 2 && cross2(lower[lower.length - 2].x, lower[lower.length - 2].z, lower[lower.length - 1].x, lower[lower.length - 1].z, p.x, p.z) <= 0) {
-      lower.pop();
-    }
-    lower.push(p);
-  }
-  const upper = [];
-  for (let i = sorted.length - 1; i >= 0; i--) {
-    const p = sorted[i];
-    while (upper.length >= 2 && cross2(upper[upper.length - 2].x, upper[upper.length - 2].z, upper[upper.length - 1].x, upper[upper.length - 1].z, p.x, p.z) <= 0) {
-      upper.pop();
-    }
-    upper.push(p);
-  }
-  lower.pop();
-  upper.pop();
-  return lower.concat(upper);
-}
-
-function expandHull(poly, amount) {
-  if (!poly?.length || !(amount > 0)) return poly || [];
-  let cx = 0;
-  let cz = 0;
-  for (const p of poly) {
-    cx += p.x;
-    cz += p.z;
-  }
-  cx /= poly.length;
-  cz /= poly.length;
-  return poly.map((p) => {
-    const dx = p.x - cx;
-    const dz = p.z - cz;
-    const d = Math.hypot(dx, dz) || 1;
-    return { x: cx + (dx / d) * (d + amount), z: cz + (dz / d) * (d + amount) };
-  });
-}
-
-function insideConvex(x, z, poly) {
-  if (!poly?.length) return false;
-  for (let i = 0; i < poly.length; i++) {
-    const a = poly[i];
-    const b = poly[(i + 1) % poly.length];
-    if (cross2(a.x, a.z, b.x, b.z, x, z) < 0) return false;
-  }
-  return true;
-}
-
-function distToHullEdge(x, z, poly) {
-  if (!poly?.length) return 0;
-  let best = Infinity;
-  for (let i = 0; i < poly.length; i++) {
-    const a = poly[i];
-    const b = poly[(i + 1) % poly.length];
-    const abx = b.x - a.x;
-    const abz = b.z - a.z;
-    const len2 = abx * abx + abz * abz || 1;
-    let t = ((x - a.x) * abx + (z - a.z) * abz) / len2;
-    t = Math.max(0, Math.min(1, t));
-    best = Math.min(best, Math.hypot(x - (a.x + abx * t), z - (a.z + abz * t)));
-  }
-  return best;
-}
-
-function distOutsideHull(x, z, poly) {
-  if (!poly?.length) return 0;
-  if (insideConvex(x, z, poly)) return 0;
-  return distToHullEdge(x, z, poly);
-}
-
-/** Point-in-polygon for possibly concave island rings ({x,z}…​). */
-function insideIslandRing(x, z, ring) {
-  if (!ring?.length) return false;
-  const flat = [];
-  for (const p of ring) flat.push([p.x, p.z]);
-  return pointInRing(x, z, flat);
-}
-
-function distOutsideIsland(x, z, ring) {
-  if (!ring?.length) return 0;
-  if (insideIslandRing(x, z, ring)) return 0;
-  return distToHullEdge(x, z, ring);
-}
-
-function ensureCcwXZ(poly) {
-  if (!poly?.length) return poly || [];
-  let a = 0;
-  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
-    a += poly[j].x * poly[i].z - poly[i].x * poly[j].z;
-  }
-  return a >= 0 ? poly : poly.slice().reverse();
-}
-
 /**
  * Island rim from ski_areas_1000ft_buffer — the map edge / wood cliff start.
  * Coords are local east/north meters (same as other homepage vectors).
@@ -852,131 +579,6 @@ function hullFromOsmData(layers, center) {
   return convexHullDropClipFrame(pts);
 }
 
-function projectToHull(x, z, hull) {
-  let best = Infinity;
-  let px = x;
-  let pz = z;
-  for (let e = 0; e < hull.length; e++) {
-    const a = hull[e];
-    const b = hull[(e + 1) % hull.length];
-    const abx = b.x - a.x;
-    const abz = b.z - a.z;
-    const len2 = abx * abx + abz * abz || 1;
-    let t = ((x - a.x) * abx + (z - a.z) * abz) / len2;
-    t = Math.max(0, Math.min(1, t));
-    const qx = a.x + abx * t;
-    const qz = a.z + abz * t;
-    const d = Math.hypot(x - qx, z - qz);
-    if (d < best) {
-      best = d;
-      px = qx;
-      pz = qz;
-    }
-  }
-  return { x: px, z: pz };
-}
-
-function ringCentroidXZ(ring) {
-  let cx = 0;
-  let cz = 0;
-  for (const p of ring || []) {
-    cx += p.x;
-    cz += p.z;
-  }
-  const n = Math.max(1, ring?.length || 0);
-  return { x: cx / n, z: cz / n };
-}
-
-/** Even arc-length resample — stops clustered rim verts from making knife-edge wood tris. */
-function resampleRingArc(ring, count) {
-  if (!ring?.length) return [];
-  const n = ring.length;
-  const seg = [];
-  let total = 0;
-  for (let i = 0; i < n; i++) {
-    const a = ring[i];
-    const b = ring[(i + 1) % n];
-    const len = Math.hypot(b.x - a.x, b.z - a.z);
-    seg.push(len);
-    total += len;
-  }
-  if (!(total > 1e-6)) return ring.slice();
-  const out = [];
-  const step = total / count;
-  let edge = 0;
-  let consumed = 0;
-  for (let i = 0; i < count; i++) {
-    const target = i * step;
-    while (edge < n - 1 && consumed + seg[edge] < target) {
-      consumed += seg[edge];
-      edge += 1;
-    }
-    const len = seg[edge] || 1e-6;
-    const t = Math.max(0, Math.min(1, (target - consumed) / len));
-    const a = ring[edge];
-    const b = ring[(edge + 1) % n];
-    out.push({ x: a.x + (b.x - a.x) * t, z: a.z + (b.z - a.z) * t });
-  }
-  return out;
-}
-
-function decimateRing(ring, maxPts) {
-  if (!ring?.length || ring.length <= maxPts) return ring || [];
-  return resampleRingArc(ring, maxPts);
-}
-
-/** Chaikin corner-cut — softens jagged buffer outlines for the cliff rim. */
-function chaikinRing(ring, iterations = 2) {
-  let pts = (ring || []).map((p) => ({ x: p.x, z: p.z }));
-  if (pts.length < 3) return pts;
-  for (let k = 0; k < iterations; k++) {
-    const next = [];
-    const n = pts.length;
-    for (let i = 0; i < n; i++) {
-      const a = pts[i];
-      const b = pts[(i + 1) % n];
-      next.push({ x: a.x * 0.75 + b.x * 0.25, z: a.z * 0.75 + b.z * 0.25 });
-      next.push({ x: a.x * 0.25 + b.x * 0.75, z: a.z * 0.25 + b.z * 0.75 });
-    }
-    pts = next;
-  }
-  return ensureCcwXZ(pts);
-}
-
-function prepareIslandRim(hull) {
-  if (!hull?.length) return [];
-  /* One light Chaikin pass — two passes rounded away major ski-area bays. */
-  return chaikinRing(resampleRingArc(decimateRing(hull, 160), 96), 1);
-}
-
-function clipPointRuns(pts, ring) {
-  if (!ring?.length) return pts?.length >= 2 ? [pts] : [];
-  const runs = [];
-  let cur = [];
-  for (const p of pts || []) {
-    if (p && insideIslandRing(p.x, p.z, ring)) cur.push(p);
-    else {
-      if (cur.length >= 2) runs.push(cur);
-      cur = [];
-    }
-  }
-  if (cur.length >= 2) runs.push(cur);
-  return runs;
-}
-
-function ensureCcw(poly) {
-  if (!poly?.length) return poly || [];
-  let cx = 0;
-  let cz = 0;
-  for (const p of poly) {
-    cx += p.x;
-    cz += p.z;
-  }
-  cx /= poly.length;
-  cz /= poly.length;
-  return insideConvex(cx, cz, poly) ? poly : poly.slice().reverse();
-}
-
 /**
  * Clip DEM to the (possibly concave) ski-area buffer rim.
  * Outside / bay verts snap onto the rim at rim height — do not reshape the
@@ -1095,40 +697,6 @@ function pruneTerrainFacesOutsideRim(mesh, edgeRim) {
   geo.computeBoundingBox();
 }
 
-function hash2(ix, iz) {
-  let n = (ix * 374761393 + iz * 668265263) | 0;
-  n = (n ^ (n >> 13)) * 1274126177;
-  return ((n ^ (n >> 16)) >>> 0) / 4294967296;
-}
-
-function valueNoise(x, z) {
-  const xi = Math.floor(x);
-  const zi = Math.floor(z);
-  const tx = x - xi;
-  const tz = z - zi;
-  const sx = tx * tx * (3 - 2 * tx);
-  const sz = tz * tz * (3 - 2 * tz);
-  const a = hash2(xi, zi);
-  const b = hash2(xi + 1, zi);
-  const c = hash2(xi, zi + 1);
-  const d = hash2(xi + 1, zi + 1);
-  return (a * (1 - sx) + b * sx) * (1 - sz) + (c * (1 - sx) + d * sx) * sz;
-}
-
-function fbm(x, z) {
-  let v = 0;
-  let amp = 0.5;
-  let f = 1;
-  let norm = 0;
-  for (let i = 0; i < 4; i++) {
-    v += valueNoise(x * f, z * f) * amp;
-    norm += amp;
-    amp *= 0.5;
-    f *= 2.13;
-  }
-  return v / norm;
-}
-
 const WOOD_HI = [0.55, 0.28, 0.16];
 const WOOD_MID = [0.42, 0.18, 0.1];
 const WOOD_LO = [0.22, 0.1, 0.06];
@@ -1153,10 +721,6 @@ function sideColor(u, n) {
   }
   const s = 0.88 + n * 0.28;
   return [base[0] * s, base[1] * s, base[2] * s];
-}
-
-function resampleHull(hull, count) {
-  return resampleRingArc(hull, count);
 }
 
 /**
@@ -1368,89 +932,6 @@ function addIslandUnderside(parent, terrainMesh) {
   return mesh;
 }
 
-/** O(verts) once, then O(1) bilinear height — avoids Raycaster storms. */
-function makeHeightGrid(mesh, resolution = GRID_RES) {
-  const pos = mesh.geometry.attributes.position;
-  const ox = mesh.position.x;
-  const oy = mesh.position.y;
-  const oz = mesh.position.z;
-  let minX = Infinity;
-  let maxX = -Infinity;
-  let minZ = Infinity;
-  let maxZ = -Infinity;
-  for (let i = 0; i < pos.count; i++) {
-    const x = pos.getX(i) + ox;
-    const z = pos.getZ(i) + oz;
-    minX = Math.min(minX, x);
-    maxX = Math.max(maxX, x);
-    minZ = Math.min(minZ, z);
-    maxZ = Math.max(maxZ, z);
-  }
-  const w = Math.max(1e-3, maxX - minX);
-  const d = Math.max(1e-3, maxZ - minZ);
-  const heights = new Float32Array(resolution * resolution);
-  heights.fill(-Infinity);
-  for (let i = 0; i < pos.count; i++) {
-    const x = pos.getX(i) + ox;
-    const y = pos.getY(i) + oy;
-    const z = pos.getZ(i) + oz;
-    const u = Math.min(resolution - 1, Math.max(0, Math.floor(((x - minX) / w) * (resolution - 1))));
-    const v = Math.min(resolution - 1, Math.max(0, Math.floor(((z - minZ) / d) * (resolution - 1))));
-    const idx = v * resolution + u;
-    if (y > heights[idx]) heights[idx] = y;
-  }
-  /* Fill empty cells from nearest filled neighbor (cheap 1-pass blur). */
-  for (let pass = 0; pass < 2; pass++) {
-    for (let v = 0; v < resolution; v++) {
-      for (let u = 0; u < resolution; u++) {
-        const idx = v * resolution + u;
-        if (heights[idx] !== -Infinity) continue;
-        let best = -Infinity;
-        for (let dv = -1; dv <= 1; dv++) {
-          for (let du = -1; du <= 1; du++) {
-            const uu = u + du;
-            const vv = v + dv;
-            if (uu < 0 || vv < 0 || uu >= resolution || vv >= resolution) continue;
-            const h = heights[vv * resolution + uu];
-            if (h > best) best = h;
-          }
-        }
-        if (best !== -Infinity) heights[idx] = best;
-      }
-    }
-  }
-
-  return (x, z) => {
-    if (x < minX || x > maxX || z < minZ || z > maxZ) return null;
-    const uf = ((x - minX) / w) * (resolution - 1);
-    const vf = ((z - minZ) / d) * (resolution - 1);
-    const u0 = Math.floor(uf);
-    const v0 = Math.floor(vf);
-    const u1 = Math.min(resolution - 1, u0 + 1);
-    const v1 = Math.min(resolution - 1, v0 + 1);
-    const tu = uf - u0;
-    const tv = vf - v0;
-    const h00 = heights[v0 * resolution + u0];
-    const h10 = heights[v0 * resolution + u1];
-    const h01 = heights[v1 * resolution + u0];
-    const h11 = heights[v1 * resolution + u1];
-    if (h00 === -Infinity) return null;
-    const a = h00 + (h10 - h00) * tu;
-    const b = h01 + (h11 - h01) * tu;
-    return a + (b - a) * tv;
-  };
-}
-
-function downsampleLine(coords, maxPts = 18) {
-  if (!coords || coords.length <= maxPts) return coords || [];
-  const out = [];
-  const step = (coords.length - 1) / (maxPts - 1);
-  for (let i = 0; i < maxPts; i++) {
-    out.push(coords[Math.round(i * step)]);
-  }
-  return out;
-}
-
 function appendRibbon(positions, pts, width) {
   if (!pts || pts.length < 2) return;
   const half = width * 0.5;
@@ -1488,36 +969,6 @@ function appendRibbon(positions, pts, width) {
       aL.x, aL.y, aL.z, bR.x, bR.y, bR.z, bL.x, bL.y, bL.z,
     );
   }
-}
-
-/** Light Chaikin pass on trail polylines to round OSM kinks before meshing. */
-function smoothTrailPts(pts, iterations = 1) {
-  if (!pts || pts.length < 3) return pts || [];
-  let cur = pts.map((p) => p.clone());
-  for (let pass = 0; pass < iterations; pass++) {
-    const next = [cur[0].clone()];
-    for (let i = 0; i < cur.length - 1; i++) {
-      const a = cur[i];
-      const b = cur[i + 1];
-      next.push(
-        new THREE.Vector3(
-          a.x * 0.75 + b.x * 0.25,
-          a.y * 0.75 + b.y * 0.25,
-          a.z * 0.75 + b.z * 0.25,
-        ),
-      );
-      next.push(
-        new THREE.Vector3(
-          a.x * 0.25 + b.x * 0.75,
-          a.y * 0.25 + b.y * 0.75,
-          a.z * 0.25 + b.z * 0.75,
-        ),
-      );
-    }
-    next.push(cur[cur.length - 1].clone());
-    cur = next;
-  }
-  return cur;
 }
 
 function meshFromPositions(positions, mat) {
@@ -1603,60 +1054,9 @@ function addTrails(parent, featureCollection, center, sample, unitScale = 1, cli
   return group;
 }
 
-
 function ensureDownhillPath(pts) {
   if (!pts || pts.length < 2) return pts || [];
   return pts[0].y >= pts[pts.length - 1].y ? pts : pts.slice().reverse();
-}
-
-function polylineLen(pts) {
-  let len = 0;
-  for (let i = 1; i < (pts || []).length; i++) len += pts[i].distanceTo(pts[i - 1]);
-  return len;
-}
-
-function alongPolyline(pts, dist) {
-  if (!pts?.length) return null;
-  if (dist <= 0) {
-    const a = pts[0];
-    const b = pts[Math.min(1, pts.length - 1)];
-    const seg = Math.max(1e-6, a.distanceTo(b));
-    return {
-      x: a.x,
-      y: a.y,
-      z: a.z,
-      tx: (b.x - a.x) / seg,
-      tz: (b.z - a.z) / seg,
-    };
-  }
-  let left = dist;
-  for (let i = 1; i < pts.length; i++) {
-    const a = pts[i - 1];
-    const b = pts[i];
-    const seg = a.distanceTo(b);
-    if (seg < 1e-6) continue;
-    if (left <= seg) {
-      const t = left / seg;
-      return {
-        x: a.x + (b.x - a.x) * t,
-        y: a.y + (b.y - a.y) * t,
-        z: a.z + (b.z - a.z) * t,
-        tx: (b.x - a.x) / seg,
-        tz: (b.z - a.z) / seg,
-      };
-    }
-    left -= seg;
-  }
-  const a = pts[pts.length - 2] || pts[0];
-  const b = pts[pts.length - 1];
-  const seg = Math.max(1e-6, a.distanceTo(b));
-  return {
-    x: b.x,
-    y: b.y,
-    z: b.z,
-    tx: (b.x - a.x) / seg,
-    tz: (b.z - a.z) / seg,
-  };
 }
 
 const RIDER_SUITS = [0xe11d48, 0x2563eb, 0x16a34a, 0x7c3aed, 0xea580c, 0x0f766e, 0xf59e0b];
@@ -2645,7 +2045,6 @@ function collectParkBlockers(center, sample, layers = {}) {
   return out;
 }
 
-
 function addTrailRiders(parent, paths, sample, unitScale = 1) {
   const minLen = Math.max(12, unitScale * 0.5);
   const usable = (paths || [])
@@ -2751,29 +2150,6 @@ function updateTrailRiders(pack, dt) {
     rider.mesh.rotation.z = Math.sin(rider.along * 0.09 + rider.phase) * (rider.board ? 0.22 : 0.14);
     rider.mesh.visible = Number.isFinite(rider.mesh.position.y);
   }
-}
-
-function sampleAlongPolyline(pts, step) {
-  if (!pts || pts.length < 2) return [];
-  const out = [];
-  let dist = 0;
-  let next = 0;
-  for (let i = 1; i < pts.length; i++) {
-    const a = pts[i - 1];
-    const b = pts[i];
-    const seg = a.distanceTo(b);
-    if (seg < 1e-4) continue;
-    while (next <= dist + seg) {
-      const t = (next - dist) / seg;
-      out.push(new THREE.Vector3().lerpVectors(a, b, t));
-      next += step;
-    }
-    dist += seg;
-  }
-  if (!out.length) out.push(pts[0].clone());
-  const last = pts[pts.length - 1];
-  if (out[out.length - 1].distanceTo(last) > step * 0.25) out.push(last.clone());
-  return out;
 }
 
 function cableHeightProfile(t, cableH, stationH) {
@@ -2944,22 +2320,6 @@ function orientLiftGround(ground) {
   if (!ground?.length) return ground || [];
   if (ground[0].y <= ground[ground.length - 1].y) return ground;
   return ground.slice().reverse();
-}
-
-function horizTangentAt(pts, i) {
-  const a = pts[Math.max(0, i - 1)];
-  const b = pts[Math.min(pts.length - 1, i + 1)];
-  const t = new THREE.Vector3(b.x - a.x, 0, b.z - a.z);
-  if (t.lengthSq() < 1e-8) t.set(1, 0, 0);
-  else t.normalize();
-  return t;
-}
-
-function sideVector(tan) {
-  const side = new THREE.Vector3().crossVectors(new THREE.Vector3(0, 1, 0), tan);
-  if (side.lengthSq() < 1e-8) side.set(1, 0, 0);
-  else side.normalize();
-  return side;
 }
 
 /** Adaptive tower spacing in mesh meters (~40–70m), tighter on steep ground. */
