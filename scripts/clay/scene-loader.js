@@ -72,6 +72,8 @@ export async function loadVectors(base, vectors, resort = null) {
   const clayWaterPath = vectors.water || null;
   const clayBuildingsPath = vectors.buildings || null;
   const clayRoadsPath = vectors.roads || null;
+  const clayCliffsPath = vectors.cliffs || null;
+  const clayRocksPath = vectors.rocks || null;
   const gameBase = gameSceneBase(resort);
   const fetches = [
     fetchJson(routesUrl).catch(() => null),
@@ -82,6 +84,8 @@ export async function loadVectors(base, vectors, resort = null) {
     clayWaterPath ? fetchJson(new URL(clayWaterPath, base)).catch(() => null) : Promise.resolve(null),
     clayBuildingsPath ? fetchJson(new URL(clayBuildingsPath, base)).catch(() => null) : Promise.resolve(null),
     clayRoadsPath ? fetchJson(new URL(clayRoadsPath, base)).catch(() => null) : Promise.resolve(null),
+    clayCliffsPath ? fetchJson(new URL(clayCliffsPath, base)).catch(() => null) : Promise.resolve(null),
+    clayRocksPath ? fetchJson(new URL(clayRocksPath, base)).catch(() => null) : Promise.resolve(null),
   ];
   if (gameBase) {
     fetches.push(
@@ -90,12 +94,14 @@ export async function loadVectors(base, vectors, resort = null) {
       fetchJson(new URL("vectors/water.geojson", gameBase)).catch(() => null),
       fetchJson(new URL("vectors/ski-area.geojson", gameBase)).catch(() => null),
       fetchJson(new URL("vectors/forest.geojson", gameBase)).catch(() => null),
+      fetchJson(new URL("vectors/cliffs.geojson", gameBase)).catch(() => null),
+      fetchJson(new URL("vectors/rocks.geojson", gameBase)).catch(() => null),
     );
   }
   const results = await Promise.all(fetches);
   const forestPoints = results[2];
   const forestHome = results[3];
-  const game = gameBase ? results.slice(8) : [];
+  const game = gameBase ? results.slice(10) : [];
   const forest = await mergeTreeArea(mergeFeatureCollections(game[4], forestHome, forestPoints));
   const waterGame = gameBase ? game[2] : null;
   return {
@@ -104,6 +110,8 @@ export async function loadVectors(base, vectors, resort = null) {
     forest,
     buildings: mergeFeatureCollections(game[0], results[6]),
     roads: mergeFeatureCollections(game[1], results[7]),
+    cliffs: mergeFeatureCollections(game[5], results[8]),
+    rocks: mergeFeatureCollections(game[6], results[9]),
     water: waterFeatureCount(waterGame) ? waterGame : results[5],
     skiArea: gameBase ? game[3] : null,
     skiAreaBuffer: results[4],

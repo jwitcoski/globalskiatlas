@@ -172,6 +172,7 @@ function createTBarTerminal(position, yaw, type, assets) {
   housing.frustumCulled = false;
   pulley.frustumCulled = false;
   g.add(col, arm, housing, pulley);
+  g.scale.set(0.5, 1, 0.5);
   return g;
 }
 

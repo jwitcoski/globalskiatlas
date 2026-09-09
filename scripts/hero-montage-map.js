@@ -66,6 +66,8 @@ import {
   waterFeatureCount,
   prepareWaterFeature,
   addOsmWater,
+  addOsmCliffs,
+  addOsmRocks,
   addWaterDisc,
   addWaterPond,
   addTrailRiders,
@@ -803,6 +805,8 @@ export async function initHeroMontageMap(container, options = {}) {
         liftTbars = liftPack?.tbarAnims?.length ? liftPack.tbarAnims : null;
       }
       if (osm.forest) addTrees(decor, osm.forest, center, sample, unitScale, clipRing);
+      if (osm.cliffs) addOsmCliffs(decor, osm.cliffs, center, sample, unitScale, clipRing);
+      if (osm.rocks) addOsmRocks(decor, osm.rocks, center, sample, unitScale, clipRing);
       if (osm.buildings) addBuildings(decor, osm.buildings, center, sample, unitScale, clipRing);
       else addProceduralBuildings(decor, sample, unitScale);
       if (hasOsmWater) {

@@ -15,8 +15,8 @@ export const TRAIL_STYLES = {
 };
 export const TREE_SCALE = 1.16;
 export const MAX_BUILDINGS = 48;
-/** Buildings are authored in mesh meters; keep them tiny in the hero (~1/8 prior size). */
-export const BUILDING_SHRINK = 0.12;
+/** Buildings are authored in mesh meters; keep them tiny in the hero (~1/16 prior size). */
+export const BUILDING_SHRINK = 0.06;
 export const GRID_RES = 72;
 export const HEIGHT_EXAGGERATE = 2;
 

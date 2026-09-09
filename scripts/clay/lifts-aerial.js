@@ -289,8 +289,11 @@ function createGondolaTerminal(endpoint, direction, endType, assets) {
  * @param {"bottom"|"top"} endType
  */
 function createLiftTerminal(kind, endpoint, direction, endType, assets) {
-  if (kind === "gondola") return createGondolaTerminal(endpoint, direction, endType, assets);
-  return createChairliftTerminal(endpoint, direction, endType, assets);
+  const terminal = kind === "gondola"
+    ? createGondolaTerminal(endpoint, direction, endType, assets)
+    : createChairliftTerminal(endpoint, direction, endType, assets);
+  terminal.scale.set(0.5, 1, 0.5);
+  return terminal;
 }
 
 /**

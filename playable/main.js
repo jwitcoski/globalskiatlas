@@ -82,6 +82,7 @@ import {
   paintTrailerFrame,
 } from "./trailer.js?v=t2";
 import { createFlyby, prepFlybyTour, clearFlybyTour, tickFlybyZoom } from "./flyby.js?v=tour4";
+import { updateLiftMotion } from "./lift-motion.js?v=1";
 
 loadDifficultyScheme();
 
@@ -1439,6 +1440,7 @@ function tick(now) {
   }
   if (lobbyHandoff) tickLobbyHandoff(frameDt);
   if (run?.phase === "ready") updateIslandDust(scene.userData.island, frameDt);
+  for (const lift of scene.userData.liftMotions || []) updateLiftMotion(THREE, lift, frameDt);
   if (scene.userData.traffic && hf) updateTraffic(scene.userData.traffic, frameDt, (x, z) => hf.sample(x, z));
   if (mini && run) {
     const hunting = !!(run.yetiOut && yeti?.visible);

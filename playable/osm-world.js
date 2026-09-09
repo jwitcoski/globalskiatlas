@@ -5,6 +5,8 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { styleForPisteFeature, classifyDifficulty } from "./trail-map.js?v=scheme1";
 import { addOsmTraffic } from "./traffic.js?v=vis16";
 import { alongPolyline, polylineLen } from "./gates.js?v=vis17";
+import { liftType, liftCableHeight, makeLiftTerminal, makeLiftCarrier, makeLiftSkier } from "./lift-graphics.js";
+import { createLiftMotion } from "./lift-motion.js";
 
 const GRID = 12;
 const MAX_FILL_SPAN = 700;
@@ -411,6 +413,23 @@ function sampleAlong(pts, step) {
   return out;
 }
 
+function straightLiftPath(points) {
+  if (points.length < 2) return points;
+  const start = points[0];
+  const end = points[points.length - 1];
+  const out = [];
+  let total = 0;
+  const distances = [0];
+  for (let i = 1; i < points.length; i++) {
+    total += points[i].distanceTo(points[i - 1]);
+    distances.push(total);
+  }
+  for (let i = 0; i < points.length; i++) {
+    out.push(new THREE.Vector3().lerpVectors(start, end, total ? distances[i] / total : 0));
+  }
+  return out;
+}
+
 function bakeMeshToBase(mesh) {
   const geo = mesh.geometry.clone();
   mesh.updateWorldMatrix(true, false);
@@ -542,8 +561,10 @@ async function addLiftKit(fc, elevFn, scene, counts, poly) {
   });
   const towerPts = [];
   const terminals = [];
+  const liftMotions = [];
   let cables = 0;
   for (const f of fc.features || []) {
+    const type = liftType(f);
     for (const coords of lineParts(f.geometry)) {
       const ground = [];
       for (const c of coords) {
@@ -553,23 +574,37 @@ async function addLiftKit(fc, elevFn, scene, counts, poly) {
         ground.push(new THREE.Vector3(x, elevFn(x, z), z));
       }
       if (ground.length < 2) continue;
-      const cable = ground.map((p) => new THREE.Vector3(p.x, p.y + CABLE_H, p.z));
-      const curve = new THREE.CatmullRomCurve3(cable);
-      const segs = Math.min(96, Math.max(12, cable.length * 3));
-      scene.add(new THREE.Mesh(new THREE.TubeGeometry(curve, segs, 0.07, 5, false), cableMat));
-      cables += 1;
+      const cableHeight = liftCableHeight(type);
+      const liftPath = type === "gondola" ? straightLiftPath(ground) : ground;
+      if (type !== "magic_carpet") {
+        const cable = liftPath.map((p) => new THREE.Vector3(p.x, p.y + cableHeight, p.z));
+        const curve = new THREE.CatmullRomCurve3(cable);
+        const segs = Math.min(96, Math.max(12, cable.length * 3));
+        scene.add(new THREE.Mesh(new THREE.TubeGeometry(curve, segs, 0.07, 5, false), cableMat));
+        cables += 1;
+      }
       const a = ground[0];
       const b = ground[ground.length - 1];
       const tanA = ground[Math.min(1, ground.length - 1)].clone().sub(a);
       const tanB = b.clone().sub(ground[Math.max(0, ground.length - 2)]);
       const lineTan = new THREE.Vector3().subVectors(b, a);
       const skip = 18;
-      towerPts.push({ p: a, tangent: tanA });
-      towerPts.push({ p: b, tangent: tanB });
-      terminals.push({ origin: a, tangent: lineTan.clone() }, { origin: b, tangent: lineTan.clone().negate() });
+      towerPts.push({ p: a, tangent: tanA, type });
+      towerPts.push({ p: b, tangent: tanB, type });
+      terminals.push({ origin: a, tangent: lineTan.clone(), type }, { origin: b, tangent: lineTan.clone().negate(), type });
+      const motion = createLiftMotion(
+        THREE,
+        scene,
+        type,
+        liftPath,
+        elevFn,
+        () => makeLiftCarrier(THREE, type, steel),
+        (color) => makeLiftSkier(THREE, color),
+      );
+      if (motion) liftMotions.push(motion);
       for (const p of sampleAlong(ground, TOWER_STEP)) {
         if (p.distanceTo(a) < skip || p.distanceTo(b) < skip) continue;
-        towerPts.push({ p, tangent: tanA.lengthSq() > tanB.lengthSq() ? tanA : lineTan });
+        towerPts.push({ p, tangent: tanA.lengthSq() > tanB.lengthSq() ? tanA : lineTan, type });
       }
     }
   }
@@ -588,9 +623,10 @@ async function addLiftKit(fc, elevFn, scene, counts, poly) {
     const s = TOWER_H / Math.max(0.01, h);
     const towerMesh = new THREE.InstancedMesh(geo, mat, towers.length);
     for (let i = 0; i < towers.length; i++) {
-      const { p, tangent } = towers[i];
+      const { p, tangent, type } = towers[i];
       dummy.position.copy(p);
-      dummy.scale.setScalar(s);
+      const heightScale = liftCableHeight(type) / TOWER_H;
+      dummy.scale.set(s, s * heightScale, s);
       const want = new THREE.Vector3(tangent.x, 0, tangent.z);
       if (want.lengthSq() < 1e-8) dummy.quaternion.identity();
       else dummy.quaternion.setFromUnitVectors(POLY_AXIS, want.normalize());
@@ -601,10 +637,9 @@ async function addLiftKit(fc, elevFn, scene, counts, poly) {
     scene.add(towerMesh);
   }
   let stations = 0;
-  const term = makeBullwheelTerminal(poly?.pillar, steel);
-  if (term && terminals.length) {
+  if (terminals.length) {
     for (const t of terminals) {
-      const clone = term.clone(true);
+      const clone = makeLiftTerminal(THREE, t.type, steel);
       placeAlongLift(clone, t.origin, t.tangent, 1);
       sitOnDem(clone, t.origin.y);
       scene.add(clone);
@@ -615,6 +650,7 @@ async function addLiftKit(fc, elevFn, scene, counts, poly) {
   counts.lift_towers = towers.length;
   counts.lift_stations = stations;
   counts.lift_source = poly ? "poly-google" : "procedural";
+  scene.userData.liftMotions = liftMotions;
 }
 
 
@@ -672,16 +708,19 @@ function drapeFill(outer, holes, elevFn, lift, material, maxSpan = MAX_FILL_SPAN
 function extrudeBuilding(outer, holes, elevFn, height, material) {
   const bb = ringBBox(outer);
   if (!Number.isFinite(bb.span) || bb.span > MAX_BUILDING_SPAN) return null;
+  const cx = (bb.minX + bb.maxX) * 0.5;
+  const cz = (bb.minY + bb.maxY) * 0.5;
+  const footprintScale = 0.5;
   const o = [];
   for (const c of outer) {
-    if (c?.length >= 2) o.push(new THREE.Vector2(c[0], c[1]));
+    if (c?.length >= 2) o.push(new THREE.Vector2(cx + (c[0] - cx) * footprintScale, cz + (c[1] - cz) * footprintScale));
   }
   if (o.length < 3) return null;
   const shape = new THREE.Shape(o);
   for (const h of holes || []) {
     const hp = [];
     for (const c of h) {
-      if (c?.length >= 2) hp.push(new THREE.Vector2(c[0], c[1]));
+      if (c?.length >= 2) hp.push(new THREE.Vector2(cx + (c[0] - cx) * footprintScale, cz + (c[1] - cz) * footprintScale));
     }
     if (hp.length >= 3) shape.holes.push(new THREE.Path(hp));
   }
@@ -1037,7 +1076,7 @@ export async function addOsmWorld(THREE, scene, sceneRoot, manifest, elevFn) {
     let n = 0;
     for (const f of buildings.features || []) {
       for (const poly of polygonParts(f.geometry)) {
-        const mesh = extrudeBuilding(poly[0], poly.slice(1), elevFn, 9, mats.building);
+        const mesh = extrudeBuilding(poly[0], poly.slice(1), elevFn, 4.5, mats.building);
         if (mesh) {
           scene.add(mesh);
           n += 1;
