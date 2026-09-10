@@ -14,7 +14,8 @@
         "wiki:ingest": "node scripts/wiki-ingest-parquet.js",
         "wiki:bulk-content": "node scripts/wiki-bulk-update-resort-content.js",
         "serve:static": "serve -l tcp://localhost:3010",
-        "test": "echo \"Error: no test specified\" && exit 1"
+        "test": "npm run test:clay",
+        "test:clay": "node scripts/tests/clay-smoke.js"
     },
     "keywords": [
         "landing",

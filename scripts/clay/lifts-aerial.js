@@ -27,6 +27,7 @@ import {
   MAX_TBAR_LIFTS,
   MAX_TBAR_CARRIERS,
 } from "./lifts-tbar.js";
+import { buildEntityMetadata, entityKey } from "./entity-metadata.js";
 
 export const GONDOLA_LIFT_TYPES = new Set([
   "gondola",
@@ -449,6 +450,7 @@ export function addLifts(parent, featureCollection, center, sample, unitScale = 
   group.name = "montage-lifts";
   const features = selectLiftFeatures(featureCollection?.features || []);
   if (!features.length) return null;
+  const pickables = [];
 
   const s = unitScale;
   const towerH = 3.4 * s;
@@ -478,6 +480,12 @@ export function addLifts(parent, featureCollection, center, sample, unitScale = 
   const cabinAccent = new THREE.MeshLambertMaterial({ color: 0x0f766e, flatShading: true });
   const surfaceMat = new THREE.MeshBasicMaterial({
     color: 0x171717,
+    side: THREE.DoubleSide,
+  });
+  const pickMaterial = new THREE.MeshBasicMaterial({
+    transparent: true,
+    opacity: 0,
+    depthWrite: false,
     side: THREE.DoubleSide,
   });
   const tbarAssets = createTBarAssets(unitScale);
@@ -514,6 +522,9 @@ export function addLifts(parent, featureCollection, center, sample, unitScale = 
         assets: tbarAssets,
       });
       if (built?.group) {
+        built.group.userData.entity = buildEntityMetadata("lift", feature);
+        built.group.userData.entityKey = entityKey(built.group.userData.entity);
+        pickables.push(built.group);
         group.add(built.group);
         tbarCount += 1;
         if (built.anim) {
@@ -565,6 +576,7 @@ export function addLifts(parent, featureCollection, center, sample, unitScale = 
     if (tbar) continue;
 
     if (!surface && aerialCount >= MAX_AERIAL) continue;
+    const featurePickPositions = [];
 
     for (const coords of lineParts(feature.geometry)) {
       if (surface) {
@@ -575,6 +587,7 @@ export function addLifts(parent, featureCollection, center, sample, unitScale = 
         }
         for (const run of clipPointRuns(pts, clipRing)) {
           appendRibbon(surfaceRibbons, run, surfaceWidth);
+          appendRibbon(featurePickPositions, run, Math.max(surfaceWidth * 2.5, 0.5 * s));
         }
         continue;
       }
@@ -592,6 +605,8 @@ export function addLifts(parent, featureCollection, center, sample, unitScale = 
       }
       if (ground.length < 2) continue;
       ground = orientLiftGround(ground);
+      const pickGround = ground.map((point) => point.clone().addScaledVector(new THREE.Vector3(0, 0.55 * s, 0), 1));
+      appendRibbon(featurePickPositions, pickGround, Math.max(0.65 * s, surfaceWidth * 2.5));
       aerialCount += 1;
 
       const liftLen = polylineLen(ground);
@@ -661,6 +676,17 @@ export function addLifts(parent, featureCollection, center, sample, unitScale = 
           else tan.normalize();
           towerBases.push({ p, tan });
         }
+      }
+    }
+    if (featurePickPositions.length) {
+      const pickMesh = meshFromPositions(featurePickPositions, pickMaterial);
+      if (pickMesh) {
+        pickMesh.name = "montage-lift-pick";
+        pickMesh.userData.entity = buildEntityMetadata("lift", feature);
+        pickMesh.userData.entityKey = entityKey(pickMesh.userData.entity);
+        pickMesh.renderOrder = 10;
+        group.add(pickMesh);
+        pickables.push(pickMesh);
       }
     }
   }
@@ -788,6 +814,7 @@ export function addLifts(parent, featureCollection, center, sample, unitScale = 
   }
 
   parent.add(group);
+  group.userData.pickables = pickables;
   return { group, chairAnim, gondolaAnim, tbarAnims };
 }
 

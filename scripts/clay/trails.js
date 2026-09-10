@@ -11,6 +11,7 @@ import {
   clipPointRuns,
   smoothTrailPts,
 } from "./math-utils.js";
+import { buildEntityMetadata, entityKey } from "./entity-metadata.js";
 
 export const CLAY_TRAIL_SCHEMES = ["american", "european", "japanese"];
 export const CLAY_TRAIL_SCHEME_LABELS = {
@@ -301,10 +302,18 @@ export function addTrails(parent, featureCollection, center, sample, unitScale =
   const trailLift = Math.max(0.4, 0.12 * unitScale);
   const riderLift = trailLift + Math.max(0.35, 0.1 * unitScale);
   const paths = [];
+  const pickables = [];
+  const pickMaterial = new THREE.MeshBasicMaterial({
+    transparent: true,
+    opacity: 0,
+    depthWrite: false,
+    side: THREE.DoubleSide,
+  });
 
   for (let i = 0; i < features.length; i += stride) {
     const feature = features[i];
     const style = trailStyle(featureDifficulty(feature));
+    const featurePositions = [];
     for (const coords of lineParts(feature.geometry)) {
       const pts = [];
       const ridePts = [];
@@ -316,16 +325,31 @@ export function addTrails(parent, featureCollection, center, sample, unitScale =
       }
       for (const run of clipPointRuns(smoothTrailPts(pts, 1), clipRing)) {
         appendRibbon(buckets[style.key], run, width);
+        appendRibbon(featurePositions, run, Math.max(width * 1.8, 0.65 * unitScale));
       }
       for (const run of clipPointRuns(smoothTrailPts(ridePts, 1), clipRing)) {
         if (run.length >= 2) paths.push(ensureDownhillPath(run));
+      }
+    }
+    if (featurePositions.length) {
+      const pickMesh = meshFromPositions(featurePositions, pickMaterial);
+      if (pickMesh) {
+        pickMesh.name = "montage-trail-pick";
+        pickMesh.userData.entity = buildEntityMetadata("piste", feature, "", {
+          center,
+          sample,
+        });
+        pickMesh.userData.entityKey = entityKey(pickMesh.userData.entity);
+        pickMesh.renderOrder = 10;
+        group.add(pickMesh);
+        pickables.push(pickMesh);
       }
     }
   }
 
   for (const [key, positions] of Object.entries(buckets)) {
     if (!positions.length) continue;
-    const style = trailStyle(key);
+    const style = CLAY_TRAIL_COLORS[key] || trailStyle(key);
     const mat = new THREE.MeshLambertMaterial({
       color: style.color,
       emissive: style.emissive,
@@ -346,6 +370,7 @@ export function addTrails(parent, featureCollection, center, sample, unitScale =
   }
 
   group.userData.paths = paths;
+  group.userData.pickables = pickables;
   group.userData.trailLift = trailLift;
   group.userData.riderLift = riderLift;
   parent.add(group);

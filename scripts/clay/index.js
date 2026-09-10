@@ -3,6 +3,10 @@
  */
 
 export * from "./config.js";
+export * from "./entity-metadata.js";
+export * from "./trail-profile.js";
+export * from "./quality.js";
+export * from "./entity-tooltip.js";
 export * from "./math-utils.js";
 export * from "./height-grid.js";
 export * from "./trees.js";

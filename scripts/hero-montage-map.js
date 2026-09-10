@@ -6,6 +6,9 @@
 import * as THREE from "three";
 import { createOrbitController } from "./clay/orbit-controller.js";
 import { createSceneRuntime } from "./clay/scene-runtime.js";
+import { createClayEntityPicker } from "./clay/entity-picker.js";
+import { createClayEntityPanel } from "./clay/entity-panel.js";
+import { createClayEntityTooltip } from "./clay/entity-tooltip.js";
 import {
   loadCatalog,
   loadHomepageMesh as loadTerrainScene,
@@ -27,6 +30,7 @@ import {
   gameSceneBase,
   playableHref,
   capDpr,
+  getClayQuality,
   cross2,
   convexHullXZ,
   expandHull,
@@ -557,6 +561,10 @@ function addLights(scene) {
 
   const key = new THREE.DirectionalLight(0xfff8f0, 0.95);
   key.position.set(-70, 95, 40);
+  key.castShadow = true;
+  key.shadow.mapSize.set(1024, 1024);
+  key.shadow.camera.near = 1;
+  key.shadow.camera.far = 260;
   scene.add(key);
 
   const fill = new THREE.DirectionalLight(0xd8e6f6, 0.35);
@@ -628,12 +636,15 @@ export async function initHeroMontageMap(container, options = {}) {
   scene.fog = null;
 
   const camera = new THREE.PerspectiveCamera(36, 1, 0.5, 1200);
+  const quality = getClayQuality();
   const renderer = new THREE.WebGLRenderer({
     antialias: true,
     alpha: false,
-    powerPreference: "low-power",
+    powerPreference: quality.powerPreference,
   });
-  renderer.setPixelRatio(capDpr());
+  renderer.setPixelRatio(Math.min(capDpr(), quality.dpr));
+  renderer.shadowMap.enabled = quality.shadows;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.NoToneMapping;
   renderer.toneMappingExposure = 1;
@@ -650,6 +661,7 @@ export async function initHeroMontageMap(container, options = {}) {
   let liftChairs = null;
   let liftGondolas = null;
   let liftTbars = null;
+  let entityPickables = [];
   const procedural = createProceduralIsland(world);
   let bounds = procedural.bounds;
   const procTrails = procedural.decor?.getObjectByName("montage-trails-proc");
@@ -664,6 +676,18 @@ export async function initHeroMontageMap(container, options = {}) {
   let lastT = performance.now();
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const canvas = renderer.domElement;
+  const entityPanel = createClayEntityPanel(embed);
+  const entityTooltip = createClayEntityTooltip(embed);
+  const entityPicker = createClayEntityPicker({
+    canvas,
+    camera,
+    getPickables: () => entityPickables,
+    onSelect: (entity) => entityPanel.show(entity),
+    onHover: (entity, event) => {
+      if (entity && event) entityTooltip.show(entity, event.clientX, event.clientY);
+      else entityTooltip.hide();
+    },
+  });
   const orbit = createOrbitController({
     camera,
     canvas,
@@ -804,7 +828,9 @@ export async function initHeroMontageMap(container, options = {}) {
       liftTbars = null;
       trailRiders = null;
       parkRiders = null;
+      entityPanel.hide();
       clearGroup(decor);
+      entityPickables = [];
       const trails = osm.routes
         ? addTrails(decor, osm.routes, center, sample, unitScale, clipRing)
         : addProceduralTrails(decor, sample);
@@ -813,6 +839,10 @@ export async function initHeroMontageMap(container, options = {}) {
         liftChairs = liftPack?.chairAnim || null;
         liftGondolas = liftPack?.gondolaAnim || null;
         liftTbars = liftPack?.tbarAnims?.length ? liftPack.tbarAnims : null;
+        entityPickables.push(...(trails?.userData?.pickables || []));
+        entityPickables.push(...(liftPack?.group?.userData?.pickables || []));
+      } else {
+        entityPickables.push(...(trails?.userData?.pickables || []));
       }
       if (osm.forest) addTrees(decor, osm.forest, center, sample, unitScale, clipRing);
       if (osm.cliffs) addOsmCliffs(decor, osm.cliffs, center, sample, unitScale, clipRing);
@@ -950,6 +980,9 @@ export async function initHeroMontageMap(container, options = {}) {
       loadToken += 1;
       runtime.dispose();
       orbit.dispose();
+      entityPicker.dispose();
+      entityPanel.dispose();
+      entityTooltip.dispose();
       window.removeEventListener("resize", resize);
       prevBtn?.removeEventListener("click", onPrev);
       nextBtn?.removeEventListener("click", onNext);

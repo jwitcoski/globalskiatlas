@@ -39,7 +39,7 @@ export function shadeSnowGeometry(geo) {
     else c.copy(low).lerp(mid, elev / 0.5);
     const ny = Math.abs(nrm.getY(i));
     const slope = THREE.MathUtils.clamp(1 - ny, 0, 1);
-    c.lerp(slopeShade, slope * 0.28);
+    c.lerp(slopeShade, slope * 0.46);
     colors[i * 3] = c.r;
     colors[i * 3 + 1] = c.g;
     colors[i * 3 + 2] = c.b;

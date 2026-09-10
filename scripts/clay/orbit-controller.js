@@ -33,6 +33,11 @@ export function createOrbitController({ camera, canvas, container, renderer, get
     zoom = THREE.MathUtils.clamp(needDist / baseDist, zoomMin, zoomMax);
   }
 
+  function reset() {
+    syncFromBounds();
+    resumeSpinAt = performance.now() + idleResumeMs;
+  }
+
   function onPointerDown(e) {
     if (e.pointerType === "mouse" && e.button !== 0) return;
     dragging = true;
@@ -67,6 +72,11 @@ export function createOrbitController({ camera, canvas, container, renderer, get
     e.preventDefault();
     zoom = THREE.MathUtils.clamp(zoom * Math.exp(e.deltaY * 0.00115), zoomMin, zoomMax);
     markInteracted();
+  }
+
+  function onDoubleClick(e) {
+    e.preventDefault();
+    reset();
   }
 
   function resize() {
@@ -106,12 +116,14 @@ export function createOrbitController({ camera, canvas, container, renderer, get
   canvas.addEventListener("pointerup", onPointerUp);
   canvas.addEventListener("pointercancel", onPointerUp);
   canvas.addEventListener("wheel", onWheel, { passive: false });
+  canvas.addEventListener("dblclick", onDoubleClick);
   canvas.addEventListener("contextmenu", (e) => e.preventDefault());
   syncFromBounds();
 
   return {
     resize,
     syncFromBounds,
+    reset,
     advance,
     frame,
     dispose() {
@@ -120,6 +132,7 @@ export function createOrbitController({ camera, canvas, container, renderer, get
       canvas.removeEventListener("pointerup", onPointerUp);
       canvas.removeEventListener("pointercancel", onPointerUp);
       canvas.removeEventListener("wheel", onWheel);
+      canvas.removeEventListener("dblclick", onDoubleClick);
     },
   };
 }
