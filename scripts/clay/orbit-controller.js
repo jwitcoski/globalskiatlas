@@ -2,11 +2,18 @@
 
 import * as THREE from "three";
 
+const DRAG_PX = 10;
+
+function pointerDistance(a, b) {
+  return Math.hypot(a.x - b.x, a.y - b.y);
+}
+
 export function createOrbitController({ camera, canvas, container, renderer, getBounds, reduceMotion = false }) {
   let az = 0.55;
   let polar = 0.78;
   let zoom = 1;
   let dragging = false;
+  let dragReady = false;
   let lastPointer = null;
   let resumeSpinAt = 0;
   const idleResumeMs = 5000;
@@ -15,9 +22,15 @@ export function createOrbitController({ camera, canvas, container, renderer, get
   const polarMax = 1.35;
   const zoomMin = 0.45;
   const zoomMax = 2.6;
+  const pointers = new Map();
+  let pinch = null;
 
   function markInteracted() {
     resumeSpinAt = performance.now() + idleResumeMs;
+  }
+
+  function applyZoomFactor(factor) {
+    zoom = THREE.MathUtils.clamp(zoom * factor, zoomMin, zoomMax);
   }
 
   function syncFromBounds() {
@@ -38,20 +51,59 @@ export function createOrbitController({ camera, canvas, container, renderer, get
     resumeSpinAt = performance.now() + idleResumeMs;
   }
 
+  function activePointers() {
+    return [...pointers.values()];
+  }
+
+  function beginPinch() {
+    const pts = activePointers();
+    if (pts.length < 2) {
+      pinch = null;
+      return;
+    }
+    pinch = { dist0: Math.max(8, pointerDistance(pts[0], pts[1])), zoom0: zoom };
+    dragging = false;
+    dragReady = false;
+    lastPointer = null;
+  }
+
   function onPointerDown(e) {
     if (e.pointerType === "mouse" && e.button !== 0) return;
-    dragging = true;
+    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pointers.size >= 2) {
+      beginPinch();
+      markInteracted();
+      return;
+    }
+    dragReady = true;
+    dragging = false;
     lastPointer = { x: e.clientX, y: e.clientY };
-    try { canvas.setPointerCapture(e.pointerId); } catch (_) { /* ignore */ }
     canvas.style.cursor = "grabbing";
     markInteracted();
-    e.preventDefault();
   }
 
   function onPointerMove(e) {
-    if (!dragging || !lastPointer) return;
+    if (pointers.has(e.pointerId)) pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+    if (pinch && pointers.size >= 2) {
+      const pts = activePointers();
+      const dist = pointerDistance(pts[0], pts[1]);
+      if (dist >= 8 && pinch.dist0 >= 8) {
+        zoom = THREE.MathUtils.clamp(pinch.zoom0 * (pinch.dist0 / dist), zoomMin, zoomMax);
+        markInteracted();
+      }
+      e.preventDefault();
+      return;
+    }
+
+    if (!dragReady || !lastPointer || pointers.size !== 1) return;
     const dx = e.clientX - lastPointer.x;
     const dy = e.clientY - lastPointer.y;
+    if (!dragging) {
+      if (Math.hypot(dx, dy) < DRAG_PX) return;
+      dragging = true;
+      try { canvas.setPointerCapture(e.pointerId); } catch (_) { /* ignore */ }
+    }
     lastPointer = { x: e.clientX, y: e.clientY };
     az -= dx * 0.005;
     polar = THREE.MathUtils.clamp(polar + dy * 0.004, polarMin, polarMax);
@@ -60,7 +112,16 @@ export function createOrbitController({ camera, canvas, container, renderer, get
   }
 
   function onPointerUp(e) {
-    if (!dragging) return;
+    pointers.delete(e.pointerId);
+    if (pointers.size < 2) pinch = null;
+    if (pointers.size === 1) {
+      const remaining = activePointers()[0];
+      lastPointer = remaining ? { x: remaining.x, y: remaining.y } : null;
+      dragReady = Boolean(lastPointer);
+      dragging = false;
+      return;
+    }
+    dragReady = false;
     dragging = false;
     lastPointer = null;
     canvas.style.cursor = "grab";
@@ -70,7 +131,7 @@ export function createOrbitController({ camera, canvas, container, renderer, get
 
   function onWheel(e) {
     e.preventDefault();
-    zoom = THREE.MathUtils.clamp(zoom * Math.exp(e.deltaY * 0.00115), zoomMin, zoomMax);
+    applyZoomFactor(Math.exp(e.deltaY * 0.00115));
     markInteracted();
   }
 
@@ -89,7 +150,7 @@ export function createOrbitController({ camera, canvas, container, renderer, get
   }
 
   function advance(dt, now) {
-    const autoSpin = !reduceMotion && !dragging && now >= resumeSpinAt;
+    const autoSpin = !reduceMotion && !dragging && !pinch && now >= resumeSpinAt;
     if (autoSpin) az += dt * spinSpeed;
     return autoSpin;
   }
@@ -97,7 +158,7 @@ export function createOrbitController({ camera, canvas, container, renderer, get
   function frame(t = 0) {
     const { center, radius } = getBounds();
     const dist = Math.max(1, radius * 1.72 * zoom);
-    const autoSpin = !reduceMotion && !dragging && performance.now() >= resumeSpinAt;
+    const autoSpin = !reduceMotion && !dragging && !pinch && performance.now() >= resumeSpinAt;
     const bob = autoSpin ? Math.sin(t * 0.35) * radius * 0.012 * zoom : 0;
     const horiz = Math.cos(polar) * dist;
     camera.position.set(
@@ -110,9 +171,9 @@ export function createOrbitController({ camera, canvas, container, renderer, get
 
   canvas.style.touchAction = "none";
   canvas.style.cursor = "grab";
-  canvas.setAttribute("aria-label", "Drag to orbit the 3D map; scroll to zoom");
+  canvas.setAttribute("aria-label", "Drag to orbit the 3D map; pinch or scroll to zoom");
   canvas.addEventListener("pointerdown", onPointerDown);
-  canvas.addEventListener("pointermove", onPointerMove);
+  canvas.addEventListener("pointermove", onPointerMove, { passive: false });
   canvas.addEventListener("pointerup", onPointerUp);
   canvas.addEventListener("pointercancel", onPointerUp);
   canvas.addEventListener("wheel", onWheel, { passive: false });

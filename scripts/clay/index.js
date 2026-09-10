@@ -17,4 +17,5 @@ export * from "./rocks.js";
 export * from "./skiers.js";
 export * from "./snowpark.js";
 export * from "./lifts-tbar.js";
+export * from "./lifts-carpet.js";
 export * from "./lifts-aerial.js";

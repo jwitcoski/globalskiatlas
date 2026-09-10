@@ -27,6 +27,12 @@ import {
   MAX_TBAR_LIFTS,
   MAX_TBAR_CARRIERS,
 } from "./lifts-tbar.js";
+import {
+  isMagicCarpetLift,
+  createCarpetAssets,
+  createMagicCarpetLift,
+  MAX_CARPET_LIFTS,
+} from "./lifts-carpet.js";
 import { buildEntityMetadata, entityKey } from "./entity-metadata.js";
 
 export const GONDOLA_LIFT_TYPES = new Set([
@@ -489,9 +495,12 @@ export function addLifts(parent, featureCollection, center, sample, unitScale = 
     side: THREE.DoubleSide,
   });
   const tbarAssets = createTBarAssets(unitScale);
+  const carpetAssets = createCarpetAssets(unitScale);
   const tbarAnims = [];
+  const carpetAnims = [];
   let tbarCount = 0;
   let tbarCarriers = 0;
+  let carpetCount = 0;
 
   /* Prefer longer drag lifts so caps still leave readable T-bars on the mountain. */
   const tbarFeatures = features
@@ -537,6 +546,46 @@ export function addLifts(parent, featureCollection, center, sample, unitScale = 
     }
   }
 
+  const carpetFeatures = features
+    .filter((f) => isMagicCarpetLift(featureAerialway(f)))
+    .map((f) => {
+      let len = 0;
+      for (const coords of lineParts(f.geometry)) {
+        const pts = [];
+        for (const coord of downsampleLine(coords, 12)) {
+          const p = gamePoint(coord[0], coord[1], center, sample, 0);
+          if (p) pts.push(p);
+        }
+        len = Math.max(len, polylineLen(pts));
+      }
+      return { feature: f, len };
+    })
+    .filter((x) => x.len >= 10)
+    .sort((a, b) => b.len - a.len);
+
+  for (const { feature } of carpetFeatures) {
+    if (carpetCount >= MAX_CARPET_LIFTS) break;
+    try {
+      const built = createMagicCarpetLift(feature, {
+        center,
+        sample,
+        unitScale,
+        clipRing,
+        assets: carpetAssets,
+      });
+      if (built?.group) {
+        built.group.userData.entity = buildEntityMetadata("lift", feature);
+        built.group.userData.entityKey = entityKey(built.group.userData.entity);
+        pickables.push(built.group);
+        group.add(built.group);
+        carpetCount += 1;
+        if (built.anim) carpetAnims.push(built.anim);
+      }
+    } catch (err) {
+      console.warn("[hero-montage-map] magic carpet lift failed", err);
+    }
+  }
+
   const poleGeo = new THREE.CylinderGeometry(0.07 * s, 0.1 * s, towerH, 5);
   poleGeo.translate(0, towerH / 2, 0);
   const gondolaPoleGeo = new THREE.CylinderGeometry(0.11 * s, 0.16 * s, gondolaTowerH, 6);
@@ -571,9 +620,10 @@ export function addLifts(parent, featureCollection, center, sample, unitScale = 
   for (const feature of features) {
     const aw = featureAerialway(feature);
     const tbar = isTBarLift(aw);
-    const surface = isSurfaceLift(aw) && !tbar;
+    const carpet = isMagicCarpetLift(aw);
+    const surface = isSurfaceLift(aw) && !tbar && !carpet;
     const gondola = isGondolaLift(aw);
-    if (tbar) continue;
+    if (tbar || carpet) continue;
 
     if (!surface && aerialCount >= MAX_AERIAL) continue;
     const featurePickPositions = [];
@@ -815,7 +865,7 @@ export function addLifts(parent, featureCollection, center, sample, unitScale = 
 
   parent.add(group);
   group.userData.pickables = pickables;
-  return { group, chairAnim, gondolaAnim, tbarAnims };
+  return { group, chairAnim, gondolaAnim, tbarAnims, carpetAnims };
 }
 
 export function updateLiftChairs(pack, dt) {

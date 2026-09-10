@@ -228,9 +228,9 @@ function toggleMapExpanded() {
   if (!layout || !btn) return;
   var expanded = layout.classList.toggle('resort-map-expanded');
   if (label) {
-    label.textContent = expanded ? 'Collapse map' : 'Expand map';
+    label.textContent = expanded ? 'Shorter map' : 'Taller map';
   }
-  btn.setAttribute('aria-label', expanded ? 'Collapse map to side-by-side layout' : 'Expand map to full width');
+  btn.setAttribute('aria-label', expanded ? 'Shrink map height' : 'Expand map height');
   if (icon) {
     icon.classList.remove('bi-arrows-fullscreen', 'bi-fullscreen-exit');
     icon.classList.add(expanded ? 'bi-fullscreen-exit' : 'bi-arrows-fullscreen');

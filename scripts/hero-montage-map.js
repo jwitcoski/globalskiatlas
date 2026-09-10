@@ -85,6 +85,7 @@ import {
   addLifts,
   updateLiftChairs,
   updateTBarLifts,
+  updateCarpetLifts,
 } from "./clay/index.js";
 
 function disposeObject(obj) {
@@ -661,6 +662,7 @@ export async function initHeroMontageMap(container, options = {}) {
   let liftChairs = null;
   let liftGondolas = null;
   let liftTbars = null;
+  let liftCarpets = null;
   let entityPickables = [];
   const procedural = createProceduralIsland(world);
   let bounds = procedural.bounds;
@@ -768,6 +770,7 @@ export async function initHeroMontageMap(container, options = {}) {
       liftChairs = null;
       liftGondolas = null;
       liftTbars = null;
+      liftCarpets = null;
       clearGroup(world);
       world.add(root);
 
@@ -826,6 +829,7 @@ export async function initHeroMontageMap(container, options = {}) {
       liftChairs = null;
       liftGondolas = null;
       liftTbars = null;
+      liftCarpets = null;
       trailRiders = null;
       parkRiders = null;
       entityPanel.hide();
@@ -839,9 +843,11 @@ export async function initHeroMontageMap(container, options = {}) {
         liftChairs = liftPack?.chairAnim || null;
         liftGondolas = liftPack?.gondolaAnim || null;
         liftTbars = liftPack?.tbarAnims?.length ? liftPack.tbarAnims : null;
+        liftCarpets = liftPack?.carpetAnims?.length ? liftPack.carpetAnims : null;
         entityPickables.push(...(trails?.userData?.pickables || []));
         entityPickables.push(...(liftPack?.group?.userData?.pickables || []));
       } else {
+        liftCarpets = null;
         entityPickables.push(...(trails?.userData?.pickables || []));
       }
       if (osm.forest) addTrees(decor, osm.forest, center, sample, unitScale, clipRing);
@@ -936,10 +942,12 @@ export async function initHeroMontageMap(container, options = {}) {
       liftChairs,
       liftGondolas,
       liftTbars,
+      liftCarpets,
       updateTrailRiders,
       updateParkRiders,
       updateLiftChairs,
       updateTBarLifts,
+      updateCarpetLifts,
     }),
   });
   runtime.start();

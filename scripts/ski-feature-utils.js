@@ -36,7 +36,9 @@ export const LIFT_TYPE_LABELS = {
   j_bar: 'J-bar',
   platter: 'Platter',
   rope_tow: 'Rope tow',
-  magic_carpet: 'Magic carpet'
+  magic_carpet: 'Magic carpet',
+  tape_lift: 'Magic carpet',
+  carpet: 'Magic carpet',
 };
 
 export function getProp(obj, keys) {

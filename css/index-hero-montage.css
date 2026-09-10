@@ -18,8 +18,8 @@
 
 @media (max-width: 1024px) {
   .hero-montage-embed {
-    max-width: 320px;
-    height: 280px;
+    max-width: min(100%, 420px);
+    height: min(72vw, 420px);
   }
 }
 
@@ -179,6 +179,22 @@
 .clay-entity-close:hover {
   background: #e2e8f0;
   color: #0f172a;
+}
+
+@media (pointer: coarse), (max-width: 720px) {
+  .clay-entity-panel {
+    left: 8px;
+    right: 8px;
+    top: auto;
+    bottom: 8px;
+    width: auto;
+    max-height: 42%;
+  }
+
+  .clay-entity-close {
+    width: 36px;
+    height: 36px;
+  }
 }
 
 .hero-montage-embed.is-ready .hero-montage-stage {

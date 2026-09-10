@@ -22,6 +22,7 @@ export function createSceneRuntime({ renderer, scene, controller, embed, getAnim
     if (animations.liftChairs) animations.updateLiftChairs(animations.liftChairs, motionDt);
     if (animations.liftGondolas) animations.updateLiftChairs(animations.liftGondolas, motionDt);
     if (animations.liftTbars) animations.updateTBarLifts(animations.liftTbars, motionDt);
+    if (animations.liftCarpets) animations.updateCarpetLifts(animations.liftCarpets, motionDt);
     controller.frame(now * 0.001);
     renderer.render(scene, animations.camera);
   }

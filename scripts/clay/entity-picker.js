@@ -2,6 +2,8 @@
 
 import * as THREE from "three";
 
+const TAP_PX = 10;
+
 function findEntityObject(object) {
   let current = object;
   while (current) {
@@ -30,9 +32,13 @@ function setHighlight(object, selected) {
 
 export function createClayEntityPicker({ canvas, camera, getPickables, onSelect, onHover }) {
   const raycaster = new THREE.Raycaster();
+  raycaster.params.Line = { ...raycaster.params.Line, threshold: 0.35 };
   const pointer = new THREE.Vector2();
   let selected = null;
   let hovered = null;
+  let press = null;
+  let pointerCount = 0;
+  let lastTapAt = 0;
 
   function updatePointer(event) {
     const rect = canvas.getBoundingClientRect();
@@ -48,7 +54,33 @@ export function createClayEntityPicker({ canvas, camera, getPickables, onSelect,
     return intersections.length ? findEntityObject(intersections[0].object) : null;
   }
 
+  function select(next) {
+    if (selected && selected !== next) setHighlight(selected, false);
+    selected = next;
+    if (selected && selected !== hovered) setHighlight(selected, true);
+    if (!selected) canvas.style.cursor = "grab";
+    onSelect?.(selected?.userData?.entity || null);
+  }
+
+  function onPointerDown(event) {
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    pointerCount += 1;
+    if (pointerCount > 1) {
+      press = null;
+      return;
+    }
+    press = { x: event.clientX, y: event.clientY, id: event.pointerId };
+  }
+
   function onPointerMove(event) {
+    if (event.pointerType !== "mouse") {
+      if (hovered) {
+        if (hovered !== selected) setHighlight(hovered, false);
+        hovered = null;
+        onHover?.(null, event);
+      }
+      return;
+    }
     const next = hit(event);
     if (next !== hovered) {
       if (hovered !== selected) setHighlight(hovered, false);
@@ -59,16 +91,33 @@ export function createClayEntityPicker({ canvas, camera, getPickables, onSelect,
     }
   }
 
-  function onClick(event) {
-    const next = hit(event);
-    if (selected && selected !== next) setHighlight(selected, false);
-    selected = next;
-    if (selected && selected !== hovered) setHighlight(selected, true);
-    if (!selected) canvas.style.cursor = "grab";
-    onSelect?.(selected?.userData?.entity || null);
+  function onPointerUp(event) {
+    pointerCount = Math.max(0, pointerCount - 1);
+    if (!press || press.id !== event.pointerId) {
+      press = null;
+      return;
+    }
+    const moved = Math.hypot(event.clientX - press.x, event.clientY - press.y);
+    press = null;
+    if (moved > TAP_PX) return;
+    lastTapAt = performance.now();
+    select(hit(event));
   }
 
+  function onClick(event) {
+    if (performance.now() - lastTapAt < 450) return;
+    select(hit(event));
+  }
+
+  function onPointerCancel() {
+    pointerCount = Math.max(0, pointerCount - 1);
+    press = null;
+  }
+
+  canvas.addEventListener("pointerdown", onPointerDown);
   canvas.addEventListener("pointermove", onPointerMove);
+  canvas.addEventListener("pointerup", onPointerUp);
+  canvas.addEventListener("pointercancel", onPointerCancel);
   canvas.addEventListener("click", onClick);
 
   return {
@@ -80,7 +129,10 @@ export function createClayEntityPicker({ canvas, camera, getPickables, onSelect,
       onSelect?.(null);
     },
     dispose() {
+      canvas.removeEventListener("pointerdown", onPointerDown);
       canvas.removeEventListener("pointermove", onPointerMove);
+      canvas.removeEventListener("pointerup", onPointerUp);
+      canvas.removeEventListener("pointercancel", onPointerCancel);
       canvas.removeEventListener("click", onClick);
     },
   };
