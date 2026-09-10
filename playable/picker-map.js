@@ -1,4 +1,4 @@
-import { initSkiResortMap } from "../scripts/ski-resort-map-ml.js?v=25";
+import { initSkiResortMap } from "../scripts/ski-resort-map-ml.js?v=26";
 import { initBasemapSwitcher } from "../scripts/basemap-switcher.js?v=1";
 import { detachBoundaryOverlay } from "../scripts/pmtiles-core.js?v=bound2";
 

@@ -24,6 +24,26 @@ function wikiDisplayName(p) {
   return en || ti || '';
 }
 
+function namesMatch(a, b) {
+  const left = String(a || "").toLowerCase().trim();
+  const right = String(b || "").toLowerCase().trim();
+  return Boolean(left && right && left === right);
+}
+
+/** Prefer catalog fields so 3D pins get the same stats as the 2D map. */
+export function mergeResortCatalogProperties(entity, statsIndex) {
+  const props = { ...(entity?.properties || {}) };
+  const rows = statsIndex?.rows;
+  if (!rows?.length) return props;
+  const pageId = entity?.wikiPageId || props.wiki_pageId || props.pageId || "";
+  const name = entity?.name || getProp(props, ENGLISH_NAME_KEYS) || getProp(props, NAME_KEYS) || "";
+  const match = rows.find(({ properties: p }) => {
+    if (pageId && (p.wiki_pageId === pageId || p.pageId === pageId)) return true;
+    return namesMatch(getProp(p, NAME_KEYS), name) || namesMatch(getProp(p, ENGLISH_NAME_KEYS), name);
+  });
+  return match ? { ...match.properties, ...props } : props;
+}
+
 function buildActionButtons(properties, latlng, displayStr, options, wikiPage, escapeHtmlFn) {
   const name = getProp(properties, NAME_KEYS);
   const id = getProp(properties, ID_KEYS);
@@ -165,9 +185,32 @@ export function buildResortPopupHtml(properties, latlng, options = {}) {
   );
 }
 
+let popupStatsIndex = null;
+let popupScopeBound = false;
+let detailsBound = false;
+
+/** Open wiki via the same View details control used on the 2D map. */
+export function bindResortDetailsLinks() {
+  if (detailsBound) return;
+  detailsBound = true;
+  document.addEventListener('click', (e) => {
+    const link = e.target.closest('.resort-details-link');
+    if (!link) return;
+    e.preventDefault();
+    const url = link.getAttribute('data-resort-url');
+    const stored = link.getAttribute('data-resort-stored');
+    if (stored) {
+      try { localStorage.setItem('resortDetails', stored); } catch (err) { console.error('[resort-details]', err); }
+    }
+    if (url) window.open(url, '_blank', 'noopener');
+  });
+}
+
 /** Wire scope toggle clicks on resort popups (event delegation). */
 export function initResortPopupScopeSwitcher(statsIndex, escapeHtmlFn = escapeHtml) {
-  if (!statsIndex) return;
+  if (statsIndex) popupStatsIndex = statsIndex;
+  if (!popupStatsIndex || popupScopeBound) return;
+  popupScopeBound = true;
 
   document.addEventListener('click', (e) => {
     const btn = e.target.closest('.sr-scope-btn');
@@ -181,7 +224,7 @@ export function initResortPopupScopeSwitcher(statsIndex, escapeHtmlFn = escapeHt
 
     const key = popup.dataset.srKey;
     const scope = btn.dataset.srScope;
-    const record = statsIndex.byKey.get(key);
+    const record = popupStatsIndex.byKey.get(key);
     if (!record || !scope) return;
 
     popup.querySelectorAll('.sr-scope-btn').forEach((b) => {
@@ -190,8 +233,8 @@ export function initResortPopupScopeSwitcher(statsIndex, escapeHtmlFn = escapeHt
       b.setAttribute('aria-selected', active ? 'true' : 'false');
     });
 
-    const charts = buildResortComparisonCharts(record, statsIndex, scope);
-    const cmp = compareResort(record, statsIndex);
+    const charts = buildResortComparisonCharts(record, popupStatsIndex, scope);
+    const cmp = compareResort(record, popupStatsIndex);
 
     const panel = popup.querySelector('.sr-charts-panel');
     if (panel) panel.innerHTML = charts.html;

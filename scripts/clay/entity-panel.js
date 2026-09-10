@@ -1,22 +1,28 @@
 /** Compact detail panel for selected clay trail and lift entities. */
 
 import {
-  aerialwayLabel,
   analyzeFeature,
-  diffLabel,
   featureStableKey,
-  formatLength,
   getProp,
 } from "../ski-feature-utils.js";
 import {
-  compareLift,
-  comparePiste,
   ensureSkiFeatureStatsIndex,
   getSkiFeatureStatsIndex,
   isGlobalStatsReady,
-  isSkiFeatureStatsLoading,
 } from "../ski-feature-stats.js";
 import { formatMeters, formatSlope } from "./trail-profile.js";
+import {
+  bindResortDetailsLinks,
+  buildResortPopupHtml,
+  initResortPopupScopeSwitcher,
+  mergeResortCatalogProperties,
+} from "../ski-resort-popups.js?v=7";
+import { playableHrefForResort } from "../playable-match.js";
+import {
+  buildSkiFeaturePopupHtml,
+  ensureSkiFeatureScopeSwitcher,
+  setOpenSkiFeatureMeta,
+} from "../ski-feature-popups.js?v=9";
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -25,20 +31,6 @@ function escapeHtml(value) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
-}
-
-function comparisonRows(meta, comparison, statsIndex) {
-  if (!comparison) return "";
-  const rows = [];
-  const add = (label, value) => {
-    if (value) rows.push(`<div class="clay-entity-rank"><span>${label}</span><strong>${value}</strong></div>`);
-  };
-  const longer = (result) => result?.percentile != null ? `Longer than ${result.percentile}%` : "";
-  add(statsIndex?.viewportOnly ? "On this map" : "Worldwide", longer(comparison.global));
-  add("Country", longer(comparison.country));
-  add("State / province", longer(comparison.state));
-  add("At this resort", longer(comparison.resort));
-  return rows.join("");
 }
 
 function indexedEntity(entity, statsIndex) {
@@ -73,51 +65,74 @@ function indexedEntity(entity, statsIndex) {
   return null;
 }
 
-function renderPanel(panel, entity, statsIndex) {
+function renderPanel(panel, entity, statsIndex, resortStatsIndex, playableResorts) {
   if (!entity) {
     panel.hidden = true;
+    panel.classList.remove("clay-entity-panel--resort", "clay-entity-panel--feature");
     delete panel.dataset.entityOsmId;
     panel.innerHTML = "";
+    setOpenSkiFeatureMeta(null);
     return;
   }
+  if (entity.entityType === "resort") {
+    panel.classList.remove("clay-entity-panel--feature");
+    setOpenSkiFeatureMeta(null);
+    const properties = mergeResortCatalogProperties(entity, resortStatsIndex);
+    const wikiPage = entity.wikiPageId
+      ? { pageId: entity.wikiPageId, englishName: entity.name, title: entity.name }
+      : null;
+    panel.classList.add("clay-entity-panel--resort");
+    panel.hidden = false;
+    delete panel.dataset.entityOsmId;
+    panel.innerHTML =
+      `<button type="button" class="clay-entity-close" data-clay-entity-close aria-label="Close details">&times;</button>` +
+      buildResortPopupHtml(properties, null, {
+        includeRoadTripButton: false,
+        wikiPage,
+        statsIndex: resortStatsIndex,
+        playableHref: playableHrefForResort(entity, properties, playableResorts),
+      });
+    bindResortDetailsLinks();
+    if (resortStatsIndex) initResortPopupScopeSwitcher(resortStatsIndex);
+    return;
+  }
+  panel.classList.remove("clay-entity-panel--resort");
+  panel.classList.add("clay-entity-panel--feature");
   const kind = entity.entityType === "lift" ? "lift" : "piste";
   const analyzed = entity.feature ? analyzeFeature(kind, entity.feature) : null;
   const indexed = indexedEntity(entity, statsIndex);
-  const meta = indexed || analyzed || { lengthKm: 0, name: entity.name, resort: entity.resort };
-  const isLift = kind === "lift";
-  const title = entity.name || meta.name || (isLift ? aerialwayLabel(meta.aerialway) : "Unnamed trail");
-  const type = isLift ? aerialwayLabel(meta.aerialway || entity.aerialway) : diffLabel(meta.difficulty || entity.difficulty || "Unknown");
-  const lengthKm = Number(indexed?.lengthKm || analyzed?.lengthKm || meta.lengthKm) || 0;
-  const comparison = isLift
-    ? compareLift(lengthKm, meta, statsIndex)
-    : comparePiste(lengthKm, meta, statsIndex);
-  const rankingHtml = comparisonRows(meta, comparison, statsIndex)
-    || (isSkiFeatureStatsLoading()
-      ? "<p>Loading worldwide rankings…</p>"
-      : "<p>Comparison data unavailable.</p>");
-  const rows = [
-    ["Type", type],
-    ["Length", formatLength(lengthKm)],
-    ["Resort", meta.resort || entity.resort],
-  ].filter(([, value]) => value);
-  if (!isLift && entity.trailProfile) {
-    rows.splice(2, 0,
+  const lengthKm = Number(indexed?.lengthKm) > 0 ? Number(indexed.lengthKm) : 0;
+  const meta = {
+    ...(analyzed || {}),
+    ...(indexed || {}),
+    kind,
+    name: entity.name || indexed?.name || analyzed?.name,
+    difficulty: entity.difficulty || indexed?.difficulty || analyzed?.difficulty,
+    aerialway: entity.aerialway || indexed?.aerialway || analyzed?.aerialway,
+    resort: entity.resort || indexed?.resort || analyzed?.resort,
+    country: entity.country || indexed?.country || analyzed?.country,
+    countryNorm: entity.countryNorm || indexed?.countryNorm || analyzed?.countryNorm,
+    state: entity.state || indexed?.state || analyzed?.state,
+    stateKey: entity.stateKey || indexed?.stateKey || analyzed?.stateKey,
+    lengthKm,
+    key: indexed?.key || analyzed?.key || `${kind}:${entity.osmId || entity.name || "unnamed"}`,
+    props: entity.properties || entity.feature?.properties || indexed?.props || analyzed?.props,
+  };
+  const extraRows = [];
+  if (kind === "piste" && entity.trailProfile) {
+    extraRows.push(
       ["Descent", formatMeters(entity.trailProfile.descentM)],
       ["Average slope", formatSlope(entity.trailProfile.averageSlopePercent)],
       ["Maximum slope", formatSlope(entity.trailProfile.maxSlopePercent)],
     );
   }
-
   panel.hidden = false;
   panel.dataset.entityOsmId = entity.osmId || "";
   panel.innerHTML =
     `<button type="button" class="clay-entity-close" data-clay-entity-close aria-label="Close details">&times;</button>` +
-    `<div class="clay-entity-kicker">${isLift ? "Lift" : "Trail"}</div>` +
-    `<h3>${escapeHtml(title)}</h3>` +
-    `<div class="clay-entity-type">${escapeHtml(type)}</div>` +
-    `<dl>${rows.map(([label, value]) => `<div><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd></div>`).join("")}</dl>` +
-    `<div class="clay-entity-ranking-title">Relative length</div>` +
-    `<div class="clay-entity-rankings">${rankingHtml}</div>`;
+    buildSkiFeaturePopupHtml(meta, statsIndex, null, escapeHtml, extraRows);
+  setOpenSkiFeatureMeta(meta);
+  ensureSkiFeatureScopeSwitcher(escapeHtml);
 }
 
 export function createClayEntityPanel(embed) {
@@ -129,12 +144,14 @@ export function createClayEntityPanel(embed) {
 
   let currentEntity = null;
   let extraIndex = null;
+  let resortIndex = null;
+  let playableResorts = [];
   const pickIndex = () => {
     const global = getSkiFeatureStatsIndex();
     if (isGlobalStatsReady(global)) return global;
     return extraIndex;
   };
-  const refresh = () => renderPanel(panel, currentEntity, pickIndex());
+  const refresh = () => renderPanel(panel, currentEntity, pickIndex(), resortIndex, playableResorts);
   ensureSkiFeatureStatsIndex(() => refresh());
 
   panel.addEventListener("click", (event) => {
@@ -148,12 +165,22 @@ export function createClayEntityPanel(embed) {
   return {
     show(entity, statsIndex) {
       currentEntity = entity;
-      if (statsIndex) extraIndex = statsIndex;
+      if (entity?.entityType === "resort") {
+        if (statsIndex) resortIndex = statsIndex;
+      } else if (statsIndex) extraIndex = statsIndex;
       refresh();
     },
     hide() {
       currentEntity = null;
       refresh();
+    },
+    setPlayableResorts(list) {
+      playableResorts = Array.isArray(list) ? list : [];
+      if (currentEntity?.entityType === "resort") refresh();
+    },
+    setResortStats(index) {
+      resortIndex = index || null;
+      if (currentEntity?.entityType === "resort") refresh();
     },
     dispose() {
       panel.remove();

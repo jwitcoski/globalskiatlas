@@ -26,7 +26,7 @@ export function createClayEntityTooltip(embed) {
       const title = entity.name
         || (entity.entityType === "resort" ? "Ski area" : entity.entityType === "lift" ? "Unnamed lift" : "Unnamed trail");
       const detail = entity.entityType === "resort"
-        ? (entity.trails ? `${entity.trails} trails · click for wiki` : "Click for wiki page")
+        ? (entity.trails ? `${entity.trails} trails · click for stats` : "Click for stats")
         : entity.entityType === "lift"
         ? aerialwayLabel(entity.aerialway)
         : diffLabel(entity.difficulty || "Unknown");

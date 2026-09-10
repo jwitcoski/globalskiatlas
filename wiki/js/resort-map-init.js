@@ -4,7 +4,7 @@
  */
 import { createMapLibre } from '../../scripts/map-core.js';
 import { addSkiPmtilesToMap, SKI_PMTILES_LAYERS } from '../../scripts/pmtiles-core.js';
-import { initSkiResortMap } from '../../scripts/ski-resort-map-ml.js?v=22';
+import { initSkiResortMap } from '../../scripts/ski-resort-map-ml.js?v=25';
 
 function waitForMaptilerSdk(ms = 4000) {
   if (typeof maptilersdk !== 'undefined') return Promise.resolve(true);

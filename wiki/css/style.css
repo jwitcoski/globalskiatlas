@@ -124,6 +124,14 @@ body {
   font-weight: 500;
 }
 
+.resort-play-wrap {
+  margin: 0.55rem 0 0;
+}
+
+.resort-play-wrap .sr-ski-game-btn {
+  display: inline-flex;
+}
+
 .resort-layout {
   display: flex;
   flex-direction: column;

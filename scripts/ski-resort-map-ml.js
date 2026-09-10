@@ -35,19 +35,25 @@ import {
   getIconId,
   addResortIconImages
 } from './resort-tier-icons.js';
-import { initSkiFeaturePopups } from './ski-feature-popups.js?v=8';
+import { initSkiFeaturePopups } from './ski-feature-popups.js?v=9';
 import {
   buildResortPopupHtml,
   buildResortHoverHtml,
   buildResortStatsIndex,
-  initResortPopupScopeSwitcher
-} from './ski-resort-popups.js?v=6';
+  initResortPopupScopeSwitcher,
+  bindResortDetailsLinks,
+} from './ski-resort-popups.js?v=7';
 import {
   addAdminRegionOverlay,
   fetchAdminBoundary,
   fitFeatures,
   resortInRegion
 } from './admin-region.js';
+import {
+  fetchPlayableCatalog,
+  matchPlayableResort,
+  playableHrefFromPath,
+} from './playable-match.js';
 
 const {
   LIFTS_MIN_ZOOM,
@@ -69,60 +75,6 @@ function circlePaintFor(playableMode) {
   };
 }
 
-function haversineKm(lat1, lon1, lat2, lon2) {
-  const r = 6371;
-  const p1 = (lat1 * Math.PI) / 180;
-  const p2 = (lat2 * Math.PI) / 180;
-  const dp = p2 - p1;
-  const dl = ((lon2 - lon1) * Math.PI) / 180;
-  const a = Math.sin(dp / 2) ** 2 + Math.cos(p1) * Math.cos(p2) * Math.sin(dl / 2) ** 2;
-  return 2 * r * Math.asin(Math.min(1, Math.sqrt(a)));
-}
-
-function matchPlayableResort(lon, lat, name, properties, playableResorts) {
-  if (!playableResorts?.length) return null;
-  const osm = String(
-    properties.osm_id || properties.osmId || properties.id || properties.winter_sports_id || ''
-  ).replace(/^[^0-9]*/, '');
-  const nameN = foldDiacritics(name || '').toLowerCase().trim();
-  let best = null;
-  let bestD = Infinity;
-  for (const r of playableResorts) {
-    const rid = String(r.id || r.winter_sports_id || '');
-    if (osm && rid && (rid === osm || rid.startsWith(`${osm}_`) || String(r.winter_sports_id || '') === osm)) {
-      return r;
-    }
-    const d = haversineKm(lat, lon, Number(r.lat), Number(r.lon));
-    if (!Number.isFinite(d)) continue;
-    const rn = foldDiacritics(r.name || '').toLowerCase().trim();
-    const nameHit = nameN && rn && (nameN === rn || nameN.includes(rn) || rn.includes(nameN));
-    const maxD = nameHit ? 8 : 2.2;
-    if (d <= maxD && d < bestD) {
-      bestD = d;
-      best = r;
-    }
-  }
-  return best;
-}
-
-async function fetchPlayableCatalog() {
-  const r = await fetch(config.GAME_SCENES_CATALOG_URL);
-  if (!r.ok) throw new Error(`Playable catalog ${r.status}`);
-  const data = await r.json();
-  return Array.isArray(data?.resorts) ? data.resorts : [];
-}
-
-function playableHrefFromPath(path) {
-  const rel = String(path || '').replace(/^\/+|\/+$/g, '');
-  if (!rel) return '';
-  const slash = rel.indexOf('/');
-  const q = new URLSearchParams();
-  q.set('resort', slash < 0 ? rel : rel.slice(0, slash));
-  if (slash >= 0) q.set('ver', rel.slice(slash + 1));
-  return `/playable/?${q.toString()}`;
-}
-
-/** Same format as wiki resort/browse: "English (local)" from a wiki page object. */
 function wikiDisplayName(p) {
   if (!p) return '';
   const en = (p.englishName != null && p.englishName !== '') ? String(p.englishName).trim() : '';
@@ -470,11 +422,12 @@ export async function initSkiResortMap(options = {}) {
   await addResortMarkerLayers(map, resortFeatures);
   if (region && !adminGeometry) fitFeatures(map, resortFeatures);
 
-  const resortPopup = new maptilersdk.Popup({
-    maxWidth: '780px',
-    closeButton: true,
-    className: 'ski-resort-popup'
-  });
+  const mapEl = map.getContainer();
+  const resortPanel = document.createElement('section');
+  resortPanel.className = 'clay-entity-panel clay-entity-panel--resort';
+  resortPanel.hidden = true;
+  resortPanel.setAttribute('aria-live', 'polite');
+  mapEl.appendChild(resortPanel);
 
   const vtTipEl = document.createElement('div');
   vtTipEl.id = 'vt-tooltip';
@@ -488,16 +441,28 @@ export async function initSkiResortMap(options = {}) {
   }
   function hideVtTip() { vtTipEl.style.display = 'none'; }
 
-  function showResortPopup(lngLat, props) {
-    let properties = {};
-    try { properties = JSON.parse(props._propsJson || '{}'); } catch (_) { /* ignore */ }
-    const latlng = { lat: lngLat.lat, lng: lngLat.lng };
-    const wikiPage = findWikiPage(properties);
-    resortPopup
-      .setLngLat(lngLat)
-      .setHTML(makeResortPopup(properties, latlng, wikiPage, props._playablePath))
-      .addTo(map);
+  function hideResortPanel() {
+    resortPanel.hidden = true;
+    resortPanel.innerHTML = '';
   }
+
+  function showResortPopup(_lngLat, props, extras = {}) {
+    let properties = extras.properties || {};
+    if (!extras.properties) {
+      try { properties = JSON.parse(props._propsJson || '{}'); } catch (_) { /* ignore */ }
+    }
+    const latlng = extras.latlng || { lat: _lngLat?.lat, lng: _lngLat?.lng };
+    const wikiPage = extras.wikiPage !== undefined ? extras.wikiPage : findWikiPage(properties);
+    const playablePath = extras.playablePath !== undefined ? extras.playablePath : props._playablePath;
+    resortPanel.innerHTML =
+      `<button type="button" class="clay-entity-close" data-clay-entity-close aria-label="Close details">&times;</button>` +
+      makeResortPopup(properties, latlng, wikiPage, playablePath);
+    resortPanel.hidden = false;
+  }
+
+  resortPanel.addEventListener('click', (e) => {
+    if (e.target.closest('[data-clay-entity-close]')) hideResortPanel();
+  });
 
   function attachResortLayerEvents(layerIds) {
     layerIds.forEach((id) => {
@@ -588,9 +553,12 @@ export async function initSkiResortMap(options = {}) {
     }
     map.flyTo({ center: [r.latlng.lng, r.latlng.lat], zoom: 16, duration: 600 });
     map.once('moveend', () => {
-      resortPopup.setLngLat([r.latlng.lng, r.latlng.lat])
-        .setHTML(makeResortPopup(r.properties, r.latlng, r.wikiPage, r.playablePath))
-        .addTo(map);
+      showResortPopup(r.latlng, {}, {
+        properties: r.properties,
+        latlng: r.latlng,
+        wikiPage: r.wikiPage,
+        playablePath: r.playablePath,
+      });
     });
   }
 
@@ -624,18 +592,7 @@ export async function initSkiResortMap(options = {}) {
     if (searchBox && !searchBox.contains(e.target)) searchDropdown.classList.remove('visible');
   });
 
-  // ── Resort details link (localStorage + popup window) ────────────────────
-  document.addEventListener('click', (e) => {
-    const link = e.target.closest('.resort-details-link');
-    if (!link) return;
-    e.preventDefault();
-    const url    = link.getAttribute('data-resort-url');
-    const stored = link.getAttribute('data-resort-stored');
-    if (stored) {
-      try { localStorage.setItem('resortDetails', stored); } catch (err) { console.error('[resort-details]', err); }
-    }
-    if (url) window.open(url, '_blank', 'noopener');
-  });
+  bindResortDetailsLinks();
 
   if (loadAds) {
     const loadAd = () => {

@@ -7,7 +7,7 @@ import * as THREE from "three";
 import { createOrbitController } from "./clay/orbit-controller.js";
 import { createSceneRuntime } from "./clay/scene-runtime.js";
 import { createClayEntityPicker } from "./clay/entity-picker.js";
-import { createClayEntityPanel } from "./clay/entity-panel.js";
+import { createClayEntityPanel } from "./clay/entity-panel.js?v=4";
 import { createClayEntityTooltip } from "./clay/entity-tooltip.js";
 import {
   loadCatalog,
@@ -91,6 +91,9 @@ import {
 } from "./clay/index.js";
 import { addRegionResortMarkers } from "./clay/region-markers.js?v=2";
 import { addRegionContextLayers } from "./clay/region-context.js?v=2";
+import { fetchSkiAreaCatalog } from "./pmtiles-core.js";
+import { buildResortStatsIndex } from "./ski-resort-popups.js?v=7";
+import { fetchPlayableCatalog } from "./playable-match.js";
 
 function disposeObject(obj) {
   obj.traverse((child) => {
@@ -691,11 +694,7 @@ export async function initHeroMontageMap(container, options = {}) {
     camera,
     getPickables: () => entityPickables,
     onSelect: (entity) => {
-      if (entity?.entityType === "resort" && entity.wikiPageId) {
-        window.location.assign(`/wiki/resort.html?page=${encodeURIComponent(entity.wikiPageId)}`);
-        return;
-      }
-      entityPanel.show(entity);
+      entityPanel.show(entity, entity?.entityType === "resort" ? regionResortStats : undefined);
     },
     onHover: (entity, event) => {
       if (entity && event) entityTooltip.show(entity, event.clientX, event.clientY);
@@ -714,6 +713,21 @@ export async function initHeroMontageMap(container, options = {}) {
   let resortIndex = 0;
   let loadToken = 0;
   let loading = false;
+  let regionResortStats = null;
+  if (regionMode) {
+    fetchSkiAreaCatalog()
+      .then((rows) => {
+        regionResortStats = buildResortStatsIndex(rows);
+        regionResortStats.rows = rows;
+        if (entityPanel.setResortStats) entityPanel.setResortStats(regionResortStats);
+      })
+      .catch((err) => console.warn("[clay-region] resort stats catalog failed", err));
+    fetchPlayableCatalog()
+      .then((list) => {
+        if (entityPanel.setPlayableResorts) entityPanel.setPlayableResorts(list);
+      })
+      .catch((err) => console.warn("[clay-region] playable catalog failed", err));
+  }
 
   const playLink = embed.querySelector("[data-hero-play]");
   const nameEl = embed.querySelector("[data-hero-resort-name]");

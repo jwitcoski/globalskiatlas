@@ -6,6 +6,7 @@ var RESORT_CLAY_REGION_ID = null;
 var RESORT_CLAY_LOADED_FOR = null;
 var RESORT_CLAY_CATALOG_PROMISE = null;
 var RESORT_CLAY_ACTIVE_TAB = 'clay';
+var RESORT_PLAYABLE_PROMISE = null;
 
 // Plan section 2.3: max main-stat rank per category (facts 12-14 yes/no; 15 = vertical drop)
 var RESORT_FACT_MAX_RANK = { small_hill: 4, ski_mountain: 10, multiple_mountains: 11, mega_resort: 14, unknown: 4 };
@@ -43,6 +44,92 @@ function formatDistanceMi(mi) {
   if (mi == null || typeof mi !== 'number' || isNaN(mi)) return '';
   var km = (mi * MI_TO_KM).toFixed(1).replace(/\.0$/, '');
   return mi + ' mi (' + km + ' km)';
+}
+
+function hideResortPlayLink() {
+  var wrap = document.getElementById('resort-play-wrap');
+  if (wrap) wrap.hidden = true;
+}
+
+function loadPlayableCatalogPack() {
+  if (!RESORT_PLAYABLE_PROMISE) {
+    RESORT_PLAYABLE_PROMISE = import('/scripts/playable-match.js').then(function (mod) {
+      return mod.fetchPlayableCatalog().then(function (list) {
+        return { list: list, hrefFor: mod.playableHrefForResort, hrefFromPath: mod.playableHrefFromPath };
+      });
+    }).catch(function (err) {
+      console.warn('[wiki] playable catalog failed', err);
+      RESORT_PLAYABLE_PROMISE = null;
+      return null;
+    });
+  }
+  return RESORT_PLAYABLE_PROMISE;
+}
+
+function playHrefFromClayRow(row) {
+  if (!row || !row.id) return '';
+  if (row.playable_ver) {
+    return '/playable/?resort=' + encodeURIComponent(row.id) + '&ver=' + encodeURIComponent(row.playable_ver);
+  }
+  return '';
+}
+
+function syncResortPlayLink(page) {
+  var wrap = document.getElementById('resort-play-wrap');
+  var link = document.getElementById('resort-play-link');
+  if (!wrap || !link) return;
+  var isRegion = page && (page.pageType === 'state' || page.pageType === 'country' || page.pageType === 'continent');
+  if (!page || isRegion) {
+    wrap.hidden = true;
+    return;
+  }
+  var wsId = page.winterSportsId != null && page.winterSportsId !== ''
+    ? String(page.winterSportsId)
+    : (page.winter_sports_id != null ? String(page.winter_sports_id) : '');
+  Promise.all([fetchClayCatalog(), loadPlayableCatalogPack()]).then(function (parts) {
+    if (window._ywikiLastPage !== page) return;
+    var href = '';
+    var clay = parts[0];
+    var pack = parts[1];
+    var clayList = clay && clay.resorts ? clay.resorts : [];
+    if (wsId) {
+      for (var i = 0; i < clayList.length; i++) {
+        if (clayList[i] && String(clayList[i].winter_sports_id) === wsId) {
+          href = playHrefFromClayRow(clayList[i]);
+          break;
+        }
+      }
+    }
+    if (!href && pack && pack.hrefFor) {
+      var lat = page.centroidLat != null ? page.centroidLat : page.latitude;
+      var lon = page.centroidLon != null ? page.centroidLon : page.longitude;
+      href = pack.hrefFor(
+        {
+          name: page.englishName || page.title || '',
+          winterSportsId: wsId,
+        },
+        {
+          winter_sports_id: wsId,
+          osm_id: wsId,
+          name: page.title,
+          english_name: page.englishName,
+          lat: lat,
+          lon: lon,
+          latitude: lat,
+          longitude: lon,
+        },
+        pack.list
+      );
+    }
+    if (href) {
+      link.href = href;
+      wrap.hidden = false;
+    } else {
+      wrap.hidden = true;
+    }
+  }).catch(function () {
+    wrap.hidden = true;
+  });
 }
 
 function disposeResortClay() {
@@ -165,7 +252,7 @@ function ensureResortClayMounted() {
       RESORT_CLAY_REGION_ID = regionId;
       showResortClaySoon(false);
       embed.hidden = false;
-      return import('/scripts/hero-montage-map.js?v=98').then(function (mod) {
+      return import('/scripts/hero-montage-map.js?v=101').then(function (mod) {
         if (RESORT_CLAY_REGION_ID !== regionId) return null;
         return mod.initHeroMontageMap(stage, { regionMode: true, regionId: sceneId, lockResort: true });
       }).then(function (api) {
@@ -223,7 +310,7 @@ function ensureResortClayMounted() {
     showResortClaySoon(false);
     embed.hidden = false;
 
-    return import('/scripts/hero-montage-map.js?v=98').then(function (mod) {
+    return import('/scripts/hero-montage-map.js?v=101').then(function (mod) {
       if (RESORT_CLAY_WINTER_ID !== wsId) return null;
       return mod.initHeroMontageMap(stage, { resortId: resortId, lockResort: true });
     }).then(function (api) {
@@ -935,6 +1022,7 @@ function populatePage(page) {
     disposeResortClay();
     RESORT_CLAY_WINTER_ID = null;
     showResortClaySoon(true);
+    hideResortPlayLink();
     return;
   }
 
@@ -1028,6 +1116,7 @@ function populatePage(page) {
       RESORT_CLAY_WINTER_ID = null;
     }
     loadRegionList(page);
+    hideResortPlayLink();
     return;
   }
 
@@ -1044,6 +1133,7 @@ function populatePage(page) {
     if (category === 'mega_resort') subParts.push('Mega resort');
   }
   setText('resort-subtitle', subParts.join(' · '));
+  syncResortPlayLink(page);
 
   renderStatsTrailAndMeta(page);
 

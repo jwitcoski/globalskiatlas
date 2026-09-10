@@ -115,7 +115,7 @@ function buildFooter(meta, globalIndex, scope = 'worldwide') {
   return 'Zoom in closer for resort-level comparisons';
 }
 
-function buildMetaRows(meta, escapeHtml) {
+function buildMetaRows(meta, escapeHtml, extraRows = []) {
   const rows = [];
   const len = formatLength(meta.lengthKm);
   if (len) rows.push(['Length', len]);
@@ -132,6 +132,9 @@ function buildMetaRows(meta, escapeHtml) {
   if (meta.groomed) rows.push(['Grooming', meta.groomed.replace(/_/g, ' ')]);
   const oneway = getFromOtherTags(meta.props, 'oneway');
   if (oneway === 'yes') rows.push(['Direction', 'One-way downhill']);
+  for (const row of extraRows) {
+    if (row?.[0] && row[1]) rows.push(row);
+  }
 
   return rows.map(([k, v]) =>
     `<tr><th>${escapeHtml(k)}</th><td>${escapeHtml(String(v))}</td></tr>`
@@ -165,7 +168,7 @@ function buildHoverHtml(meta, globalIndex, viewportIndex, escapeHtml) {
   return html;
 }
 
-function buildPopupHtml(meta, globalIndex, viewportIndex, escapeHtml) {
+function buildPopupHtml(meta, globalIndex, viewportIndex, escapeHtml, extraRows = []) {
   const title = meta.name || (meta.kind === 'lift' ? aerialwayLabel(meta.aerialway) : 'Unnamed trail');
   const badge = meta.kind === 'lift'
     ? `<span class="sf-badge sf-badge-lift">${escapeHtml(aerialwayLabel(meta.aerialway))}</span>`
@@ -174,7 +177,7 @@ function buildPopupHtml(meta, globalIndex, viewportIndex, escapeHtml) {
   const defaultScope = isGlobalStatsReady(globalIndex)
     ? getDefaultFeatureScope(meta, globalIndex)
     : 'worldwide';
-  const rows = buildMetaRows(meta, escapeHtml);
+  const rows = buildMetaRows(meta, escapeHtml, extraRows);
   const comparison = buildComparisonPanel(meta, globalIndex, viewportIndex, escapeHtml);
   const foot = buildFooter(meta, globalIndex, defaultScope);
 
@@ -187,6 +190,23 @@ function buildPopupHtml(meta, globalIndex, viewportIndex, escapeHtml) {
     `<div class="sf-popup-foot sf-feature-foot">${escapeHtml(foot)}</div>` +
     `</div>`
   );
+}
+
+export function buildSkiFeaturePopupHtml(meta, globalIndex, viewportIndex, escapeHtml, extraRows = []) {
+  return buildPopupHtml(meta, globalIndex, viewportIndex, escapeHtml, extraRows);
+}
+
+let lastOpenFeatureMeta = null;
+let featureScopeWired = false;
+
+export function setOpenSkiFeatureMeta(meta) {
+  lastOpenFeatureMeta = meta || null;
+}
+
+export function ensureSkiFeatureScopeSwitcher(escapeHtmlFn) {
+  if (featureScopeWired) return;
+  featureScopeWired = true;
+  wireFeatureScopeSwitcher(() => lastOpenFeatureMeta, escapeHtmlFn);
 }
 
 function wireFeatureScopeSwitcher(getOpenMeta, escapeHtml) {
@@ -275,7 +295,6 @@ export function initSkiFeaturePopups(map, options = {}) {
 
   let lastPopupMeta = null;
   let lastPopupLngLat = null;
-  let scopeSwitcherWired = false;
 
   function refreshOpenPopup() {
     if (!lastPopupMeta || !lastPopupLngLat || !popup.isOpen()) return;
@@ -287,11 +306,7 @@ export function initSkiFeaturePopups(map, options = {}) {
   }
 
   ensureSkiFeatureStatsIndex(() => refreshOpenPopup());
-
-  if (!scopeSwitcherWired) {
-    wireFeatureScopeSwitcher(() => lastPopupMeta, escapeHtml);
-    scopeSwitcherWired = true;
-  }
+  ensureSkiFeatureScopeSwitcher(escapeHtml);
 
   function showTip(point, html) {
     if (!tipEl) return;
@@ -327,6 +342,7 @@ export function initSkiFeaturePopups(map, options = {}) {
     const viewportIndex = buildViewportStatsIndex(map);
     lastPopupMeta = meta;
     lastPopupLngLat = e.lngLat;
+    setOpenSkiFeatureMeta(meta);
     popup
       .setLngLat(e.lngLat)
       .setHTML(buildPopupHtml(meta, globalIndex, viewportIndex, escapeHtml))
@@ -353,6 +369,7 @@ export function initSkiFeaturePopups(map, options = {}) {
   popup.on('close', () => {
     lastPopupMeta = null;
     lastPopupLngLat = null;
+    setOpenSkiFeatureMeta(null);
   });
 
   return { popup, ensureSkiFeatureStatsIndex };

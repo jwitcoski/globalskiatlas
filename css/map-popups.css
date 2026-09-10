@@ -146,8 +146,8 @@
 .mapboxgl-popup.ski-resort-popup .mapboxgl-popup-content {
   padding: 14px 16px;
   border-radius: 12px;
-  width: min(92vw, 780px);
-  max-width: min(92vw, 780px);
+  width: min(92vw, 420px);
+  max-width: min(92vw, 420px);
 }
 .maplibregl-popup.ski-feature-popup .maplibregl-popup-content,
 .mapboxgl-popup.ski-feature-popup .mapboxgl-popup-content {
@@ -303,4 +303,70 @@
   .sr-charts-row { flex-direction: column; }
   .sr-popup-footer { flex-direction: column; align-items: flex-start; }
   .sr-popup-footer .sf-popup-foot { text-align: left; }
+}
+
+/* Same overlay as the 3D clay resort panel */
+.maplibregl-map .clay-entity-panel,
+.mapboxgl-map .clay-entity-panel,
+.resort-map-gl-wrap .clay-entity-panel {
+  position: absolute;
+  left: 12px;
+  top: 12px;
+  z-index: 12;
+  width: min(240px, calc(100% - 24px));
+  max-height: calc(100% - 72px);
+  overflow: auto;
+  padding: 14px 16px 16px;
+  border: 1px solid rgb(15 118 110 / 0.28);
+  border-radius: 12px;
+  background: rgb(255 255 255 / 0.94);
+  box-shadow: 0 12px 30px rgb(15 23 42 / 0.18);
+  backdrop-filter: blur(8px);
+  color: #0f172a;
+  pointer-events: auto;
+}
+.maplibregl-map .clay-entity-panel--resort,
+.mapboxgl-map .clay-entity-panel--resort,
+.resort-map-gl-wrap .clay-entity-panel--resort {
+  width: min(420px, calc(100% - 24px));
+}
+.maplibregl-map .clay-entity-close,
+.mapboxgl-map .clay-entity-close,
+.resort-map-gl-wrap .clay-entity-close {
+  position: absolute;
+  top: 7px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  font-size: 20px;
+  line-height: 1;
+}
+.maplibregl-map .clay-entity-close:hover,
+.mapboxgl-map .clay-entity-close:hover,
+.resort-map-gl-wrap .clay-entity-close:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+@media (pointer: coarse), (max-width: 720px) {
+  .maplibregl-map .clay-entity-panel,
+  .mapboxgl-map .clay-entity-panel,
+  .resort-map-gl-wrap .clay-entity-panel {
+    left: 8px;
+    right: 8px;
+    top: auto;
+    bottom: 8px;
+    width: auto;
+    max-height: 58%;
+  }
+  .maplibregl-map .clay-entity-close,
+  .mapboxgl-map .clay-entity-close,
+  .resort-map-gl-wrap .clay-entity-close {
+    width: 36px;
+    height: 36px;
+  }
 }
