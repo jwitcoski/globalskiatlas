@@ -1,5 +1,5 @@
 /**
- * Base lodges, buildings, and cabin geometry for 3D clay ski resort scenes.
+ * Low-poly snowy ski chalets for clay 3D resort scenes.
  */
 
 import * as THREE from "three";
@@ -12,129 +12,143 @@ function classifyBuildingStyle(area) {
   return "apartment";
 }
 
-function gableRoofGeometry(w, d, roofHeight) {
-  const halfW = w * 0.56;
-  const halfD = d * 0.56;
-  const vertices = new Float32Array([
-    -halfW, 0, -halfD,
-    halfW, 0, -halfD,
-    0, roofHeight, -halfD,
-    -halfW, 0, halfD,
-    halfW, 0, halfD,
-    0, roofHeight, halfD,
-  ]);
-  const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute("position", new THREE.BufferAttribute(vertices, 3));
-  geometry.setIndex([
-    0, 1, 2,
-    3, 5, 4,
-    0, 3, 4, 0, 4, 1,
-    1, 4, 5, 1, 5, 2,
-  ]);
-  geometry.computeVertexNormals();
-  return geometry;
+function createChaletKit() {
+  const lambert = (color, extra = {}) =>
+    new THREE.MeshLambertMaterial({ color, flatShading: true, ...extra });
+  return {
+    wood: lambert(PALETTE.building, { polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 }),
+    stucco: lambert(PALETTE.buildingStucco, { polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 }),
+    trim: lambert(PALETTE.buildingTrim),
+    roof: lambert(PALETTE.buildingRoof, { side: THREE.DoubleSide }),
+    snow: lambert(PALETTE.snowShade, { side: THREE.DoubleSide }),
+    chimney: lambert(0x4b5563),
+    deck: lambert(0x8b5a3c),
+    window: new THREE.MeshLambertMaterial({
+      color: 0xfde68a,
+      emissive: 0xf59e0b,
+      emissiveIntensity: 0.7,
+      flatShading: true,
+    }),
+  };
 }
 
-function addBuildingRoof(group, cx, cz, y0, w, d, h, yaw, roofMat, style) {
-  if (style === "chalet") {
-    const roofHeight = Math.max(0.45, h * 0.5);
-    const roof = new THREE.Mesh(gableRoofGeometry(w, d, roofHeight), roofMat);
-    roof.position.set(cx, y0 + h, cz);
-    roof.rotation.y = yaw;
-    roof.renderOrder = 5;
-    roof.frustumCulled = false;
-    group.add(roof);
-    return;
+function addPitchedSnowRoof(pivot, w, d, h, style, kit) {
+  const ridgeAlongZ = d >= w;
+  const span = (ridgeAlongZ ? w : d) * 1.16;
+  const along = (ridgeAlongZ ? d : w) * 1.12;
+  const rise = Math.max(h * 0.7, Math.min(w, d) * 0.55);
+  const halfSpan = span * 0.5;
+  const slope = Math.hypot(halfSpan, rise);
+  const pitch = Math.atan2(rise, halfSpan);
+  const thick = Math.max(0.06, Math.min(w, d) * 0.1);
+
+  const crown = new THREE.Group();
+  crown.name = "chalet-roof";
+  crown.position.y = h;
+  if (!ridgeAlongZ) crown.rotation.y = Math.PI * 0.5;
+  pivot.add(crown);
+
+  const shingleGeo = new THREE.BoxGeometry(slope, thick, along);
+  const snowGeo = new THREE.BoxGeometry(slope * 1.04, thick * 0.65, along * 1.05);
+  for (const sign of [-1, 1]) {
+    const rotZ = sign * pitch;
+    const x = sign * -halfSpan * 0.5;
+    const y = rise * 0.5;
+    const shingles = new THREE.Mesh(shingleGeo, kit.roof);
+    shingles.rotation.z = rotZ;
+    shingles.position.set(x, y, 0);
+    shingles.frustumCulled = false;
+    crown.add(shingles);
+
+    const snow = new THREE.Mesh(snowGeo, kit.snow);
+    snow.rotation.z = rotZ;
+    snow.position.set(x, y + thick * 0.55, 0);
+    snow.frustumCulled = false;
+    crown.add(snow);
   }
 
-  const roofHeight = style === "shed" ? Math.max(0.12, h * 0.1) : Math.max(0.25, h * 0.14);
-  const roof = new THREE.Mesh(
-    new THREE.BoxGeometry(w * (style === "apartment" ? 1.1 : 1.04), roofHeight, d * (style === "apartment" ? 1.1 : 1.04)),
-    roofMat,
-  );
-  roof.position.set(cx, y0 + h + Math.max(0.12, h * 0.06), cz);
-  roof.rotation.y = yaw;
-  roof.renderOrder = 5;
-  roof.frustumCulled = false;
-  group.add(roof);
+  if (style !== "shed") {
+    const chimneyH = Math.max(0.16, h * 0.24);
+    const chimneyR = Math.max(0.04, Math.min(w, d) * 0.055);
+    const chimney = new THREE.Mesh(new THREE.CylinderGeometry(chimneyR, chimneyR * 1.12, chimneyH, 6), kit.chimney);
+    chimney.position.set(span * 0.12, rise * 0.55 + chimneyH * 0.4, along * 0.08);
+    chimney.frustumCulled = false;
+    crown.add(chimney);
+  }
+  return rise;
 }
 
-function addApartmentBalconies(group, cx, cz, y0, w, d, h, yaw, balconyMat) {
+function addWindow(pivot, x, y, z, ww, hh, rotY, kit) {
+  const pane = new THREE.Mesh(new THREE.PlaneGeometry(ww, hh), kit.window);
+  pane.position.set(x, y, z);
+  pane.rotation.y = rotY;
+  pane.frustumCulled = false;
+  pivot.add(pane);
+}
+
+function addChaletDetails(pivot, w, d, h, style, kit) {
+  const ww = Math.max(0.12, Math.min(w, d) * (style === "apartment" ? 0.12 : 0.16));
+  const hh = Math.max(0.14, h * (style === "apartment" ? 0.16 : 0.2));
+  const frontZ = d * 0.5 + 0.012;
+  const sideX = w * 0.5 + 0.012;
+  addWindow(pivot, -w * 0.18, h * 0.42, frontZ, ww, hh, 0, kit);
+  addWindow(pivot, w * 0.18, h * 0.42, frontZ, ww, hh, 0, kit);
+  if (style !== "shed") {
+    addWindow(pivot, sideX, h * 0.46, d * 0.08, ww * 0.85, hh * 0.9, Math.PI * 0.5, kit);
+  }
+  if (style === "apartment") {
+    addWindow(pivot, -w * 0.18, h * 0.68, frontZ, ww, hh * 0.85, 0, kit);
+    addWindow(pivot, w * 0.18, h * 0.68, frontZ, ww, hh * 0.85, 0, kit);
+  }
+
+  const deckW = w * (style === "apartment" ? 0.55 : 0.62);
+  const deckD = Math.max(0.16, d * 0.22);
+  const deck = new THREE.Mesh(new THREE.BoxGeometry(deckW, Math.max(0.03, h * 0.04), deckD), kit.deck);
+  deck.position.set(0, Math.max(0.03, h * 0.03), d * 0.5 + deckD * 0.32);
+  deck.frustumCulled = false;
+  pivot.add(deck);
+
+  const overhang = new THREE.Mesh(
+    new THREE.BoxGeometry(deckW * 1.02, Math.max(0.03, h * 0.035), deckD * 0.55),
+    kit.trim,
+  );
+  overhang.position.set(0, h * 0.28, d * 0.5 + deckD * 0.08);
+  overhang.frustumCulled = false;
+  pivot.add(overhang);
+}
+
+function addApartmentBalconies(pivot, w, d, h, kit) {
   const levelCount = h > 1.2 ? 2 : 1;
   for (let level = 0; level < levelCount; level += 1) {
-    const balcony = new THREE.Mesh(new THREE.BoxGeometry(w * 0.72, Math.max(0.04, h * 0.045), d * 0.16), balconyMat);
-    const localZ = d * 0.56;
-    balcony.position.set(cx + Math.sin(yaw) * localZ, y0 + h * (0.38 + level * 0.25), cz + Math.cos(yaw) * localZ);
-    balcony.rotation.y = yaw;
-    balcony.renderOrder = 5;
+    const balcony = new THREE.Mesh(
+      new THREE.BoxGeometry(w * 0.62, Math.max(0.04, h * 0.045), d * 0.14),
+      kit.trim,
+    );
+    balcony.position.set(0, h * (0.38 + level * 0.24), d * 0.52);
     balcony.frustumCulled = false;
-    group.add(balcony);
+    pivot.add(balcony);
   }
 }
 
-export function addClayBuilding(group, cx, cz, y0, w, d, h, yaw, wallMat, roofMat, footprint = null, style = null) {
+export function addClayBuilding(group, cx, cz, y0, w, d, h, yaw, kit, footprint = null, style = null) {
   const buildingStyle = style || classifyBuildingStyle(w * d);
-  if (footprint) {
-    const shape = new THREE.Shape();
-    for (const [index, point] of footprint.outer.entries()) {
-      const x = (point.x - cx) * (w / footprint.width);
-      const z = -(point.z - cz) * (d / footprint.depth);
-      if (index === 0) shape.moveTo(x, z);
-      else shape.lineTo(x, z);
-    }
-    for (const hole of footprint.holes || []) {
-      const path = new THREE.Path();
-      for (const [index, point] of hole.entries()) {
-        const x = (point.x - cx) * (w / footprint.width);
-        const z = -(point.z - cz) * (d / footprint.depth);
-        if (index === 0) path.moveTo(x, z);
-        else path.lineTo(x, z);
-      }
-      shape.holes.push(path);
-    }
-
-    let geometry;
-    let roofGeometry;
-    try {
-      geometry = new THREE.ExtrudeGeometry(shape, { depth: h, bevelEnabled: false });
-      roofGeometry = new THREE.ShapeGeometry(shape);
-    } catch {
-      return;
-    }
-    const box = new THREE.Mesh(geometry, wallMat);
-    box.position.set(cx, y0, cz);
-    box.rotation.x = -Math.PI * 0.5;
-    box.renderOrder = 5;
-    box.frustumCulled = false;
-    group.add(box);
-
-    if (buildingStyle === "chalet") {
-      addBuildingRoof(group, cx, cz, y0, w, d, h, yaw, roofMat, buildingStyle);
-    } else {
-      const roof = new THREE.Mesh(roofGeometry, roofMat);
-      roof.position.set(cx, y0 + h + Math.max(0.2, h * 0.08), cz);
-      roof.rotation.x = -Math.PI * 0.5;
-      roof.renderOrder = 5;
-      roof.frustumCulled = false;
-      group.add(roof);
-    }
-    if (buildingStyle === "apartment") {
-      addApartmentBalconies(group, cx, cz, y0, w, d, h, yaw, roofMat);
-    }
-    return;
-  }
+  const mats = kit?.wood ? kit : createChaletKit();
+  const wallMat = buildingStyle === "apartment" ? mats.stucco : mats.wood;
+  const pivot = new THREE.Group();
+  pivot.name = `clay-${buildingStyle}`;
+  pivot.position.set(cx, y0, cz);
+  pivot.rotation.y = yaw;
 
   const box = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), wallMat);
-  box.position.set(cx, y0 + h * 0.5, cz);
-  box.rotation.y = yaw;
+  box.position.y = h * 0.5;
   box.renderOrder = 5;
   box.frustumCulled = false;
-  group.add(box);
+  pivot.add(box);
 
-  addBuildingRoof(group, cx, cz, y0, w, d, h, yaw, roofMat, buildingStyle);
-  if (buildingStyle === "apartment") {
-    addApartmentBalconies(group, cx, cz, y0, w, d, h, yaw, roofMat);
-  }
+  addPitchedSnowRoof(pivot, w, d, h, buildingStyle, mats);
+  addChaletDetails(pivot, w, d, h, buildingStyle, mats);
+  if (buildingStyle === "apartment") addApartmentBalconies(pivot, w, d, h, mats);
+  group.add(pivot);
 }
 
 export function addBuildings(parent, featureCollection, center, sample, unitScale = 1, clipRing = null) {
@@ -143,22 +157,8 @@ export function addBuildings(parent, featureCollection, center, sample, unitScal
 
   const group = new THREE.Group();
   group.name = "montage-buildings";
-  const wallMat = new THREE.MeshLambertMaterial({
-    color: PALETTE.building,
-    flatShading: true,
-    polygonOffset: true,
-    polygonOffsetFactor: -4,
-    polygonOffsetUnits: -4,
-  });
-  const roofMat = new THREE.MeshLambertMaterial({
-    color: PALETTE.buildingRoof,
-    flatShading: true,
-    polygonOffset: true,
-    polygonOffsetFactor: -5,
-    polygonOffsetUnits: -5,
-  });
+  const kit = createChaletKit();
   const s = unitScale * BUILDING_SHRINK;
-  /* Keep base-village footprints near the buffer edge; hard clip hid them under snow. */
   const edgeSlackM = Math.max(35, 12 * unitScale);
   const snowLift = Math.max(0.55, 0.18 * unitScale);
 
@@ -216,7 +216,6 @@ export function addBuildings(parent, featureCollection, center, sample, unitScal
     }
   }
 
-  /* Prefer larger footprints (lodges / base villages often sit near the rim). */
   candidates.sort((a, b) => b.area - a.area);
 
   let count = 0;
@@ -226,20 +225,7 @@ export function addBuildings(parent, featureCollection, center, sample, unitScal
     const w = c.footW * footprintScale;
     const d = c.footD * footprintScale;
     const h = Math.max(3.5, Math.min(11, Math.sqrt(c.area) * 0.32)) * s;
-    addClayBuilding(
-      group,
-      c.cx,
-      c.cz,
-      c.y,
-      w,
-      d,
-      h,
-      0,
-      wallMat,
-      roofMat,
-      c.footprint,
-      classifyBuildingStyle(c.area),
-    );
+    addClayBuilding(group, c.cx, c.cz, c.y, w, d, h, 0, kit, c.footprint, classifyBuildingStyle(c.area));
     count += 1;
   }
 
@@ -251,20 +237,7 @@ export function addBuildings(parent, featureCollection, center, sample, unitScal
 export function addProceduralBuildings(parent, sample, unitScale = 1) {
   const group = new THREE.Group();
   group.name = "montage-buildings-proc";
-  const wallMat = new THREE.MeshLambertMaterial({
-    color: PALETTE.building,
-    flatShading: true,
-    polygonOffset: true,
-    polygonOffsetFactor: -4,
-    polygonOffsetUnits: -4,
-  });
-  const roofMat = new THREE.MeshLambertMaterial({
-    color: PALETTE.buildingRoof,
-    flatShading: true,
-    polygonOffset: true,
-    polygonOffsetFactor: -5,
-    polygonOffsetUnits: -5,
-  });
+  const kit = createChaletKit();
   const s = unitScale * BUILDING_SHRINK;
   const snowLift = Math.max(0.55, 0.18 * unitScale);
 
@@ -298,8 +271,7 @@ export function addProceduralBuildings(parent, sample, unitScale = 1) {
         d,
         h,
         rng(seed) * Math.PI * 0.25,
-        wallMat,
-        roofMat,
+        kit,
         null,
         classifyBuildingStyle(rawW * rawD),
       );
