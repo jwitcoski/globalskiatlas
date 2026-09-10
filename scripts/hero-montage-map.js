@@ -912,10 +912,11 @@ export async function initHeroMontageMap(container, options = {}) {
   }
   async function onTrailScheme(event) {
     const scheme = event.currentTarget.dataset.clayTrailScheme;
-    if (!scheme || scheme === getClayTrailScheme() || loading) return;
+    if (!scheme || scheme === getClayTrailScheme()) return;
     setClayTrailScheme(scheme);
     syncChrome(currentResort());
-    if (currentResort()) await mountResort(currentResort());
+    document.dispatchEvent(new CustomEvent("gsa-trail-scheme-change", { detail: { scheme } }));
+    if (!loading && currentResort()) await mountResort(currentResort());
   }
   prevBtn?.addEventListener("click", onPrev);
   nextBtn?.addEventListener("click", onNext);

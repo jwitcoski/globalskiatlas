@@ -36,12 +36,83 @@ function isLineGeometry(geom) {
   return geom && (geom.type === 'LineString' || geom.type === 'MultiLineString');
 }
 
+function toBytes(value) {
+  if (!value) return null;
+  if (value instanceof Uint8Array) return value;
+  if (value instanceof ArrayBuffer) return new Uint8Array(value);
+  if (ArrayBuffer.isView(value)) return new Uint8Array(value.buffer, value.byteOffset, value.byteLength);
+  return null;
+}
+
+function readWkbPoints(view, offset, le, count, dims) {
+  const coords = [];
+  let o = offset;
+  for (let i = 0; i < count; i++) {
+    const x = view.getFloat64(o, le);
+    const y = view.getFloat64(o + 8, le);
+    o += 8 * dims;
+    coords.push([x, y]);
+  }
+  return { coords, offset: o };
+}
+
+/** Decode WKB / EWKB line geometries from GeoParquet. */
+export function wkbToLineGeometry(value) {
+  const bytes = toBytes(value);
+  if (!bytes || bytes.length < 9) return null;
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const le = view.getUint8(0) === 1;
+  let type = view.getUint32(1, le);
+  let offset = 5;
+  if (type & 0x20000000) offset += 4;
+  const hasZ = Boolean(type & 0x80000000) || Math.floor((type % 1000) / 1000) === 1;
+  const hasM = Boolean(type & 0x40000000);
+  const baseType = type & 0xff;
+  const dims = 2 + (hasZ ? 1 : 0) + (hasM ? 1 : 0);
+  if (baseType === 2) {
+    const n = view.getUint32(offset, le);
+    offset += 4;
+    const { coords } = readWkbPoints(view, offset, le, n, dims);
+    return { type: 'LineString', coordinates: coords };
+  }
+  if (baseType === 5) {
+    const nParts = view.getUint32(offset, le);
+    offset += 4;
+    const parts = [];
+    for (let p = 0; p < nParts; p++) {
+      const n = view.getUint32(offset, le);
+      offset += 4;
+      const read = readWkbPoints(view, offset, le, n, dims);
+      parts.push(read.coords);
+      offset = read.offset;
+    }
+    return { type: 'MultiLineString', coordinates: parts };
+  }
+  return null;
+}
+
+function asLineGeometry(raw) {
+  if (isLineGeometry(raw)) return raw;
+  if (raw?.type === 'GeometryCollection' && Array.isArray(raw.geometries)) {
+    const lines = raw.geometries.filter(isLineGeometry);
+    if (lines.length === 1) return lines[0];
+    if (lines.length > 1) {
+      return {
+        type: 'MultiLineString',
+        coordinates: lines.flatMap((g) => g.type === 'LineString' ? [g.coordinates] : g.coordinates),
+      };
+    }
+  }
+  return wkbToLineGeometry(raw);
+}
+
 /** GeoParquet rows → GeoJSON features for stats / analysis. */
 export function parquetRowsToLineFeatures(rows) {
   const out = [];
   for (const row of rows) {
-    if (!isLineGeometry(row.geometry)) continue;
-    const { geometry, ...props } = row;
+    const geometry = asLineGeometry(row.geometry);
+    if (!geometry) continue;
+    const { geometry: _geom, ...props } = row;
     out.push({ type: 'Feature', geometry, properties: props });
   }
   return out;

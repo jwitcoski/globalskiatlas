@@ -197,7 +197,12 @@ function switchMapTab(tab) {
     if (clayPanel) clayPanel.style.display = 'none';
     setTabActive('live');
     if (legendEl) legendEl.style.display = '';
-    if (RESORT_MAP_INSTANCE) RESORT_MAP_INSTANCE.resize();
+    if (RESORT_MAP_INSTANCE) {
+      RESORT_MAP_INSTANCE.resize();
+      if (window._gsaEnhanceParams && window.enhanceResortMap) {
+        window.enhanceResortMap(window._gsaEnhanceParams);
+      }
+    }
   } else if (tab === 'static') {
     if (liveWrap) liveWrap.style.display = 'none';
     livePanel.style.display = 'none';
@@ -1060,7 +1065,7 @@ function populatePage(page) {
   if (hasCoords || page.pageId) {
     initResortMap(hasCoords ? lat : null, hasCoords ? lon : null, page.pageId || YWIKI_PATH);
     syncResortClayContext(page);
-    if (hasCoords && window.enhanceResortMap) {
+    if (hasCoords) {
       var enhanceParams = {
         title: page.title || YWIKI_PATH,
         lat: lat,
@@ -1068,7 +1073,10 @@ function populatePage(page) {
         pageId: page.pageId || YWIKI_PATH
       };
       if (page.skiNorthAngle != null && !isNaN(Number(page.skiNorthAngle))) enhanceParams.skiNorthAngle = Number(page.skiNorthAngle);
-      window.enhanceResortMap(enhanceParams);
+      window._gsaEnhanceParams = enhanceParams;
+      if (window.enhanceResortMap && window.RESORT_MAP_INSTANCE) {
+        window.enhanceResortMap(enhanceParams);
+      }
     }
   } else {
     var aside = document.getElementById('resort-map-aside');

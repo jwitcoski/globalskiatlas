@@ -8,8 +8,8 @@
   <link rel="stylesheet" href="../css/tailwind-build.css" />
   <link rel="stylesheet" href="../css/index.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" integrity="sha512-dPXYcDub/aeb08c63jRq/k6GaKccl256JQy/AnOq7CAnEZ9FzSL9wSbcZkMp4R26vBsMLFYH4kQ67/bbV8XaCQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-  <link rel="stylesheet" href="css/style.css?v=8"/>
-  <link rel="stylesheet" href="../css/index-hero-montage.css?v=55"/>
+  <link rel="stylesheet" href="css/style.css?v=9"/>
+  <link rel="stylesheet" href="../css/index-hero-montage.css?v=56"/>
   <link rel="stylesheet" href="https://cdn.maptiler.com/maptiler-sdk-js/v3.10.2/maptiler-sdk.css">
   <script type="importmap">
     {
@@ -106,6 +106,11 @@
             <i class="bi bi-arrows-fullscreen" aria-hidden="true"></i>
             <span class="resort-map-expand-label">Taller map</span>
           </button>
+          <div class="hero-montage-trail-schemes resort-map-schemes" role="group" aria-label="Trail colors">
+            <button type="button" data-clay-trail-scheme="american" aria-label="American trail colors" title="American trail colors" aria-pressed="true"><span class="clay-flag clay-flag-american" aria-hidden="true"></span></button>
+            <button type="button" data-clay-trail-scheme="european" aria-label="European trail colors" title="European trail colors" aria-pressed="false"><span class="clay-flag clay-flag-european" aria-hidden="true"></span></button>
+            <button type="button" data-clay-trail-scheme="japanese" aria-label="Japanese trail colors" title="Japanese trail colors" aria-pressed="false"><span class="clay-flag clay-flag-japanese" aria-hidden="true"></span></button>
+          </div>
         </div>
         <div class="resort-map-gl-wrap" style="position:relative;display:none">
           <div id="resort-map-gl" class="resort-map-gl"></div>
@@ -257,7 +262,7 @@
     maptilersdk.config.apiKey = config.MAPTILER_KEY;
   </script>
   <script type="module" src="/wiki/js/resort-map-init.js"></script>
-  <script type="module" src="/wiki/js/resort-map-layers.js"></script>
+  <script type="module" src="/wiki/js/resort-map-layers.js?v=10"></script>
   <script src="/wiki/js/showdown.min.js"></script>
   <script src="/wiki/js/auth.js"></script>
   <script>

@@ -82,20 +82,26 @@ export function featureTag(feature, key) {
 export function featureOsmWayId(feature) {
   const props = feature?.properties || {};
   const tags = props.tags && typeof props.tags === "object" ? props.tags : {};
-  if (tags.osm_way_id != null && String(tags.osm_way_id).trim()) return String(tags.osm_way_id);
-  const id = String(props.id || "");
-  const m = /way:(\d+)/.exec(id) || /:(\d+)$/.exec(id);
-  return m ? m[1] : "";
+  const candidates = [
+    tags.osm_way_id,
+    props.osm_way_id,
+    props.osm_id,
+    tags.osm_id,
+    props.id,
+    props["@id"],
+    tags.id,
+  ];
+  for (const value of candidates) {
+    if (value == null || String(value).trim() === "") continue;
+    const text = String(value).trim();
+    const match = /(?:way:|node:|relation:|nan:|:)?(\d+)\s*$/i.exec(text);
+    if (match) return match[1];
+  }
+  return "";
 }
 
 export function featureLiftOsmId(feature) {
-  const props = feature?.properties || {};
-  const tags = props.tags && typeof props.tags === "object" ? props.tags : {};
-  if (tags.osm_way_id != null && String(tags.osm_way_id).trim()) return String(tags.osm_way_id);
-  if (props.osm_way_id != null && String(props.osm_way_id).trim()) return String(props.osm_way_id);
-  const id = String(props.id || "");
-  const m = /(?:way:|nan:|:)?(\d+)\s*$/.exec(id);
-  return m ? m[1] : "";
+  return featureOsmWayId(feature);
 }
 
 export function isWoodFeature(feature) {

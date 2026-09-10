@@ -84,6 +84,11 @@ export function buildStatsIndexFromFeatures(pisteFeats, liftFeats) {
     const pt = { km: a.lengthKm, cat: diff };
     pistesAll.push(pt);
     pistesByKey.set(a.key, a);
+    const numericId = String(a.key).replace(/^(?:piste|lift):(?:way:|node:|relation:)?/i, '');
+    if (/^\d+$/.test(numericId)) {
+      pistesByKey.set(`piste:${numericId}`, a);
+      pistesByKey.set(`piste:way:${numericId}`, a);
+    }
     addToMap(pistesByDiff, diff, pt);
     const resort = a.resort || 'Unknown resort';
     addToMap(pistesByResort, resort, pt);
@@ -116,6 +121,11 @@ export function buildStatsIndexFromFeatures(pisteFeats, liftFeats) {
     const pt = { km: a.lengthKm, cat: liftType };
     liftsAll.push(pt);
     liftsByKey.set(a.key, a);
+    const numericId = String(a.key).replace(/^(?:piste|lift):(?:way:|node:|relation:)?/i, '');
+    if (/^\d+$/.test(numericId)) {
+      liftsByKey.set(`lift:${numericId}`, a);
+      liftsByKey.set(`lift:way:${numericId}`, a);
+    }
     addToMap(liftsByType, liftType, pt);
     const resort = a.resort || 'Unknown resort';
     addToMap(liftsByResort, resort, pt);
@@ -161,17 +171,36 @@ export function buildStatsIndexFromFeatures(pisteFeats, liftFeats) {
  * @param {maptilersdk.Map} map
  */
 export function buildViewportStatsIndex(map) {
-  if (!map?.getSource?.(SKI_PMTILES_SOURCES.overview)) return null;
-  let pisteFeats = [];
-  let liftFeats = [];
-  try {
-    pisteFeats = map.querySourceFeatures(SKI_PMTILES_SOURCES.overview, { sourceLayer: 'pistes' });
-    liftFeats = map.querySourceFeatures(SKI_PMTILES_SOURCES.overview, { sourceLayer: 'lifts' });
-  } catch (_) {
-    return null;
+  if (!map?.querySourceFeatures) return null;
+  const pisteFeats = [];
+  const liftFeats = [];
+  const pull = (source, layer) => {
+    try {
+      return map.querySourceFeatures(source, { sourceLayer: layer }) || [];
+    } catch (_) {
+      return [];
+    }
+  };
+  for (const source of [SKI_PMTILES_SOURCES.overview, SKI_PMTILES_SOURCES.resort]) {
+    if (!map.getSource?.(source)) continue;
+    pisteFeats.push(...pull(source, 'pistes'));
+    liftFeats.push(...pull(source, 'lifts'));
+  }
+  if (!pisteFeats.length && !liftFeats.length && typeof map.queryRenderedFeatures === 'function') {
+    const layers = ['pistes', 'lifts'].filter((id) => map.getLayer?.(id));
+    if (layers.length) {
+      try {
+        for (const feature of map.queryRenderedFeatures({ layers })) {
+          if (feature.layer?.id === 'lifts') liftFeats.push(feature);
+          else pisteFeats.push(feature);
+        }
+      } catch (_) { /* ignore */ }
+    }
   }
   if (!pisteFeats.length && !liftFeats.length) return null;
-  return buildStatsIndexFromFeatures(pisteFeats, liftFeats);
+  const index = buildStatsIndexFromFeatures(pisteFeats, liftFeats);
+  index.viewportOnly = true;
+  return index;
 }
 
 export function isGlobalStatsReady(index) {
@@ -197,25 +226,20 @@ let statsLoading = false;
 
 /** Start background load; safe to call multiple times. */
 export function ensureSkiFeatureStatsIndex(onReady) {
-  if (statsIndex && isGlobalStatsReady(statsIndex)) {
-    if (typeof onReady === 'function') onReady(statsIndex);
-    return Promise.resolve(statsIndex);
-  }
   if (!statsPromise) {
     statsLoading = true;
     statsPromise = loadSkiFeatureStatsIndex()
       .then((idx) => {
-        statsIndex = idx;
+        statsIndex = isGlobalStatsReady(idx) ? idx : null;
         statsLoading = false;
-        const trails = idx.pistes.all.count;
-        const lifts = idx.lifts.all.count;
-        if (trails === 0 && lifts === 0) {
+        const trails = idx?.pistes?.all?.count ?? 0;
+        const lifts = idx?.lifts?.all?.count ?? 0;
+        if (!statsIndex) {
           console.warn('[ski-feature-stats] empty index (0 trails, 0 lifts) — check GeoParquet URLs / CORS');
         } else if (globalThis.__GSA_DEBUG) {
           console.log('[ski-feature-stats] loaded from GeoParquet', { trails, lifts });
         }
-        if (typeof onReady === 'function') onReady(idx);
-        return idx;
+        return statsIndex;
       })
       .catch((err) => {
         console.warn('[ski-feature-stats] load failed:', err);
@@ -223,6 +247,11 @@ export function ensureSkiFeatureStatsIndex(onReady) {
         statsPromise = null;
         return null;
       });
+  }
+  if (typeof onReady === 'function') {
+    statsPromise.then((idx) => {
+      if (idx && isGlobalStatsReady(idx)) onReady(idx);
+    });
   }
   return statsPromise;
 }

@@ -49,6 +49,10 @@ export async function initResortMap(lat, lon, pageId, zoom) {
   }
 
   m.flyTo({ center: [lon, lat], zoom: Math.max(useZoom, 13), duration: 800 });
+
+  if (window._gsaEnhanceParams && typeof window.enhanceResortMap === 'function') {
+    window.enhanceResortMap(window._gsaEnhanceParams);
+  }
 }
 
 window.initResortMap = function (lat, lon, pageId, zoom) {

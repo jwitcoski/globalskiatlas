@@ -18,6 +18,55 @@ export const ATLAS_COLORS = {
   pisteDefault: '#7d8b8f'
 };
 
+/** Clay 3D trail palette — used by the wiki 2D map so both views match. */
+export const CLAY_PISTE_HEX = {
+  green: '#86efac',
+  blue: '#93c5fd',
+  red: '#ef4444',
+  black: '#64748b',
+  orange: '#f97316',
+  gray: '#94a3b8',
+};
+
+function otherTagsHas(fragment) {
+  return ['in', fragment, ['coalesce', ['get', 'other_tags'], '']];
+}
+
+function difficultyIs(...names) {
+  const prop = ['downcase', ['to-string', ['coalesce',
+    ['get', 'piste:difficulty'],
+    ['get', 'difficulty'],
+    ['get', 'piste_difficulty'],
+    '',
+  ]]];
+  const checks = [];
+  for (const name of names) {
+    checks.push(['==', prop, name]);
+    checks.push(otherTagsHas(`piste:difficulty"=>"${name}`));
+  }
+  return ['any', ...checks];
+}
+
+/** MapLibre line-color matching clay American / European / Japanese schemes. */
+export function pisteLineColorExpression(scheme = 'american') {
+  const mid = scheme === 'american' ? CLAY_PISTE_HEX.blue : CLAY_PISTE_HEX.red;
+  return [
+    'case',
+    ['any', otherTagsHas('piste:type"=>"snow_park'), ['==', ['downcase', ['to-string', ['coalesce', ['get', 'piste:type'], ['get', 'piste_type'], '']]], 'snow_park']],
+    CLAY_PISTE_HEX.orange,
+    difficultyIs('novice', 'easy', 'beginner', 'green', 'learning'),
+    CLAY_PISTE_HEX.green,
+    difficultyIs('intermediate', 'medium', scheme === 'american' ? 'blue' : '__none__'),
+    mid,
+    difficultyIs('blue'),
+    mid,
+    difficultyIs('red'),
+    scheme === 'american' ? CLAY_PISTE_HEX.red : CLAY_PISTE_HEX.red,
+    difficultyIs('advanced', 'difficult', 'very_difficult', 'black', 'expert', 'extreme', 'freeride', 'double_black'),
+    CLAY_PISTE_HEX.black,
+    CLAY_PISTE_HEX.gray,
+  ];
+}
 /** MapLibre line-color expression for pistes layer (other_tags OSM serialization). */
 export const PISTE_LINE_COLOR = [
   'case',

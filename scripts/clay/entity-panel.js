@@ -4,7 +4,9 @@ import {
   aerialwayLabel,
   analyzeFeature,
   diffLabel,
+  featureStableKey,
   formatLength,
+  getProp,
 } from "../ski-feature-utils.js";
 import {
   compareLift,
@@ -12,6 +14,7 @@ import {
   ensureSkiFeatureStatsIndex,
   getSkiFeatureStatsIndex,
   isGlobalStatsReady,
+  isSkiFeatureStatsLoading,
 } from "../ski-feature-stats.js";
 import { formatMeters, formatSlope } from "./trail-profile.js";
 
@@ -24,14 +27,14 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
-function comparisonRows(meta, comparison) {
+function comparisonRows(meta, comparison, statsIndex) {
   if (!comparison) return "";
   const rows = [];
   const add = (label, value) => {
     if (value) rows.push(`<div class="clay-entity-rank"><span>${label}</span><strong>${value}</strong></div>`);
   };
   const longer = (result) => result?.percentile != null ? `Longer than ${result.percentile}%` : "";
-  add("Worldwide", longer(comparison.global));
+  add(statsIndex?.viewportOnly ? "On this map" : "Worldwide", longer(comparison.global));
   add("Country", longer(comparison.country));
   add("State / province", longer(comparison.state));
   add("At this resort", longer(comparison.resort));
@@ -39,11 +42,35 @@ function comparisonRows(meta, comparison) {
 }
 
 function indexedEntity(entity, statsIndex) {
-  if (!statsIndex || !entity?.osmId) return null;
-  const map = entity.entityType === "lift" ? statsIndex.liftsByKey : statsIndex.pistesByKey;
-  if (!map) return null;
+  if (!statsIndex || !entity) return null;
   const kind = entity.entityType === "lift" ? "lift" : "piste";
-  return map.get(`${kind}:${entity.osmId}`) || map.get(`${kind}:way:${entity.osmId}`) || null;
+  const table = kind === "lift" ? statsIndex.liftsByKey : statsIndex.pistesByKey;
+  if (!table) return null;
+  const props = entity.properties || entity.feature?.properties || {};
+  const keys = [];
+  const add = (value) => {
+    if (value && !keys.includes(value)) keys.push(value);
+  };
+  const osmId = String(entity.osmId || "").replace(/^(?:way|node|relation|nan):/i, "");
+  if (osmId) {
+    add(`${kind}:${osmId}`);
+    add(`${kind}:way:${osmId}`);
+    add(`${kind}:relation:${osmId}`);
+  }
+  const rawId = getProp(props, ["osm_id", "id", "@id", "osm_way_id", "ref"]);
+  if (rawId != null && String(rawId).trim() !== "") {
+    const cleaned = String(rawId).trim().replace(/^(?:way|node|relation|nan):/i, "");
+    add(featureStableKey(kind, props));
+    add(`${kind}:${rawId}`);
+    add(`${kind}:${cleaned}`);
+    add(`${kind}:way:${cleaned}`);
+  }
+  add(featureStableKey(kind, props));
+  for (const key of keys) {
+    const hit = table.get(key);
+    if (hit) return hit;
+  }
+  return null;
 }
 
 function renderPanel(panel, entity, statsIndex) {
@@ -53,18 +80,25 @@ function renderPanel(panel, entity, statsIndex) {
     panel.innerHTML = "";
     return;
   }
+  const kind = entity.entityType === "lift" ? "lift" : "piste";
+  const analyzed = entity.feature ? analyzeFeature(kind, entity.feature) : null;
   const indexed = indexedEntity(entity, statsIndex);
-  const meta = indexed || { ...analyzeFeature(entity.entityType, entity.feature), lengthKm: 0 };
-  const isLift = entity.entityType === "lift";
+  const meta = indexed || analyzed || { lengthKm: 0, name: entity.name, resort: entity.resort };
+  const isLift = kind === "lift";
   const title = entity.name || meta.name || (isLift ? aerialwayLabel(meta.aerialway) : "Unnamed trail");
-  const type = isLift ? aerialwayLabel(meta.aerialway) : diffLabel(meta.difficulty || "Unknown");
+  const type = isLift ? aerialwayLabel(meta.aerialway || entity.aerialway) : diffLabel(meta.difficulty || entity.difficulty || "Unknown");
+  const lengthKm = Number(indexed?.lengthKm || analyzed?.lengthKm || meta.lengthKm) || 0;
   const comparison = isLift
-    ? compareLift(meta.lengthKm, meta, statsIndex)
-    : comparePiste(meta.lengthKm, meta, statsIndex);
+    ? compareLift(lengthKm, meta, statsIndex)
+    : comparePiste(lengthKm, meta, statsIndex);
+  const rankingHtml = comparisonRows(meta, comparison, statsIndex)
+    || (isSkiFeatureStatsLoading()
+      ? "<p>Loading worldwide rankings…</p>"
+      : "<p>Comparison data unavailable.</p>");
   const rows = [
     ["Type", type],
-    ["Length", formatLength(meta.lengthKm)],
-    ["Resort", meta.resort],
+    ["Length", formatLength(lengthKm)],
+    ["Resort", meta.resort || entity.resort],
   ].filter(([, value]) => value);
   if (!isLift && entity.trailProfile) {
     rows.splice(2, 0,
@@ -83,7 +117,7 @@ function renderPanel(panel, entity, statsIndex) {
     `<div class="clay-entity-type">${escapeHtml(type)}</div>` +
     `<dl>${rows.map(([label, value]) => `<div><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd></div>`).join("")}</dl>` +
     `<div class="clay-entity-ranking-title">Relative length</div>` +
-    `<div class="clay-entity-rankings">${comparisonRows(meta, comparison) || "<p>Comparison data unavailable.</p>"}</div>`;
+    `<div class="clay-entity-rankings">${rankingHtml}</div>`;
 }
 
 export function createClayEntityPanel(embed) {
@@ -94,23 +128,27 @@ export function createClayEntityPanel(embed) {
   embed.appendChild(panel);
 
   let currentEntity = null;
-  let readyIndex = getSkiFeatureStatsIndex();
-  const refresh = () => renderPanel(panel, currentEntity, readyIndex);
-  ensureSkiFeatureStatsIndex((index) => {
-    readyIndex = index;
-    refresh();
-  });
+  let extraIndex = null;
+  const pickIndex = () => {
+    const global = getSkiFeatureStatsIndex();
+    if (isGlobalStatsReady(global)) return global;
+    return extraIndex;
+  };
+  const refresh = () => renderPanel(panel, currentEntity, pickIndex());
+  ensureSkiFeatureStatsIndex(() => refresh());
 
   panel.addEventListener("click", (event) => {
     if (event.target.closest("[data-clay-entity-close]")) {
       currentEntity = null;
+      extraIndex = null;
       refresh();
     }
   });
 
   return {
-    show(entity) {
+    show(entity, statsIndex) {
       currentEntity = entity;
+      if (statsIndex) extraIndex = statsIndex;
       refresh();
     },
     hide() {

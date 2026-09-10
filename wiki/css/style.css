@@ -258,9 +258,31 @@ body {
   color: #fff;
 }
 
+.resort-map-header-row .hero-montage-trail-schemes {
+  position: static;
+  margin-left: auto;
+}
+
+.resort-clay-embed .hero-montage-trail-schemes {
+  display: none;
+}
+
+.resort-legend-line--european-mid { background: #ef4444; }
+
+.resort-legend-title {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: #64748b;
+}
+
 .resort-map-gl-wrap {
   position: relative;
   width: 100%;
+}
+
+.resort-map-gl-wrap .clay-entity-tooltip,
+.resort-map-gl-wrap .clay-entity-panel {
+  z-index: 12;
 }
 
 .resort-map-legend {
@@ -275,6 +297,7 @@ body {
   font-size: 10px;
   max-height: 140px;
   overflow-y: auto;
+  pointer-events: none;
 }
 .resort-map-legend h3 { margin: 0 0 4px 0; font-size: 11px; }
 .resort-map-legend .resort-legend-row { display: flex; align-items: center; gap: 6px; margin: 2px 0; }

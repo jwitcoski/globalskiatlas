@@ -175,10 +175,20 @@ export function featureOtherTagsBlob(feature) {
 export function featureOsmWayId(feature) {
   const props = feature?.properties || {};
   const tags = props.tags && typeof props.tags === "object" ? props.tags : {};
-  if (tags.osm_way_id != null && String(tags.osm_way_id).trim()) return String(tags.osm_way_id);
-  const id = String(props.id || "");
-  const m = /way:(\d+)/.exec(id) || /:(\d+)$/.exec(id);
-  return m ? m[1] : "";
+  const candidates = [
+    tags.osm_way_id,
+    props.osm_way_id,
+    props.osm_id,
+    tags.osm_id,
+    props.id,
+    props["@id"],
+  ];
+  for (const value of candidates) {
+    if (value == null || String(value).trim() === "") continue;
+    const match = /(?:way:|node:|relation:|nan:|:)?(\d+)\s*$/i.exec(String(value).trim());
+    if (match) return match[1];
+  }
+  return "";
 }
 
 export function isPisteAreaOutline(feature) {
