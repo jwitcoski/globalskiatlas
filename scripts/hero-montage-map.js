@@ -63,6 +63,9 @@ import {
   addProceduralBuildings,
   addTrails,
   addProceduralTrails,
+  getClayTrailScheme,
+  loadClayTrailScheme,
+  setClayTrailScheme,
   waterFeatureCount,
   prepareWaterFeature,
   addOsmWater,
@@ -680,6 +683,8 @@ export async function initHeroMontageMap(container, options = {}) {
   const prevBtn = embed.querySelector("[data-hero-prev]");
   const nextBtn = embed.querySelector("[data-hero-next]");
   const switcher = embed.querySelector(".hero-montage-switcher");
+  const trailSchemeBtns = [...embed.querySelectorAll("[data-clay-trail-scheme]")];
+  loadClayTrailScheme();
 
   function currentResort() {
     return resorts[resortIndex] || null;
@@ -706,6 +711,11 @@ export async function initHeroMontageMap(container, options = {}) {
     if (switcher) switcher.hidden = lockResort || resorts.length < 2;
     if (prevBtn) prevBtn.disabled = lockResort || loading || resorts.length < 2;
     if (nextBtn) nextBtn.disabled = lockResort || loading || resorts.length < 2;
+    const scheme = getClayTrailScheme();
+    for (const button of trailSchemeBtns) {
+      const active = button.dataset.clayTrailScheme === scheme;
+      button.setAttribute("aria-pressed", active ? "true" : "false");
+    }
   }
 
   async function mountResort(resort) {
@@ -864,8 +874,16 @@ export async function initHeroMontageMap(container, options = {}) {
   function onNext() {
     stepResort(1);
   }
+  async function onTrailScheme(event) {
+    const scheme = event.currentTarget.dataset.clayTrailScheme;
+    if (!scheme || scheme === getClayTrailScheme() || loading) return;
+    setClayTrailScheme(scheme);
+    syncChrome(currentResort());
+    if (currentResort()) await mountResort(currentResort());
+  }
   prevBtn?.addEventListener("click", onPrev);
   nextBtn?.addEventListener("click", onNext);
+  for (const button of trailSchemeBtns) button.addEventListener("click", onTrailScheme);
 
   function resize() {
     orbit.resize();
@@ -935,6 +953,7 @@ export async function initHeroMontageMap(container, options = {}) {
       window.removeEventListener("resize", resize);
       prevBtn?.removeEventListener("click", onPrev);
       nextBtn?.removeEventListener("click", onNext);
+      for (const button of trailSchemeBtns) button.removeEventListener("click", onTrailScheme);
       disposeObject(world);
       renderer.dispose();
       if (renderer.domElement.parentNode === container) container.removeChild(renderer.domElement);

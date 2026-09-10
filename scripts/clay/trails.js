@@ -12,6 +12,68 @@ import {
   smoothTrailPts,
 } from "./math-utils.js";
 
+export const CLAY_TRAIL_SCHEMES = ["american", "european", "japanese"];
+export const CLAY_TRAIL_SCHEME_LABELS = {
+  american: "American",
+  european: "European",
+  japanese: "Japanese",
+};
+
+const CLAY_TRAIL_COLORS = {
+  green: TRAIL_STYLES.green,
+  blue: TRAIL_STYLES.blue,
+  red: { color: 0xef4444, emissive: 0xdc2626, intensity: 0.11, key: "red" },
+  black: TRAIL_STYLES.black,
+  orange: { color: 0xf97316, emissive: 0xea580c, intensity: 0.11, key: "orange" },
+  yellow: { color: 0xeab308, emissive: 0xca8a04, intensity: 0.1, key: "yellow" },
+  gray: { color: 0x94a3b8, emissive: 0x64748b, intensity: 0.06, key: "gray" },
+};
+
+const CLAY_TRAIL_SCHEME_KEYS = {
+  american: {
+    green: "green",
+    blue: "blue",
+    black: "black",
+  },
+  european: {
+    green: "green",
+    blue: "red",
+    black: "black",
+  },
+  japanese: {
+    green: "green",
+    blue: "red",
+    black: "black",
+  },
+};
+
+let clayTrailScheme = "american";
+
+export function getClayTrailScheme() {
+  return clayTrailScheme;
+}
+
+export function loadClayTrailScheme() {
+  try {
+    const stored = localStorage.getItem("gsa-diff-scheme");
+    if (CLAY_TRAIL_SCHEMES.includes(stored)) clayTrailScheme = stored;
+  } catch {
+    /* ignore */
+  }
+  return clayTrailScheme;
+}
+
+export function setClayTrailScheme(scheme) {
+  if (!CLAY_TRAIL_SCHEMES.includes(scheme)) return clayTrailScheme;
+  clayTrailScheme = scheme;
+  try {
+    localStorage.setItem("gsa-diff-scheme", scheme);
+  } catch {
+    /* ignore */
+  }
+  return clayTrailScheme;
+}
+
 export function appendRibbon(positions, pts, width) {
   if (!pts || pts.length < 2) return;
   const half = width * 0.5;
@@ -189,8 +251,31 @@ export function selectTrailCenterlines(features) {
   return [...byKey.values()];
 }
 
-export function trailStyle(difficulty) {
-  return TRAIL_STYLES[difficultyBucket(difficulty)] || TRAIL_STYLES.blue;
+export function trailStyle(difficulty, scheme = clayTrailScheme) {
+  const raw = String(difficulty || "").toLowerCase().trim();
+  if (!raw || raw === "unrated" || raw === "unknown" || raw === "undefined") return CLAY_TRAIL_COLORS.gray;
+  if (scheme === "european") {
+    if (raw.includes("freeride")) return CLAY_TRAIL_COLORS.yellow;
+    if (raw === "double_black" || raw === "double black" || raw === "black") return CLAY_TRAIL_COLORS.black;
+    if (raw === "green" || raw === "beginner" || raw === "novice" || raw === "learning") return CLAY_TRAIL_COLORS.green;
+    if (raw === "blue" || raw === "easy") return CLAY_TRAIL_COLORS.blue;
+    if (raw === "red" || raw === "intermediate" || raw === "medium") return CLAY_TRAIL_COLORS.red;
+    if (raw.includes("expert") || raw.includes("extreme")) return CLAY_TRAIL_COLORS.orange;
+    if (raw.includes("advanced") || raw.includes("difficult") || raw === "very_difficult") return CLAY_TRAIL_COLORS.black;
+  }
+  if (scheme === "japanese") {
+    if (raw === "green" || raw === "beginner" || raw === "novice" || raw === "learning" || raw === "easy") {
+      return CLAY_TRAIL_COLORS.green;
+    }
+    if (raw === "red" || raw === "intermediate" || raw === "medium" || raw === "blue") return CLAY_TRAIL_COLORS.red;
+    if (raw === "black" || raw === "double_black" || raw === "double black") return CLAY_TRAIL_COLORS.black;
+    if (raw.includes("advanced") || raw.includes("expert") || raw.includes("extreme") || raw.includes("freeride") || raw === "very_difficult") {
+      return CLAY_TRAIL_COLORS.black;
+    }
+  }
+  const sourceKey = difficultyBucket(difficulty);
+  const key = CLAY_TRAIL_SCHEME_KEYS[scheme]?.[sourceKey] || sourceKey;
+  return CLAY_TRAIL_COLORS[key] || CLAY_TRAIL_COLORS.blue;
 }
 
 export function ensureDownhillPath(pts) {
@@ -205,6 +290,10 @@ export function addTrails(parent, featureCollection, center, sample, unitScale =
     green: [],
     blue: [],
     black: [],
+    red: [],
+    orange: [],
+    yellow: [],
+    gray: [],
   };
   const features = selectTrailCenterlines(featureCollection?.features || []);
   const stride = Math.max(1, Math.ceil(features.length / MAX_TRAILS));
@@ -273,7 +362,7 @@ export function addProceduralTrails(parent, sample) {
     { key: "green", pts: [[-4, 30], [-10, 20], [-16, 10], [-12, 2]] },
     { key: "blue", pts: [[6, 32], [0, 22], [-4, 12], [2, 3]] },
   ];
-  const buckets = { green: [], blue: [], black: [] };
+  const buckets = { green: [], blue: [], black: [], red: [], orange: [], yellow: [], gray: [] };
   const ridePaths = [];
   for (const path of paths) {
     const pts = [];
