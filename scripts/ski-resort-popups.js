@@ -45,8 +45,8 @@ function buildActionButtons(properties, latlng, displayStr, options, wikiPage, e
   }
 
   const popupUrl = pageParam
-    ? new URL('wiki/resort.html', location.href).href + '?page=' + encodeURIComponent(pageParam)
-    : new URL('wiki/browse.html', location.href).href;
+    ? `${location.origin}/wiki/resort.html?page=${encodeURIComponent(pageParam)}`
+    : `${location.origin}/wiki/browse.html`;
   const stored = JSON.stringify({ name: displayStr || name || null, id: id != null ? String(id) : null, lat, lon });
   const storedAttr = stored.replace(/"/g, '&quot;');
 

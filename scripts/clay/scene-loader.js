@@ -6,18 +6,22 @@ import {
   HEIGHT_EXAGGERATE,
   HERO_SPAN,
   gameSceneBase,
+  regionCatalogUrl,
+  regionSceneRoot,
   sceneRoot,
 } from "./config.js";
 import {
   exaggerateHeights,
   fitTerrainRoot,
-} from "./island.js";
+  regionHeightExaggerateFactor,
+  smoothTerrainHeights,
+} from "./island.js?v=3";
 import {
   mergeFeatureCollections,
   mergeTreeArea,
   shadeSnowMesh,
   waterFeatureCount,
-} from "./index.js";
+} from "./index.js?v=4";
 
 let gltfLoader;
 
@@ -31,7 +35,7 @@ function getGltfLoader() {
 }
 
 export async function fetchJson(url) {
-  const res = await fetch(url, { cache: "force-cache" });
+  const res = await fetch(url, { cache: "no-store" });
   if (!res.ok) throw new Error(`${url} ${res.status}`);
   return res.json();
 }
@@ -45,19 +49,23 @@ export async function loadHomepageMesh(base) {
   const meshUrl = new URL(manifest.terrain.mesh, base);
   const vectors = manifest.vectors || {};
   const gltf = await getGltfLoader().loadAsync(meshUrl.href);
+  const isRegion = manifest.scene_kind === "wiki_region";
 
   let mesh = null;
   gltf.scene.traverse((child) => {
     if (!child.isMesh) return;
     if (!mesh) mesh = child;
-    exaggerateHeights(child, HEIGHT_EXAGGERATE);
-    shadeSnowMesh(child);
+    const exaggerate = isRegion ? regionHeightExaggerateFactor(child) : HEIGHT_EXAGGERATE;
+    exaggerateHeights(child, exaggerate);
+    if (isRegion) smoothTerrainHeights(child, 6);
+    shadeSnowMesh(child, isRegion ? { contrast: true } : null);
     child.castShadow = false;
     child.receiveShadow = true;
   });
   if (!mesh) throw new Error("terrain mesh missing");
 
-  return { fitted: fitTerrainRoot(mesh, HERO_SPAN), vectors, base, manifest };
+  const heroSpan = Number(manifest.camera?.suggested_hero_span) || HERO_SPAN;
+  return { fitted: fitTerrainRoot(mesh, heroSpan), vectors, base, manifest };
 }
 
 export async function loadVectors(base, vectors, resort = null) {
@@ -68,7 +76,11 @@ export async function loadVectors(base, vectors, resort = null) {
   const liftsUrl = new URL(vectors.lifts || "vectors/lifts.geojson", base);
   const treePointsUrl = new URL(vectors.tree_points || "vectors/tree-points.geojson", base);
   const forestUrl = new URL(vectors.forest || "vectors/forest.geojson", base);
-  const bufferPath = vectors.ski_area_buffer || null;
+  const bufferPath = vectors.ski_area_buffer || vectors.admin_boundary || null;
+  const resortsPath = vectors.resorts || null;
+  const footprintsPath = vectors.ski_area_footprints || null;
+  const highwaysPath = vectors.highways || null;
+  const placesPath = vectors.places || null;
   const clayWaterPath = vectors.water || null;
   const clayBuildingsPath = vectors.buildings || null;
   const clayRoadsPath = vectors.roads || null;
@@ -86,6 +98,10 @@ export async function loadVectors(base, vectors, resort = null) {
     clayRoadsPath ? fetchJson(new URL(clayRoadsPath, base)).catch(() => null) : Promise.resolve(null),
     clayCliffsPath ? fetchJson(new URL(clayCliffsPath, base)).catch(() => null) : Promise.resolve(null),
     clayRocksPath ? fetchJson(new URL(clayRocksPath, base)).catch(() => null) : Promise.resolve(null),
+    resortsPath ? fetchJson(new URL(resortsPath, base)).catch(() => null) : Promise.resolve(null),
+    footprintsPath ? fetchJson(new URL(footprintsPath, base)).catch(() => null) : Promise.resolve(null),
+    highwaysPath ? fetchJson(new URL(highwaysPath, base)).catch(() => null) : Promise.resolve(null),
+    placesPath ? fetchJson(new URL(placesPath, base)).catch(() => null) : Promise.resolve(null),
   ];
   if (gameBase) {
     fetches.push(
@@ -101,7 +117,11 @@ export async function loadVectors(base, vectors, resort = null) {
   const results = await Promise.all(fetches);
   const forestPoints = results[2];
   const forestHome = results[3];
-  const game = gameBase ? results.slice(10) : [];
+  const regionResorts = results[10];
+  const regionFootprints = results[11];
+  const regionHighways = results[12];
+  const regionPlaces = results[13];
+  const game = gameBase ? results.slice(14) : [];
   const forest = await mergeTreeArea(mergeFeatureCollections(game[4], forestHome, forestPoints));
   const waterGame = gameBase ? game[2] : null;
   return {
@@ -115,7 +135,22 @@ export async function loadVectors(base, vectors, resort = null) {
     water: waterFeatureCount(waterGame) ? waterGame : results[5],
     skiArea: gameBase ? game[3] : null,
     skiAreaBuffer: results[4],
+    resorts: regionResorts,
+    skiAreaFootprints: regionFootprints,
+    highways: regionHighways,
+    places: regionPlaces,
   };
+}
+
+export async function loadRegionCatalog() {
+  const catalog = await fetchJson(regionCatalogUrl());
+  return (catalog?.regions || []).filter((region) => region?.id && region.ready !== false);
+}
+
+export async function loadRegionScene(regionId) {
+  const base = regionSceneRoot(regionId);
+  const { fitted, vectors, manifest } = await loadHomepageMesh(base);
+  return { base, fitted, vectors, manifest };
 }
 
 export async function loadResortScene(resort) {

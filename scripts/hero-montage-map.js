@@ -12,9 +12,10 @@ import { createClayEntityTooltip } from "./clay/entity-tooltip.js";
 import {
   loadCatalog,
   loadHomepageMesh as loadTerrainScene,
+  loadRegionCatalog,
   loadVectors as loadSceneVectors,
   yieldFrame as waitForFrame,
-} from "./clay/scene-loader.js";
+} from "./clay/scene-loader.js?v=8";
 import {
   addSoftShadow as addIslandShadow,
   addIslandUnderside,
@@ -29,6 +30,7 @@ import {
   catalogUrl,
   gameSceneBase,
   playableHref,
+  regionSceneRoot,
   capDpr,
   getClayQuality,
   cross2,
@@ -87,6 +89,8 @@ import {
   updateTBarLifts,
   updateCarpetLifts,
 } from "./clay/index.js";
+import { addRegionResortMarkers } from "./clay/region-markers.js?v=2";
+import { addRegionContextLayers } from "./clay/region-context.js?v=2";
 
 function disposeObject(obj) {
   obj.traverse((child) => {
@@ -628,7 +632,9 @@ export async function initHeroMontageMap(container, options = {}) {
   if (!container) return null;
 
   const preferredId = options.resortId ? String(options.resortId) : "";
-  const lockResort = Boolean(options.lockResort || preferredId);
+  const regionMode = Boolean(options.regionMode);
+  const regionId = options.regionId ? String(options.regionId) : "";
+  const lockResort = Boolean(options.lockResort || preferredId || regionMode);
 
   const embed = container.closest(".hero-montage-embed") || container;
 
@@ -684,7 +690,13 @@ export async function initHeroMontageMap(container, options = {}) {
     canvas,
     camera,
     getPickables: () => entityPickables,
-    onSelect: (entity) => entityPanel.show(entity),
+    onSelect: (entity) => {
+      if (entity?.entityType === "resort" && entity.wikiPageId) {
+        window.location.assign(`/wiki/resort.html?page=${encodeURIComponent(entity.wikiPageId)}`);
+        return;
+      }
+      entityPanel.show(entity);
+    },
     onHover: (entity, event) => {
       if (entity && event) entityTooltip.show(entity, event.clientX, event.clientY);
       else entityTooltip.hide();
@@ -711,6 +723,10 @@ export async function initHeroMontageMap(container, options = {}) {
   const switcher = embed.querySelector(".hero-montage-switcher");
   const trailSchemeBtns = [...embed.querySelectorAll("[data-clay-trail-scheme]")];
   loadClayTrailScheme();
+  if (regionMode) {
+    embed.classList.add("hero-montage-embed--region");
+    for (const button of trailSchemeBtns) button.hidden = true;
+  }
 
   function currentResort() {
     return resorts[resortIndex] || null;
@@ -752,7 +768,7 @@ export async function initHeroMontageMap(container, options = {}) {
     embed.classList.add("is-loading");
 
     try {
-      const base = sceneRoot(resort.id);
+      const base = regionMode ? regionSceneRoot(resort.id) : sceneRoot(resort.id);
       const { fitted, vectors } = await loadTerrainScene(base);
       if (token !== loadToken) return;
       await waitForFrame();
@@ -774,7 +790,7 @@ export async function initHeroMontageMap(container, options = {}) {
       clearGroup(world);
       world.add(root);
 
-      const osm = await loadSceneVectors(base, vectors, resort);
+      const osm = await loadSceneVectors(base, vectors, regionMode ? null : resort);
       if (token !== loadToken) return;
       await waitForFrame();
 
@@ -808,8 +824,8 @@ export async function initHeroMontageMap(container, options = {}) {
         addIslandShadow(root, HERO_SPAN * 0.48);
       }
 
-      const hasOsmWater = waterFeatureCount(osm.water) > 0;
-      const water = hasOsmWater ? null : prepareWaterFeature(mesh, sample, span, clipRing);
+      const hasOsmWater = !regionMode && waterFeatureCount(osm.water) > 0;
+      const water = regionMode || hasOsmWater ? null : prepareWaterFeature(mesh, sample, span, clipRing);
       if (water) sample = makeHeightGrid(mesh);
       if (woodRim?.length >= 3) {
         const pos = mesh.geometry.attributes.position;
@@ -835,6 +851,21 @@ export async function initHeroMontageMap(container, options = {}) {
       entityPanel.hide();
       clearGroup(decor);
       entityPickables = [];
+      if (regionMode) {
+        addRegionContextLayers(decor, {
+          footprints: osm.skiAreaFootprints,
+          water: osm.water,
+          highways: osm.highways,
+          places: osm.places,
+          center,
+          sample,
+          span,
+        });
+        if (osm.resorts) {
+          const pins = addRegionResortMarkers(decor, osm.resorts, center, sample, span);
+          entityPickables.push(...(pins.userData.pickables || []));
+        }
+      } else {
       const trails = osm.routes
         ? addTrails(decor, osm.routes, center, sample, unitScale, clipRing)
         : addProceduralTrails(decor, sample);
@@ -882,6 +913,7 @@ export async function initHeroMontageMap(container, options = {}) {
       } catch (err) {
         console.warn("[hero-montage-map] snowpark failed", err);
         parkRiders = null;
+      }
       }
       bounds = framingBoundsFromRoot(root, new THREE.Vector3(0, 0, 0));
       orbit.syncFromBounds();
@@ -962,6 +994,18 @@ export async function initHeroMontageMap(container, options = {}) {
       region_label: "",
     };
     try {
+      if (regionMode) {
+        const all = await loadRegionCatalog();
+        const hit = all.find((r) => r.id === regionId || r.pageId === regionId);
+        if (!hit?.id) {
+          console.warn("[hero-montage-map] region scene not ready", regionId);
+          return;
+        }
+        resorts = [hit];
+        resortIndex = 0;
+        await mountResort(currentResort());
+        return;
+      }
       const all = await loadCatalog(catalogUrl);
       if (preferredId) {
         const hit = all.find((r) => r.id === preferredId);

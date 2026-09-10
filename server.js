@@ -366,6 +366,39 @@ app.post('/api/isochrone', async (req, res) => {
   }
 });
 
+app.get('/api/admin-boundary', async (req, res) => {
+  try {
+    const osmId = String(req.query.osm_id || '').trim();
+    const state = String(req.query.state || '').trim();
+    const country = String(req.query.country || '').trim();
+    const pageType = String(req.query.pageType || '').trim();
+    let url;
+    if (/^[NWR]\d+$/i.test(osmId)) {
+      url = `https://nominatim.openstreetmap.org/lookup?format=json&polygon_geojson=1&osm_ids=${encodeURIComponent(osmId)}`;
+    } else {
+      const params = new URLSearchParams({ format: 'json', polygon_geojson: '1', limit: '1' });
+      if (pageType === 'country') params.set('country', country);
+      else {
+        if (state) params.set('state', state);
+        if (country) params.set('country', country);
+      }
+      url = `https://nominatim.openstreetmap.org/search?${params.toString()}`;
+    }
+    const response = await fetch(url, {
+      headers: { Accept: 'application/json', 'User-Agent': 'GlobalSkiAtlas/1.0 (wiki region map)' },
+    });
+    const rows = await response.json();
+    const geom = rows?.[0]?.geojson;
+    if (!geom || (geom.type !== 'Polygon' && geom.type !== 'MultiPolygon')) {
+      return res.status(404).json({ error: 'Not Found' });
+    }
+    res.json({ type: 'Feature', properties: {}, geometry: geom });
+  } catch (err) {
+    console.error('GET /api/admin-boundary', err.message);
+    res.status(502).json({ error: 'Bad Gateway', message: 'Admin boundary unavailable' });
+  }
+});
+
 // Mount /api/wiki so GET /api/wiki/index is always matched before :pageId
 const apiWikiRouter = require('express').Router({ mergeParams: true });
 apiWikiRouter.get('/index', handleWikiIndex);

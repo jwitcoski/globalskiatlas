@@ -8,7 +8,7 @@ export * from "./trail-profile.js";
 export * from "./quality.js";
 export * from "./entity-tooltip.js";
 export * from "./math-utils.js";
-export * from "./height-grid.js";
+export * from "./height-grid.js?v=2";
 export * from "./trees.js";
 export * from "./buildings.js";
 export * from "./trails.js";

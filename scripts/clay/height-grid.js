@@ -13,7 +13,7 @@ export function mountainHeight(x, z) {
   return 5 + (peak + ridge + bowl + ripple) * HEIGHT_EXAGGERATE;
 }
 
-export function shadeSnowGeometry(geo) {
+export function shadeSnowGeometry(geo, opts = {}) {
   if (!geo?.attributes?.position) return;
   if (!geo.attributes.normal) geo.computeVertexNormals();
   const pos = geo.attributes.position;
@@ -27,19 +27,20 @@ export function shadeSnowGeometry(geo) {
   }
   const spanY = Math.max(1, maxY - minY);
   const colors = new Float32Array(pos.count * 3);
-  const high = new THREE.Color(0xffffff);
-  const mid = new THREE.Color(0xf6f8fb);
-  const low = new THREE.Color(0xe8eef5);
-  const slopeShade = new THREE.Color(0xdde5ee);
+  const contrast = !!opts.contrast;
+  const high = new THREE.Color(contrast ? 0xffffff : 0xffffff);
+  const mid = new THREE.Color(contrast ? 0xe8eef4 : 0xf6f8fb);
+  const low = new THREE.Color(contrast ? 0xb7c4d4 : 0xe8eef5);
+  const slopeShade = new THREE.Color(contrast ? 0x8fa0b3 : 0xdde5ee);
+  const slopeAmt = contrast ? 0.78 : 0.46;
   const c = new THREE.Color();
   for (let i = 0; i < pos.count; i++) {
     const elev = (pos.getY(i) - minY) / spanY;
-    /* Stay near snow-white; only a soft cool tint in valleys. */
     if (elev > 0.5) c.copy(mid).lerp(high, (elev - 0.5) / 0.5);
     else c.copy(low).lerp(mid, elev / 0.5);
     const ny = Math.abs(nrm.getY(i));
     const slope = THREE.MathUtils.clamp(1 - ny, 0, 1);
-    c.lerp(slopeShade, slope * 0.46);
+    c.lerp(slopeShade, slope * slopeAmt);
     colors[i * 3] = c.r;
     colors[i * 3 + 1] = c.g;
     colors[i * 3 + 2] = c.b;
@@ -47,8 +48,8 @@ export function shadeSnowGeometry(geo) {
   geo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
 }
 
-export function shadeSnowMesh(mesh) {
-  shadeSnowGeometry(mesh.geometry);
+export function shadeSnowMesh(mesh, opts = null) {
+  shadeSnowGeometry(mesh.geometry, opts || {});
   if (mesh.material && !Array.isArray(mesh.material)) mesh.material.dispose();
   mesh.material = new THREE.MeshLambertMaterial({
     color: 0xffffff,

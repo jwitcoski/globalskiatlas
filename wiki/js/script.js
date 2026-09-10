@@ -2,6 +2,7 @@ var RESORT_MAP_INSTANCE = null;
 var RESORT_STATIC_MAP_BASE = 'https://globalskiatlas-resort-maps.s3.us-east-1.amazonaws.com/';
 var RESORT_CLAY_API = null;
 var RESORT_CLAY_WINTER_ID = null;
+var RESORT_CLAY_REGION_ID = null;
 var RESORT_CLAY_LOADED_FOR = null;
 var RESORT_CLAY_CATALOG_PROMISE = null;
 var RESORT_CLAY_ACTIVE_TAB = 'clay';
@@ -50,6 +51,7 @@ function disposeResortClay() {
   }
   RESORT_CLAY_API = null;
   RESORT_CLAY_LOADED_FOR = null;
+  RESORT_CLAY_REGION_ID = null;
   var stage = document.getElementById('resort-clay-stage');
   if (stage) stage.innerHTML = '';
   var embed = document.getElementById('resort-clay-embed');
@@ -95,26 +97,103 @@ function resolveClayResortId(winterSportsId) {
   });
 }
 
-/** Keep clay viewer in sync with the loaded wiki page (join key: winterSportsId). */
+function resolveClayRegionId(pageId) {
+  if (pageId == null || pageId === '') return Promise.resolve(null);
+  return fetch('/clay_scenes/regions/by-page/' + encodeURIComponent(pageId) + '.json', { cache: 'no-store' })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (hit) {
+      if (hit && hit.ready !== false && hit.id) return String(hit.id);
+      return null;
+    })
+    .catch(function () { return null; });
+}
+
+/** Keep clay viewer in sync with the loaded wiki page. */
 function syncResortClayContext(page) {
+  var isRegion = page && (page.pageType === 'state' || page.pageType === 'country');
+  var aside = document.getElementById('resort-map-aside');
+  if (aside) aside.classList.toggle('resort-map-aside--region', !!isRegion);
+
+  if (isRegion) {
+    var regionId = page.pageId || YWIKI_PATH;
+    if (regionId !== RESORT_CLAY_REGION_ID || RESORT_CLAY_WINTER_ID) {
+      disposeResortClay();
+      RESORT_CLAY_WINTER_ID = null;
+      RESORT_CLAY_REGION_ID = regionId;
+      showResortClaySoon(true);
+    }
+    return;
+  }
+
   var wsId = page && page.winterSportsId != null && page.winterSportsId !== ''
     ? String(page.winterSportsId)
     : null;
-  if (wsId !== RESORT_CLAY_WINTER_ID) {
+  if (wsId !== RESORT_CLAY_WINTER_ID || RESORT_CLAY_REGION_ID) {
     disposeResortClay();
     RESORT_CLAY_WINTER_ID = wsId;
+    RESORT_CLAY_REGION_ID = null;
     showResortClaySoon(true);
   }
-  // Default map tab is 3D Map on each page load.
   switchMapTab('clay');
 }
 
 function ensureResortClayMounted() {
-  var wsId = RESORT_CLAY_WINTER_ID;
   var embed = document.getElementById('resort-clay-embed');
   var stage = document.getElementById('resort-clay-stage');
   if (!embed || !stage) return;
 
+  var regionId = RESORT_CLAY_REGION_ID;
+  if (regionId) {
+    var regionKey = 'region:' + regionId;
+    if (RESORT_CLAY_LOADED_FOR === regionKey && RESORT_CLAY_API) {
+      showResortClaySoon(false);
+      embed.hidden = false;
+      if (typeof RESORT_CLAY_API.resize === 'function') {
+        setTimeout(function () { RESORT_CLAY_API.resize(); }, 50);
+      }
+      return;
+    }
+    resolveClayRegionId(regionId).then(function (sceneId) {
+      if (RESORT_CLAY_REGION_ID !== regionId) return;
+      if (!sceneId) {
+        disposeResortClay();
+        RESORT_CLAY_REGION_ID = regionId;
+        showResortClaySoon(true);
+        return;
+      }
+      disposeResortClay();
+      RESORT_CLAY_REGION_ID = regionId;
+      showResortClaySoon(false);
+      embed.hidden = false;
+      return import('/scripts/hero-montage-map.js?v=98').then(function (mod) {
+        if (RESORT_CLAY_REGION_ID !== regionId) return null;
+        return mod.initHeroMontageMap(stage, { regionMode: true, regionId: sceneId, lockResort: true });
+      }).then(function (api) {
+        if (RESORT_CLAY_REGION_ID !== regionId) {
+          if (api && typeof api.dispose === 'function') api.dispose();
+          return;
+        }
+        if (!api) {
+          showResortClaySoon(true);
+          return;
+        }
+        RESORT_CLAY_API = typeof api.dispose === 'function' ? api : { dispose: api };
+        RESORT_CLAY_LOADED_FOR = regionKey;
+        if (typeof RESORT_CLAY_API.resize === 'function') {
+          setTimeout(function () { RESORT_CLAY_API.resize(); }, 50);
+        }
+      }).catch(function (err) {
+        console.warn('[resort-clay] region mount failed', err);
+        if (RESORT_CLAY_REGION_ID !== regionId) return;
+        disposeResortClay();
+        RESORT_CLAY_REGION_ID = regionId;
+        showResortClaySoon(true);
+      });
+    });
+    return;
+  }
+
+  var wsId = RESORT_CLAY_WINTER_ID;
   if (!wsId) {
     disposeResortClay();
     showResortClaySoon(true);
@@ -144,7 +223,7 @@ function ensureResortClayMounted() {
     showResortClaySoon(false);
     embed.hidden = false;
 
-    return import('/scripts/hero-montage-map.js?v=88').then(function (mod) {
+    return import('/scripts/hero-montage-map.js?v=98').then(function (mod) {
       if (RESORT_CLAY_WINTER_ID !== wsId) return null;
       return mod.initHeroMontageMap(stage, { resortId: resortId, lockResort: true });
     }).then(function (api) {
@@ -199,7 +278,7 @@ function switchMapTab(tab) {
     if (legendEl) legendEl.style.display = '';
     if (RESORT_MAP_INSTANCE) {
       RESORT_MAP_INSTANCE.resize();
-      if (window._gsaEnhanceParams && window.enhanceResortMap) {
+      if (!window._gsaRegionMap && window._gsaEnhanceParams && window.enhanceResortMap) {
         window.enhanceResortMap(window._gsaEnhanceParams);
       }
     }
@@ -927,7 +1006,21 @@ function populatePage(page) {
     var regionLon = page.longitude != null ? Number(page.longitude) : null;
     var regionHasCoords = regionLat != null && !isNaN(regionLat) && regionLon != null && !isNaN(regionLon);
     if (regionHasCoords && aside) {
-      initResortMap(regionLat, regionLon, page.pageId || YWIKI_PATH, page.mapZoom != null ? Number(page.mapZoom) : undefined);
+      var regionMap = (page.pageType === 'state' || page.pageType === 'country')
+        ? {
+          pageType: page.pageType,
+          title: page.title || '',
+          state: page.state || page.title || '',
+          country: page.country || ''
+        }
+        : null;
+      initResortMap(
+        regionLat,
+        regionLon,
+        page.pageId || YWIKI_PATH,
+        page.mapZoom != null ? Number(page.mapZoom) : undefined,
+        regionMap ? { region: regionMap } : undefined
+      );
       syncResortClayContext(page);
     } else if (aside) {
       aside.style.display = 'none';

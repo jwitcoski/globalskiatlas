@@ -1,11 +1,33 @@
 /**
  * Wiki resort live map — MapTiler SDK + PMTiles.
- * Call window.initResortMap(lat, lon, pageId, zoom) from script.js.
+ * Call window.initResortMap(lat, lon, pageId, zoom, extras) from script.js.
  */
 import { createMapLibre } from '../../scripts/map-core.js';
 import { addSkiPmtilesToMap, SKI_PMTILES_LAYERS } from '../../scripts/pmtiles-core.js';
+import { initSkiResortMap } from '../../scripts/ski-resort-map-ml.js?v=22';
 
-export async function initResortMap(lat, lon, pageId, zoom) {
+function waitForMaptilerSdk(ms = 4000) {
+  if (typeof maptilersdk !== 'undefined') return Promise.resolve(true);
+  return new Promise((resolve) => {
+    const started = Date.now();
+    const t = setInterval(() => {
+      if (typeof maptilersdk !== 'undefined') {
+        clearInterval(t);
+        resolve(true);
+      } else if (Date.now() - started > ms) {
+        clearInterval(t);
+        resolve(false);
+      }
+    }, 50);
+  });
+}
+
+function setRegionMapChrome(aside, isRegion) {
+  if (!aside) return;
+  aside.classList.toggle('resort-map-aside--region', !!isRegion);
+}
+
+export async function initResortMap(lat, lon, pageId, zoom, extras) {
   var aside = document.getElementById('resort-map-aside');
   var container = document.getElementById('resort-map-gl');
   if (!aside || !container) return;
@@ -16,9 +38,11 @@ export async function initResortMap(lat, lon, pageId, zoom) {
     if (typeof setResortStaticMaps === 'function') setResortStaticMaps(pageId);
   }
 
-  var useZoom = zoom != null && !isNaN(Number(zoom)) ? Number(zoom) : 11;
+  var region = extras && extras.region ? extras.region : null;
+  var useZoom = zoom != null && !isNaN(Number(zoom)) ? Number(zoom) : (region ? 6 : 11);
 
-  if (lat == null || lon == null || typeof maptilersdk === 'undefined') {
+  const sdkReady = await waitForMaptilerSdk();
+  if (lat == null || lon == null || !sdkReady) {
     var tabLive = document.getElementById('tab-live');
     if (tabLive) tabLive.style.display = 'none';
     if (typeof switchMapTab === 'function') switchMapTab('clay');
@@ -30,6 +54,32 @@ export async function initResortMap(lat, lon, pageId, zoom) {
     window.RESORT_MAP_INSTANCE = null;
     container.innerHTML = '';
   }
+
+  if (region) {
+    setRegionMapChrome(aside, true);
+    window._gsaRegionMap = true;
+    window._gsaEnhanceParams = null;
+    if (typeof switchMapTab === 'function') switchMapTab('live');
+    const { map } = await initSkiResortMap({
+      containerId: 'resort-map-gl',
+      includeRoadTripButton: false,
+      loadAds: false,
+      noControl: false,
+      skipOlympics: true,
+      region,
+      center: [lon, lat],
+      zoom: useZoom,
+      legendEl: document.getElementById('resort-map-legend'),
+    });
+    window.RESORT_MAP_INSTANCE = map;
+    requestAnimationFrame(() => {
+      try { map.resize(); } catch (_) { /* ignore */ }
+    });
+    return;
+  }
+
+  setRegionMapChrome(aside, false);
+  window._gsaRegionMap = false;
 
   const { map: m } = await createMapLibre({
     containerId: 'resort-map-gl',
@@ -55,8 +105,8 @@ export async function initResortMap(lat, lon, pageId, zoom) {
   }
 }
 
-window.initResortMap = function (lat, lon, pageId, zoom) {
-  initResortMap(lat, lon, pageId, zoom).catch(function (err) {
+window.initResortMap = function (lat, lon, pageId, zoom, extras) {
+  initResortMap(lat, lon, pageId, zoom, extras).catch(function (err) {
     console.warn('[resort-map-init]', err);
   });
 };

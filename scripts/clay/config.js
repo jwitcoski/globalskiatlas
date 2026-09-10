@@ -55,8 +55,24 @@ export function sceneRoot(resortId) {
   return new URL(`/clay_scenes/${resortId}/`, location.origin);
 }
 
+export function regionSceneRoot(regionId) {
+  return new URL(`/clay_scenes/regions/${encodeURIComponent(resortIdSafe(regionId))}/`, location.origin);
+}
+
+function resortIdSafe(id) {
+  return String(id || "").replace(/^\/+|\/+$/g, "");
+}
+
 export function catalogUrl() {
   return new URL("/clay_scenes/catalog.json", location.origin);
+}
+
+export function regionCatalogUrl() {
+  return new URL("/clay_scenes/regions/catalog.json", location.origin);
+}
+
+export function regionByPageUrl(pageId) {
+  return new URL(`/clay_scenes/regions/by-page/${encodeURIComponent(pageId)}.json`, location.origin);
 }
 
 export function gameSceneBase(resort) {

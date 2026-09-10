@@ -21,6 +21,72 @@ export function exaggerateHeights(mesh, factor = 2) {
   mesh.geometry.computeVertexNormals();
 }
 
+/** State-scale DEMs are ~0.3% relief; scale so ridges read after the island is fitted to hero size. */
+export function regionHeightExaggerateFactor(mesh) {
+  const pos = mesh?.geometry?.attributes?.position;
+  if (!pos) return 12;
+  let minY = Infinity;
+  let maxY = -Infinity;
+  let minX = Infinity;
+  let maxX = -Infinity;
+  let minZ = Infinity;
+  let maxZ = -Infinity;
+  for (let i = 0; i < pos.count; i++) {
+    minX = Math.min(minX, pos.getX(i));
+    maxX = Math.max(maxX, pos.getX(i));
+    minY = Math.min(minY, pos.getY(i));
+    maxY = Math.max(maxY, pos.getY(i));
+    minZ = Math.min(minZ, pos.getZ(i));
+    maxZ = Math.max(maxZ, pos.getZ(i));
+  }
+  const relief = Math.max(1, maxY - minY);
+  const plan = Math.max(maxX - minX, maxZ - minZ, 1);
+  return Math.min(16, Math.max(6, (plan * 0.055) / relief));
+}
+
+/** Laplacian Y-smooth so a coarse DEM does not turn into needles after exaggeration. */
+export function smoothTerrainHeights(mesh, iterations = 5) {
+  const geo = mesh?.geometry;
+  const pos = geo?.attributes?.position;
+  if (!pos) return;
+  const index = geo.getIndex();
+  const n = pos.count;
+  const adj = Array.from({ length: n }, () => []);
+  if (index) {
+    const arr = index.array;
+    for (let i = 0; i < arr.length; i += 3) {
+      const a = arr[i];
+      const b = arr[i + 1];
+      const c = arr[i + 2];
+      adj[a].push(b, c);
+      adj[b].push(a, c);
+      adj[c].push(a, b);
+    }
+  } else {
+    for (let i = 0; i + 2 < n; i += 3) {
+      adj[i].push(i + 1, i + 2);
+      adj[i + 1].push(i, i + 2);
+      adj[i + 2].push(i, i + 1);
+    }
+  }
+  const next = new Float32Array(n);
+  for (let iter = 0; iter < iterations; iter++) {
+    for (let v = 0; v < n; v++) {
+      const nbr = adj[v];
+      if (!nbr.length) {
+        next[v] = pos.getY(v);
+        continue;
+      }
+      let sum = pos.getY(v) * 2;
+      for (const u of nbr) sum += pos.getY(u);
+      next[v] = sum / (nbr.length + 2);
+    }
+    for (let v = 0; v < n; v++) pos.setY(v, next[v]);
+  }
+  pos.needsUpdate = true;
+  geo.computeVertexNormals();
+}
+
 export function fitTerrainRoot(mesh, targetSpan = HERO_SPAN) {
   const root = new THREE.Group();
   root.name = "montage-terrain-root";

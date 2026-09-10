@@ -263,6 +263,27 @@ body {
   margin-left: auto;
 }
 
+.resort-map-aside--region .resort-map-schemes {
+  display: none;
+}
+
+.resort-map-aside--region .resort-map-legend {
+  max-height: 220px;
+  pointer-events: auto;
+}
+
+.resort-map-aside--region .resort-map-legend .legend-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 2px 0;
+}
+
+.resort-map-gl-wrap .maplibregl-ctrl-top-right {
+  top: 8px;
+  right: 8px;
+}
+
 .resort-clay-embed .hero-montage-trail-schemes {
   display: none;
 }

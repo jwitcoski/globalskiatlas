@@ -23,12 +23,17 @@ export function createClayEntityTooltip(embed) {
     show(entity, clientX, clientY) {
       if (!entity) return this.hide();
       const embedRect = embed.getBoundingClientRect();
-      const title = entity.name || (entity.entityType === "lift" ? "Unnamed lift" : "Unnamed trail");
-      const detail = entity.entityType === "lift"
+      const title = entity.name
+        || (entity.entityType === "resort" ? "Ski area" : entity.entityType === "lift" ? "Unnamed lift" : "Unnamed trail");
+      const detail = entity.entityType === "resort"
+        ? (entity.trails ? `${entity.trails} trails · click for wiki` : "Click for wiki page")
+        : entity.entityType === "lift"
         ? aerialwayLabel(entity.aerialway)
         : diffLabel(entity.difficulty || "Unknown");
-      const detailClass = entity.entityType === "lift" ? "clay-entity-tooltip-type" : "clay-entity-tooltip-difficulty";
-      const detailStyle = entity.entityType === "lift"
+      const detailClass = entity.entityType === "lift" || entity.entityType === "resort"
+        ? "clay-entity-tooltip-type"
+        : "clay-entity-tooltip-difficulty";
+      const detailStyle = entity.entityType === "lift" || entity.entityType === "resort"
         ? ""
         : ` style="--clay-difficulty-color: #${trailStyle(entity.difficulty, getClayTrailScheme()).color.toString(16).padStart(6, "0")}"`;
       tooltip.innerHTML = `<strong>${escapeHtml(title)}</strong><span class="${detailClass}"${detailStyle}>${escapeHtml(detail)}</span>`;

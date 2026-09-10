@@ -41,7 +41,13 @@ import {
   buildResortHoverHtml,
   buildResortStatsIndex,
   initResortPopupScopeSwitcher
-} from './ski-resort-popups.js?v=5';
+} from './ski-resort-popups.js?v=6';
+import {
+  addAdminRegionOverlay,
+  fetchAdminBoundary,
+  fitFeatures,
+  resortInRegion
+} from './admin-region.js';
 
 const {
   LIFTS_MIN_ZOOM,
@@ -196,6 +202,9 @@ export async function initSkiResortMap(options = {}) {
   const includeRoadTripButton = !!options.includeRoadTripButton;
   const containerId = options.containerId || 'map';
   const loadAds = options.loadAds !== false;
+  const region = options.region || null;
+  const noControl = !!options.noControl;
+  const skipOlympics = !!options.skipOlympics || !!region;
   const onPlayablePick = typeof options.onPlayablePick === 'function' ? options.onPlayablePick : null;
   let gameResorts = options.playableResorts || null;
   if (!gameResorts) {
@@ -212,7 +221,10 @@ export async function initSkiResortMap(options = {}) {
   // ── Initialise MapLibre map (map-core) ──────────────────────────────────
   const { map } = await createMapLibre({
     containerId,
-    style: getBasemapStyle(getSavedBasemapId())
+    style: getBasemapStyle(getSavedBasemapId()),
+    noControl,
+    center: options.center,
+    zoom: options.zoom
   });
   map._skiCirclePaint = circlePaintFor(playableMode);
   await addSkiPmtilesToMap(map, SKI_PMTILES_OPTIONS);
@@ -224,17 +236,28 @@ export async function initSkiResortMap(options = {}) {
   } catch (e) {
     console.warn('[ski-resort-map-ml] catalog load failed:', e);
   }
+  let adminGeometry = null;
+  if (region) {
+    try {
+      adminGeometry = await fetchAdminBoundary(region);
+    } catch (e) {
+      console.warn('[ski-resort-map-ml] admin boundary failed:', e);
+    }
+  }
+
   const olympicRingsSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 30" width="36" height="18" style="display:block"><circle cx="12" cy="15" r="6" fill="none" stroke="#0081C8" stroke-width="2"/><circle cx="30" cy="15" r="6" fill="none" stroke="#000" stroke-width="2"/><circle cx="48" cy="15" r="6" fill="none" stroke="#EE334E" stroke-width="2"/><circle cx="21" cy="21" r="6" fill="none" stroke="#FCB131" stroke-width="2"/><circle cx="39" cy="21" r="6" fill="none" stroke="#00A651" stroke-width="2"/></svg>';
-  OLYMPIC_HOSTS.forEach((host) => {
-    const el = document.createElement('div');
-    el.className = 'olympic-rings-marker';
-    el.style.cssText = 'background:#fff;border-radius:50%;padding:2px;box-shadow:0 1px 4px rgba(0,0,0,0.3);line-height:0;cursor:default;';
-    el.innerHTML = olympicRingsSvg;
-    new maptilersdk.Marker({ element: el })
-      .setLngLat([host.lon, host.lat])
-      .setPopup(new maptilersdk.Popup({ closeButton: false, offset: [0, -12] }).setHTML(`${host.name} – Milan–Cortina 2026`))
-      .addTo(map);
-  });
+  if (!skipOlympics) {
+    OLYMPIC_HOSTS.forEach((host) => {
+      const el = document.createElement('div');
+      el.className = 'olympic-rings-marker';
+      el.style.cssText = 'background:#fff;border-radius:50%;padding:2px;box-shadow:0 1px 4px rgba(0,0,0,0.3);line-height:0;cursor:default;';
+      el.innerHTML = olympicRingsSvg;
+      new maptilersdk.Marker({ element: el })
+        .setLngLat([host.lon, host.lat])
+        .setPopup(new maptilersdk.Popup({ closeButton: false, offset: [0, -12] }).setHTML(`${host.name} – Milan–Cortina 2026`))
+        .addTo(map);
+    });
+  }
 
   let wikiPages = [];
   try {
@@ -291,6 +314,7 @@ export async function initSkiResortMap(options = {}) {
   rows.forEach(({ geometry, properties }) => {
     if (!geometry || geometry.type !== 'Point') return;
     const [lon, lat] = geometry.coordinates;
+    if (region && !resortInRegion(properties, adminGeometry, lon, lat, region)) return;
     const tier    = getMapSizeTier(properties);
     const color   = getMapTierColorForProps(properties);
     const name    = getProp(properties, NAME_KEYS);
@@ -410,7 +434,7 @@ export async function initSkiResortMap(options = {}) {
   }
 
   // ── Legend ───────────────────────────────────────────────────────────────
-  const legendEl = document.getElementById('legend');
+  const legendEl = options.legendEl || document.getElementById('legend') || document.getElementById('resort-map-legend');
   if (legendEl) {
     legendEl.style.display = 'block';
     legendEl.innerHTML =
@@ -426,19 +450,25 @@ export async function initSkiResortMap(options = {}) {
         : playableMode
         ? '<div class="legend-row" style="margin-top:8px"><span class="legend-swatch" style="background:#0d9488;border:2px solid #0d9488;border-radius:50%"></span> Teal ring = playable in Ski Game (click to ski)</div>'
         : '') +
-      '<h3 style="margin-top:10px">Resort boundary (zoom 8+)</h3>' +
-      `<div class="legend-row"><span class="legend-line" style="background:${ATLAS_COLORS.boundaryOutline};height:2px;border-top:2px dashed ${ATLAS_COLORS.boundaryOutline}"></span> Dashed outline = ski area boundary</div>` +
-      `<div class="legend-row" style="font-size:11px;color:#64748b">Tan lines at zoom 12+ = elevation contours (where available)</div>` +
-      '<h3 style="margin-top:10px">Pistes (zoom 10+)</h3>' +
-      `<div class="legend-row"><span class="legend-line" style="background:${ATLAS_COLORS.pisteEasy}"></span> Green = easy / novice</div>` +
-      `<div class="legend-row"><span class="legend-line" style="background:${ATLAS_COLORS.pisteIntermediate}"></span> Blue = intermediate</div>` +
-      `<div class="legend-row"><span class="legend-line" style="background:${ATLAS_COLORS.pisteAdvanced}"></span> Black = advanced</div>` +
-      `<div class="legend-row"><span class="legend-line" style="background:${ATLAS_COLORS.pisteExpert}"></span> Red = expert</div>` +
-      `<div class="legend-row"><span class="legend-line" style="background:${ATLAS_COLORS.lift}"></span> Orange = lifts</div>`;
+      (region
+        ? '<div class="legend-row" style="margin-top:8px;font-size:11px;color:#64748b">Click a resort for details. Zoom in for trails and lifts.</div>'
+        : (
+          '<h3 style="margin-top:10px">Resort boundary (zoom 8+)</h3>' +
+          `<div class="legend-row"><span class="legend-line" style="background:${ATLAS_COLORS.boundaryOutline};height:2px;border-top:2px dashed ${ATLAS_COLORS.boundaryOutline}"></span> Dashed outline = ski area boundary</div>` +
+          `<div class="legend-row" style="font-size:11px;color:#64748b">Tan lines at zoom 12+ = elevation contours (where available)</div>` +
+          '<h3 style="margin-top:10px">Pistes (zoom 10+)</h3>' +
+          `<div class="legend-row"><span class="legend-line" style="background:${ATLAS_COLORS.pisteEasy}"></span> Green = easy / novice</div>` +
+          `<div class="legend-row"><span class="legend-line" style="background:${ATLAS_COLORS.pisteIntermediate}"></span> Blue = intermediate</div>` +
+          `<div class="legend-row"><span class="legend-line" style="background:${ATLAS_COLORS.pisteAdvanced}"></span> Black = advanced</div>` +
+          `<div class="legend-row"><span class="legend-line" style="background:${ATLAS_COLORS.pisteExpert}"></span> Red = expert</div>` +
+          `<div class="legend-row"><span class="legend-line" style="background:${ATLAS_COLORS.lift}"></span> Orange = lifts</div>`
+        ));
   }
 
   // ── Resort dots + icon symbols (single GeoJSON source, aligned coordinates) ─
+  if (adminGeometry) addAdminRegionOverlay(map, adminGeometry);
   await addResortMarkerLayers(map, resortFeatures);
+  if (region && !adminGeometry) fitFeatures(map, resortFeatures);
 
   const resortPopup = new maptilersdk.Popup({
     maxWidth: '780px',
@@ -491,7 +521,7 @@ export async function initSkiResortMap(options = {}) {
           onPlayablePick(p._playablePath);
           return;
         }
-        if (id.includes('circles')) {
+        if (id.includes('circles') && !region) {
           map.flyTo({ center: e.lngLat, zoom: Math.max(map.getZoom() + 4, 11), duration: 500 });
         } else {
           showResortPopup(e.lngLat, p);
@@ -511,6 +541,7 @@ export async function initSkiResortMap(options = {}) {
 
   async function restoreOverlays() {
     await restoreSkiPmtilesAfterStyleChange(map, SKI_PMTILES_OPTIONS);
+    if (adminGeometry) addAdminRegionOverlay(map, adminGeometry);
     await addResortMarkerLayers(map, resortFeatures);
   }
 
