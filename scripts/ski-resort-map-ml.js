@@ -35,14 +35,14 @@ import {
   getIconId,
   addResortIconImages
 } from './resort-tier-icons.js';
-import { initSkiFeaturePopups } from './ski-feature-popups.js?v=9';
+import { initSkiFeaturePopups } from './ski-feature-popups.js?v=10';
 import {
   buildResortPopupHtml,
   buildResortHoverHtml,
   buildResortStatsIndex,
   initResortPopupScopeSwitcher,
   bindResortDetailsLinks,
-} from './ski-resort-popups.js?v=7';
+} from './ski-resort-popups.js?v=8';
 import {
   addAdminRegionOverlay,
   fetchAdminBoundary,

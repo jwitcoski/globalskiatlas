@@ -3,7 +3,7 @@
  */
 import { aerialwayLabel, diffLabel } from './ski-feature-utils.js';
 import { buildScopeToggleHtml } from './ski-resort-charts.js?v=3';
-import { isGlobalStatsReady } from './ski-feature-stats.js?v=4';
+import { isGlobalStatsReady } from './ski-feature-stats.js';
 
 const TEAL = '#0d9488';
 const GREY = '#94a3b8';

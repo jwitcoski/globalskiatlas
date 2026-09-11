@@ -210,7 +210,6 @@ function enhanceResortMap(params) {
     button._gsaSchemeBound = true;
     button.addEventListener('click', (event) => {
       event.preventDefault();
-      event.stopPropagation();
       applyScheme(button.dataset.clayTrailScheme);
     });
   }

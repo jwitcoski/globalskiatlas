@@ -19,12 +19,12 @@ import {
   getSkiFeatureStatsIndex,
   isGlobalStatsReady,
   isSkiFeatureStatsLoading
-} from './ski-feature-stats.js?v=4';
+} from './ski-feature-stats.js';
 import {
   buildComparisonCharts,
   buildFeatureChartsPanel,
   getDefaultFeatureScope
-} from './ski-feature-charts.js?v=4';
+} from './ski-feature-charts.js';
 
 function difficultyBadgeHtml(diff, escapeHtml) {
   const color = DIFF_COLORS[diff] || '#64748b';
@@ -215,7 +215,7 @@ function wireFeatureScopeSwitcher(getOpenMeta, escapeHtml) {
     if (!btn || !btn.closest('.sf-popup')) return;
 
     const root = btn.closest('.sf-popup');
-    if (!root || root.closest('.sr-popup')) return;
+    if (!root || root.classList.contains('sr-popup') || root.closest('.sr-popup')) return;
 
     const key = root.dataset.sfKey;
     const scope = btn.dataset.srScope;
@@ -230,6 +230,7 @@ function wireFeatureScopeSwitcher(getOpenMeta, escapeHtml) {
 
     e.preventDefault();
     e.stopPropagation();
+    if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
 
     root.querySelectorAll('.sr-scope-btn').forEach((b) => {
       const active = b === btn;
@@ -238,7 +239,7 @@ function wireFeatureScopeSwitcher(getOpenMeta, escapeHtml) {
     });
 
     const charts = buildComparisonCharts(meta, globalIndex, scope);
-    const panel = root.querySelector('.sf-charts-panel');
+    const panel = root.querySelector('.sf-charts-panel') || root.querySelector('.sr-charts-panel');
     if (panel) panel.innerHTML = charts.html;
 
     const caption = root.querySelector('.sf-chart-caption');
@@ -253,7 +254,7 @@ function wireFeatureScopeSwitcher(getOpenMeta, escapeHtml) {
 
     const foot = root.querySelector('.sf-feature-foot');
     if (foot && charts.foot) foot.textContent = charts.foot;
-  });
+  }, true);
 }
 
 /** Try to enrich trail width from resort-detail OSM polygons at click point. */
@@ -333,7 +334,13 @@ export function initSkiFeaturePopups(map, options = {}) {
     showTip(e.point, buildHoverHtml(meta, globalIndex, viewportIndex, escapeHtml));
   }
 
+  function isPopupUiEvent(e) {
+    const t = e.originalEvent?.target;
+    return Boolean(t && t.closest && t.closest('.maplibregl-popup, .mapboxgl-popup, .sr-scope-btn, .clay-entity-panel'));
+  }
+
   function handleClick(kind, e) {
+    if (isPopupUiEvent(e)) return;
     if (!e.features?.length) return;
     const feature = e.features[0];
     let meta = analyzeFeature(kind, feature);

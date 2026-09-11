@@ -7,7 +7,7 @@ import * as THREE from "three";
 import { createOrbitController } from "./clay/orbit-controller.js";
 import { createSceneRuntime } from "./clay/scene-runtime.js";
 import { createClayEntityPicker } from "./clay/entity-picker.js";
-import { createClayEntityPanel } from "./clay/entity-panel.js?v=4";
+import { createClayEntityPanel } from "./clay/entity-panel.js?v=5";
 import { createClayEntityTooltip } from "./clay/entity-tooltip.js";
 import {
   loadCatalog,
@@ -92,7 +92,7 @@ import {
 import { addRegionResortMarkers } from "./clay/region-markers.js?v=2";
 import { addRegionContextLayers } from "./clay/region-context.js?v=2";
 import { fetchSkiAreaCatalog } from "./pmtiles-core.js";
-import { buildResortStatsIndex } from "./ski-resort-popups.js?v=7";
+import { buildResortStatsIndex } from "./ski-resort-popups.js?v=8";
 import { fetchPlayableCatalog } from "./playable-match.js";
 
 function disposeObject(obj) {
@@ -735,11 +735,14 @@ export async function initHeroMontageMap(container, options = {}) {
   const prevBtn = embed.querySelector("[data-hero-prev]");
   const nextBtn = embed.querySelector("[data-hero-next]");
   const switcher = embed.querySelector(".hero-montage-switcher");
-  const trailSchemeBtns = [...embed.querySelectorAll("[data-clay-trail-scheme]")];
+  const trailSchemeBtns = () => [...new Set([
+    ...embed.querySelectorAll("[data-clay-trail-scheme]"),
+    ...document.querySelectorAll("#resort-map-aside [data-clay-trail-scheme]"),
+  ])];
   loadClayTrailScheme();
   if (regionMode) {
     embed.classList.add("hero-montage-embed--region");
-    for (const button of trailSchemeBtns) button.hidden = true;
+    for (const button of trailSchemeBtns()) button.hidden = true;
   }
 
   function currentResort() {
@@ -768,7 +771,7 @@ export async function initHeroMontageMap(container, options = {}) {
     if (prevBtn) prevBtn.disabled = lockResort || loading || resorts.length < 2;
     if (nextBtn) nextBtn.disabled = lockResort || loading || resorts.length < 2;
     const scheme = getClayTrailScheme();
-    for (const button of trailSchemeBtns) {
+    for (const button of trailSchemeBtns()) {
       const active = button.dataset.clayTrailScheme === scheme;
       button.setAttribute("aria-pressed", active ? "true" : "false");
     }
@@ -956,17 +959,31 @@ export async function initHeroMontageMap(container, options = {}) {
   function onNext() {
     stepResort(1);
   }
-  async function onTrailScheme(event) {
-    const scheme = event.currentTarget.dataset.clayTrailScheme;
-    if (!scheme || scheme === getClayTrailScheme()) return;
+  async function applyClayTrailScheme(scheme) {
+    if (!scheme || regionMode) return;
     setClayTrailScheme(scheme);
     syncChrome(currentResort());
-    document.dispatchEvent(new CustomEvent("gsa-trail-scheme-change", { detail: { scheme } }));
-    if (!loading && currentResort()) await mountResort(currentResort());
+    if (currentResort()) await mountResort(currentResort());
+  }
+  async function onTrailScheme(event) {
+    const button = event.target.closest("[data-clay-trail-scheme]");
+    if (!button) return;
+    if (!embed.contains(button) && !button.closest("#resort-map-aside")) return;
+    const scheme = button.dataset.clayTrailScheme;
+    if (!scheme) return;
+    event.preventDefault();
+    await applyClayTrailScheme(scheme);
+    document.dispatchEvent(new CustomEvent("gsa-trail-scheme-change", { detail: { scheme, source: "clay" } }));
+  }
+  function onSchemeEvent(event) {
+    const scheme = event.detail?.scheme;
+    if (!scheme || event.detail?.source === "clay") return;
+    applyClayTrailScheme(scheme);
   }
   prevBtn?.addEventListener("click", onPrev);
   nextBtn?.addEventListener("click", onNext);
-  for (const button of trailSchemeBtns) button.addEventListener("click", onTrailScheme);
+  document.addEventListener("click", onTrailScheme);
+  document.addEventListener("gsa-trail-scheme-change", onSchemeEvent);
 
   function resize() {
     orbit.resize();
@@ -1053,7 +1070,8 @@ export async function initHeroMontageMap(container, options = {}) {
       window.removeEventListener("resize", resize);
       prevBtn?.removeEventListener("click", onPrev);
       nextBtn?.removeEventListener("click", onNext);
-      for (const button of trailSchemeBtns) button.removeEventListener("click", onTrailScheme);
+      document.removeEventListener("click", onTrailScheme);
+      document.removeEventListener("gsa-trail-scheme-change", onSchemeEvent);
       disposeObject(world);
       renderer.dispose();
       if (renderer.domElement.parentNode === container) container.removeChild(renderer.domElement);

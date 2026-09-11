@@ -252,7 +252,7 @@ export function initResortPopupScopeSwitcher(statsIndex, escapeHtmlFn = escapeHt
 
     const foot = popup.querySelector('.sr-popup-foot');
     if (foot && charts.foot) foot.textContent = charts.foot;
-  });
+  }, true);
 }
 
 /** Compact hover tooltip for resort markers. */

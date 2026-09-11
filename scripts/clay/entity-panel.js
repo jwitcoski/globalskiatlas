@@ -16,13 +16,13 @@ import {
   buildResortPopupHtml,
   initResortPopupScopeSwitcher,
   mergeResortCatalogProperties,
-} from "../ski-resort-popups.js?v=7";
+} from "../ski-resort-popups.js?v=8";
 import { playableHrefForResort } from "../playable-match.js";
 import {
   buildSkiFeaturePopupHtml,
   ensureSkiFeatureScopeSwitcher,
   setOpenSkiFeatureMeta,
-} from "../ski-feature-popups.js?v=9";
+} from "../ski-feature-popups.js?v=10";
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -110,10 +110,10 @@ function renderPanel(panel, entity, statsIndex, resortStatsIndex, playableResort
     difficulty: entity.difficulty || indexed?.difficulty || analyzed?.difficulty,
     aerialway: entity.aerialway || indexed?.aerialway || analyzed?.aerialway,
     resort: entity.resort || indexed?.resort || analyzed?.resort,
-    country: entity.country || indexed?.country || analyzed?.country,
-    countryNorm: entity.countryNorm || indexed?.countryNorm || analyzed?.countryNorm,
-    state: entity.state || indexed?.state || analyzed?.state,
-    stateKey: entity.stateKey || indexed?.stateKey || analyzed?.stateKey,
+    country: indexed?.country || entity.country || analyzed?.country,
+    countryNorm: indexed?.countryNorm || entity.countryNorm || analyzed?.countryNorm,
+    state: indexed?.state || entity.state || analyzed?.state,
+    stateKey: indexed?.stateKey || entity.stateKey || analyzed?.stateKey,
     lengthKm,
     key: indexed?.key || analyzed?.key || `${kind}:${entity.osmId || entity.name || "unnamed"}`,
     props: entity.properties || entity.feature?.properties || indexed?.props || analyzed?.props,
