@@ -4,7 +4,7 @@
  */
 import { createMapLibre } from '../../scripts/map-core.js';
 import { addSkiPmtilesToMap, SKI_PMTILES_LAYERS } from '../../scripts/pmtiles-core.js';
-import { initSkiResortMap } from '../../scripts/ski-resort-map-ml.js?v=26';
+import { initSkiResortMap } from '../../scripts/ski-resort-map-ml.js?v=27';
 
 function waitForMaptilerSdk(ms = 4000) {
   if (typeof maptilersdk !== 'undefined') return Promise.resolve(true);
@@ -39,7 +39,7 @@ export async function initResortMap(lat, lon, pageId, zoom, extras) {
   }
 
   var region = extras && extras.region ? extras.region : null;
-  var useZoom = zoom != null && !isNaN(Number(zoom)) ? Number(zoom) : (region ? 6 : 11);
+  var useZoom = zoom != null && !isNaN(Number(zoom)) ? Number(zoom) : (region ? 3 : 11);
 
   const sdkReady = await waitForMaptilerSdk();
   if (lat == null || lon == null || !sdkReady) {
@@ -68,12 +68,17 @@ export async function initResortMap(lat, lon, pageId, zoom, extras) {
       skipOlympics: true,
       region,
       center: [lon, lat],
-      zoom: useZoom,
+      zoom: 3,
       legendEl: document.getElementById('resort-map-legend'),
     });
     window.RESORT_MAP_INSTANCE = map;
-    requestAnimationFrame(() => {
+    const refitAdmin = () => {
       try { map.resize(); } catch (_) { /* ignore */ }
+      if (typeof map._gsaFitAdmin === 'function') map._gsaFitAdmin();
+    };
+    requestAnimationFrame(() => {
+      refitAdmin();
+      requestAnimationFrame(refitAdmin);
     });
     return;
   }

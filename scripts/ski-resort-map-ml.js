@@ -47,6 +47,7 @@ import {
   addAdminRegionOverlay,
   fetchAdminBoundary,
   fitFeatures,
+  fitMapToAdminExtent,
   resortInRegion
 } from './admin-region.js';
 import {
@@ -176,7 +177,9 @@ export async function initSkiResortMap(options = {}) {
     style: getBasemapStyle(getSavedBasemapId()),
     noControl,
     center: options.center,
-    zoom: options.zoom
+    zoom: options.zoom,
+    minZoom: region ? 0.5 : options.minZoom,
+    maxZoom: options.maxZoom
   });
   map._skiCirclePaint = circlePaintFor(playableMode);
   await addSkiPmtilesToMap(map, SKI_PMTILES_OPTIONS);
@@ -418,7 +421,11 @@ export async function initSkiResortMap(options = {}) {
   }
 
   // ── Resort dots + icon symbols (single GeoJSON source, aligned coordinates) ─
-  if (adminGeometry) addAdminRegionOverlay(map, adminGeometry);
+  if (adminGeometry) {
+    addAdminRegionOverlay(map, adminGeometry);
+    map._gsaAdminGeometry = adminGeometry;
+    map._gsaFitAdmin = () => fitMapToAdminExtent(map, adminGeometry);
+  }
   await addResortMarkerLayers(map, resortFeatures);
   if (region && !adminGeometry) fitFeatures(map, resortFeatures);
 

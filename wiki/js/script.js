@@ -151,8 +151,19 @@ function disposeResortClay() {
 function showResortClaySoon(show) {
   var soon = document.getElementById('resort-clay-soon');
   var embed = document.getElementById('resort-clay-embed');
+  var title = soon && soon.querySelector('.resort-clay-soon-title');
+  var body = soon && soon.querySelector('.resort-clay-soon-body');
   if (soon) soon.hidden = !show;
   if (show && embed) embed.hidden = true;
+  if (show && title && body) {
+    if (RESORT_CLAY_REGION_ID) {
+      title.textContent = '3D clay map coming soon';
+      body.textContent = 'A floating-island overview will appear here when this state or province scene is built.';
+    } else {
+      title.textContent = '3D clay map coming soon';
+      body.textContent = 'A floating-island preview will appear here when this resort’s scene is built.';
+    }
+  }
 }
 
 function fetchClayCatalog() {
@@ -184,12 +195,12 @@ function resolveClayResortId(winterSportsId) {
   });
 }
 
-function resolveClayRegionId(pageId) {
+function resolveClayRegion(pageId) {
   if (pageId == null || pageId === '') return Promise.resolve(null);
   return fetch('/clay_scenes/regions/by-page/' + encodeURIComponent(pageId) + '.json', { cache: 'no-store' })
     .then(function (r) { return r.ok ? r.json() : null; })
     .then(function (hit) {
-      if (hit && hit.ready !== false && hit.id) return String(hit.id);
+      if (hit && hit.ready !== false && hit.id) return hit;
       return null;
     })
     .catch(function () { return null; });
@@ -209,6 +220,7 @@ function syncResortClayContext(page) {
       RESORT_CLAY_REGION_ID = regionId;
       showResortClaySoon(true);
     }
+    switchMapTab('clay');
     return;
   }
 
@@ -240,9 +252,9 @@ function ensureResortClayMounted() {
       }
       return;
     }
-    resolveClayRegionId(regionId).then(function (sceneId) {
+    resolveClayRegion(regionId).then(function (hit) {
       if (RESORT_CLAY_REGION_ID !== regionId) return;
-      if (!sceneId) {
+      if (!hit) {
         disposeResortClay();
         RESORT_CLAY_REGION_ID = regionId;
         showResortClaySoon(true);
@@ -252,9 +264,9 @@ function ensureResortClayMounted() {
       RESORT_CLAY_REGION_ID = regionId;
       showResortClaySoon(false);
       embed.hidden = false;
-      return import('/scripts/hero-montage-map.js?v=104').then(function (mod) {
+      return import('/scripts/hero-montage-map.js?v=105').then(function (mod) {
         if (RESORT_CLAY_REGION_ID !== regionId) return null;
-        return mod.initHeroMontageMap(stage, { regionMode: true, regionId: sceneId, lockResort: true });
+        return mod.initHeroMontageMap(stage, { regionMode: true, region: hit, regionId: hit.id, lockResort: true });
       }).then(function (api) {
         if (RESORT_CLAY_REGION_ID !== regionId) {
           if (api && typeof api.dispose === 'function') api.dispose();
@@ -310,7 +322,7 @@ function ensureResortClayMounted() {
     showResortClaySoon(false);
     embed.hidden = false;
 
-    return import('/scripts/hero-montage-map.js?v=104').then(function (mod) {
+    return import('/scripts/hero-montage-map.js?v=105').then(function (mod) {
       if (RESORT_CLAY_WINTER_ID !== wsId) return null;
       return mod.initHeroMontageMap(stage, { resortId: resortId, lockResort: true });
     }).then(function (api) {
@@ -1106,7 +1118,7 @@ function populatePage(page) {
         regionLat,
         regionLon,
         page.pageId || YWIKI_PATH,
-        page.mapZoom != null ? Number(page.mapZoom) : undefined,
+        undefined,
         regionMap ? { region: regionMap } : undefined
       );
       syncResortClayContext(page);

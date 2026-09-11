@@ -343,16 +343,30 @@ export function addAdminRegionOverlay(map, geometry) {
   }
 
   if (bbox) {
-    try {
-      map.fitBounds(bbox, { padding: 36, duration: 700, maxZoom: 8.5 });
-      const pad = 0.6;
-      map.setMaxBounds([
-        [bbox[0] - pad, bbox[1] - pad],
-        [bbox[2] + pad, bbox[3] + pad],
-      ]);
-    } catch (err) {
-      console.warn('[admin-region] fitBounds failed', err);
-    }
+    fitMapToAdminExtent(map, geometry);
+  }
+  return bbox;
+}
+
+export function fitMapToAdminExtent(map, geometry) {
+  const bbox = geometryBbox(geometry);
+  if (!map || !bbox) return null;
+  const lonSpan = Math.max(bbox[2] - bbox[0], 0.01);
+  const latSpan = Math.max(bbox[3] - bbox[1], 0.01);
+  const lonPad = Math.max(0.25, lonSpan * 0.08);
+  const latPad = Math.max(0.25, latSpan * 0.08);
+  try {
+    map.resize();
+    map.fitBounds(
+      [[bbox[0], bbox[1]], [bbox[2], bbox[3]]],
+      { padding: 40, duration: 0, maxZoom: 12 }
+    );
+    map.setMaxBounds([
+      [bbox[0] - lonPad, bbox[1] - latPad],
+      [bbox[2] + lonPad, bbox[3] + latPad],
+    ]);
+  } catch (err) {
+    console.warn('[admin-region] fitBounds failed', err);
   }
   return bbox;
 }
@@ -366,7 +380,7 @@ export function fitFeatures(map, features) {
   }
   if (!Number.isFinite(bbox[0])) return;
   try {
-    map.fitBounds(bbox, { padding: 48, duration: 700, maxZoom: 8.5 });
+    map.fitBounds(bbox, { padding: 48, duration: 0, maxZoom: 12 });
   } catch (err) {
     console.warn('[admin-region] feature fitBounds failed', err);
   }

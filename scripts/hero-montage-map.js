@@ -1026,13 +1026,20 @@ export async function initHeroMontageMap(container, options = {}) {
     };
     try {
       if (regionMode) {
-        const all = await loadRegionCatalog();
-        const hit = all.find((r) => r.id === regionId || r.pageId === regionId);
+        let hit = options.region && options.region.id ? options.region : null;
+        if (!hit?.id) {
+          const all = await loadRegionCatalog();
+          hit = all.find((r) => r.id === regionId || r.pageId === regionId) || null;
+        }
         if (!hit?.id) {
           console.warn("[hero-montage-map] region scene not ready", regionId);
           return;
         }
-        resorts = [hit];
+        resorts = [{
+          ...hit,
+          display_name: hit.display_name || hit.title || hit.id,
+          short_name: hit.short_name || hit.title || hit.display_name || hit.id,
+        }];
         resortIndex = 0;
         await mountResort(currentResort());
         return;
