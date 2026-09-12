@@ -11,6 +11,7 @@ import {
   isGlobalStatsReady,
 } from "../ski-feature-stats.js";
 import { formatMeters, formatSlope } from "./trail-profile.js";
+import { buildAdmin1StatsHtml } from "./region-state-stats.js";
 import {
   bindResortDetailsLinks,
   buildResortPopupHtml,
@@ -65,17 +66,28 @@ function indexedEntity(entity, statsIndex) {
   return null;
 }
 
-function renderPanel(panel, entity, statsIndex, resortStatsIndex, playableResorts) {
+function renderPanel(panel, entity, statsIndex, resortStatsIndex, playableResorts, parquetRows, parquetReady) {
   if (!entity) {
     panel.hidden = true;
-    panel.classList.remove("clay-entity-panel--resort", "clay-entity-panel--feature");
+    panel.classList.remove("clay-entity-panel--resort", "clay-entity-panel--feature", "clay-entity-panel--admin1");
     delete panel.dataset.entityOsmId;
     panel.innerHTML = "";
     setOpenSkiFeatureMeta(null);
     return;
   }
+  if (entity.entityType === "admin1") {
+    panel.classList.remove("clay-entity-panel--resort", "clay-entity-panel--feature");
+    panel.classList.add("clay-entity-panel--admin1");
+    setOpenSkiFeatureMeta(null);
+    panel.hidden = false;
+    delete panel.dataset.entityOsmId;
+    panel.innerHTML =
+      `<button type="button" class="clay-entity-close" data-clay-entity-close aria-label="Close details">&times;</button>` +
+      buildAdmin1StatsHtml(entity, parquetRows, parquetReady);
+    return;
+  }
   if (entity.entityType === "resort") {
-    panel.classList.remove("clay-entity-panel--feature");
+    panel.classList.remove("clay-entity-panel--feature", "clay-entity-panel--admin1");
     setOpenSkiFeatureMeta(null);
     const properties = mergeResortCatalogProperties(entity, resortStatsIndex);
     const wikiPage = entity.wikiPageId
@@ -96,7 +108,7 @@ function renderPanel(panel, entity, statsIndex, resortStatsIndex, playableResort
     if (resortStatsIndex) initResortPopupScopeSwitcher(resortStatsIndex);
     return;
   }
-  panel.classList.remove("clay-entity-panel--resort");
+  panel.classList.remove("clay-entity-panel--resort", "clay-entity-panel--admin1");
   panel.classList.add("clay-entity-panel--feature");
   const kind = entity.entityType === "lift" ? "lift" : "piste";
   const analyzed = entity.feature ? analyzeFeature(kind, entity.feature) : null;
@@ -146,12 +158,22 @@ export function createClayEntityPanel(embed) {
   let extraIndex = null;
   let resortIndex = null;
   let playableResorts = [];
+  let parquetRows = null;
+  let parquetReady = false;
   const pickIndex = () => {
     const global = getSkiFeatureStatsIndex();
     if (isGlobalStatsReady(global)) return global;
     return extraIndex;
   };
-  const refresh = () => renderPanel(panel, currentEntity, pickIndex(), resortIndex, playableResorts);
+  const refresh = () => renderPanel(
+    panel,
+    currentEntity,
+    pickIndex(),
+    resortIndex,
+    playableResorts,
+    parquetRows,
+    parquetReady,
+  );
   ensureSkiFeatureStatsIndex(() => refresh());
 
   panel.addEventListener("click", (event) => {
@@ -167,7 +189,9 @@ export function createClayEntityPanel(embed) {
       currentEntity = entity;
       if (entity?.entityType === "resort") {
         if (statsIndex) resortIndex = statsIndex;
-      } else if (statsIndex) extraIndex = statsIndex;
+      } else if (entity?.entityType !== "admin1" && statsIndex) {
+        extraIndex = statsIndex;
+      }
       refresh();
     },
     hide() {
@@ -181,6 +205,11 @@ export function createClayEntityPanel(embed) {
     setResortStats(index) {
       resortIndex = index || null;
       if (currentEntity?.entityType === "resort") refresh();
+    },
+    setParquetRows(rows) {
+      parquetRows = Array.isArray(rows) ? rows : [];
+      parquetReady = true;
+      if (currentEntity?.entityType === "admin1") refresh();
     },
     dispose() {
       panel.remove();

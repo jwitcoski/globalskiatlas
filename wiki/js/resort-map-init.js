@@ -4,7 +4,7 @@
  */
 import { createMapLibre } from '../../scripts/map-core.js';
 import { addSkiPmtilesToMap, SKI_PMTILES_LAYERS } from '../../scripts/pmtiles-core.js';
-import { initSkiResortMap } from '../../scripts/ski-resort-map-ml.js?v=27';
+import { initSkiResortMap } from '../../scripts/ski-resort-map-ml.js?v=28';
 
 function waitForMaptilerSdk(ms = 4000) {
   if (typeof maptilersdk !== 'undefined') return Promise.resolve(true);
@@ -59,7 +59,6 @@ export async function initResortMap(lat, lon, pageId, zoom, extras) {
     setRegionMapChrome(aside, true);
     window._gsaRegionMap = true;
     window._gsaEnhanceParams = null;
-    if (typeof switchMapTab === 'function') switchMapTab('live');
     const { map } = await initSkiResortMap({
       containerId: 'resort-map-gl',
       includeRoadTripButton: false,

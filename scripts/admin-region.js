@@ -28,6 +28,162 @@ export const ADMIN_MASK_LAYER = 'gsa-admin-mask-fill';
 export const ADMIN_OUTLINE_SOURCE = 'gsa-admin-outline';
 export const ADMIN_OUTLINE_FILL = 'gsa-admin-outline-fill';
 export const ADMIN_OUTLINE_LINE = 'gsa-admin-outline-line';
+export const ADMIN1_SOURCE = 'gsa-admin1';
+export const ADMIN1_FILL = 'gsa-admin1-fill';
+export const ADMIN1_LINE = 'gsa-admin1-line';
+
+const NE_ADMIN1_URL = 'https://cdn.jsdelivr.net/gh/nvkelso/natural-earth-vector@v5.1.2/geojson/ne_50m_admin_1_states_provinces.geojson';
+
+let regionCatalogPromise = null;
+let naturalEarthPromise = null;
+
+export function clampLonLatBbox(bbox) {
+  if (!bbox || bbox.length < 4) return null;
+  return [
+    Math.max(-179.9, Math.min(179.9, Number(bbox[0]))),
+    Math.max(-85, Math.min(85, Number(bbox[1]))),
+    Math.max(-179.9, Math.min(179.9, Number(bbox[2]))),
+    Math.max(-85, Math.min(85, Number(bbox[3]))),
+  ];
+}
+
+export function fetchRegionClayCatalog() {
+  if (!regionCatalogPromise) {
+    regionCatalogPromise = fetch('/clay_scenes/regions/catalog.json')
+      .then((r) => (r.ok ? r.json() : { regions: [] }))
+      .catch(() => ({ regions: [] }));
+  }
+  return regionCatalogPromise;
+}
+
+export async function findReadyRegionRow(pageId) {
+  const id = String(pageId || '');
+  if (!id) return null;
+  const catalog = await fetchRegionClayCatalog();
+  return (catalog.regions || []).find((row) => row.pageId === id && row.ready) || null;
+}
+
+function fetchNaturalEarthAdmin1() {
+  if (!naturalEarthPromise) {
+    naturalEarthPromise = fetch(NE_ADMIN1_URL)
+      .then((r) => (r.ok ? r.json() : { features: [] }))
+      .catch(() => ({ features: [] }));
+  }
+  return naturalEarthPromise;
+}
+
+function neMatchesUnit(feature, unit) {
+  const props = feature?.properties || {};
+  const country = props.admin || props.adm0_name || props.ADM0_NAME || props.geounit;
+  const state = props.name || props.woe_name || props.gn_name || props.NAME;
+  return countriesMatch(country, unit.country) && statesMatch(state, unit.state || unit.title);
+}
+
+export async function loadCountryAdmin1Features(country) {
+  const catalog = await fetchRegionClayCatalog();
+  const units = (catalog.regions || []).filter((row) => (
+    row.pageType === 'state'
+    && row.ready
+    && countriesMatch(row.country, country)
+  ));
+  if (!units.length) return { type: 'FeatureCollection', features: [] };
+
+  let neFeatures = [];
+  try {
+    const ne = await fetchNaturalEarthAdmin1();
+    neFeatures = ne.features || [];
+  } catch {
+    neFeatures = [];
+  }
+
+  const features = units.map((unit) => {
+    const hit = neFeatures.find((f) => neMatchesUnit(f, unit));
+    const geometry = hit?.geometry || bboxToPolygon(unit.bbox);
+    return {
+      type: 'Feature',
+      geometry,
+      properties: {
+        kind: 'admin1',
+        pageId: unit.pageId,
+        pageType: 'state',
+        title: unit.title || unit.state || unit.pageId,
+        state: unit.state || unit.title || '',
+        country: unit.country || country,
+        resort_count: unit.resort_count || 0,
+        has_region_scene: true,
+        scene: `clay_scenes/regions/${unit.pageId}/scene-manifest.json`,
+      },
+    };
+  }).filter((f) => f.geometry);
+
+  return { type: 'FeatureCollection', features };
+}
+
+export function addAdmin1InteractiveLayer(map, fc) {
+  if (!map || !fc?.features?.length) return;
+  if (map.getSource(ADMIN1_SOURCE)) {
+    map.getSource(ADMIN1_SOURCE).setData(fc);
+  } else {
+    map.addSource(ADMIN1_SOURCE, { type: 'geojson', data: fc, generateId: true });
+    map.addLayer({
+      id: ADMIN1_FILL,
+      type: 'fill',
+      source: ADMIN1_SOURCE,
+      paint: {
+        'fill-color': '#2563eb',
+        'fill-opacity': [
+          'case',
+          ['boolean', ['feature-state', 'hover'], false],
+          0.28,
+          0.08,
+        ],
+      },
+    });
+    map.addLayer({
+      id: ADMIN1_LINE,
+      type: 'line',
+      source: ADMIN1_SOURCE,
+      paint: {
+        'line-color': [
+          'case',
+          ['boolean', ['feature-state', 'hover'], false],
+          '#f8fafc',
+          '#1d4ed8',
+        ],
+        'line-width': [
+          'case',
+          ['boolean', ['feature-state', 'hover'], false],
+          2.4,
+          1.1,
+        ],
+        'line-opacity': 0.95,
+      },
+    });
+  }
+}
+
+export function fitMapToBbox(map, rawBbox) {
+  const bbox = clampLonLatBbox(rawBbox);
+  if (!map || !bbox || bbox[2] <= bbox[0] || bbox[3] <= bbox[1]) return null;
+  const lonSpan = Math.max(bbox[2] - bbox[0], 0.01);
+  const latSpan = Math.max(bbox[3] - bbox[1], 0.01);
+  const lonPad = Math.max(0.35, lonSpan * 0.06);
+  const latPad = Math.max(0.35, latSpan * 0.06);
+  try {
+    map.resize();
+    map.fitBounds(
+      [[bbox[0], bbox[1]], [bbox[2], bbox[3]]],
+      { padding: 36, duration: 0, maxZoom: lonSpan > 25 ? 5.5 : 11 },
+    );
+    map.setMaxBounds([
+      [Math.max(-180, bbox[0] - lonPad), Math.max(-85, bbox[1] - latPad)],
+      [Math.min(180, bbox[2] + lonPad), Math.min(85, bbox[3] + latPad)],
+    ]);
+  } catch (err) {
+    console.warn('[admin-region] bbox fitBounds failed', err);
+  }
+  return bbox;
+}
 
 export function foldName(s) {
   if (s == null || s === '') return '';
@@ -349,26 +505,7 @@ export function addAdminRegionOverlay(map, geometry) {
 }
 
 export function fitMapToAdminExtent(map, geometry) {
-  const bbox = geometryBbox(geometry);
-  if (!map || !bbox) return null;
-  const lonSpan = Math.max(bbox[2] - bbox[0], 0.01);
-  const latSpan = Math.max(bbox[3] - bbox[1], 0.01);
-  const lonPad = Math.max(0.25, lonSpan * 0.08);
-  const latPad = Math.max(0.25, latSpan * 0.08);
-  try {
-    map.resize();
-    map.fitBounds(
-      [[bbox[0], bbox[1]], [bbox[2], bbox[3]]],
-      { padding: 40, duration: 0, maxZoom: 12 }
-    );
-    map.setMaxBounds([
-      [bbox[0] - lonPad, bbox[1] - latPad],
-      [bbox[2] + lonPad, bbox[3] + latPad],
-    ]);
-  } catch (err) {
-    console.warn('[admin-region] fitBounds failed', err);
-  }
-  return bbox;
+  return fitMapToBbox(map, geometryBbox(geometry));
 }
 
 export function fitFeatures(map, features) {

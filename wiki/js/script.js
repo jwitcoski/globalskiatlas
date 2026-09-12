@@ -5,6 +5,7 @@ var RESORT_CLAY_WINTER_ID = null;
 var RESORT_CLAY_REGION_ID = null;
 var RESORT_CLAY_LOADED_FOR = null;
 var RESORT_CLAY_CATALOG_PROMISE = null;
+var RESORT_REGION_CLAY_CATALOG_PROMISE = null;
 var RESORT_CLAY_ACTIVE_TAB = 'clay';
 var RESORT_PLAYABLE_PROMISE = null;
 
@@ -195,15 +196,41 @@ function resolveClayResortId(winterSportsId) {
   });
 }
 
+function fetchRegionClayCatalog() {
+  if (!RESORT_REGION_CLAY_CATALOG_PROMISE) {
+    RESORT_REGION_CLAY_CATALOG_PROMISE = fetch('/clay_scenes/regions/catalog.json')
+      .then(function (r) {
+        if (!r.ok) throw new Error('region clay catalog ' + r.status);
+        return r.json();
+      })
+      .catch(function (err) {
+        console.warn('[resort-clay] region catalog', err);
+        RESORT_REGION_CLAY_CATALOG_PROMISE = null;
+        return null;
+      });
+  }
+  return RESORT_REGION_CLAY_CATALOG_PROMISE;
+}
+
 function resolveClayRegion(pageId) {
   if (pageId == null || pageId === '') return Promise.resolve(null);
-  return fetch('/clay_scenes/regions/by-page/' + encodeURIComponent(pageId) + '.json', { cache: 'no-store' })
-    .then(function (r) { return r.ok ? r.json() : null; })
-    .then(function (hit) {
-      if (hit && hit.ready !== false && hit.id) return hit;
+  var pid = String(pageId);
+  return fetchRegionClayCatalog().then(function (catalog) {
+    if (catalog && Array.isArray(catalog.regions)) {
+      for (var i = 0; i < catalog.regions.length; i++) {
+        var row = catalog.regions[i];
+        if (row && row.pageId === pid && row.ready) return row;
+      }
       return null;
-    })
-    .catch(function () { return null; });
+    }
+    return fetch('/clay_scenes/regions/by-page/' + encodeURIComponent(pid) + '.json')
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (hit) {
+        if (hit && hit.ready && (hit.pageId === pid || hit.id === pid)) return hit;
+        return null;
+      })
+      .catch(function () { return null; });
+  });
 }
 
 /** Keep clay viewer in sync with the loaded wiki page. */
@@ -264,9 +291,14 @@ function ensureResortClayMounted() {
       RESORT_CLAY_REGION_ID = regionId;
       showResortClaySoon(false);
       embed.hidden = false;
-      return import('/scripts/hero-montage-map.js?v=105').then(function (mod) {
+      return import('/scripts/hero-montage-map.js?v=108').then(function (mod) {
         if (RESORT_CLAY_REGION_ID !== regionId) return null;
-        return mod.initHeroMontageMap(stage, { regionMode: true, region: hit, regionId: hit.id, lockResort: true });
+        return mod.initHeroMontageMap(stage, {
+          regionMode: true,
+          region: hit,
+          regionId: hit.pageId || hit.id,
+          lockResort: true,
+        });
       }).then(function (api) {
         if (RESORT_CLAY_REGION_ID !== regionId) {
           if (api && typeof api.dispose === 'function') api.dispose();
@@ -322,7 +354,7 @@ function ensureResortClayMounted() {
     showResortClaySoon(false);
     embed.hidden = false;
 
-    return import('/scripts/hero-montage-map.js?v=105').then(function (mod) {
+    return import('/scripts/hero-montage-map.js?v=108').then(function (mod) {
       if (RESORT_CLAY_WINTER_ID !== wsId) return null;
       return mod.initHeroMontageMap(stage, { resortId: resortId, lockResort: true });
     }).then(function (api) {
@@ -377,6 +409,9 @@ function switchMapTab(tab) {
     if (legendEl) legendEl.style.display = '';
     if (RESORT_MAP_INSTANCE) {
       RESORT_MAP_INSTANCE.resize();
+      if (typeof RESORT_MAP_INSTANCE._gsaFitAdmin === 'function') {
+        setTimeout(function () { RESORT_MAP_INSTANCE._gsaFitAdmin(); }, 60);
+      }
       if (!window._gsaRegionMap && window._gsaEnhanceParams && window.enhanceResortMap) {
         window.enhanceResortMap(window._gsaEnhanceParams);
       }
@@ -419,7 +454,10 @@ function toggleMapExpanded() {
     icon.classList.add(expanded ? 'bi-fullscreen-exit' : 'bi-arrows-fullscreen');
   }
   setTimeout(function () {
-    if (RESORT_MAP_INSTANCE) RESORT_MAP_INSTANCE.resize();
+    if (RESORT_MAP_INSTANCE) {
+      RESORT_MAP_INSTANCE.resize();
+      if (typeof RESORT_MAP_INSTANCE._gsaFitAdmin === 'function') RESORT_MAP_INSTANCE._gsaFitAdmin();
+    }
     if (RESORT_CLAY_API && typeof RESORT_CLAY_API.resize === 'function') RESORT_CLAY_API.resize();
   }, 100);
 }
@@ -1111,7 +1149,8 @@ function populatePage(page) {
           pageType: page.pageType,
           title: page.title || '',
           state: page.state || page.title || '',
-          country: page.country || ''
+          country: page.country || page.title || '',
+          pageId: page.pageId || YWIKI_PATH
         }
         : null;
       initResortMap(

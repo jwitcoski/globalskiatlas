@@ -7,15 +7,16 @@ import * as THREE from "three";
 import { createOrbitController } from "./clay/orbit-controller.js";
 import { createSceneRuntime } from "./clay/scene-runtime.js";
 import { createClayEntityPicker } from "./clay/entity-picker.js";
-import { createClayEntityPanel } from "./clay/entity-panel.js?v=5";
+import { createClayEntityPanel } from "./clay/entity-panel.js?v=6";
 import { createClayEntityTooltip } from "./clay/entity-tooltip.js";
 import {
   loadCatalog,
   loadHomepageMesh as loadTerrainScene,
+  findReadyRegionByPageId,
   loadRegionCatalog,
   loadVectors as loadSceneVectors,
   yieldFrame as waitForFrame,
-} from "./clay/scene-loader.js?v=8";
+} from "./clay/scene-loader.js?v=10";
 import {
   addSoftShadow as addIslandShadow,
   addIslandUnderside,
@@ -90,7 +91,9 @@ import {
   updateCarpetLifts,
 } from "./clay/index.js";
 import { addRegionResortMarkers } from "./clay/region-markers.js?v=2";
-import { addRegionContextLayers } from "./clay/region-context.js?v=2";
+import { addRegionContextLayers } from "./clay/region-context.js?v=3";
+import { addAdmin1Regions } from "./clay/admin1-layer.js";
+import { loadSkiAreasAnalyzed } from "./geoparquet-browser.js";
 import { fetchSkiAreaCatalog } from "./pmtiles-core.js";
 import { buildResortStatsIndex } from "./ski-resort-popups.js?v=8";
 import { fetchPlayableCatalog } from "./playable-match.js";
@@ -601,6 +604,14 @@ function boundsFromObject(object, fallback) {
  * center down and makes sea-level vs alpine cameras look randomly zoomed).
  */
 function framingBoundsFromRoot(root, fallback) {
+  const stored = root?.userData?.landFraming;
+  if (stored?.center && stored.radius > 0) {
+    root.updateMatrixWorld(true);
+    const center = stored.center.clone().applyMatrix4(root.matrixWorld);
+    const scale = root.scale.x || 1;
+    const size = stored.size.clone().multiplyScalar(scale);
+    return { center, radius: stored.radius * scale, size };
+  }
   const skipNames = new Set(["montage-island-wood", "montage-shadow", "montage-underside"]);
   const box = new THREE.Box3();
   let found = false;
@@ -722,6 +733,11 @@ export async function initHeroMontageMap(container, options = {}) {
         if (entityPanel.setResortStats) entityPanel.setResortStats(regionResortStats);
       })
       .catch((err) => console.warn("[clay-region] resort stats catalog failed", err));
+    loadSkiAreasAnalyzed()
+      .then((rows) => {
+        if (entityPanel.setParquetRows) entityPanel.setParquetRows(rows);
+      })
+      .catch((err) => console.warn("[clay-region] ski_areas_analyzed.parquet failed", err));
     fetchPlayableCatalog()
       .then((list) => {
         if (entityPanel.setPlayableResorts) entityPanel.setPlayableResorts(list);
@@ -785,10 +801,15 @@ export async function initHeroMontageMap(container, options = {}) {
     embed.classList.add("is-loading");
 
     try {
-      const base = regionMode ? regionSceneRoot(resort.id) : sceneRoot(resort.id);
-      const { fitted, vectors } = await loadTerrainScene(base);
+      const base = regionMode ? regionSceneRoot(resort.id || resort.pageId) : sceneRoot(resort.id);
+      const { fitted, vectors, manifest, heightExaggerate } = await loadTerrainScene(base);
       if (token !== loadToken) return;
+      if (regionMode) {
+        console.info("[clay-region]", manifest?.pageId || resort.id, "height_exaggerate", heightExaggerate);
+      }
       await waitForFrame();
+      const regionPageType = manifest?.pageType || resort.pageType || "";
+      const skipSkiFootprints = regionPageType === "country";
 
       const { root, center, mesh, span } = fitted;
       const decor = new THREE.Group();
@@ -807,7 +828,10 @@ export async function initHeroMontageMap(container, options = {}) {
       clearGroup(world);
       world.add(root);
 
-      const osm = await loadSceneVectors(base, vectors, regionMode ? null : resort);
+      const osm = await loadSceneVectors(base, vectors, regionMode ? null : resort, {
+        skipSkiFootprints,
+        regionVectors: regionMode,
+      });
       if (token !== loadToken) return;
       await waitForFrame();
 
@@ -877,7 +901,12 @@ export async function initHeroMontageMap(container, options = {}) {
           center,
           sample,
           span,
+          skipSkiFootprints,
         });
+        if (osm.admin1) {
+          const admin1 = addAdmin1Regions(decor, osm.admin1, center, sample, span);
+          entityPickables.push(...(admin1?.userData?.pickables || []));
+        }
         if (osm.resorts) {
           const pins = addRegionResortMarkers(decor, osm.resorts, center, sample, span);
           entityPickables.push(...(pins.userData.pickables || []));
@@ -1029,7 +1058,8 @@ export async function initHeroMontageMap(container, options = {}) {
         let hit = options.region && options.region.id ? options.region : null;
         if (!hit?.id) {
           const all = await loadRegionCatalog();
-          hit = all.find((r) => r.id === regionId || r.pageId === regionId) || null;
+          hit = findReadyRegionByPageId({ regions: all }, regionId)
+            || all.find((r) => r.pageId === regionId || r.id === regionId) || null;
         }
         if (!hit?.id) {
           console.warn("[hero-montage-map] region scene not ready", regionId);

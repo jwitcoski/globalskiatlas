@@ -21,6 +21,23 @@ export function exaggerateHeights(mesh, factor = 2) {
   mesh.geometry.computeVertexNormals();
 }
 
+/** Wiki region GLBs store real elevation meters. Game Y = elev * height_exaggerate. */
+export function scaleMeshElevation(mesh, factor) {
+  if (!mesh?.geometry?.attributes?.position || !(factor > 0) || factor === 1) return;
+  const pos = mesh.geometry.attributes.position;
+  for (let i = 0; i < pos.count; i++) pos.setY(i, pos.getY(i) * factor);
+  pos.needsUpdate = true;
+  mesh.geometry.computeVertexNormals();
+}
+
+export function wikiRegionHeightExaggerate(manifest) {
+  const terrain = Number(manifest?.terrain?.height_exaggerate);
+  if (Number.isFinite(terrain) && terrain > 0) return terrain;
+  const camera = Number(manifest?.camera?.height_exaggerate);
+  if (Number.isFinite(camera) && camera > 0) return camera;
+  return null;
+}
+
 /** State-scale DEMs are ~0.3% relief; scale so ridges read after the island is fitted to hero size. */
 export function regionHeightExaggerateFactor(mesh) {
   const pos = mesh?.geometry?.attributes?.position;
@@ -87,12 +104,16 @@ export function smoothTerrainHeights(mesh, iterations = 5) {
   geo.computeVertexNormals();
 }
 
-export function fitTerrainRoot(mesh, targetSpan = HERO_SPAN) {
+export function fitTerrainRoot(mesh, targetSpan = HERO_SPAN, landElev = null) {
   const root = new THREE.Group();
   root.name = "montage-terrain-root";
   root.add(mesh);
   const box = new THREE.Box3().setFromObject(mesh);
   const center = box.getCenter(new THREE.Vector3());
+  const landMin = Number(landElev?.min);
+  const landMax = Number(landElev?.max);
+  const hasLand = Number.isFinite(landMin) && Number.isFinite(landMax) && landMax > landMin;
+  if (hasLand) center.y = (landMin + landMax) * 0.5;
   mesh.position.sub(center);
   root.userData.terrainCenter = center.clone();
   const sized = new THREE.Box3().setFromObject(mesh);
@@ -100,6 +121,21 @@ export function fitTerrainRoot(mesh, targetSpan = HERO_SPAN) {
   const span = Math.max(size.x, size.z, 1);
   root.scale.setScalar(targetSpan / span);
   root.updateMatrixWorld(true);
+  if (hasLand) {
+    const y0 = landMin + mesh.position.y;
+    const y1 = landMax + mesh.position.y;
+    const landSize = new THREE.Vector3(size.x, Math.max(1, y1 - y0), size.z);
+    const landCenter = new THREE.Vector3(
+      (sized.min.x + sized.max.x) * 0.5,
+      (y0 + y1) * 0.5,
+      (sized.min.z + sized.max.z) * 0.5,
+    );
+    root.userData.landFraming = {
+      center: landCenter,
+      size: landSize,
+      radius: Math.max(landSize.x, landSize.y, landSize.z) * 0.5,
+    };
+  }
   return { root, center, mesh, span };
 }
 

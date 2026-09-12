@@ -44,12 +44,23 @@ import {
   bindResortDetailsLinks,
 } from './ski-resort-popups.js?v=8';
 import {
+  ADMIN1_FILL,
+  ADMIN1_SOURCE,
+  addAdmin1InteractiveLayer,
   addAdminRegionOverlay,
   fetchAdminBoundary,
+  findReadyRegionRow,
   fitFeatures,
   fitMapToAdminExtent,
+  fitMapToBbox,
+  loadCountryAdmin1Features,
   resortInRegion
 } from './admin-region.js';
+import {
+  admin1EntityFromProps,
+  buildAdmin1StatsHtml,
+} from './clay/region-state-stats.js';
+import { loadSkiAreasAnalyzed } from './geoparquet-browser.js';
 import {
   fetchPlayableCatalog,
   matchPlayableResort,
@@ -405,7 +416,9 @@ export async function initSkiResortMap(options = {}) {
         : playableMode
         ? '<div class="legend-row" style="margin-top:8px"><span class="legend-swatch" style="background:#0d9488;border:2px solid #0d9488;border-radius:50%"></span> Teal ring = playable in Ski Game (click to ski)</div>'
         : '') +
-      (region
+      (region?.pageType === 'country'
+        ? '<div class="legend-row" style="margin-top:8px;font-size:11px;color:#64748b">Click a state or province for ski stats. Resorts are shown for context.</div>'
+        : region
         ? '<div class="legend-row" style="margin-top:8px;font-size:11px;color:#64748b">Click a resort for details. Zoom in for trails and lifts.</div>'
         : (
           '<h3 style="margin-top:10px">Resort boundary (zoom 8+)</h3>' +
@@ -421,13 +434,30 @@ export async function initSkiResortMap(options = {}) {
   }
 
   // ── Resort dots + icon symbols (single GeoJSON source, aligned coordinates) ─
+  const catalogRow = region?.pageId ? await findReadyRegionRow(region.pageId) : null;
+  const catalogBbox = catalogRow?.bbox || null;
+  const isCountryRegion = region?.pageType === 'country';
+  let admin1Collection = { type: 'FeatureCollection', features: [] };
+
   if (adminGeometry) {
     addAdminRegionOverlay(map, adminGeometry);
     map._gsaAdminGeometry = adminGeometry;
-    map._gsaFitAdmin = () => fitMapToAdminExtent(map, adminGeometry);
   }
+  map._gsaFitAdmin = () => {
+    if (catalogBbox) fitMapToBbox(map, catalogBbox);
+    else if (adminGeometry) fitMapToAdminExtent(map, adminGeometry);
+    else fitFeatures(map, resortFeatures);
+  };
   await addResortMarkerLayers(map, resortFeatures);
-  if (region && !adminGeometry) fitFeatures(map, resortFeatures);
+  if (isCountryRegion) {
+    try {
+      admin1Collection = await loadCountryAdmin1Features(region.country || region.title);
+      addAdmin1InteractiveLayer(map, admin1Collection);
+    } catch (err) {
+      console.warn('[ski-resort-map-ml] admin-1 layer failed', err);
+    }
+  }
+  map._gsaFitAdmin();
 
   const mapEl = map.getContainer();
   const resortPanel = document.createElement('section');
@@ -450,6 +480,8 @@ export async function initSkiResortMap(options = {}) {
 
   function hideResortPanel() {
     resortPanel.hidden = true;
+    resortPanel.classList.remove('clay-entity-panel--admin1');
+    resortPanel.classList.add('clay-entity-panel--resort');
     resortPanel.innerHTML = '';
   }
 
@@ -461,17 +493,75 @@ export async function initSkiResortMap(options = {}) {
     const latlng = extras.latlng || { lat: _lngLat?.lat, lng: _lngLat?.lng };
     const wikiPage = extras.wikiPage !== undefined ? extras.wikiPage : findWikiPage(properties);
     const playablePath = extras.playablePath !== undefined ? extras.playablePath : props._playablePath;
+    resortPanel.classList.remove('clay-entity-panel--admin1');
+    resortPanel.classList.add('clay-entity-panel--resort');
     resortPanel.innerHTML =
       `<button type="button" class="clay-entity-close" data-clay-entity-close aria-label="Close details">&times;</button>` +
       makeResortPopup(properties, latlng, wikiPage, playablePath);
     resortPanel.hidden = false;
   }
 
+  let parquetRows = null;
+  let parquetReady = false;
+  let hoveredAdmin1 = null;
+
+  function showAdmin1Panel(props) {
+    const entity = admin1EntityFromProps(props);
+    resortPanel.classList.remove('clay-entity-panel--resort');
+    resortPanel.classList.add('clay-entity-panel--admin1');
+    resortPanel.innerHTML =
+      `<button type="button" class="clay-entity-close" data-clay-entity-close aria-label="Close details">&times;</button>` +
+      buildAdmin1StatsHtml(entity, parquetRows, parquetReady);
+    resortPanel.hidden = false;
+    resortPanel._gsaAdmin1Entity = entity;
+  }
+
+  if (isCountryRegion) {
+    loadSkiAreasAnalyzed()
+      .then((rows) => {
+        parquetRows = rows;
+        parquetReady = true;
+        if (!resortPanel.hidden && resortPanel._gsaAdmin1Entity) {
+          showAdmin1Panel(resortPanel._gsaAdmin1Entity);
+        }
+      })
+      .catch((err) => console.warn('[ski-resort-map-ml] parquet failed', err));
+  }
+
   resortPanel.addEventListener('click', (e) => {
     if (e.target.closest('[data-clay-entity-close]')) hideResortPanel();
   });
 
+  if (isCountryRegion) {
+    map.on('mouseenter', ADMIN1_FILL, () => { map.getCanvas().style.cursor = 'pointer'; });
+    map.on('mousemove', ADMIN1_FILL, (e) => {
+      if (!e.features.length) return;
+      const feat = e.features[0];
+      if (hoveredAdmin1 != null && hoveredAdmin1 !== feat.id) {
+        map.setFeatureState({ source: ADMIN1_SOURCE, id: hoveredAdmin1 }, { hover: false });
+      }
+      hoveredAdmin1 = feat.id;
+      map.setFeatureState({ source: ADMIN1_SOURCE, id: feat.id }, { hover: true });
+      const title = feat.properties.title || feat.properties.state || 'State';
+      showVtTip(e.point, `<strong>${escapeHtml(title)}</strong><div class="tt-hint">Click for ski stats</div>`);
+    });
+    map.on('mouseleave', ADMIN1_FILL, () => {
+      map.getCanvas().style.cursor = '';
+      hideVtTip();
+      if (hoveredAdmin1 != null) {
+        map.setFeatureState({ source: ADMIN1_SOURCE, id: hoveredAdmin1 }, { hover: false });
+        hoveredAdmin1 = null;
+      }
+    });
+    map.on('click', ADMIN1_FILL, (e) => {
+      if (!e.features.length) return;
+      e.preventDefault();
+      showAdmin1Panel(e.features[0].properties);
+    });
+  }
+
   function attachResortLayerEvents(layerIds) {
+    if (isCountryRegion) return;
     layerIds.forEach((id) => {
       map.on('mouseenter', id, () => { map.getCanvas().style.cursor = 'pointer'; });
       map.on('mousemove', id, (e) => {
@@ -515,6 +605,9 @@ export async function initSkiResortMap(options = {}) {
     await restoreSkiPmtilesAfterStyleChange(map, SKI_PMTILES_OPTIONS);
     if (adminGeometry) addAdminRegionOverlay(map, adminGeometry);
     await addResortMarkerLayers(map, resortFeatures);
+    if (isCountryRegion && admin1Collection.features.length) {
+      addAdmin1InteractiveLayer(map, admin1Collection);
+    }
   }
 
   document.addEventListener('mousemove', (ev) => {

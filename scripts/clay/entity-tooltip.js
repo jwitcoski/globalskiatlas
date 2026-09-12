@@ -24,13 +24,15 @@ export function createClayEntityTooltip(embed) {
       if (!entity) return this.hide();
       const embedRect = embed.getBoundingClientRect();
       const title = entity.name
-        || (entity.entityType === "resort" ? "Ski area" : entity.entityType === "lift" ? "Unnamed lift" : "Unnamed trail");
-      const detail = entity.entityType === "resort"
+        || (entity.entityType === "admin1" ? "State" : entity.entityType === "resort" ? "Ski area" : entity.entityType === "lift" ? "Unnamed lift" : "Unnamed trail");
+      const detail = entity.entityType === "admin1"
+        ? (entity.hasRegionScene ? "Click for ski stats" : "Coming soon")
+        : entity.entityType === "resort"
         ? (entity.trails ? `${entity.trails} trails · click for stats` : "Click for stats")
         : entity.entityType === "lift"
         ? aerialwayLabel(entity.aerialway)
         : diffLabel(entity.difficulty || "Unknown");
-      const detailClass = entity.entityType === "lift" || entity.entityType === "resort"
+      const detailClass = entity.entityType === "lift" || entity.entityType === "resort" || entity.entityType === "admin1"
         ? "clay-entity-tooltip-type"
         : "clay-entity-tooltip-difficulty";
       const detailStyle = entity.entityType === "lift" || entity.entityType === "resort"

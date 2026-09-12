@@ -171,10 +171,10 @@ function addPlaces(parent, fc, center, sample, span) {
   return group;
 }
 
-export function addRegionContextLayers(parent, { footprints, water, highways, places, center, sample, span }) {
+export function addRegionContextLayers(parent, { footprints, water, highways, places, center, sample, span, skipSkiFootprints = false }) {
   const group = new THREE.Group();
   group.name = "region-context";
-  addRegionSkiFootprints(group, footprints, center, sample, span);
+  if (!skipSkiFootprints) addRegionSkiFootprints(group, footprints, center, sample, span);
   const rivers = {
     type: "FeatureCollection",
     features: (water?.features || []).filter((f) => (f.properties?.kind || "river") !== "lake"),

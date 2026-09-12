@@ -327,8 +327,25 @@
 }
 .maplibregl-map .clay-entity-panel--resort,
 .mapboxgl-map .clay-entity-panel--resort,
-.resort-map-gl-wrap .clay-entity-panel--resort {
+.resort-map-gl-wrap .clay-entity-panel--resort,
+.maplibregl-map .clay-entity-panel--admin1,
+.resort-map-gl-wrap .clay-entity-panel--admin1 {
   width: min(420px, calc(100% - 24px));
+}
+.resort-map-gl-wrap .clay-admin1-open,
+.maplibregl-map .clay-admin1-open {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin-top: 4px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: #0f766e;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
 }
 .maplibregl-map .clay-entity-close,
 .mapboxgl-map .clay-entity-close,

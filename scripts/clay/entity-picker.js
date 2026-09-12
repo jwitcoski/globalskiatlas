@@ -16,6 +16,10 @@ function findEntityObject(object) {
 function setHighlight(object, selected) {
   if (!object?.userData?.entity) return;
   object.userData.selected = selected;
+  if (typeof object.userData.setPickHighlight === "function") {
+    object.userData.setPickHighlight(selected);
+    return;
+  }
   object.traverse((child) => {
     const material = child.material;
     if (!material || Array.isArray(material)) return;

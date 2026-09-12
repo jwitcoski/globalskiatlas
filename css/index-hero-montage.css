@@ -96,8 +96,34 @@
 }
 
 .clay-entity-panel--resort,
-.clay-entity-panel--feature {
+.clay-entity-panel--feature,
+.clay-entity-panel--admin1 {
   width: min(420px, calc(100% - 24px));
+}
+
+.clay-admin1-open {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin-top: 4px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: #0f766e;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.clay-admin1-open:hover {
+  background: #0d9488;
+}
+
+.clay-admin1-soon {
+  margin: 8px 0 0;
+  color: #64748b;
+  font-size: 12px;
 }
 
 .clay-entity-panel--resort .sr-popup,
@@ -206,7 +232,8 @@
   }
 
   .clay-entity-panel--resort,
-  .clay-entity-panel--feature {
+  .clay-entity-panel--feature,
+  .clay-entity-panel--admin1 {
     max-height: 58%;
   }
 
