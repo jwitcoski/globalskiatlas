@@ -4,6 +4,7 @@
 User-agent: *
 Allow: /
 Disallow: /assets/svg/
+Disallow: /auth/
+Disallow: /wiki/callback.html
 
-# Sitemap (uncomment when you add sitemap.xml)
-# Sitemap: https://globalskiatlas.com/sitemap.xml
+Sitemap: https://globalskiatlas.com/sitemap.xml

@@ -23,6 +23,8 @@ What the atlas highlights at these latitudes:
 
 Northern extremes are rarely about acreage bragging. They are about access, light, and whether the mapped geometry matches what the ticket office sells. Preview chair and piste layout before you commit, and cross-check [lift facts](../SkiLiftFacts.html) when a resort claims more capacity than the map shows.
 
+Travelers often underestimate how much “season” means at high latitude. A March trip to the Alps and a March trip above the Arctic Circle can feel like different sports: one still sits in midwinter rhythm, the other may already be chasing spring corn under long daylight. Pair atlas previews with local season calendars rather than copying a Colorado packing list.
+
 ## Southern anchors: Patagonia and season-flip skiing
 
 Southern extremes cluster in Patagonia near fifty-four degrees south. Cerro Castor near Ushuaia, Argentina, markets itself among the world’s southernmost full-scale resorts, with modern lifts on tree-lined, wind-exposed terrain. Smaller operations around Ushuaia can push latitude farther south with modest trail networks in OSM.
@@ -30,6 +32,8 @@ Southern extremes cluster in Patagonia near fifty-four degrees south. Cerro Cast
 Australia’s Perisher and New Zealand’s Queenstown-area mountains are southern icons for many travelers, but they are not the absolute latitude extremes. They remain useful for season-flip comparisons and for understanding how Southern Hemisphere ski cultures differ from Alpine and Rockies norms. Use [how to read a ski trail map](how-to-read-ski-trail-map.html) when difficulty colors or piste naming conventions look unfamiliar.
 
 Most extremes rank small or medium in [tier ranking](../resort-tier-rank.html) despite dramatic coordinates. Small lift fleets mean one closure can remove half the mountain. [Trail facts](../SkiTrailFacts.html) and careful map zooms matter more here than brochure photography.
+
+Wind is the other southern wildcard. Patagonian storms can shut exposed lifts while lower tree runs remain skiable—or the reverse. That is another reason to treat mapped terrain as a layout guide and official notices as the day-of authority.
 
 ## Planning trips to the edge of the ski map
 
@@ -48,6 +52,8 @@ Practical atlas workflow:
 4. Preview mesh in the [ski game](/playable/) when a scene exists.
 5. Treat atlas data as planning input for patrolled resort skiing inside mapped boundaries, not backcountry safety authority.
 
+If you are comparing two high-latitude options, put both into [resort comparison](../resort-comparison.html) and ask which failure mode you can tolerate: fewer lifts, longer transfers, or thinner mapped trail detail. The “most extreme” pin is a conversation starter, not an automatic itinerary winner.
+
 OSM gaps are common until visitors improve tags. If a pole-side partner is missing or incomplete, follow [how to tag a ski resort in OpenStreetMap](how-to-tag-a-ski-resort-in-openstreetmap.html) and [ski lift types explained](ski-lift-types-explained.html) so the next explorer’s ranking improves.
 
 ## What geographic extremes teach about the whole dataset
@@ -57,3 +63,5 @@ A global downhill atlas should record where the sport thins toward the poles as 
 They also support the broader project vision—paper atlas spreads, open downloads on [Download Data](../DownloadData.html), and the three-volume framing on [book pitch](../bookpitch.html)—because the edges of the sport are part of the story, not footnotes.
 
 Sort by latitude when you want wonder. Plan with daylight, wind, and incomplete mapping in mind. Fix OSM when you find a missing pole-side partner. The next explorer’s ranking improves because community mapping, not brochure copy, defines the edge of the ski world.
+
+For a broader planning workflow that uses these extremes as inspiration rather than default destinations, see the [ski trip planning checklist](ski-trip-planning-checklist.html).

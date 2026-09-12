@@ -86,6 +86,8 @@ If you are evaluating the project as a data source, ask three questions:
 
 For Global Ski Atlas, the answers are designed to be yes, yes, and yes—through OSM, GeoParquet, and public tools rather than a closed proprietary layer.
 
+Curious readers can go further on the [About](../about.html) page for frontend and backend architecture diagrams, or start a conversation on the [contact](../contact.html) page if a download link or map layer looks broken after a deploy.
+
 ## Takeaway
 
 The atlas website is the readable surface of an open ski-data pipeline: OSM geometry in, consistent spatial analysis in the middle, GeoParquet and interactive products out. Understanding that path makes the map less mysterious when a local hill looks thin, and it shows where your contribution—as a skier who maps, or a researcher who downloads—actually lands. Start with the [map](../mainmap.html), verify with [Download Data](../DownloadData.html), and improve the commons when you can.

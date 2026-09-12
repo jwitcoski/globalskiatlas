@@ -86,7 +86,7 @@ If you want a spatial feel for layout, the experimental [ski game](/playable/) c
 
 ## 8. After the trip: feed the commons
 
-If a mapped trail was missing, a lift was wrong, or a boundary looked bloated, fix it upstream. Global Ski Atlas improves when OSM improves. The tagging guide and [how the data pipeline works](how-global-ski-atlas-data-pipeline-works.md) explain how edits become atlas updates. Corrections also help the next traveler who shortlists that hill.
+If a mapped trail was missing, a lift was wrong, or a boundary looked bloated, fix it upstream. Global Ski Atlas improves when OSM improves. The tagging guide and [how the data pipeline works](how-global-ski-atlas-data-pipeline-works.html) explain how edits become atlas updates. Corrections also help the next traveler who shortlists that hill.
 
 ## One-page summary
 
@@ -100,3 +100,5 @@ If a mapped trail was missing, a lift was wrong, or a boundary looked bloated, f
 8. Improve OSM when you find gaps.
 
 Follow that order and Global Ski Atlas becomes a decision system instead of a novelty map—exactly what you need when lodging deposits are due and the group chat is already arguing about which mountain is “best.”
+
+If you want a deeper understanding of why two websites disagree on acres or trail counts, keep [ski resort stats explained](ski-resort-stats-explained.html) and [how the data pipeline works](how-global-ski-atlas-data-pipeline-works.html) bookmarked beside this checklist. Better definitions make better shortlists.
