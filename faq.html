@@ -127,41 +127,63 @@
         <main class="tw-mt-[80px] tw-flex-1 tw-px-[5%] tw-py-12 max-lg:tw-px-4">
             <div class="tw-mx-auto tw-max-w-3xl">
                 <h1 class="tw-mb-2 tw-text-3xl tw-font-bold tw-text-black max-md:tw-text-2xl">Frequently Asked Questions</h1>
+                <p class="tw-mb-4 tw-text-gray-700 tw-leading-relaxed">
+                    Global Ski Atlas is a worldwide ski resort atlas built from open map data. These answers cover how the interactive map works,
+                    where statistics come from, how comparison and trip tools fit together, and how to report problems.
+                    For longer guides, visit the
+                    <a href="blog/index.html" class="tw-text-blue-600 hover:tw-underline">blog</a>.
+                    To reach the maintainer directly, use the
+                    <a href="contact.html" class="tw-text-blue-600 hover:tw-underline">contact page</a>.
+                </p>
                 <p class="tw-mb-8 tw-text-gray-500">Answers to common questions about Global Ski Atlas.</p>
 
                 <div class="tw-space-y-0">
-                    <details class="faq-item">
+                    <details class="faq-item" open>
                         <summary>What is Global Ski Atlas?</summary>
                         <div class="faq-answer">
-                            Global Ski Atlas is your guide to ski resorts worldwide. It includes a coffee table book (paper atlas), an interactive online atlas map, a resort comparison tool, and an AI assistant you can ask anything about skiing. We cover thousands of ski areas with terrain, lifts, pistes, and key details.
+                            Global Ski Atlas is your guide to ski resorts worldwide. It includes a coffee table book (paper atlas), an interactive online atlas map, a resort comparison tool, drive-time and trip-planning maps, open data downloads, a community wiki, and an AI assistant you can ask about skiing. We cover thousands of downhill ski areas with terrain, lifts, pistes, and key details derived from OpenStreetMap geometry so mountains can be compared on a shared methodology instead of mismatched resort brochures.
                         </div>
                     </details>
 
                     <details class="faq-item">
                         <summary>How do I use the Online Atlas?</summary>
                         <div class="faq-answer">
-                            Go to <a href="mainmap.html" class="tw-text-blue-600 hover:tw-underline">Online Atlas</a>, pan and zoom the map to explore. Click a resort marker to see a popup with details (terrain, lifts, elevation, etc.). Use the search box to find a specific resort by name. The legend explains map colors and symbols.
+                            Go to the <a href="mainmap.html" class="tw-text-blue-600 hover:tw-underline">interactive map</a>, pan and zoom to explore. Click a resort marker to see a popup with details (terrain, lifts, elevation, etc.). Use the search box to find a specific resort by name. The legend explains map colors and symbols. For written resort pages, browse the <a href="wiki/browse.html" class="tw-text-blue-600 hover:tw-underline">Online Atlas wiki</a>. A short how-to also sits beneath the map for visitors who land directly on the tool.
                         </div>
                     </details>
 
                     <details class="faq-item">
                         <summary>How does the Resort Comparison work?</summary>
                         <div class="faq-answer">
-                            On the <a href="resort-comparison.html" class="tw-text-blue-600 hover:tw-underline">Compare Resorts</a> page you can select two or more ski areas and see them side by side—terrain size, lift count, vertical drop, pass info, and more—to help you decide where to ski.
+                            On the <a href="resort-comparison.html" class="tw-text-blue-600 hover:tw-underline">Compare Resorts</a> page you can select two or more ski areas and see them side by side—terrain size, lift count, vertical drop, pass info, and more—to help you decide where to ski. Read <a href="blog/ski-resort-stats-explained.html" class="tw-text-blue-600 hover:tw-underline">what ski resort stats actually mean</a> before trusting brochure-style numbers that use different definitions.
                         </div>
                     </details>
 
                     <details class="faq-item">
                         <summary>What is the AI Assistant?</summary>
                         <div class="faq-answer">
-                            The AI Assistant is a skiing-focused chatbot. You can ask about resorts, conditions, gear, technique, or trip planning. Try it from the home page or via <a href="skiing-ai.html" class="tw-text-blue-600 hover:tw-underline">AI Assistant</a>. It uses our atlas data and general skiing knowledge to answer your questions.
+                            The AI Assistant is a skiing-focused chatbot. You can ask about resorts, conditions, gear, technique, or trip planning. Try it from the home page or via <a href="skiing-ai.html" class="tw-text-blue-600 hover:tw-underline">AI Assistant</a>. It uses our atlas data and general skiing knowledge to answer your questions. It is not a substitute for official resort notices, avalanche forecasts, or local guide advice.
                         </div>
                     </details>
 
                     <details class="faq-item">
                         <summary>Where does the resort data come from?</summary>
                         <div class="faq-answer">
-                            We use authoritative open and licensed geographic and ski-area data (e.g., OpenStreetMap and other sources), processed and analyzed to provide consistent resort statistics. You can download the underlying parquet datasets from the footer links (ski areas, lifts, pistes) for your own use.
+                            We use authoritative open geographic and ski-area data centered on OpenStreetMap, processed into consistent resort statistics. You can download the underlying parquet datasets from <a href="DownloadData.html" class="tw-text-blue-600 hover:tw-underline">Data downloads</a> for your own use. Because coverage depends on volunteer mapping, some hills are incomplete until editors add boundaries, pistes, and lifts. Our <a href="blog/how-to-tag-a-ski-resort-in-openstreetmap.html" class="tw-text-blue-600 hover:tw-underline">OSM tagging guide</a> explains how to help.
+                        </div>
+                    </details>
+
+                    <details class="faq-item">
+                        <summary>Is the map official navigation or safety guidance?</summary>
+                        <div class="faq-answer">
+                            No. Global Ski Atlas is a research and planning aid. Trail and lift geometry can lag behind reality, difficulty colors vary by region, and snow conditions change daily. Always confirm opening status, closures, hazards, and avalanche information with the resort and local authorities before you ski. The experimental <a href="/playable/" class="tw-text-blue-600 hover:tw-underline">ski game</a> is entertainment based on exported DEM and OSM scenes—not an official trail map.
+                        </div>
+                    </details>
+
+                    <details class="faq-item">
+                        <summary>How can I plan a multi-resort trip?</summary>
+                        <div class="faq-answer">
+                            Use the <a href="TripPlannerMap.html" class="tw-text-blue-600 hover:tw-underline">trip planner</a> to string resorts into a driving route, and the <a href="DriveTimeMap.html" class="tw-text-blue-600 hover:tw-underline">drive-time map</a> to see which mountains fall inside one- to four-hour rings from a starting point. The blog guide on <a href="blog/multi-resort-ski-road-trip-planner.html" class="tw-text-blue-600 hover:tw-underline">multi-resort road trips</a> covers pacing, overnight stops, and how to shortlist candidates with comparison tools.
                         </div>
                     </details>
 
@@ -189,7 +211,7 @@
                     <details class="faq-item" id="contact">
                         <summary>How do I contact you or report an error?</summary>
                         <div class="faq-answer">
-                            <p class="tw-mb-4">Use the form below for general inquiries, feedback, or to report data errors. We appreciate corrections and suggestions to improve the atlas.</p>
+                            <p class="tw-mb-4">Prefer the dedicated <a href="contact.html" class="tw-text-blue-600 hover:tw-underline">contact page</a> for general inquiries, feedback, or data errors. You can also use the form below. Include the resort name and what looks wrong so we can investigate.</p>
                             <div class="contact-form-wrapper tw-w-full tw-max-w-md tw-mt-4">
                                 <p class="contact-form-label">CONTACT</p>
                                 <h2 class="contact-form-title">Get in touch</h2>
@@ -274,7 +296,7 @@
                     <a href="blog/index.html" class="footer-link">Blog</a>
                     <a href="about.html" class="footer-link">About</a>
                     <a href="faq.html" class="footer-link">FAQ</a>
-                    <a href="https://witcoskitech.com" class="footer-link" target="_blank" rel="noopener">Contact</a>
+                    <a href="contact.html" class="footer-link">Contact</a>
                     <a href="privacy-policy.html" class="footer-link">Privacy Policy</a>
                 </div>
             </div>
