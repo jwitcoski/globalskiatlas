@@ -87,8 +87,8 @@
     "description": "Sample road-trip itineraries, how many days per stop, and how to build routes in the Global Ski Atlas trip planner.",
     "pillar": "Help skiers decide",
     "date": "2026-09-01",
-    "readTime": 6,
-    "related": ["us-states-most-ski-resorts", "epic-ikon-indy-europe-which-to-choose", "how-to-choose-a-ski-resort"]
+    "readTime": 8,
+    "related": ["us-states-most-ski-resorts", "epic-ikon-indy-europe-which-to-choose", "ski-trip-planning-checklist"]
   },
   {
     "slug": "epic-pass-vs-ikon-pass-resort-coverage",
@@ -96,7 +96,7 @@
     "description": "How many atlas resorts each pass includes, where they overlap, and what thousands of independent hills are left out.",
     "pillar": "Help skiers decide",
     "date": "2026-09-01",
-    "readTime": 6,
+    "readTime": 7,
     "related": ["epic-ikon-indy-europe-which-to-choose", "us-states-most-ski-resorts", "how-to-choose-a-ski-resort"]
   },
   {
@@ -105,8 +105,8 @@
     "description": "Four different skiing strategies — destination passes, partner networks, independent discovery, and Alpine trips — and how to pick yours.",
     "pillar": "Help skiers decide",
     "date": "2026-09-01",
-    "readTime": 6,
-    "related": ["epic-pass-vs-ikon-pass-resort-coverage", "multi-resort-ski-road-trip-planner", "how-to-choose-a-ski-resort"]
+    "readTime": 7,
+    "related": ["epic-pass-vs-ikon-pass-resort-coverage", "multi-resort-ski-road-trip-planner", "ski-trip-planning-checklist"]
   },
   {
     "slug": "northernmost-southernmost-ski-resorts",
@@ -114,7 +114,25 @@
     "description": "The geographic extremes of downhill skiing — Arctic Scandinavia to Patagonia — from latitude-sorted atlas data.",
     "pillar": "Reveal the dataset",
     "date": "2026-09-01",
-    "readTime": 6,
+    "readTime": 7,
     "related": ["how-many-ski-resorts-worldwide", "how-to-choose-a-ski-resort", "how-to-tag-a-ski-resort-in-openstreetmap"]
+  },
+  {
+    "slug": "how-global-ski-atlas-data-pipeline-works",
+    "title": "How the Global Ski Atlas Data Pipeline Works (For Non-Engineers)",
+    "description": "From OpenStreetMap extracts to GeoParquet, maps, wiki pages, and resort facts — a plain-language tour of how atlas data is built.",
+    "pillar": "Reveal the dataset",
+    "date": "2026-09-12",
+    "readTime": 7,
+    "related": ["how-to-tag-a-ski-resort-in-openstreetmap", "ski-resort-stats-explained", "how-many-ski-resorts-worldwide"]
+  },
+  {
+    "slug": "ski-trip-planning-checklist",
+    "title": "Ski Trip Planning Checklist: From Shortlist to Snow",
+    "description": "A practical pre-trip checklist using Global Ski Atlas tools — map, drive time, comparison, weather, and pass strategy — so you ski more and guess less.",
+    "pillar": "Help skiers decide",
+    "date": "2026-09-12",
+    "readTime": 7,
+    "related": ["how-to-choose-a-ski-resort", "multi-resort-ski-road-trip-planner", "epic-ikon-indy-europe-which-to-choose"]
   }
 ]

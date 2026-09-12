@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-KJGNL3KJL0"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){ dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'G-KJGNL3KJL0');
+  </script>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4372859798489282" crossorigin="anonymous"></script>
+  <title>How the Global Ski Atlas Data Pipeline Works (For Non-Engineers) – Global Ski Atlas Blog</title>
+  <meta name="description" content="From OpenStreetMap extracts to GeoParquet, maps, wiki pages, and resort facts — a plain-language tour of how atlas data is built." />
+  <meta property="og:title" content="How the Global Ski Atlas Data Pipeline Works (For Non-Engineers) – Global Ski Atlas" />
+  <meta property="og:description" content="From OpenStreetMap extracts to GeoParquet, maps, wiki pages, and resort facts — a plain-language tour of how atlas data is built." />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://globalskiatlas.com/blog/how-global-ski-atlas-data-pipeline-works.html" />
+  <meta property="og:image" content="https://globalskiatlas.com/assets/og-banner.png" />
+  <meta property="og:site_name" content="Global Ski Atlas" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="How the Global Ski Atlas Data Pipeline Works (For Non-Engineers)" />
+  <meta name="twitter:description" content="From OpenStreetMap extracts to GeoParquet, maps, wiki pages, and resort facts — a plain-language tour of how atlas data is built." />
+  <meta name="twitter:image" content="https://globalskiatlas.com/assets/og-banner.png" />
+  <link rel="canonical" href="https://globalskiatlas.com/blog/how-global-ski-atlas-data-pipeline-works.html" />
+  <link rel="shortcut icon" href="../assets/logo.png?v=2" type="image/x-icon" />
+  <link rel="stylesheet" href="../css/tailwind-build.css" />
+  <link rel="stylesheet" href="../css/index.css" />
+  <link rel="stylesheet" href="../css/blog.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" integrity="sha512-dPXYcDub/aeb08c63jRq/k6GaKccl256JQy/AnOq7CAnEZ9FzSL9wSbcZkMp4R26vBsMLFYH4kQ67/bbV8XaCQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"How the Global Ski Atlas Data Pipeline Works (For Non-Engineers)","description":"From OpenStreetMap extracts to GeoParquet, maps, wiki pages, and resort facts — a plain-language tour of how atlas data is built.","datePublished":"2026-09-12","dateModified":"2026-09-12","author":{"@type":"Organization","name":"Global Ski Atlas"},"publisher":{"@type":"Organization","name":"Global Ski Atlas","logo":{"@type":"ImageObject","url":"https://globalskiatlas.com/assets/logo.png"}},"mainEntityOfPage":{"@type":"WebPage","@id":"https://globalskiatlas.com/blog/how-global-ski-atlas-data-pipeline-works.html"},"image":"https://globalskiatlas.com/assets/og-banner.png"}</script>
+</head>
+<body class="tw-flex tw-min-h-[100vh] tw-flex-col tw-bg-[#fff] tw-overflow-x-hidden">
+  <header
+    class="tw-absolute tw-top-0 tw-z-[100] tw-flex tw-h-[60px] tw-w-full tw-bg-opacity-0
+           tw-px-[5%] max-lg:tw-mr-auto max-lg:tw-px-4 lg:tw-justify-around"
+  >
+    <a class="tw-h-[50px] tw-w-[50px] tw-p-[4px]" href="../index.html" aria-label="Global Ski Atlas home">
+      <img src="../assets/logo.png?v=2" alt="Global Ski Atlas" class="tw-object tw-h-full tw-w-full" />
+    </a>
+    <div class="collapsible-header animated-collapse max-lg:tw-shadow-md" id="collapsed-header-items">
+      <div
+        class="header-nav-inner tw-flex tw-h-full tw-w-max tw-flex-wrap tw-gap-5 tw-text-base tw-text-black
+               max-lg:tw-mt-[30px] max-lg:tw-flex-col max-lg:tw-place-items-end
+               max-lg:tw-gap-5 lg:tw-mx-auto lg:tw-place-items-center"
+      >
+        <div class="header-dropdown-group">
+          <a class="header-tab header-links" href="../mainmap.html" aria-haspopup="true">Atlas <i class="bi bi-chevron-down tw-text-xs"></i></a>
+          <div class="header-dropdown" role="menu">
+            <a class="header-links" href="../coffee-table-book.html" role="menuitem">Coffee Table Book</a>
+            <a class="header-links" href="../bookpitch.html" role="menuitem">Book pitch</a>
+            <a class="header-links" href="../mainmap.html" role="menuitem">Interactive Map</a>
+            <a class="header-links" href="../wiki/browse.html" role="menuitem">Online Atlas</a>
+          </div>
+        </div>
+        <div class="header-dropdown-group">
+          <a class="header-tab header-links" href="../TripPlannerMap.html" aria-haspopup="true">Driving <i class="bi bi-chevron-down tw-text-xs"></i></a>
+          <div class="header-dropdown" role="menu">
+            <a class="header-links" href="../TripPlannerMap.html" role="menuitem">Trip Planner</a>
+            <a class="header-links" href="../DriveTimeMap.html" role="menuitem">Drive Time</a>
+          </div>
+        </div>
+        <div class="header-dropdown-group">
+          <a class="header-tab header-links" href="../SkiResortFacts.html" aria-haspopup="true">Statistics <i class="bi bi-chevron-down tw-text-xs"></i></a>
+          <div class="header-dropdown" role="menu">
+            <a class="header-links" href="../SkiResortFacts.html" role="menuitem">Resort Facts</a>
+            <a class="header-links" href="../SkiTrailFacts.html" role="menuitem">Trail Facts</a>
+            <a class="header-links" href="../SkiLiftFacts.html" role="menuitem">Lift Facts</a>
+          </div>
+        </div>
+        <div class="header-dropdown-group">
+          <a class="header-tab header-links" href="../resort-comparison.html" aria-haspopup="true">Compare <i class="bi bi-chevron-down tw-text-xs"></i></a>
+          <div class="header-dropdown" role="menu">
+            <a class="header-links" href="../resort-comparison.html" role="menuitem">Resort Comparison</a>
+            <a class="header-links" href="../resort-tier-rank.html" role="menuitem">Tier Ranking</a>
+          </div>
+        </div>
+        <a class="header-links" href="../weather-map.html">Weather</a>
+        <a class="header-links" href="/playable/">Ski Game</a>
+        <a class="header-links" href="../skiing-ai.html">AI Assistant</a>
+        <a class="header-links tw-font-semibold" href="index.html">Blog</a>
+        <a class="header-links" href="../about.html">About</a>
+      </div>
+    </div>
+    <button
+      class="bi bi-list tw-absolute tw-right-3 tw-top-3 tw-z-50 tw-text-3xl
+             tw-text-black lg:tw-hidden"
+      onclick="toggleHeader()"
+      aria-label="menu"
+      id="collapse-btn"
+    ></button>
+  </header>
+  <main class="tw-mt-[80px] tw-flex-1 tw-px-[5%] tw-py-12 max-lg:tw-px-4">
+    <article class="tw-mx-auto tw-max-w-3xl">
+      <p class="blog-pillar">Reveal the dataset</p>
+      <h1 class="tw-mt-2 tw-text-3xl tw-font-bold tw-text-black max-md:tw-text-2xl">How the Global Ski Atlas Data Pipeline Works (For Non-Engineers)</h1>
+      <p class="blog-meta tw-mt-3">September 12, 2026 · 7 min read</p>
+      <p class="tw-mt-4 tw-text-lg tw-leading-relaxed tw-text-gray-600">From OpenStreetMap extracts to GeoParquet, maps, wiki pages, and resort facts — a plain-language tour of how atlas data is built.</p>
+      <div class="blog-prose tw-mt-8"><p>Global Ski Atlas looks simple when you zoom the <a href="../mainmap.html" rel="noopener noreferrer" target="_blank">interactive map</a>: dots, polygons, lifts, and trail lines. Underneath that view is a repeatable data pipeline that starts with volunteer maps and ends in files your browser can draw quickly. This guide explains that path in plain language—OpenStreetMap to pipeline jobs to GeoParquet to the map, wiki, and stats pages—so non-engineers can trust what they are seeing and know how to improve it.</p>
+<p>For a visual overview of the site and backend, see <a href="../about.html" rel="noopener noreferrer" target="_blank">About</a>. For downloads and the step list behind the datasets, see <a href="../DownloadData.html" rel="noopener noreferrer" target="_blank">Download Data</a>. For the resort-level numbers the pipeline computes, browse <a href="../SkiResortFacts.html" rel="noopener noreferrer" target="_blank">Ski Resort Facts</a>.</p>
+<h3 id="why-open-map-data-is-the-starting-point">Why open map data is the starting point</h3>
+<p>Ski resorts publish beautiful trail maps. Those maps are rarely comparable. One mountain counts glades; another counts only signed trails; a third markets “skiable acres” with fuzzy boundaries. Global Ski Atlas starts from <a href="https://www.openstreetmap.org/" rel="noopener noreferrer" target="_blank">OpenStreetMap</a> (OSM) instead: a shared geographic database anyone can edit, with lifts and pistes tagged as real geometry.</p>
+<p>OSM is not perfect. Popular U.S. and Alpine resorts tend to be richly mapped. Small municipal hills and remote areas lag. That unevenness is a feature you should understand, not a hidden flaw: when a resort looks thin in the atlas, the usual cause is incomplete tagging—not a conspiracy to hide terrain.</p>
+<p>If you want to help, read <a href="how-to-tag-a-ski-resort-in-openstreetmap.html" rel="noopener noreferrer" target="_blank">how to tag a ski resort in OpenStreetMap</a>. Fixes upstream become atlas updates after the next pipeline run.</p>
+<h3 id="the-short-version-of-the-pipeline">The short version of the pipeline</h3>
+<p>In one paragraph: we download regional OSM extracts, find winter-sports areas, pull nearby lifts and pistes, enrich them with boundaries and names, compute statistics, export compact GeoParquet files, and publish those files for the website and researchers.</p>
+<p>In practice the work is regional. Europe and North America are too large to process as one giant blob every time, so configuration splits continents into countries or sub-regions, then a combine step merges outputs into a global dataset. <a href="../DownloadData.html" rel="noopener noreferrer" target="_blank">Download Data</a> describes that regional strategy and the public Parquet files that result.</p>
+<h3 id="what-each-major-stage-is-doing">What each major stage is doing</h3>
+<p>You do not need to run the jobs to understand their jobs:</p>
+<ol>
+<li><strong>Extract winter sports</strong> — Identify ski areas and winter-sport facilities in OSM.</li>
+<li><strong>Nearby context</strong> — Pull OSM features within a few kilometers so buildings, roads, and related objects can support enrichment.</li>
+<li><strong>Lifts and pistes</strong> — Capture lift lines and trail geometries with their tags (type, difficulty, name, and so on).</li>
+<li><strong>Enrich</strong> — Attach administrative context, boundaries, and cleaner attributes for display.</li>
+<li><strong>Analyze</strong> — Compute the statistics you see in comparison tools and facts pages: trail counts, elevation-related measures, area estimates, and similar fields.</li>
+<li><strong>Parquet export</strong> — Write compact columnar files that keep geometry attached.</li>
+<li><strong>Buffers and display helpers</strong> — Build mapping aids such as buffer polygons around ski areas.</li>
+<li><strong>Names and translation fills</strong> — Improve English display names where needed.</li>
+<li><strong>Elevation and contours</strong> — Attach elevation context used in analysis and cartography.</li>
+<li><strong>CSV refresh</strong> — Regenerate tabular summaries with final fields.</li>
+<li><strong>Combine regions</strong> — Merge regional outputs into the global set the site consumes.</li>
+</ol>
+<p>That eleven-step outline matches the explanation on <a href="../DownloadData.html" rel="noopener noreferrer" target="_blank">Download Data</a>. Exact engineering details evolve; the idea stays stable: geometry in, comparable stats out.</p>
+<h3 id="geoparquet-in-human-terms">GeoParquet in human terms</h3>
+<p>Parquet is a compact file format popular in data analysis. <strong>GeoParquet</strong> adds geography—points, lines, and polygons—so the same file can feed both spreadsheets-style tools and maps.</p>
+<p>Why the atlas uses it:</p>
+<ul>
+<li>Files stay smaller than bulky text formats for the same geometry.</li>
+<li>Browsers and analysis tools can read only the columns they need.</li>
+<li>One published snapshot can power the map, research downloads, and derived products.</li>
+</ul>
+<p>On <a href="../DownloadData.html" rel="noopener noreferrer" target="_blank">Download Data</a> you will typically find ski-area files (raw and analyzed), lifts, and pistes. Analyzed ski areas feed much of what the Online Atlas and stats experiences summarize. Lifts and pistes feed the lines you see when you zoom into a mountain.</p>
+<h3 id="from-files-to-the-map-you-click">From files to the map you click</h3>
+<p>The public site is largely a static frontend with interactive map views. As described on <a href="../about.html" rel="noopener noreferrer" target="_blank">About</a>, maps are powered by MapLibre and load GeoParquet for client-side rendering. That means:</p>
+<ul>
+<li>The basemap and ski layers can show thousands of areas without inventing a custom map per resort.</li>
+<li>Zooming into a mountain reveals lift and piste geometry derived from OSM tags.</li>
+<li>What you see is only as current as the last successful pipeline publish and the OSM edits that fed it.</li>
+</ul>
+<p>When you compare two resorts in <a href="../resort-comparison.html" rel="noopener noreferrer" target="_blank">resort comparison</a>, you are comparing fields computed by the same analyze step—not two marketing departments’ acreage claims. <a href="ski-resort-stats-explained.html" rel="noopener noreferrer" target="_blank">Ski resort stats explained</a> defines how to read those columns carefully.</p>
+<h3 id="wiki-pages-and-“resort-facts”">Wiki pages and “resort facts”</h3>
+<p>The <a href="../wiki/browse.html" rel="noopener noreferrer" target="_blank">Online Atlas</a> wiki presents resort pages people can read like encyclopedia entries. Behind the scenes, page content and revisions live in a wiki service described on <a href="../about.html" rel="noopener noreferrer" target="_blank">About</a>. Mapped statistics still originate from the pipeline outputs.</p>
+<p><a href="../SkiResortFacts.html" rel="noopener noreferrer" target="_blank">Ski Resort Facts</a> is the statistics-facing sibling: sortable, filterable summaries built from analyzed ski-area data. Use it when you want patterns across many mountains—largest trail counts, dense lift networks, beginner-friendly mixes—without opening fifty resort websites.</p>
+<p>Together, map + wiki + facts answer three different questions:</p>
+<ul>
+<li><strong>Where is it, and what does the layout look like?</strong> → map</li>
+<li><strong>What is the story and structured page for this place?</strong> → wiki</li>
+<li><strong>How does it rank among peers on mapped metrics?</strong> → facts and comparison tools</li>
+</ul>
+<h3 id="what-the-pipeline-cannot-decide-for-you">What the pipeline cannot decide for you</h3>
+<p>Open data is honest about uncertainty. The pipeline cannot:</p>
+<ul>
+<li>Guarantee a trail is open tomorrow.</li>
+<li>Replace avalanche forecasts or resort patrol decisions.</li>
+<li>Invent lifts that nobody mapped.</li>
+<li>Resolve every naming conflict between local language names and marketing brands.</li>
+</ul>
+<p>It also cannot freeze pass partnerships into permanent truth. Pass alignment articles such as <a href="epic-pass-vs-ikon-pass-resort-coverage.html" rel="noopener noreferrer" target="_blank">Epic vs Ikon coverage</a> are separate overlays that must be verified on official pass sites.</p>
+<h3 id="how-often-things-update-conceptually">How often things update (conceptually)</h3>
+<p>Think in layers of freshness:</p>
+<ul>
+<li><strong>OSM edits</strong> — Happen whenever mappers save changes.</li>
+<li><strong>Pipeline runs</strong> — Batch jobs process regions and republish combined files; large continent runs can take many hours.</li>
+<li><strong>Website deploy</strong> — Static pages and app code ship on their own cadence.</li>
+<li><strong>Wiki edits</strong> — Human page text can move independently of geometry.</li>
+</ul>
+<p>If a brand-new chairlift is missing, the fix is usually: map it in OSM, wait for (or trigger) a data refresh, then confirm it on the atlas map. For tagging help, use the OSM how-to post linked above.</p>
+<h3 id="how-researchers-use-the-same-files">How researchers use the same files</h3>
+<p>The downloadable Parquet sets are not a different “research universe.” They are the same family of outputs the site uses, published for analysis in tools like Pandas, GeoPandas, and DuckDB. Common projects:</p>
+<ul>
+<li>Counting downhill areas by country or U.S. state (<a href="how-many-ski-resorts-worldwide.html" rel="noopener noreferrer" target="_blank">how many ski resorts worldwide</a>, <a href="us-states-most-ski-resorts.html" rel="noopener noreferrer" target="_blank">U.S. state counts</a>).</li>
+<li>Ranking mapped terrain size (<a href="largest-ski-resorts-in-the-world.html" rel="noopener noreferrer" target="_blank">largest ski resorts</a>).</li>
+<li>Studying lift-type mixes (<a href="ski-lift-types-explained.html" rel="noopener noreferrer" target="_blank">ski lift types explained</a>).</li>
+<li>Joining external partner lists to atlas IDs for pass research.</li>
+</ul>
+<p>Always credit OpenStreetMap contributors and follow the license terms that apply to OSM-derived data.</p>
+<h3 id="a-mental-model-you-can-reuse">A mental model you can reuse</h3>
+<p>When something on Global Ski Atlas surprises you, walk this chain:</p>
+<ol>
+<li>Is the geometry present in OSM?</li>
+<li>Did the pipeline pick it up as a ski area, lift, or piste?</li>
+<li>Did analyze compute the stat you expected?</li>
+<li>Is the website showing the latest published file?</li>
+</ol>
+<p>That sequence turns “the map must be wrong” into a diagnosable question. Often the answer is a missing tag. Sometimes it is a centroid quirk. Occasionally it is a true data bug worth reporting.</p>
+<h3 id="where-to-go-next">Where to go next</h3>
+<ul>
+<li><a href="../about.html" rel="noopener noreferrer" target="_blank">About</a> — Project story, frontend/backend overview, and who builds it.</li>
+<li><a href="../DownloadData.html" rel="noopener noreferrer" target="_blank">Download Data</a> — Pipeline steps, regional processing notes, and Parquet downloads.</li>
+<li><a href="../SkiResortFacts.html" rel="noopener noreferrer" target="_blank">Ski Resort Facts</a> — Explore computed resort statistics.</li>
+<li><a href="../mainmap.html" rel="noopener noreferrer" target="_blank">Interactive map</a> — See the published geometry.</li>
+<li><a href="../wiki/browse.html" rel="noopener noreferrer" target="_blank">Online atlas</a> — Read resort pages.</li>
+<li><a href="how-to-tag-a-ski-resort-in-openstreetmap.html" rel="noopener noreferrer" target="_blank">How to tag a ski resort in OpenStreetMap</a> — Improve the source of truth.</li>
+</ul>
+<p>The atlas is not magic. It is a disciplined path from shared maps to shared statistics. Once you see that path, every pin on the map becomes easier to trust—and easier to improve.</p></div>
+      <section class="blog-related" aria-label="Related articles">
+          <h2 class="tw-text-xl tw-font-semibold tw-text-black">Related articles</h2>
+          <ul class="tw-mt-4"><li><a href="how-to-tag-a-ski-resort-in-openstreetmap.html">How to Tag a Ski Resort in OpenStreetMap (So It Shows Up in the Atlas)</a></li>
+            <li><a href="ski-resort-stats-explained.html">What Ski Resort Stats Actually Mean</a></li>
+            <li><a href="how-many-ski-resorts-worldwide.html">How Many Ski Resorts Are There in the World?</a></li></ul>
+        </section>
+      <p class="tw-mt-10 tw-text-sm tw-text-gray-500"><a href="index.html" class="tw-text-blue-600 hover:tw-underline">← Back to all articles</a></p>
+    </article>
+  </main>
+  <footer
+    class="tw-mt-auto tw-flex tw-w-full tw-place-content-around tw-gap-3 tw-border-t tw-border-gray-200
+           tw-bg-gray-50 tw-py-6 tw-px-[10%] tw-text-black max-md:tw-flex-col"
+  >
+    <div class="tw-flex tw-h-full tw-w-[250px] tw-flex-col tw-place-items-center tw-gap-6 max-md:tw-w-full">
+      <img src="../assets/logo.png?v=2" alt="Global Ski Atlas" class="tw-max-w-[120px]" />
+      <div>Global Ski Atlas</div>
+      <div class="tw-mt-3 tw-text-lg tw-font-semibold">Follow us</div>
+      <div class="tw-flex tw-gap-4 tw-text-2xl">
+        <a href="javascript:void(0)" aria-label="Facebook" title="Coming soon"><i class="bi bi-facebook"></i></a>
+        <a href="https://twitter.com/@pauls_freeman" aria-label="Twitter"><i class="bi bi-twitter"></i></a>
+        <a href="https://instagram.com/" class="tw-h-[40px] tw-w-[40px]" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
+      </div>
+    </div>
+    <div class="tw-flex tw-h-full tw-w-[250px] tw-flex-col tw-gap-4">
+      <h2 class="tw-text-3xl max-md:tw-text-xl">Explore</h2>
+      <div class="tw-flex tw-flex-col tw-gap-3 max-md:tw-text-sm">
+        <a href="../coffee-table-book.html" class="footer-link">Coffee Table Book</a>
+        <a href="../mainmap.html" class="footer-link">Interactive Map</a>
+        <a href="../resort-comparison.html" class="footer-link">Compare Resorts</a>
+        <a href="/playable/" class="footer-link">Ski Game</a>
+        <a href="../skiing-ai.html" class="footer-link">AI Assistant</a>
+      </div>
+    </div>
+    <div class="tw-flex tw-h-full tw-w-[250px] tw-flex-col tw-gap-4">
+      <h2 class="tw-text-3xl max-md:tw-text-xl">Download Parquet Data</h2>
+      <div class="tw-flex tw-flex-col tw-gap-3 max-md:tw-text-sm">
+        <a href="../DownloadData.html" class="footer-link tw-inline-flex tw-items-center tw-gap-1">Data downloads &amp; how we create it <i class="bi bi-arrow-right tw-text-sm"></i></a>
+      </div>
+    </div>
+    <div class="tw-flex tw-h-full tw-w-[250px] tw-flex-col tw-gap-4">
+      <h2 class="tw-text-3xl max-md:tw-text-xl">Resources</h2>
+      <div class="tw-flex tw-flex-col tw-gap-3 max-md:tw-text-sm">
+        <a href="index.html" class="footer-link">Blog</a>
+        <a href="../about.html" class="footer-link">About</a>
+        <a href="../faq.html" class="footer-link">FAQ</a>
+        <a href="../contact.html" class="footer-link">Contact</a>
+        <a href="../privacy-policy.html" class="footer-link">Privacy Policy</a>
+      </div>
+    </div>
+  </footer>
+  <script src="../index.js"></script>
+</body>
+</html>

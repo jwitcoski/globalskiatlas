@@ -98,11 +98,84 @@
       <h1 class="tw-mt-2 tw-text-3xl tw-font-bold tw-text-black max-md:tw-text-2xl">The 10 Largest Ski Resorts in the World (By Mapped Terrain)</h1>
       <p class="blog-meta tw-mt-3">September 1, 2026 · 6 min read</p>
       <p class="tw-mt-4 tw-text-lg tw-leading-relaxed tw-text-gray-600">The biggest downhill ski areas ranked by mapped skiable terrain from OpenStreetMap — not resort marketing brochures.</p>
-      <div class="blog-prose tw-mt-8"><p>Magazine lists of the world’s largest ski resorts rarely agree because each repeats resort marketing that measures “size” differently—acres, kilometers, interconnected domains, or ticket boundaries. Global Ski Atlas ranks downhill areas by mapped trail length: the sum of tagged <code>piste</code> ways inside each resort boundary from OpenStreetMap, analyzed the same way on every continent. This essay argues that mapped kilometers provide a fairer yardstick than brochure copy, names the resort domains that consistently dominate that measure, and shows how to verify live rankings on the <a href="../mainmap.html" rel="noopener noreferrer" target="_blank">interactive map</a> and in <a href="../resort-comparison.html" rel="noopener noreferrer" target="_blank">resort comparison</a>.</p>
-<p>Our methodology clips downhill <code>piste</code> lines inside OSM resort polygons and sums their lengths, with lift counts and difficulty mixes as supporting context explained in <a href="ski-resort-stats-explained.html" rel="noopener noreferrer" target="_blank">ski resort stats explained</a>. The approach captures interconnected European mega-domains and large North American consolidations when mappers have traced pistes thoroughly, but it undercounts unmapped off-piste and can mis-rank areas where volunteers have not yet drawn every connector. Marketing acreage often includes hike-to terrain or loosely affiliated villages; mapped kilometers reward what is on the map today, which is why a French area may look smaller than its brochure until a local mapper spends a week tracing Val Thorens, and why two similarly sized mountains can rank differently based on tagging culture alone.</p>
-<p>Several names reliably appear at the top of live data sorted by mapped trail length, even as exact order shifts with each OSM edit. Les Trois Vallées and Portes du Soleil in France and Switzerland represent the densest European networks, with Matterhorn Ski Paradise, Paradiski, Espace Killy, and Dolomiti-linked domains close behind. In North America, consolidated Utah and Tahoe footprints and growing Japanese coverage at Niseko United illustrate how merger and mapping enthusiasm inflate mapped size independently of skier perception. Whistler, Grandvalira, and the Jungfrau region often sit just outside the top tier depending on boundary tagging. These are guided landmarks, not a frozen medal table—always check the current dataset before quoting a rank.</p>
-<p>Disagreement between marketing and mapped size is a feature of open data, not a failure of it. Resorts have every incentive to maximize headline figures; volunteers have every incentive to trace what exists on the ground. Global Ski Atlas publishes what is drawn today so skiers can compare Les Trois Vallées to Zermatt on one scale, preview terrain on the <a href="../mainmap.html" rel="noopener noreferrer" target="_blank">map</a>, and settle bets in <a href="../resort-comparison.html" rel="noopener noreferrer" target="_blank">resort comparison</a>. The experimental <a href="/playable/" rel="noopener noreferrer" target="_blank">ski game</a> loads the same geometry for a playful sense of sprawl versus a compact eastern hill, and <a href="../SkiTrailFacts.html" rel="noopener noreferrer" target="_blank">trail facts</a> helps identify the longest individual runs inside a domain. When a brochure claims ten new kilometers, check whether those lines exist in OSM yet—someone still has to draw them.</p>
-<p>The world’s largest ski resorts are mostly the names you already know; open data changes how you measure them. Trust mapped trail kilometers from the live atlas for rankings, use marketing for photos and vibe, and remember that completeness varies by region as discussed in <a href="how-many-ski-resorts-worldwide.html" rel="noopener noreferrer" target="_blank">how many ski resorts worldwide</a>. Mapped size is honest, reproducible, and improvable—exactly the standard a worldwide downhill atlas should apply.</p></div>
+      <div class="blog-prose tw-mt-8"><p>Magazine lists of the world’s largest ski resorts rarely agree. Each repeats marketing that measures “size” differently—acres, piste kilometers, interconnected ticket domains, or village counts. One list crowns a French mega-domain. Another favors a Swiss-Italian continuum. A third quietly mixes managed in-bounds terrain with hike-to bowls a brochure likes to mention.</p>
+<p>Global Ski Atlas ranks downhill areas by mapped terrain derived from OpenStreetMap: primarily the sum of tagged downhill <code>piste</code> ways inside each resort boundary, analyzed the same way on every continent. This guide explains that yardstick, which domains consistently dominate it, why brochure size and mapped size diverge, how boundary tagging changes ranks, and how to verify live orderings on the <a href="../mainmap.html" rel="noopener noreferrer" target="_blank">interactive map</a> and in <a href="../resort-comparison.html" rel="noopener noreferrer" target="_blank">resort comparison</a>.</p>
+<p>Exact order shifts with every substantial OSM edit. Treat the names below as durable landmarks in the top tier, not as a frozen medal table you can quote forever without checking current data.</p>
+<h3 id="what-“largest”-means-in-an-open-atlas">What “largest” means in an open atlas</h3>
+<p>Size needs a definition before it needs a ranking. We emphasize mapped trail length because it is:</p>
+<ul>
+<li>Auditable in downloadable geometry from <a href="../DownloadData.html" rel="noopener noreferrer" target="_blank">Download Data</a></li>
+<li>Comparable across countries without proprietary acreage formulas</li>
+<li>Sensitive to real trail networks rather than brand storytelling</li>
+<li>Improvised by the same community that maps the rest of the planet</li>
+</ul>
+<p>Supporting context still matters. Lift counts, difficulty mix, and vertical relief help interpret whether a long trail network is a dense cruiser maze, a collection of alpine connectors, or something in between. Those supporting stats are defined in <a href="ski-resort-stats-explained.html" rel="noopener noreferrer" target="_blank">ski resort stats explained</a>.</p>
+<p>Mapped kilometers reward what is drawn today. That honesty is also a limitation: unmapped off-piste does not count, and thoroughly traced regions can outrank equally large but sparsely tagged mountains.</p>
+<h3 id="how-the-ranking-is-computed">How the ranking is computed</h3>
+<p>In broad strokes the pipeline:</p>
+<ol>
+<li>Identifies winter-sports resort boundaries from OSM</li>
+<li>Associates downhill piste ways with those areas</li>
+<li>Sums mapped trail lengths and related measures</li>
+<li>Publishes comparable resort records for maps, facts tables, and downloads</li>
+</ol>
+<p>Interconnected European mega-domains and large North American consolidations rise when mappers have traced pistes thoroughly. Areas with incomplete trail drawing fall until someone finishes the geometry. Marketing acreage often includes hike-to terrain or loosely affiliated villages; mapped kilometers do not automatically inherit those claims.</p>
+<p>Because counts and lengths move with OSM, live sorted views in <a href="../SkiResortFacts.html" rel="noopener noreferrer" target="_blank">Ski Resort Facts</a> and <a href="../resort-comparison.html" rel="noopener noreferrer" target="_blank">resort comparison</a> beat any static top-ten paragraph—including this one.</p>
+<h3 id="domains-that-reliably-sit-near-the-top">Domains that reliably sit near the top</h3>
+<p>Several names repeatedly appear when live data is sorted by mapped trail length, even as exact positions shuffle.</p>
+<p><strong>Les Trois Vallées (France).</strong> The classic interconnected network around Courchevel, Méribel, Val Thorens, and neighbors. Dense piste tracing and a huge managed domain keep it near the summit of mapped-size lists.</p>
+<p><strong>Portes du Soleil (France / Switzerland).</strong> Another vast cross-border network where village-to-village skiing creates enormous mapped trail inventories when OSM is complete.</p>
+<p><strong>Matterhorn Ski Paradise / Zermatt–Cervinia area.</strong> High-alpine terrain spanning Swiss and Italian sides, often near the top tier depending on how boundaries and connectors are tagged.</p>
+<p><strong>Paradiski and Espace Killy / Tignes–Val d’Isère.</strong> French Alpine complexes with deep trail networks and strong mapping cultures.</p>
+<p><strong>Dolomiti-linked domains.</strong> Sella Ronda and related interconnected areas can look enormous when relations and pistes are drawn as one skiing system; boundary choices strongly affect whether they appear as one giant object or several large neighbors.</p>
+<p><strong>Grandvalira and other Andorra networks.</strong> Compact country, outsized mapped domain when trails are fully traced.</p>
+<p>Outside Europe, large footprints show up differently. Consolidated Utah and Tahoe complexes, Whistler Blackcomb, and growing Japanese coverage around places like Niseko United illustrate how mergers, multi-base tickets, and mapping enthusiasm inflate mapped size independently of skier folklore. Jungfrau-region skiing and other Swiss networks often sit just outside or inside the absolute top group depending on the current extract.</p>
+<p>These are guided landmarks for exploration, not an official championship. Always sort the current dataset before quoting a rank in an argument.</p>
+<h3 id="why-brochure-size-and-mapped-size-disagree">Why brochure size and mapped size disagree</h3>
+<p>Disagreement is expected. Resorts maximize headline figures. Volunteers trace what exists on the ground and what imagery supports. Typical gaps:</p>
+<ul>
+<li>Brochure acres include hike-to or sidecountry the atlas does not treat as fully mapped downhill inventory</li>
+<li>Ticket domains span multiple OSM polygons, so one brand becomes several atlas objects—or the reverse</li>
+<li>New runs are sold in marketing before anyone draws them in OSM</li>
+<li>Sparse tagging in remote regions understates real size</li>
+<li>Oversized polygons temporarily overstate area until corrected</li>
+</ul>
+<p>When a brochure claims ten new kilometers, ask whether those lines exist in OpenStreetMap yet. Someone still has to draw them before mapped rankings move. That loop—from ground truth to OSM to atlas—is the same improvement path described in <a href="how-to-tag-a-ski-resort-in-openstreetmap.html" rel="noopener noreferrer" target="_blank">how to tag a ski resort in OpenStreetMap</a>.</p>
+<h3 id="boundary-tagging-can-change-who-looks-biggest">Boundary tagging can change who looks biggest</h3>
+<p>Mega-domains are where methodology becomes visible. If local mappers maintain one giant <code>landuse=winter_sports</code> polygon for an interconnected ticket, mapped trail length aggregates into one champion. If they maintain village-level areas linked by shared lifts, you may see several large resorts instead of one ultra-large object.</p>
+<p>Neither style is automatically wrong. Both can be honest representations of local mapping practice. The practical advice for skiers:</p>
+<ul>
+<li>Read size ranks as mapped objects, not as pure brand names</li>
+<li>Open the candidate on the <a href="../mainmap.html" rel="noopener noreferrer" target="_blank">main map</a> and see whether neighboring villages are separate atlas entries</li>
+<li>Use <a href="../SkiTrailFacts.html" rel="noopener noreferrer" target="_blank">trail facts</a> when you care about the longest individual runs inside a domain rather than the summed network</li>
+</ul>
+<p>Understanding this ambiguity also clarifies global counts in <a href="how-many-ski-resorts-worldwide.html" rel="noopener noreferrer" target="_blank">how many ski resorts worldwide</a>: more objects does not always mean more skiing, and one object does not always mean a single base village.</p>
+<h3 id="how-to-verify-rankings-yourself">How to verify rankings yourself</h3>
+<p>Do not memorize a static top ten from a blog post.</p>
+<ol>
+<li>Sort live resort metrics in <a href="../SkiResortFacts.html" rel="noopener noreferrer" target="_blank">Ski Resort Facts</a> by mapped trail length or related size fields</li>
+<li>Compare a few giants side by side in <a href="../resort-comparison.html" rel="noopener noreferrer" target="_blank">resort comparison</a></li>
+<li>Inspect geometry on the <a href="../mainmap.html" rel="noopener noreferrer" target="_blank">interactive map</a></li>
+<li>Preview sprawl versus compact hills in the <a href="/playable/" rel="noopener noreferrer" target="_blank">ski game</a></li>
+<li>Download GeoParquet from <a href="../DownloadData.html" rel="noopener noreferrer" target="_blank">Download Data</a> if you want to reproduce the sum</li>
+</ol>
+<p>If a famous giant looks oddly small, check whether trails are missing, whether the boundary is split, or whether you are looking at only one village inside a larger ticket. If an obscure name looks oddly large, check for duplicate pistes or an oversized polygon before rewriting ski history.</p>
+<h3 id="size-is-not-the-same-as-“best”">Size is not the same as “best”</h3>
+<p>Mapped size answers a narrow question: where is the largest coherently mapped downhill trail network under one atlas object today? It does not answer:</p>
+<ul>
+<li>Which mountain has the most reliable snow next week</li>
+<li>Which resort is best for beginners in your family</li>
+<li>Which pass product maximizes your days from home</li>
+<li>Which village has the nightlife you want</li>
+</ul>
+<p>Use size to understand scale and planning horizon. A multi-day European mega-domain rewards a longer stay. A compact hill can deliver a better Saturday. Pair size ranks with the decision framework in <a href="how-to-choose-a-ski-resort.html" rel="noopener noreferrer" target="_blank">how to choose a ski resort</a> and beginner-specific guidance in <a href="best-ski-resorts-for-beginners.html" rel="noopener noreferrer" target="_blank">best ski resorts for beginners</a> when trip fit matters more than bragging rights.</p>
+<h3 id="regional-completeness-still-shapes-the-leaderboard">Regional completeness still shapes the leaderboard</h3>
+<p>Europe’s top-tier dominance in mapped size is partly geography and partly mapping culture. Dense Alpine networks really are vast. They are also heavily traced. Regions with newer or thinner OSM ski coverage can hide large real-world areas until local mappers catch up. That is why size rankings should be read alongside the coverage caveats in <a href="how-many-ski-resorts-worldwide.html" rel="noopener noreferrer" target="_blank">how many ski resorts worldwide</a>.</p>
+<p>Improving a near-miss domain is often higher leverage than arguing about the current number-one slot. Adding missing connectors, splitting duplicate ways, and tightening boundaries refine both size ranks and everyday comparison tools.</p>
+<h3 id="practical-takeaway-for-skiers-and-mappers">Practical takeaway for skiers and mappers</h3>
+<p>The world’s largest ski resorts are mostly names you already know. Open data changes how you measure them. Trust mapped trail kilometers from the live atlas for rankings, use marketing for photos and vibe, and remember that completeness varies by region.</p>
+<p>For skiers: sort current data, preview the network on the <a href="../mainmap.html" rel="noopener noreferrer" target="_blank">map</a>, and choose size only when your trip length and ability actually need it.</p>
+<p>For mappers: every correctly drawn piste in a mega-domain or overlooked giant moves the leaderboard toward ground truth. Mapped size is honest, reproducible, and improvable—exactly the standard a worldwide downhill atlas should apply.</p></div>
       <section class="blog-related" aria-label="Related articles">
           <h2 class="tw-text-xl tw-font-semibold tw-text-black">Related articles</h2>
           <ul class="tw-mt-4"><li><a href="ski-resort-stats-explained.html">What Ski Resort Stats Actually Mean</a></li>
@@ -148,6 +221,7 @@
         <a href="index.html" class="footer-link">Blog</a>
         <a href="../about.html" class="footer-link">About</a>
         <a href="../faq.html" class="footer-link">FAQ</a>
+        <a href="../contact.html" class="footer-link">Contact</a>
         <a href="../privacy-policy.html" class="footer-link">Privacy Policy</a>
       </div>
     </div>
