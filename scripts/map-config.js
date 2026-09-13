@@ -2,11 +2,13 @@
  * Map and data URLs for ski atlas maps (MapTiler SDK, PMTiles, OSRM, etc.)
  */
 const MAPTILER_KEY = '0P06ORgY8WvmMOnPr0p2';
+const MAPBOX_ACCESS_TOKEN = '';
 
 const S3_OUTPUT = 'https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com';
 
 export const config = {
   MAPTILER_KEY,
+  MAPBOX_ACCESS_TOKEN,
 
   // ── PMTiles (Planetiler — all map display) ───────────────────────────────
   PMTILES_OVERVIEW_URL: `${S3_OUTPUT}/pmtiles/ski_overview.pmtiles`,
@@ -28,7 +30,6 @@ export const config = {
   SKI_AREAS_GEOJSON_URL: `${S3_OUTPUT}/combined/ski_areas.geojson`,
 
   // ── Drive-time isochrones (DriveTimeMap.html) ─────────────────────────────
-  MAPBOX_ACCESS_TOKEN: '',
   OPENROUTE_SERVICE_API_KEY: '',
 
   // ── Zoom thresholds ──────────────────────────────────────────────────────

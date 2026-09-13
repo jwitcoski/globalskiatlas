@@ -86,6 +86,31 @@ html, body { height: 100%; font-family: system-ui, -apple-system, sans-serif; }
   outline: none;
 }
 .dt-input-row input:focus { border-color: #0d9488; }
+.dt-select {
+  width: 100%;
+  padding: 8px 10px;
+  font-size: 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  outline: none;
+  background: #fff;
+  color: #111827;
+}
+.dt-select:focus { border-color: #0d9488; }
+.dt-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  font-size: 12px;
+  color: #374151;
+}
+.dt-swatch { display: inline-flex; align-items: center; gap: 5px; }
+.dt-swatch i {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  display: inline-block;
+}
 .dt-btn {
   padding: 8px 14px;
   background: #0d9488;
@@ -120,8 +145,9 @@ html, body { height: 100%; font-family: system-ui, -apple-system, sans-serif; }
 .dt-band { margin-bottom: 14px; }
 .dt-band h4 { font-size: 13px; font-weight: 600; margin: 0 0 6px 0; display: flex; align-items: center; gap: 8px; }
 .dt-band ul { list-style: none; margin: 0; padding: 0; font-size: 13px; max-height: 140px; overflow-y: auto; }
-.dt-band li { padding: 6px 8px; border-radius: 6px; margin-bottom: 2px; }
+.dt-band li { padding: 6px 8px; border-radius: 6px; margin-bottom: 2px; cursor: pointer; }
 .dt-band li:hover { background: #f0fdfa; }
+.dt-band li small { display: block; color: #6b7280; font-size: 11px; margin-top: 2px; }
 .dt-band-1h .dt-band-fill { background: rgba(13, 148, 136, 0.45); }
 .dt-band-2h .dt-band-fill { background: rgba(13, 148, 136, 0.35); }
 .dt-band-3h .dt-band-fill { background: rgba(13, 148, 136, 0.28); }

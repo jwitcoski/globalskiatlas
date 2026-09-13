@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Ski Resorts by Drive Time – Global Ski Atlas</title>
-  <meta name="description" content="See which ski resorts you can drive to in 1 hour from any location. Drive-time isochrone map with 3,000+ ski areas worldwide." />
+  <meta name="description" content="See which ski resorts you can drive to in 2, 3, or 4 hours from any location. Drive-time map with 3,000+ ski areas worldwide." />
   <link rel="preconnect" href="https://api.maptiler.com" crossorigin />
   <link rel="preconnect" href="https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com" crossorigin />
   <link rel="shortcut icon" href="./assets/logo.png?v=2" type="image/x-icon" />
@@ -16,7 +16,7 @@
   <link rel="stylesheet" href="css/drivetimemap.css" />
 </head>
 <body class="tw-flex tw-min-h-[100vh] tw-flex-col tw-bg-[#fff]">
-  <h1 class="tw-sr-only">Ski resorts by drive time – see what you can reach in 1 hour</h1>
+  <h1 class="tw-sr-only">Ski resorts by drive time – see what you can reach in 2, 3, or 4 hours</h1>
   <header
     class="tw-absolute tw-top-0 tw-z-[100] tw-flex tw-h-[60px] tw-w-full tw-bg-opacity-0 
            tw-px-[5%] max-lg:tw-mr-auto max-lg:tw-px-4 lg:tw-justify-around"
@@ -89,7 +89,7 @@
         <button class="dt-close-btn" id="dtClose" aria-label="Close">&#x2715;</button>
       </div>
       <div class="dt-body">
-        <p class="dt-hint">We use the 10 nearest resorts (by straight-line distance), get their drive times from OSRM, then draw estimated rings at the nearest hour. Resorts are listed by distance band.</p>
+        <p class="dt-hint">Labeled 2 / 3 / 4 hour rings. Only day-trip range (up to 4 hours). The nearest 24 resorts use Mapbox drive times; the rest use air distance.</p>
         <div>
           <div class="dt-label">Starting point</div>
           <div class="dt-input-row">
@@ -101,10 +101,22 @@
           </button>
           <div class="dt-status" id="dtOriginStatus"></div>
         </div>
+        <div>
+          <div class="dt-label">Driving</div>
+          <select id="dtProfile" class="dt-select">
+            <option value="driving" selected>Typical speeds</option>
+            <option value="driving-traffic">With live traffic</option>
+          </select>
+        </div>
+        <div class="dt-legend" aria-hidden="true">
+          <span class="dt-swatch"><i style="background:#0d9488"></i> 2 hours</span>
+          <span class="dt-swatch"><i style="background:#2563eb"></i> 3 hours</span>
+          <span class="dt-swatch"><i style="background:#d97706"></i> 4 hours</span>
+        </div>
         <div id="dtApiWarning" class="dt-warning" style="display:none;"></div>
         <div>
-          <button class="dt-btn dt-btn-full" id="dtDrawBtn" disabled>Show estimated drive-time rings</button>
-          <p class="dt-hint" style="margin-top:6px">Rings based on 10 nearest resorts + OSRM drive times (no API key).</p>
+          <button class="dt-btn dt-btn-full" id="dtDrawBtn" disabled>Show drive-time areas</button>
+          <p class="dt-hint" style="margin-top:6px">About 25 Matrix elements per search. Resorts beyond that show air-distance estimates. Click a name to fly there.</p>
         </div>
         <div id="dtResults" class="dt-results">
           <div id="dtBandList"></div>
@@ -134,6 +146,6 @@
 
   <script src="scripts/header-toggle.js"></script>
   <script defer src="https://cdn.maptiler.com/maptiler-sdk-js/v3.10.2/maptiler-sdk.umd.min.js"></script>
-  <script type="module" src="scripts/drive-time-map-ml.js"></script>
+  <script type="module" src="scripts/drive-time-map-ml.js?v=mb4"></script>
 </body>
 </html>

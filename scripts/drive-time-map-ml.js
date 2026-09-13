@@ -1,56 +1,82 @@
 /**
- * Drive-time map – estimated drive-time rings from nearest 10 resorts.
- * Finds 10 nearest resorts by straight-line distance, gets drive times via OSRM table,
- * then draws concentric circles at radii that approximate 1h, 2h, 3h, … (nearest hour).
+ * Drive-time map — Mapbox Matrix ETAs plus labeled 2 / 3 / 4 hour rings.
+ * Ring radius is calibrated from Mapbox drive times (km per hour in that region).
  * Entry for DriveTimeMap.html.
  */
+import { config } from './map-config.js?v=mb4';
 import { initSkiResortMap } from './ski-resort-map-ml.js';
 import { escapeHtml } from './utils.js';
 
-const OSRM_TABLE_URL = 'https://router.project-osrm.org/table/v1/driving';
-const NEAREST_N = 10;
+const MATRIX_LIMIT = 24;
+const HOURS = [2, 3, 4];
+const MAX_HOURS = 4;
+const RING_COLORS = { 2: '#0d9488', 3: '#2563eb', 4: '#d97706' };
 const EARTH_RADIUS_KM = 6371;
+const FALLBACK_KMH = 70;
 
-// Colors for 1h, 2h, 3h, … rings (teal, blue, amber, purple, red, emerald, orange, indigo)
-const RING_COLORS = ['#0d9488', '#2563eb', '#ca8a04', '#9333ea', '#dc2626', '#059669', '#ea580c', '#4f46e5'];
-
-// ── Haversine distance (km) between [lon, lat] and { lat, lng } ───────────
-function haversineKm(lon0, lat0, lon1, lat1) {
+function haversineKm(lng0, lat0, lng1, lat1) {
   const toRad = (d) => (d * Math.PI) / 180;
-  const R = EARTH_RADIUS_KM;
-  const φ0 = toRad(lat0), φ1 = toRad(lat1);
-  const Δφ = toRad(lat1 - lat0), Δλ = toRad(lon1 - lon0);
+  const φ0 = toRad(lat0);
+  const φ1 = toRad(lat1);
+  const Δφ = toRad(lat1 - lat0);
+  const Δλ = toRad(lng1 - lng0);
   const a = Math.sin(Δφ / 2) ** 2 + Math.cos(φ0) * Math.cos(φ1) * Math.sin(Δλ / 2) ** 2;
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
+  return 2 * EARTH_RADIUS_KM * Math.asin(Math.sqrt(a));
 }
 
-// ── Circle polygon (center [lon, lat], radius km, num points) ──────────────
-function circlePolygon(lon, lat, radiusKm, numPoints = 64) {
+function bandLabel(minutes) {
+  if (minutes == null || minutes > MAX_HOURS * 60) return null;
+  if (minutes <= 120) return 'Within 2 hours';
+  if (minutes <= 180) return '2–3 hours';
+  return '3–4 hours';
+}
+
+function bandColor(key) {
+  if (key === 'Within 2 hours') return RING_COLORS[2];
+  if (key === '2–3 hours') return RING_COLORS[3];
+  if (key === '3–4 hours') return RING_COLORS[4];
+  return '#6b7280';
+}
+
+function formatEta(d) {
+  if (d.minutes == null) return `${d.km.toFixed(0)} km air`;
+  const hours = d.minutes / 60;
+  const time = hours >= 1.5 ? `${hours.toFixed(1)} hr` : `${d.minutes} min`;
+  const how = d.airEst ? 'air est.' : 'drive';
+  return `${time} · ${how} · ${d.km.toFixed(0)} km`;
+}
+
+function resortKey(d) {
+  const r = d.resort;
+  return `${r.name}|${r.latlng.lng}|${r.latlng.lat}`;
+}
+
+function median(values) {
+  if (!values.length) return FALLBACK_KMH;
+  const s = values.slice().sort((a, b) => a - b);
+  const mid = Math.floor(s.length / 2);
+  return s.length % 2 ? s[mid] : (s[mid - 1] + s[mid]) / 2;
+}
+
+function circleLineString(lon, lat, radiusKm, numPoints = 96) {
   const toRad = (d) => (d * Math.PI) / 180;
   const toDeg = (r) => (r * 180) / Math.PI;
   const R = EARTH_RADIUS_KM;
   const coords = [];
   for (let i = 0; i <= numPoints; i++) {
     const bearing = (i / numPoints) * 2 * Math.PI;
-    const φ0 = toRad(lat), λ0 = toRad(lon);
-    const φ1 = Math.asin(Math.sin(φ0) * Math.cos(radiusKm / R) + Math.cos(φ0) * Math.sin(radiusKm / R) * Math.cos(bearing));
-    const λ1 = λ0 + Math.atan2(Math.sin(bearing) * Math.sin(radiusKm / R) * Math.cos(φ0), Math.cos(radiusKm / R) - Math.sin(φ0) * Math.sin(φ1));
+    const φ0 = toRad(lat);
+    const λ0 = toRad(lon);
+    const δ = radiusKm / R;
+    const φ1 = Math.asin(Math.sin(φ0) * Math.cos(δ) + Math.cos(φ0) * Math.sin(δ) * Math.cos(bearing));
+    const λ1 = λ0 + Math.atan2(Math.sin(bearing) * Math.sin(δ) * Math.cos(φ0), Math.cos(δ) - Math.sin(φ0) * Math.sin(φ1));
     coords.push([toDeg(λ1), toDeg(φ1)]);
   }
-  return { type: 'Polygon', coordinates: [coords] };
+  return { type: 'LineString', coordinates: coords };
 }
 
-// Circle as LineString for outline-only ring
-function circleLineString(lon, lat, radiusKm, numPoints = 64) {
-  const poly = circlePolygon(lon, lat, radiusKm, numPoints);
-  return { type: 'LineString', coordinates: poly.coordinates[0] };
-}
-
-// Point at "north" of circle for label (radiusKm to degrees approx)
 function circleLabelPoint(lon, lat, radiusKm) {
-  const latOffset = radiusKm / 111.32;
-  return { type: 'Point', coordinates: [lon, lat + latOffset] };
+  return { type: 'Point', coordinates: [lon, lat + radiusKm / 111.32] };
 }
 
 (async function main() {
@@ -64,6 +90,7 @@ function circleLabelPoint(lon, lat, radiusKm) {
     return;
   }
 
+  const token = config.MAPBOX_ACCESS_TOKEN || '';
   const panel = document.getElementById('driveTimePanel');
   const toggle = document.getElementById('dt-toggle');
   const closeBtn = document.getElementById('dtClose');
@@ -73,16 +100,31 @@ function circleLabelPoint(lon, lat, radiusKm) {
   const originStatus = document.getElementById('dtOriginStatus');
   const apiWarning = document.getElementById('dtApiWarning');
   const drawBtn = document.getElementById('dtDrawBtn');
+  const profileEl = document.getElementById('dtProfile');
   const resultsEl = document.getElementById('dtResults');
   const bandListEl = document.getElementById('dtBandList');
 
   let originLngLat = null;
   let originMarker = null;
 
+  function setStatus(msg) {
+    if (originStatus) originStatus.textContent = msg || '';
+  }
+
+  function tokenReady() {
+    if (token && token.indexOf('pk.') === 0) return true;
+    if (apiWarning) {
+      apiWarning.textContent = 'Mapbox public token is missing. Add MAPBOX_ACCESS_TOKEN in scripts/map-config.js.';
+      apiWarning.style.display = 'block';
+    }
+    if (drawBtn) drawBtn.disabled = true;
+    return false;
+  }
+
   function setOrigin(lng, lat, label) {
     originLngLat = [lng, lat];
-    if (originStatus) originStatus.textContent = label ? `Set: ${label}` : `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-    drawBtn.disabled = !originLngLat;
+    setStatus(label ? `Set: ${label}` : `${lat.toFixed(4)}, ${lng.toFixed(4)}`);
+    if (drawBtn) drawBtn.disabled = !originLngLat || !tokenReady();
     if (map && originLngLat) {
       if (originMarker) originMarker.remove();
       const el = document.createElement('div');
@@ -93,236 +135,272 @@ function circleLabelPoint(lon, lat, radiusKm) {
     }
   }
 
-  function clearIsochrones() {
-    const sources = (map.getStyle().sources) || {};
+  function clearRings() {
+    const style = map.getStyle();
+    const layers = (style && style.layers) || [];
+    layers.slice().forEach((layer) => {
+      if (layer.id.startsWith('dt-circle-') || layer.id.startsWith('dt-label-')) {
+        if (map.getLayer(layer.id)) map.removeLayer(layer.id);
+      }
+    });
+    const sources = (style && style.sources) || {};
     Object.keys(sources).forEach((id) => {
       if (id.startsWith('dt-circle-') || id.startsWith('dt-label-')) {
-        if (map.getLayer(id)) map.removeLayer(id);
         if (map.getSource(id)) map.removeSource(id);
       }
     });
   }
 
-  // ── Panel ─────────────────────────────────────────────────────────────
+  function nearestResorts(lngLat, n) {
+    return searchResorts
+      .filter((r) => r.latlng && Number.isFinite(r.latlng.lng) && Number.isFinite(r.latlng.lat))
+      .map((r) => ({
+        resort: r,
+        km: haversineKm(lngLat[0], lngLat[1], r.latlng.lng, r.latlng.lat)
+      }))
+      .sort((a, b) => a.km - b.km)
+      .slice(0, n);
+  }
+
+  async function geocode(query) {
+    const url =
+      'https://api.mapbox.com/geocoding/v5/mapbox.places/' +
+      encodeURIComponent(query) +
+      '.json?access_token=' +
+      token +
+      '&limit=1';
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Geocode HTTP ' + res.status);
+    const data = await res.json();
+    const f = data.features && data.features[0];
+    if (!f) return null;
+    return { lng: f.center[0], lat: f.center[1], display_name: f.place_name };
+  }
+
+  async function loadMatrix(lngLat, destinations, profile) {
+    if (!destinations.length) return [];
+    const chunk = destinations.slice(0, MATRIX_LIMIT);
+    const coords = [lngLat]
+      .concat(chunk.map((d) => [d.resort.latlng.lng, d.resort.latlng.lat]))
+      .map((c) => c.join(','))
+      .join(';');
+    const url =
+      'https://api.mapbox.com/directions-matrix/v1/mapbox/' +
+      profile +
+      '/' +
+      coords +
+      '?sources=0&annotations=duration,distance&access_token=' +
+      token;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Matrix HTTP ' + res.status);
+    const data = await res.json();
+    const durations = (data.durations && data.durations[0]) || [];
+    return chunk.map((d, j) => ({ ...d, durationSec: durations[j + 1], airEst: false }));
+  }
+
+  function paintRings(lng, lat, radiusByHour) {
+    HOURS.forEach((H) => {
+      const radiusKm = radiusByHour[H];
+      if (!radiusKm) return;
+      const color = RING_COLORS[H];
+      const lineId = `dt-circle-${H}h`;
+      const labelId = `dt-label-${H}h`;
+      const lineGeom = circleLineString(lng, lat, radiusKm);
+      const labelText = `${H} hrs`;
+
+      map.addSource(lineId, { type: 'geojson', data: { type: 'Feature', geometry: lineGeom, properties: {} } });
+      map.addLayer({
+        id: lineId,
+        type: 'line',
+        source: lineId,
+        paint: {
+          'line-color': color,
+          'line-width': 2.5,
+          'line-opacity': 0.95
+        },
+        layout: { 'line-join': 'round', 'line-cap': 'round' }
+      });
+
+      map.addSource(labelId, {
+        type: 'geojson',
+        data: { type: 'Feature', geometry: circleLabelPoint(lng, lat, radiusKm), properties: { label: labelText } }
+      });
+      map.addLayer({
+        id: labelId,
+        type: 'symbol',
+        source: labelId,
+        layout: {
+          'text-field': ['get', 'label'],
+          'text-size': 13,
+          'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
+          'text-allow-overlap': true
+        },
+        paint: {
+          'text-color': color,
+          'text-halo-color': '#ffffff',
+          'text-halo-width': 2
+        }
+      });
+    });
+  }
+
+  function renderBands(withEta) {
+    const groups = {
+      'Within 2 hours': [],
+      '2–3 hours': [],
+      '3–4 hours': []
+    };
+    withEta.forEach((d) => {
+      const mins = d.durationSec == null ? null : Math.round(d.durationSec / 60);
+      const key = bandLabel(mins);
+      if (!key) return;
+      groups[key].push({ ...d, minutes: mins });
+    });
+
+    bandListEl.innerHTML = '';
+    Object.keys(groups).forEach((key) => {
+      const list = groups[key];
+      if (!list.length) return;
+      list.sort((a, b) => (a.minutes ?? 9999) - (b.minutes ?? 9999));
+      const color = bandColor(key);
+      const div = document.createElement('div');
+      div.className = 'dt-band';
+      const heading = document.createElement('h4');
+      heading.innerHTML =
+        `<span class="dt-band-fill" style="background:${color}"></span> ${escapeHtml(key)} <span class="dt-count">(${list.length})</span>`;
+      const ul = document.createElement('ul');
+      list.forEach((d) => {
+        const li = document.createElement('li');
+        const country = d.resort.country ? ` <span style="color:#6b7280">${escapeHtml(d.resort.country)}</span>` : '';
+        const eta = formatEta(d);
+        li.innerHTML = `${escapeHtml(d.resort.name)}${country}<small>${escapeHtml(eta)}</small>`;
+        li.addEventListener('click', () => {
+          map.flyTo({ center: [d.resort.latlng.lng, d.resort.latlng.lat], zoom: 10, duration: 800 });
+        });
+        ul.appendChild(li);
+      });
+      div.appendChild(heading);
+      div.appendChild(ul);
+      bandListEl.appendChild(div);
+    });
+    resultsEl.classList.add('visible');
+  }
+
+  async function runAt(lngLat, placeLabel) {
+    if (!tokenReady() || !map || !bandListEl) return;
+    setOrigin(lngLat[0], lngLat[1], placeLabel);
+    const profile = (profileEl && profileEl.value) || 'driving';
+    drawBtn.disabled = true;
+    setStatus('Loading drive times…');
+    if (apiWarning) apiWarning.style.display = 'none';
+    clearRings();
+
+    try {
+      const allNear = nearestResorts(lngLat, searchResorts.length);
+      const withEta = await loadMatrix(lngLat, allNear.slice(0, MATRIX_LIMIT), profile);
+      const speeds = withEta
+        .filter((d) => d.durationSec > 60 && d.km > 5)
+        .map((d) => d.km / (d.durationSec / 3600))
+        .filter((s) => s > 20 && s < 130);
+      const kmh = Math.min(95, Math.max(40, median(speeds)));
+      const radiusByHour = {};
+      HOURS.forEach((H) => { radiusByHour[H] = kmh * H; });
+      const maxKm = kmh * MAX_HOURS;
+      const maxSec = MAX_HOURS * 3600;
+      const matrixKeys = new Set(withEta.map(resortKey));
+      const listed = withEta.filter((d) => d.durationSec != null && d.durationSec <= maxSec);
+      for (const d of allNear) {
+        if (d.km > maxKm) break;
+        if (matrixKeys.has(resortKey(d))) continue;
+        listed.push({
+          ...d,
+          durationSec: (d.km / kmh) * 3600,
+          airEst: true
+        });
+      }
+
+      paintRings(lngLat[0], lngLat[1], radiusByHour);
+      renderBands(listed);
+
+      const maxR = radiusByHour[4];
+      const pad = 1.1 * (maxR / 111);
+      map.fitBounds(
+        [[lngLat[0] - pad, lngLat[1] - pad], [lngLat[0] + pad, lngLat[1] + pad]],
+        { padding: 80, duration: 800, maxZoom: 8 }
+      );
+      setStatus((placeLabel || 'Origin') + ' · Mapbox driving');
+    } catch (err) {
+      console.warn('[drive-time-map-ml] error:', err);
+      clearRings();
+      setStatus((err && err.message) ? err.message : 'Drive-time request failed.');
+    }
+    drawBtn.disabled = !originLngLat;
+  }
+
   if (toggle) toggle.addEventListener('click', () => panel.classList.toggle('open'));
   if (closeBtn) closeBtn.addEventListener('click', () => panel.classList.remove('open'));
-
-  // ── Geocode (Nominatim) ───────────────────────────────────────────────
-  async function geocode(address) {
-    const res = await fetch(
-      'https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + encodeURIComponent(address),
-      { headers: { Accept: 'application/json' } }
-    );
-    const data = await res.json();
-    if (!data || !data.length) return null;
-    const lat = parseFloat(data[0].lat);
-    const lng = parseFloat(data[0].lon);
-    if (Number.isNaN(lat) || Number.isNaN(lng)) return null;
-    return { lat, lng, display_name: data[0].display_name };
-  }
 
   geocodeBtn.addEventListener('click', async () => {
     const q = (originInput && originInput.value) ? originInput.value.trim() : '';
     if (!q) {
-      if (originStatus) originStatus.textContent = 'Enter an address or city.';
+      setStatus('Enter an address or city.');
       return;
     }
-    if (originStatus) originStatus.textContent = 'Searching…';
+    if (!tokenReady()) return;
+    setStatus('Searching…');
     geocodeBtn.disabled = true;
     try {
       const result = await geocode(q);
       if (result) {
-        setOrigin(result.lng, result.lat, result.display_name);
         if (originInput) originInput.value = result.display_name;
-        map.flyTo({ center: [result.lng, result.lat], zoom: Math.max(map.getZoom(), 8), duration: 800 });
+        await runAt([result.lng, result.lat], result.display_name);
       } else {
-        if (originStatus) originStatus.textContent = 'Address not found.';
+        setStatus('Address not found.');
       }
     } catch (e) {
-      if (originStatus) originStatus.textContent = 'Geocoding failed.';
+      setStatus((e && e.message) ? e.message : 'Geocoding failed.');
     }
     geocodeBtn.disabled = false;
   });
 
+  originInput?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') geocodeBtn.click();
+  });
+
   useLocBtn.addEventListener('click', () => {
     if (!navigator.geolocation) {
-      if (originStatus) originStatus.textContent = 'Geolocation not supported.';
+      setStatus('Geolocation not supported.');
       return;
     }
-    if (originStatus) originStatus.textContent = 'Getting location…';
+    if (!tokenReady()) return;
+    setStatus('Getting location…');
     useLocBtn.disabled = true;
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const lat = pos.coords.latitude;
         const lng = pos.coords.longitude;
-        setOrigin(lng, lat, null);
         if (originInput) originInput.value = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-        map.flyTo({ center: [lng, lat], zoom: Math.max(map.getZoom(), 10), duration: 800 });
-        useLocBtn.disabled = false;
+        runAt([lng, lat], 'Your location').finally(() => {
+          useLocBtn.disabled = false;
+        });
       },
       () => {
-        if (originStatus) originStatus.textContent = 'Location denied or unavailable.';
+        setStatus('Location denied or unavailable.');
         useLocBtn.disabled = false;
-      }
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
     );
   });
 
-  // ── Build estimated drive-time circles from 10 nearest resorts ──────────
-  drawBtn.addEventListener('click', async () => {
-    if (!originLngLat || !map || !bandListEl) return;
-
-    clearIsochrones();
-    drawBtn.disabled = true;
-    if (originStatus) originStatus.textContent = 'Finding nearest resorts & drive times…';
-    if (apiWarning) apiWarning.style.display = 'none';
-
-    const [originLng, originLat] = originLngLat;
-
-    try {
-      // 1. Straight-line distance to every resort; take nearest NEAREST_N
-      const withDist = searchResorts.map((r) => ({
-        resort: r,
-        distKm: haversineKm(originLng, originLat, r.latlng.lng, r.latlng.lat)
-      }));
-      withDist.sort((a, b) => a.distKm - b.distKm);
-      const nearest = withDist.slice(0, NEAREST_N);
-      if (nearest.length === 0) {
-        throw new Error('No resorts to measure');
-      }
-
-      // 2. OSRM table: origin (index 0) → destinations 1..N
-      const coordStrCorrect = nearest.reduce((acc, n) => acc + `${n.resort.latlng.lng},${n.resort.latlng.lat};`, `${originLng},${originLat};`).slice(0, -1);
-      const destinations = nearest.map((_, i) => i + 1).join(';');
-      const url = `${OSRM_TABLE_URL}/${coordStrCorrect}?sources=0&destinations=${destinations}`;
-      const res = await fetch(url);
-      const data = await res.json();
-      if (data.code !== 'Ok' || !data.durations || !data.durations[0]) {
-        throw new Error(data.message || 'OSRM table request failed');
-      }
-
-      const durationsSec = data.durations[0];
-      const samples = nearest.map((n, i) => ({
-        distKm: n.distKm,
-        driveSec: durationsSec[i] != null ? durationsSec[i] : Infinity
-      })).filter((s) => s.driveSec != null && Number.isFinite(s.driveSec));
-
-      if (samples.length === 0) throw new Error('No drive times returned');
-
-      // 3. Only show a ring for hour H if at least one resort has drive time in that band (H-1 to H hours)
-      const hoursWithResorts = new Set();
-      samples.forEach((s) => {
-        const h = Math.ceil(s.driveSec / 3600);
-        if (h >= 1 && h <= 10) hoursWithResorts.add(h);
-      });
-      const hours = Array.from(hoursWithResorts).sort((a, b) => a - b);
-      const radiusByHour = {};
-      hours.forEach((H) => {
-        const maxSec = H * 3600;
-        const within = samples.filter((s) => s.driveSec <= maxSec);
-        if (within.length) radiusByHour[H] = Math.max(...within.map((s) => s.distKm));
-      });
-      if (hours.length === 0) throw new Error('No hour bands from sample resorts');
-
-      // 4. Draw each hour as an outline ring (line only) with distinct color + label
-      hours.forEach((H, idx) => {
-        const radiusKm = radiusByHour[H];
-        const color = RING_COLORS[idx % RING_COLORS.length];
-        const lineGeom = circleLineString(originLng, originLat, radiusKm);
-        const lineId = `dt-circle-${H}h`;
-        const labelId = `dt-label-${H}h`;
-        const labelText = H === 1 ? '1 hr' : `${H} hrs`;
-
-        if (map.getSource(lineId)) {
-          map.getSource(lineId).setData({ type: 'Feature', geometry: lineGeom, properties: {} });
-        } else {
-          map.addSource(lineId, { type: 'geojson', data: { type: 'Feature', geometry: lineGeom, properties: {} } });
-          map.addLayer({
-            id: lineId,
-            type: 'line',
-            source: lineId,
-            paint: {
-              'line-color': color,
-              'line-width': 2.5,
-              'line-opacity': 0.95
-            },
-            layout: { 'line-join': 'round', 'line-cap': 'round' }
-          });
-        }
-
-        const labelPoint = circleLabelPoint(originLng, originLat, radiusKm);
-        if (map.getSource(labelId)) {
-          map.getSource(labelId).setData({ type: 'Feature', geometry: labelPoint, properties: { label: labelText } });
-        } else {
-          map.addSource(labelId, {
-            type: 'geojson',
-            data: { type: 'Feature', geometry: labelPoint, properties: { label: labelText } }
-          });
-          map.addLayer({
-            id: labelId,
-            type: 'symbol',
-            source: labelId,
-            layout: {
-              'text-field': ['get', 'label'],
-              'text-size': 13,
-              'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
-              'text-allow-overlap': true
-            },
-            paint: {
-              'text-color': color,
-              'text-halo-color': '#ffffff',
-              'text-halo-width': 2
-            }
-          });
-        }
-      });
-
-      // 5. Assign every resort to an hour band by straight-line distance
-      const bands = {};
-      hours.forEach((H) => { bands[H] = []; });
-      const maxRadius = radiusByHour[hours[hours.length - 1]];
-
-      searchResorts.forEach((r) => {
-        const d = haversineKm(originLng, originLat, r.latlng.lng, r.latlng.lat);
-        if (d > maxRadius) return;
-        for (let i = 0; i < hours.length; i++) {
-          const H = hours[i];
-          const prevR = i === 0 ? 0 : radiusByHour[hours[i - 1]];
-          if (d > prevR && d <= radiusByHour[H]) {
-            bands[H].push(r);
-            break;
-          }
-        }
-      });
-
-      // 6. Dynamic results UI (swatch color matches ring color)
-      bandListEl.innerHTML = '';
-      hours.forEach((H, i) => {
-        const list = bands[H] || [];
-        const color = RING_COLORS[i % RING_COLORS.length];
-        const div = document.createElement('div');
-        div.className = 'dt-band';
-        div.innerHTML =
-          `<h4><span class="dt-band-fill" style="background:${color}"></span> Within ~${H} hour${H > 1 ? 's' : ''} <span class="dt-count">(${list.length})</span></h4>` +
-          `<ul>${list.map((r) => `<li>${escapeHtml(r.name)}${r.country ? ` <span style="color:#6b7280">${escapeHtml(r.country)}</span>` : ''}</li>`).join('')}</ul>`;
-        bandListEl.appendChild(div);
-      });
-
-      resultsEl.classList.add('visible');
-
-      // Fit map to largest circle with padding
-      const maxR = radiusByHour[hours[hours.length - 1]];
-      const bounds = 1.1 * (maxR / 111); // rough deg from km
-      map.fitBounds(
-        [[originLng - bounds, originLat - bounds], [originLng + bounds, originLat + bounds]],
-        { padding: 80, duration: 800, maxZoom: 10 }
-      );
-
-      if (originStatus) originStatus.textContent = '';
-    } catch (err) {
-      console.warn('[drive-time-map-ml] error:', err);
-      const message = (err && err.message) ? err.message : 'Drive-time request failed.';
-      if (originStatus) originStatus.textContent = message;
-    }
-    drawBtn.disabled = !originLngLat;
+  drawBtn.addEventListener('click', () => {
+    if (!originLngLat) return;
+    runAt(originLngLat, originStatus?.textContent?.replace(/^Set:\s*/, '') || 'Origin');
   });
+
+  profileEl?.addEventListener('change', () => {
+    if (originLngLat) runAt(originLngLat, 'Origin');
+  });
+
+  tokenReady();
+  if (panel) panel.classList.add('open');
 })();
