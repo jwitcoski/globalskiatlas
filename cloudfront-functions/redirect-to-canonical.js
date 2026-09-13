@@ -52,14 +52,19 @@ function handler(event) {
     if (uri === '/index.html') {
       newPath = '/';
     } else {
-      newPath = uri.slice(0, -11) || '/';
+      // Keep the trailing slash so /blog/index.html → /blog/, not /blog
+      // (S3 REST origins 403 on extensionless keys like "blog").
+      newPath = uri.slice(0, -10) || '/';
     }
   }
 
-  // 4. /playable → /playable/ so relative ESM imports resolve under /playable/
-  if (uri === '/playable') {
+  // 4. Extensionless paths → trailing slash so S3 can serve directory index.html.
+  // /playable and /blog both 403 without this; default root object only covers /.
+  var lastSlash = uri.lastIndexOf('/');
+  var lastSegment = uri.slice(lastSlash + 1);
+  if (uri !== '/' && uri.charAt(uri.length - 1) !== '/' && lastSegment.indexOf('.') === -1) {
     needRedirect = true;
-    newPath = '/playable/';
+    newPath = uri + '/';
   }
 
   if (needRedirect) {
