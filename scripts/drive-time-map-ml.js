@@ -4,7 +4,7 @@
  * them into isobands. If the grid is too sparse, a duration heatmap is shown instead.
  * Entry for DriveTimeMap.html.
  */
-import { config } from './map-config.js?v=mb4';
+import { config } from './map-config.js?v=mb5';
 import { initSkiResortMap } from './ski-resort-map-ml.js';
 import { escapeHtml } from './utils.js';
 
@@ -95,7 +95,7 @@ function matrixDestLimit(profile) {
 function buildSamplePoints(lng, lat, radiusKm, profile) {
   const pts = [];
   const rings = profile === 'driving-traffic' ? [0.28, 0.52, 0.76, 1.0] : [0.2, 0.4, 0.6, 0.8, 1.0];
-  const nBearings = profile === 'driving-traffic' ? 8 : 12;
+  const nBearings = profile === 'driving-traffic' ? 12 : 18;
   for (let r = 0; r < rings.length; r++) {
     const dist = radiusKm * rings[r];
     for (let i = 0; i < nBearings; i++) {
@@ -185,20 +185,37 @@ function labelFeaturesFromBands(bands) {
 
 async function getTurfIso() {
   if (turfIso) return turfIso;
-  const [interpMod, isoMod, helpersMod, bboxMod] = await Promise.all([
+  const [interpMod, isoMod, helpersMod, bboxMod, smoothMod] = await Promise.all([
     import('https://esm.sh/@turf/interpolate@7.2.0'),
     import('https://esm.sh/@turf/isobands@7.2.0'),
     import('https://esm.sh/@turf/helpers@7.2.0'),
-    import('https://esm.sh/@turf/bbox@7.2.0')
+    import('https://esm.sh/@turf/bbox@7.2.0'),
+    import('https://esm.sh/@turf/polygon-smooth@7.2.0')
   ]);
   turfIso = {
     interpolate: interpMod.default ?? interpMod.interpolate,
     isobands: isoMod.default ?? isoMod.isobands,
     point: helpersMod.point,
     featureCollection: helpersMod.featureCollection,
-    bbox: bboxMod.default ?? bboxMod.bbox
+    bbox: bboxMod.default ?? bboxMod.bbox,
+    polygonSmooth: smoothMod.default ?? smoothMod.polygonSmooth
   };
   return turfIso;
+}
+
+async function smoothZonePolygons(fc) {
+  if (!fc || !fc.features || !fc.features.length) return fc;
+  try {
+    const t = await getTurfIso();
+    const smoothed = t.polygonSmooth(fc, { iterations: 3 });
+    if (smoothed && smoothed.features && smoothed.features.length) {
+      smoothed.labels = fc.labels;
+      return smoothed;
+    }
+  } catch (err) {
+    console.warn('[drive-time-map-ml] polygonSmooth failed:', err);
+  }
+  return fc;
 }
 
 function firstSymbolLayerId(map) {
@@ -671,12 +688,14 @@ function firstSymbolLayerId(map) {
       let zoneFc = samplesToZonePolygons(lngLat[0], lngLat[1], sampleFc.timed || []);
       let mode = 'circles';
       if (zoneFc && zoneFc.features.length) {
+        zoneFc = await smoothZonePolygons(zoneFc);
         paintIsochrones(zoneFc);
         mode = 'isobands';
       } else if (sampleFc.features.length >= 12) {
         try {
           zoneFc = await pointsToIsobands(sampleFc, maxKm);
           if (zoneFc && zoneFc.features && zoneFc.features.length) {
+            zoneFc = await smoothZonePolygons(zoneFc);
             paintIsochrones(zoneFc);
             mode = 'isobands';
           }
