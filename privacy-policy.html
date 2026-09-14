@@ -82,7 +82,7 @@
         <main class="tw-mt-[80px] tw-flex-1 tw-px-[5%] tw-py-12 max-lg:tw-px-4">
             <div class="tw-mx-auto tw-max-w-3xl">
                 <h1 class="tw-mb-2 tw-text-3xl tw-font-bold tw-text-black max-md:tw-text-2xl">Privacy Policy</h1>
-                <p class="tw-mb-8 tw-text-gray-500">Last updated: February 2025</p>
+                <p class="tw-mb-8 tw-text-gray-500">Last updated: September 2026</p>
 
                 <div class="tw-space-y-8 tw-text-gray-700 tw-leading-relaxed">
                     <section>
@@ -90,7 +90,7 @@
                         <p>When you use Global Ski Atlas (globalskiatlas.com), we may collect:</p>
                         <ul class="tw-mt-2 tw-list-inside tw-list-disc tw-space-y-1 tw-pl-2">
                             <li><strong>Usage data:</strong> Pages visited, time spent, and navigation patterns through Google Analytics</li>
-                            <li><strong>Device and browser information:</strong> IP address (anonymized), browser type, operating system</li>
+                            <li><strong>Approximate location:</strong> On the homepage we ask MapTiler for a city-level location from your IP so we can open the nearest ski area that has a 3D clay map. We do not store that IP or coordinates on our servers.</li>
                             <li><strong>Ad-related data:</strong> Google AdSense may collect data (e.g., cookies, device identifiers) to serve personalized ads</li>
                             <li><strong>AI Assistant queries:</strong> Messages you send to our skiing AI assistant may be processed to provide responses</li>
                         </ul>
@@ -100,7 +100,7 @@
                         <h2 class="tw-mb-3 tw-text-xl tw-font-semibold tw-text-black">2. How We Use Your Information</h2>
                         <p>We use the information we collect to:</p>
                         <ul class="tw-mt-2 tw-list-inside tw-list-disc tw-space-y-1 tw-pl-2">
-                            <li>Understand how visitors use our site and improve the user experience</li>
+                            <li>Show the 3D map of the ski area nearest your estimated location</li>
                             <li>Display relevant advertisements through Google AdSense</li>
                             <li>Respond to your questions through the AI Assistant</li>
                             <li>Comply with legal obligations</li>
@@ -118,7 +118,7 @@
                         <ul class="tw-mt-2 tw-list-inside tw-list-disc tw-space-y-1 tw-pl-2">
                             <li>Google Analytics</li>
                             <li>Google AdSense (for advertising)</li>
-                            <li>Map services (e.g., MapTiler, OpenStreetMap)</li>
+                            <li>Map services (e.g., MapTiler, including IP geolocation for the homepage 3D map, and OpenStreetMap)</li>
                             <li>Amazon Web Services (for the AI Assistant)</li>
                         </ul>
                         <p class="tw-mt-3">These services have their own privacy policies governing how they use data.</p>
@@ -194,5 +194,6 @@
         </footer>
 
         <script src="./index.js"></script>
-    </body>
+    <script src="scripts/site-nav.js?v=3" defer></script>
+</body>
 </html>

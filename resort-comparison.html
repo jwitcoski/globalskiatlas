@@ -295,7 +295,7 @@
     }
   </style>
 </head>
-<body class="tw-flex tw-min-h-[100vh] tw-flex-col tw-bg-[#fff]">
+<body class="tw-flex tw-min-h-[100vh] tw-flex-col tw-bg-[#fff]" data-gsa-banner="compare">
   <header
     class="tw-absolute tw-top-0 tw-z-[100] tw-flex tw-h-[60px] tw-w-full tw-bg-opacity-0 
            tw-px-[5%] max-lg:tw-mr-auto max-lg:tw-px-4 lg:tw-justify-around"
@@ -1183,15 +1183,54 @@
       else setTimeout(autoZoomToSelection, 300);
     }
 
+    async function preselectNearestResort() {
+      const q = new URLSearchParams(location.search);
+      if (q.get('near') !== '1' && !q.get('ws') && !q.get('name') && !q.get('resort')) return;
+      let ws = q.get('ws') || '';
+      let nameWant = String(q.get('name') || q.get('resort') || '').toLowerCase().trim();
+      if (!ws && !nameWant) {
+        try {
+          const mod = await import('./scripts/clay/nearest-resort.js');
+          const { nearest } = await mod.resolveVisitorNearestClay();
+          if (nearest) {
+            ws = String(nearest.winter_sports_id || '');
+            nameWant = String(nearest.display_name || nearest.short_name || '').toLowerCase().trim();
+          }
+        } catch (err) {
+          console.warn('nearest compare preselect failed', err);
+          return;
+        }
+      }
+      const idx = resortData.findIndex((r) => {
+        const p = r.analyzedRow || (r.outlineFeature && r.outlineFeature.properties) || {};
+        if (ws && String(p.winter_sports_id || '') === String(ws)) return true;
+        const n = String(r.name || '').toLowerCase();
+        if (!nameWant || !n) return false;
+        return n === nameWant || n.includes(nameWant) || nameWant.includes(n.split('(')[0].trim());
+      });
+      if (idx < 0) return;
+      const box = document.getElementById('checkbox-' + idx);
+      if (!box) return;
+      box.checked = true;
+      box.dispatchEvent(new Event('change'));
+      const country = box.closest('.accordion-section');
+      if (country) country.classList.add('open');
+      const state = box.closest('.resort-state-section');
+      if (state) state.classList.add('open');
+      box.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }
+
     loadData()
-      .then(() => {
+      .then(async () => {
         document.getElementById('loading').remove();
         displayResorts();
+        await preselectNearestResort();
       })
       .catch((err) => {
         document.getElementById('loading').outerHTML = `<div class="error">Failed to load data: ${err.message}. Check network and CORS.</div>`;
         console.error(err);
       });
   </script>
+<script src="scripts/site-nav.js?v=3" defer></script>
 </body>
 </html>

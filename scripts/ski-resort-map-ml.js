@@ -42,7 +42,7 @@ import {
   buildResortStatsIndex,
   initResortPopupScopeSwitcher,
   bindResortDetailsLinks,
-} from './ski-resort-popups.js?v=8';
+  } from './ski-resort-popups.js?v=9';
 import {
   ADMIN1_FILL,
   ADMIN1_SOURCE,
@@ -65,6 +65,8 @@ import {
   fetchPlayableCatalog,
   matchPlayableResort,
   playableHrefFromPath,
+  fetchClayCatalog,
+  clayHomeHrefForWsId,
 } from './playable-match.js';
 
 const {
@@ -179,6 +181,12 @@ export async function initSkiResortMap(options = {}) {
       gameResorts = [];
     }
   }
+  let clayResorts = [];
+  try {
+    clayResorts = await fetchClayCatalog();
+  } catch (e) {
+    clayResorts = [];
+  }
   const playableMode = !!(gameResorts.length && onPlayablePick);
   const playableDotsOnly = !!options.playableDotsOnly && gameResorts.length > 0;
 
@@ -271,6 +279,7 @@ export async function initSkiResortMap(options = {}) {
       statsIndex: resortStatsIndex,
       escapeHtml,
       playableHref: playablePath ? playableHrefFromPath(playablePath) : '',
+      clayHomeHref: clayHomeHrefForWsId(properties?.winter_sports_id, clayResorts),
     });
   }
 

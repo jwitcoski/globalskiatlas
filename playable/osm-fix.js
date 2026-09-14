@@ -15,10 +15,10 @@ export function osmMapUrl(ctx) {
   const lat = Number(ctx?.lat);
   const lon = Number(ctx?.lon);
   if (Number.isFinite(lat) && Number.isFinite(lon)) {
-    return `https://www.openstreetmap.org/#map=15/${lat.toFixed(5)}/${lon.toFixed(5)}`;
+    return `https://www.openstreetmap.org/edit#map=16/${lat.toFixed(5)}/${lon.toFixed(5)}`;
   }
   const osmId = String(ctx?.winterSportsId || "").replace(/\D/g, "");
-  if (osmId) return `https://www.openstreetmap.org/relation/${osmId}`;
+  if (osmId) return `https://www.openstreetmap.org/edit?relation=${osmId}`;
   return "https://www.openstreetmap.org/";
 }
 

@@ -17,8 +17,8 @@ import {
   buildResortPopupHtml,
   initResortPopupScopeSwitcher,
   mergeResortCatalogProperties,
-} from "../ski-resort-popups.js?v=8";
-import { playableHrefForResort } from "../playable-match.js";
+} from "../ski-resort-popups.js?v=9";
+import { playableHrefForResort, clayHomeHrefForWsId, fetchClayCatalog } from "../playable-match.js";
 import {
   buildSkiFeaturePopupHtml,
   ensureSkiFeatureScopeSwitcher,
@@ -66,7 +66,7 @@ function indexedEntity(entity, statsIndex) {
   return null;
 }
 
-function renderPanel(panel, entity, statsIndex, resortStatsIndex, playableResorts, parquetRows, parquetReady) {
+function renderPanel(panel, entity, statsIndex, resortStatsIndex, playableResorts, parquetRows, parquetReady, clayResorts) {
   if (!entity) {
     panel.hidden = true;
     panel.classList.remove("clay-entity-panel--resort", "clay-entity-panel--feature", "clay-entity-panel--admin1");
@@ -103,6 +103,10 @@ function renderPanel(panel, entity, statsIndex, resortStatsIndex, playableResort
         wikiPage,
         statsIndex: resortStatsIndex,
         playableHref: playableHrefForResort(entity, properties, playableResorts),
+        clayHomeHref: clayHomeHrefForWsId(
+          entity.winterSportsId || properties.winter_sports_id,
+          clayResorts,
+        ),
       });
     bindResortDetailsLinks();
     if (resortStatsIndex) initResortPopupScopeSwitcher(resortStatsIndex);
@@ -158,6 +162,7 @@ export function createClayEntityPanel(embed) {
   let extraIndex = null;
   let resortIndex = null;
   let playableResorts = [];
+  let clayResorts = [];
   let parquetRows = null;
   let parquetReady = false;
   const pickIndex = () => {
@@ -173,8 +178,12 @@ export function createClayEntityPanel(embed) {
     playableResorts,
     parquetRows,
     parquetReady,
+    clayResorts,
   );
-  ensureSkiFeatureStatsIndex(() => refresh());
+  fetchClayCatalog().then((list) => {
+    clayResorts = list;
+    if (currentEntity?.entityType === "resort") refresh();
+  });
 
   panel.addEventListener("click", (event) => {
     if (event.target.closest("[data-clay-entity-close]")) {

@@ -77,7 +77,10 @@ function buildActionButtons(properties, latlng, displayStr, options, wikiPage, e
     extraButtons = `<button class="rtp-add-btn" data-resort-name="${rn}" data-resort-lat="${lat ?? 0}" data-resort-lon="${lon ?? 0}" data-resort-country="${rc}"><i class="bi bi-plus-circle"></i> Road Trip</button>`;
   }
   if (options.playableHref) {
-    extraButtons += `<a class="sr-ski-game-btn" href="${escapeHtmlFn(options.playableHref)}">3D Ski Game <i class="bi bi-controller"></i></a>`;
+    extraButtons += `<a class="sr-ski-game-btn" href="${escapeHtmlFn(options.playableHref)}">Ski in 3D <i class="bi bi-controller"></i></a>`;
+  }
+  if (options.clayHomeHref) {
+    extraButtons += `<a class="sr-ski-game-btn" href="${escapeHtmlFn(options.clayHomeHref)}">3D clay map</a>`;
   }
 
   return (

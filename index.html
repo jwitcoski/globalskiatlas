@@ -12,8 +12,8 @@
             gtag('config', 'G-KJGNL3KJL0');
         </script>
         <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4372859798489282" crossorigin="anonymous"></script>
-        <title>Global Ski Atlas – Your Guide to Ski Resorts Worldwide</title>
-        <meta name="description" content="Explore the paper atlas, online atlas, ski resort comparison tool, and skiing AI assistant. Your guide to ski resorts worldwide." />
+        <title>Global Ski Atlas – The mountain next door, in 3D</title>
+        <meta name="description" content="See the ski hill nearest you in 3D, then wander to the Alps, Japan, or a local day with the kids." />
         <link
             rel="shortcut icon"
             href="./assets/logo.png?v=2"
@@ -21,16 +21,16 @@
         />
 
         <!-- Open Graph -->
-        <meta property="og:title" content="Global Ski Atlas – Your Guide to Ski Resorts Worldwide" />
-        <meta property="og:description" content="Explore 3,000+ ski resorts with our interactive map, resort comparison tool, AI ski assistant, and coffee table book. The most comprehensive ski resort database on the web." />
+        <meta property="og:title" content="Global Ski Atlas – The mountain next door, in 3D" />
+        <meta property="og:description" content="See the ski hill nearest you in 3D, then wander farther." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://globalskiatlas.com/" />
         <meta property="og:image" content="https://globalskiatlas.com/assets/og-banner.png" />
         <meta property="og:site_name" content="Global Ski Atlas" />
         <!-- Twitter Card -->
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Global Ski Atlas – Your Guide to Ski Resorts Worldwide" />
-        <meta name="twitter:description" content="Explore 3,000+ ski resorts with our interactive map, resort comparison tool, AI ski assistant, and coffee table book." />
+        <meta name="twitter:title" content="Global Ski Atlas – The mountain next door, in 3D" />
+        <meta name="twitter:description" content="See the ski hill nearest you in 3D, then wander farther." />
         <meta name="twitter:image" content="https://globalskiatlas.com/assets/og-banner.png" />
         <!-- Canonical -->
         <link rel="canonical" href="https://globalskiatlas.com/" />
@@ -41,7 +41,7 @@
           "@type": "WebSite",
           "name": "Global Ski Atlas",
           "url": "https://globalskiatlas.com/",
-          "description": "The most comprehensive ski resort database. Explore 3,000+ ski resorts worldwide with interactive maps, comparison tools, and an AI assistant.",
+          "description": "3D clay ski maps of the mountain nearest you, plus drive time, comparison, and OpenStreetMap-powered resort data.",
           "potentialAction": {
             "@type": "SearchAction",
             "target": "https://globalskiatlas.com/mainmap.html?q={search_term_string}",
@@ -66,7 +66,7 @@
             referrerpolicy="no-referrer"
         />
         <link rel="preconnect" href="https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com" crossorigin />
-        <link rel="stylesheet" href="css/index-hero-montage.css?v=55" />
+        <link rel="stylesheet" href="css/index-hero-montage.css?v=56" />
         <script type="importmap">
         {
             "imports": {
@@ -160,13 +160,18 @@
                         class="tw-flex tw-flex-wrap tw-text-6xl tw-font-semibold tw-uppercase 
                                 tw-leading-[80px] max-lg:tw-text-4xl max-md:tw-leading-snug"
                     >
-                        <span class="reveal-hero-text"> Your guide to ski resorts worldwide. </span>
+                        <span class="reveal-hero-text"> Here’s the mountain next door. </span>
                     </div>
                     <div
                         class="reveal-hero-text tw-mt-2 tw-max-w-[450px] tw-p-2 
                                 tw-text-justify max-lg:tw-max-w-full"
                     >
-                        Explore the paper atlas and coffee table book, browse the online atlas, plan multi-resort ski trips, compare resorts side by side, or ask the AI anything about skiing—all in one place.
+                        This is the ski area nearest you, in 3D. Flip through the arrows to try somewhere farther — a local hill with the kids, or a daydream in the Alps.
+                        <div class="tw-mt-4 tw-flex tw-flex-wrap tw-gap-3">
+                            <a href="/playable/?near=1" class="tw-inline-flex tw-h-11 tw-place-items-center tw-rounded-lg tw-px-5 tw-font-semibold tw-text-white" style="background-color:#1a4d8c;">Ski in 3D</a>
+                            <a href="DriveTimeMap.html" class="tw-inline-flex tw-h-11 tw-place-items-center tw-rounded-lg tw-border tw-border-gray-400 tw-px-5 tw-font-semibold tw-text-black">Drive from home</a>
+                            <a href="resort-comparison.html?near=1" class="tw-inline-flex tw-h-11 tw-place-items-center tw-rounded-lg tw-border tw-border-gray-400 tw-px-5 tw-font-semibold tw-text-black">Compare</a>
+                        </div>
                     </div>
                 </div>
 
@@ -186,6 +191,7 @@
                             <div class="hero-montage-switch-label">
                                 <span data-hero-resort-name>Montage</span>
                                 <span class="hero-montage-switch-region" data-hero-region>North America</span>
+                                <span class="hero-montage-switch-near" data-hero-near hidden></span>
                             </div>
                             <button type="button" class="hero-montage-switch-btn" data-hero-next aria-label="Next resort">
                                 <i class="bi bi-chevron-right" aria-hidden="true"></i>
@@ -216,89 +222,26 @@
         >
             <div class="tw-flex tw-flex-col tw-place-items-center tw-gap-10">
                 <h2 class="reveal-up tw-text-center tw-text-4xl tw-font-semibold max-md:tw-text-2xl">
-                    Take your skiing to the next level
+                    Then decide
                 </h2>
                 <div class="features-grid">
-                    <div class="reveal-up tw-flex tw-flex-col tw-place-items-center tw-text-center">
-                        <div class="tw-flex tw-h-16 tw-w-16 tw-place-content-center tw-place-items-center tw-rounded-full tw-border tw-border-gray-300 tw-bg-gray-100">
-                            <i class="bi bi-triangle-fill tw-text-2xl tw-text-gray-700"></i>
-                        </div>
-                        <h3 class="tw-mt-4 tw-text-xl tw-font-bold">Comprehensive Resort Data</h3>
-                        <p class="tw-mt-2 tw-text-sm tw-leading-relaxed tw-text-gray-600">Detailed information on over 3,000 ski resorts worldwide, including terrain, lifts, and amenities.</p>
-                    </div>
-                    <div class="reveal-up tw-flex tw-flex-col tw-place-items-center tw-text-center">
-                        <div class="tw-flex tw-h-16 tw-w-16 tw-place-content-center tw-place-items-center tw-rounded-full tw-border tw-border-gray-300 tw-bg-gray-100">
-                            <i class="bi bi-map tw-text-2xl tw-text-gray-700"></i>
-                        </div>
-                        <h3 class="tw-mt-4 tw-text-xl tw-font-bold">Online Atlas</h3>
-                        <p class="tw-mt-2 tw-text-sm tw-leading-relaxed tw-text-gray-600">Browse our community-powered resort wiki — detailed pages for 3,000+ ski resorts with terrain stats, lift counts, and more.</p>
-                    </div>
-                    <div class="reveal-up tw-flex tw-flex-col tw-place-items-center tw-text-center">
-                        <div class="tw-flex tw-h-16 tw-w-16 tw-place-content-center tw-place-items-center tw-rounded-full tw-border tw-border-gray-300 tw-bg-gray-100">
-                            <i class="bi bi-signpost-2-fill tw-text-2xl tw-text-gray-700"></i>
-                        </div>
-                        <h3 class="tw-mt-4 tw-text-xl tw-font-bold">Ski Trip Planner</h3>
-                        <p class="tw-mt-2 tw-text-sm tw-leading-relaxed tw-text-gray-600">Plan multi-resort ski trips with an interactive map and turn-by-turn directions—add up to 25 stops and choose to end at the last resort or return to start.</p>
-                    </div>
-                    <div class="reveal-up tw-flex tw-flex-col tw-place-items-center tw-text-center">
-                        <div class="tw-flex tw-h-16 tw-w-16 tw-place-content-center tw-place-items-center tw-rounded-full tw-border tw-border-gray-300 tw-bg-gray-100">
-                            <i class="bi bi-car-front-fill tw-text-2xl tw-text-gray-700"></i>
-                        </div>
-                        <h3 class="tw-mt-4 tw-text-xl tw-font-bold">Drive-Time Map</h3>
-                        <p class="tw-mt-2 tw-text-sm tw-leading-relaxed tw-text-gray-600">Enter any location and see concentric rings for 1h, 2h, 3h, 4h drive time to the nearest ski resorts. Plan day trips or see how far you are from the slopes.</p>
-                    </div>
-                    <div class="reveal-up tw-flex tw-flex-col tw-place-items-center tw-text-center">
-                        <div class="tw-flex tw-h-16 tw-w-16 tw-place-content-center tw-place-items-center tw-rounded-full tw-border tw-border-gray-300 tw-bg-gray-100">
-                            <i class="bi bi-bar-chart tw-text-2xl tw-text-gray-700"></i>
-                        </div>
-                        <h3 class="tw-mt-4 tw-text-xl tw-font-bold">Resort Comparison</h3>
-                        <p class="tw-mt-2 tw-text-sm tw-leading-relaxed tw-text-gray-600">Compare multiple resorts side by side based on your preferred criteria.</p>
-                    </div>
-                    <div class="reveal-up tw-flex tw-flex-col tw-place-items-center tw-text-center">
-                        <div class="tw-flex tw-h-16 tw-w-16 tw-place-content-center tw-place-items-center tw-rounded-full tw-border tw-border-gray-300 tw-bg-gray-100">
-                            <i class="bi bi-controller tw-text-2xl tw-text-gray-700"></i>
-                        </div>
-                        <h3 class="tw-mt-4 tw-text-xl tw-font-bold">Ski Game</h3>
-                        <p class="tw-mt-2 tw-text-sm tw-leading-relaxed tw-text-gray-600">Ski exported DEM + OSM scenes from hundreds of resorts. Not official maps, not for navigation or safety.</p>
-                    </div>
-                    <div class="reveal-up tw-flex tw-flex-col tw-place-items-center tw-text-center">
-                        <div class="tw-flex tw-h-16 tw-w-16 tw-place-content-center tw-place-items-center tw-rounded-full tw-border tw-border-gray-300 tw-bg-gray-100">
-                            <i class="bi bi-book tw-text-2xl tw-text-gray-700"></i>
-                        </div>
-                        <h3 class="tw-mt-4 tw-text-xl tw-font-bold">Coffee Table Book</h3>
-                        <p class="tw-mt-2 tw-text-sm tw-leading-relaxed tw-text-gray-600">A beautiful photographic journey through the world's most stunning ski destinations.</p>
-                    </div>
-                </div>
-                <div class="tw-flex tw-gap-3 tw-flex-wrap tw-justify-center">
-                    <a
-                        href="#online-atlas"
-                        aria-label="Browse the Online Atlas"
-                        class="reveal-up tw-mt-6 tw-flex tw-h-12 tw-min-w-[180px] tw-place-content-center tw-place-items-center tw-rounded-lg tw-border tw-border-gray-300 tw-bg-white tw-px-6 tw-py-3 tw-text-black hover:tw-bg-gray-50"
-                    >
-                        Online Atlas
+                    <a href="/playable/?near=1" class="reveal-up job-card tw-flex tw-flex-col tw-place-items-center tw-text-center tw-no-underline tw-text-inherit">
+                        <h3 class="tw-mt-4 tw-text-xl tw-font-bold">Ski in 3D</h3>
+                        <p class="tw-mt-2 tw-text-sm tw-leading-relaxed tw-text-gray-600">Clay maps and the ski game are why this site exists. Start with the mountain nearest you, then try Japan, the Andes, or the Alps.</p>
                     </a>
-                    <a
-                        href="#trip-planner"
-                        aria-label="Plan a ski trip"
-                        class="reveal-up tw-mt-6 tw-flex tw-h-12 tw-min-w-[180px] tw-place-content-center tw-place-items-center tw-rounded-lg tw-border tw-border-gray-300 tw-bg-white tw-px-6 tw-py-3 tw-text-black hover:tw-bg-gray-50"
-                    >
-                        Trip Planner
+                    <a href="DriveTimeMap.html" class="reveal-up job-card tw-flex tw-flex-col tw-place-items-center tw-text-center tw-no-underline tw-text-inherit">
+                        <h3 class="tw-mt-4 tw-text-xl tw-font-bold">Drive from home</h3>
+                        <p class="tw-mt-2 tw-text-sm tw-leading-relaxed tw-text-gray-600">Kids, a pass day, or a Friday escape: 1–4 hour rings to the nearest hills.</p>
                     </a>
-                    <a
-                        href="#drive-time-map-detail"
-                        aria-label="Drive-Time Map"
-                        class="reveal-up tw-mt-6 tw-flex tw-h-12 tw-min-w-[180px] tw-place-content-center tw-place-items-center tw-rounded-lg tw-border tw-border-gray-300 tw-bg-white tw-px-6 tw-py-3 tw-text-black hover:tw-bg-gray-50"
-                    >
-                        Drive Time
-                    </a>
-                    <a
-                        href="/playable/"
-                        aria-label="Play the ski game"
-                        class="reveal-up tw-mt-6 tw-flex tw-h-12 tw-min-w-[180px] tw-place-content-center tw-place-items-center tw-rounded-lg tw-border tw-border-gray-300 tw-bg-white tw-px-6 tw-py-3 tw-text-black hover:tw-bg-gray-50"
-                    >
-                        Ski Game
+                    <a href="resort-comparison.html?near=1" class="reveal-up job-card tw-flex tw-flex-col tw-place-items-center tw-text-center tw-no-underline tw-text-inherit">
+                        <h3 class="tw-mt-4 tw-text-xl tw-font-bold">Compare options</h3>
+                        <p class="tw-mt-2 tw-text-sm tw-leading-relaxed tw-text-gray-600">Two mountains, one table — then ski the winner in 3D before you book.</p>
                     </a>
                 </div>
+                <a href="blog/how-to-tag-a-ski-resort-in-openstreetmap.html" class="reveal-up job-card job-card--wide tw-mt-2 tw-max-w-2xl tw-text-center tw-no-underline tw-text-inherit">
+                    <h3 class="tw-text-xl tw-font-bold">These 3D maps are only as good as OpenStreetMap</h3>
+                    <p class="tw-mt-2 tw-text-sm tw-leading-relaxed tw-text-gray-600">If trails look thin, edit OSM or write the wiki.</p>
+                </a>
             </div>
         </section>
 
@@ -311,14 +254,15 @@
                 </p>
                 <p class="reveal-up tw-mt-4 tw-text-lg tw-leading-relaxed tw-text-gray-700">
                     Start on the
-                    <a href="mainmap.html" class="tw-text-blue-600 hover:tw-underline">interactive map</a>,
-                    dig into
-                    <a href="SkiResortFacts.html" class="tw-text-blue-600 hover:tw-underline">resort facts</a>
-                    and
-                    <a href="resort-comparison.html" class="tw-text-blue-600 hover:tw-underline">side-by-side comparison</a>,
-                    or read practical guides on the
-                    <a href="blog/index.html" class="tw-text-blue-600 hover:tw-underline">blog</a>—from beginner hills and pass coverage to trail-map dialects and OpenStreetMap tagging.
-                    When a local area looks incomplete, the atlas documents how to improve the open data so the next build is better for everyone.
+                    <strong>3D map</strong> of the hill nearest you, then
+                    <a href="DriveTimeMap.html" class="tw-text-blue-600 hover:tw-underline">drive time</a>
+                    or
+                    <a href="resort-comparison.html" class="tw-text-blue-600 hover:tw-underline">compare</a>.
+                    The 2D
+                    <a href="mainmap.html" class="tw-text-blue-600 hover:tw-underline">interactive map</a>
+                    is the full index. When OSM looks incomplete,
+                    <a href="blog/how-to-tag-a-ski-resort-in-openstreetmap.html" class="tw-text-blue-600 hover:tw-underline">tag the resort</a>
+                    so the next 3D build is better.
                 </p>
                 <p class="reveal-up tw-mt-4 tw-text-lg tw-leading-relaxed tw-text-gray-700">
                     The project is a planning and research aid, not an official trail map or avalanche forecast. Confirm openings, closures, and safety with resorts and local authorities before you ski.
@@ -384,10 +328,10 @@
                 <div
                     class="tw-mt-6 tw-flex tw-max-w-[450px] tw-flex-col tw-gap-4"
                 >
-                    <h3 class="tw-text-4xl tw-font-medium">Coffee Table Book</h3>
-                    <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700">A stunning visual journey through the world's most beautiful ski resorts</p>
-                    <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600">Our limited edition coffee table book features breathtaking maps of ski resorts from around the globe. Each page captures the majesty of mountain landscapes, the thrill of perfect powder, and the unique character of each destination.</p>
-                    <a href="coffee-table-book.html" class="tw-mt-6 tw-inline-flex tw-gap-2 tw-rounded-lg tw-px-8 tw-py-4 tw-text-lg tw-font-semibold tw-shadow-md tw-no-underline tw-text-white hover:tw-opacity-90" style="background-color: #2563eb;" aria-label="View Coffee Table Book">View the coffee table book <i class="bi bi-arrow-right"></i></a>
+                    <h3 class="tw-text-4xl tw-font-medium">Print edition (later)</h3>
+                    <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700">The coffee table book prints these 3D maps when OSM is good enough.</p>
+                    <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600">Preview sample chapters and join the waitlist. There is no Amazon checkout yet. Helping OSM and the wiki is how the atlas gets written.</p>
+                    <a href="coffee-table-book.html" class="tw-mt-6 tw-inline-flex tw-gap-2 tw-rounded-lg tw-px-8 tw-py-4 tw-text-lg tw-font-semibold tw-shadow-md tw-no-underline tw-text-white hover:tw-opacity-90" style="background-color: #2563eb;" aria-label="Coffee table book waitlist">Preview and waitlist <i class="bi bi-arrow-right"></i></a>
                 </div>
             </div>
         </section>
@@ -770,8 +714,9 @@
             <div class="tw-flex tw-h-full tw-w-[250px] tw-flex-col tw-gap-4">
                 <h2 class="tw-text-3xl max-md:tw-text-xl">Explore</h2>
                 <div class="tw-flex tw-flex-col tw-gap-3 max-md:tw-text-sm">
+                    <a href="/playable/" class="footer-link">3D / Ski Game</a>
+                    <a href="index.html" class="footer-link">Nearest 3D map</a>
                     <a href="coffee-table-book.html" class="footer-link">Coffee Table Book</a>
-                    <a href="bookpitch.html" class="footer-link">Book pitch</a>
                     <a href="wiki/browse.html" class="footer-link">Online Atlas</a>
                     <a href="TripPlannerMap.html" class="footer-link">Trip Planner</a>
                     <a href="DriveTimeMap.html" class="footer-link">Drive Time</a>
@@ -801,7 +746,7 @@
                 </div>
             </div>
         </footer>
-    </body>
+    <script src="scripts/site-nav.js?v=3" defer></script>
 
     <link
         rel="stylesheet"
@@ -849,10 +794,20 @@
             gap: 2.5rem;
             max-width: 64rem;
         }
-        @media (max-width: 768px) {
-            #ai-assistant .features-grid {
-                grid-template-columns: 1fr;
-            }
+        #ai-assistant .job-card {
+            padding: 1.25rem 1rem;
+            border: 1px solid #d4d4d4;
+            border-radius: 12px;
+            background: #fff;
+        }
+        #ai-assistant .job-card:hover {
+            border-color: #1a4d8c;
+        }
+        #ai-assistant .job-card--wide {
+            display: block;
+            width: 100%;
+            max-width: 42rem;
+            padding: 1.25rem 1.5rem;
         }
         /* AI Assistant section button - ensure visibility */
         #ai-assistant-detail .ai-try-btn {
@@ -887,7 +842,7 @@
         .stat-lifts-legend .lift-symbol-img { width: 100%; height: 100%; object-fit: contain; display: block; }
     </style>
 
-    <script type="module" src="scripts/hero-montage-map.js?v=108"></script>
+    <script type="module" src="scripts/hero-montage-map.js?v=110"></script>
     <script type="module">
         import { fetchSkiAreaCatalog, loadPmtilesLayerFeatures } from './scripts/pmtiles-core.js';
         (async function () {
@@ -1108,4 +1063,5 @@
             },
         });
     </script>
+</body>
 </html>

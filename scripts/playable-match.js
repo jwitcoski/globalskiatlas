@@ -85,3 +85,23 @@ export function playableHrefForResort(entity, properties, playableResorts) {
   }
   return "";
 }
+
+let clayCatalogPromise;
+
+export async function fetchClayCatalog() {
+  if (!clayCatalogPromise) {
+    clayCatalogPromise = fetch("/clay_scenes/catalog.json")
+      .then((r) => (r.ok ? r.json() : { resorts: [] }))
+      .then((data) => (Array.isArray(data?.resorts) ? data.resorts : []))
+      .catch(() => []);
+  }
+  return clayCatalogPromise;
+}
+
+export function clayHomeHrefForWsId(winterSportsId, clayResorts) {
+  const ws = String(winterSportsId || "").replace(/^[^0-9]*/, "");
+  if (!ws || !clayResorts?.length) return "";
+  const hit = clayResorts.find((r) => String(r.winter_sports_id || "") === ws);
+  if (!hit?.id) return "";
+  return `/?resort=${encodeURIComponent(hit.id)}`;
+}

@@ -291,7 +291,7 @@ function ensureResortClayMounted() {
       RESORT_CLAY_REGION_ID = regionId;
       showResortClaySoon(false);
       embed.hidden = false;
-      return import('/scripts/hero-montage-map.js?v=108').then(function (mod) {
+      return import('/scripts/hero-montage-map.js?v=110').then(function (mod) {
         if (RESORT_CLAY_REGION_ID !== regionId) return null;
         return mod.initHeroMontageMap(stage, {
           regionMode: true,
@@ -354,7 +354,7 @@ function ensureResortClayMounted() {
     showResortClaySoon(false);
     embed.hidden = false;
 
-    return import('/scripts/hero-montage-map.js?v=108').then(function (mod) {
+    return import('/scripts/hero-montage-map.js?v=110').then(function (mod) {
       if (RESORT_CLAY_WINTER_ID !== wsId) return null;
       return mod.initHeroMontageMap(stage, { resortId: resortId, lockResort: true });
     }).then(function (api) {
@@ -549,6 +549,16 @@ function renderFromMarkdown(text) {
 
   var firstP = target.querySelector('p');
   if (firstP) firstP.classList.add('resort-body-first');
+
+  var existing = document.getElementById('resort-empty-wiki-cta');
+  if (existing) existing.remove();
+  if (!(text || '').trim()) {
+    var cta = document.createElement('div');
+    cta.id = 'resort-empty-wiki-cta';
+    cta.className = 'resort-data-callout';
+    cta.innerHTML = '<strong>Be the first to describe this resort.</strong> Open Edit this page below. Better OSM trails also make the 3D clay map look right. <a href="../blog/how-to-tag-a-ski-resort-in-openstreetmap.html">How to tag in OSM</a>.';
+    target.parentNode.insertBefore(cta, target);
+  }
 }
 
 function run() {
@@ -1195,7 +1205,7 @@ function populatePage(page) {
     var osmType = (page.winterSportsType || '').toLowerCase().trim();
     var validTypes = { node: true, way: true, relation: true };
     if (osmId && validTypes[osmType]) {
-      var osmUrl = 'https://www.openstreetmap.org/' + osmType + '/' + encodeURIComponent(osmId);
+      var osmUrl = 'https://www.openstreetmap.org/edit?' + osmType + '=' + encodeURIComponent(osmId);
       if (osmEditLink) osmEditLink.href = osmUrl;
     }
   }

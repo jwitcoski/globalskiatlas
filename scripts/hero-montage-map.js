@@ -16,7 +16,8 @@ import {
   loadRegionCatalog,
   loadVectors as loadSceneVectors,
   yieldFrame as waitForFrame,
-} from "./clay/scene-loader.js?v=10";
+} from "./clay/scene-loader.js?v=11";
+import { indexOfNearestClayResort, lookupIpLocation } from "./clay/nearest-resort.js";
 import {
   addSoftShadow as addIslandShadow,
   addIslandUnderside,
@@ -645,7 +646,9 @@ function framingBoundsFromRoot(root, fallback) {
 export async function initHeroMontageMap(container, options = {}) {
   if (!container) return null;
 
-  const preferredId = options.resortId ? String(options.resortId) : "";
+  const params = typeof location !== "undefined" ? new URLSearchParams(location.search) : null;
+  const preferredId = String(options.resortId || params?.get("resort") || "");
+  const skipNearest = options.skipNearest === true || params?.get("nearest") === "0";
   const regionMode = Boolean(options.regionMode);
   const regionId = options.regionId ? String(options.regionId) : "";
   const lockResort = Boolean(options.lockResort || preferredId || regionMode);
@@ -720,6 +723,9 @@ export async function initHeroMontageMap(container, options = {}) {
     getBounds: () => bounds,
     reduceMotion,
   });
+  let nearestId = "";
+  let visitorPlace = "";
+  const nearEl = embed.querySelector("[data-hero-near]");
   let resorts = [];
   let resortIndex = 0;
   let loadToken = 0;
@@ -770,6 +776,15 @@ export async function initHeroMontageMap(container, options = {}) {
     const label = resort.short_name || resort.display_name || resort.id;
     if (nameEl) nameEl.textContent = label;
     if (regionEl) regionEl.textContent = resort.region_label || resort.country || "";
+    if (nearEl) {
+      const isNear = Boolean(nearestId) && resort.id === nearestId;
+      nearEl.hidden = !isNear;
+      nearEl.textContent = isNear
+        ? visitorPlace
+          ? `Nearest 3D map to you · ${visitorPlace}`
+          : "Nearest 3D map to you"
+        : "";
+    }
     embed.setAttribute("aria-label", `${resort.display_name || label} 3D clay map`);
     const href = playableHref(resort);
     if (playLink) {
@@ -1085,6 +1100,19 @@ export async function initHeroMontageMap(container, options = {}) {
           : [{ id: "montage_mountain_pa", display_name: "Montage Mountain", short_name: "Montage", playable_ver: "v0-107b3a77b75f", region_label: "North America" }];
         resortIndex = Math.max(0, resorts.findIndex((r) => r.id === "montage_mountain_pa"));
         if (resortIndex < 0) resortIndex = 0;
+        if (!skipNearest && resorts.length > 1) {
+          try {
+            const origin = await lookupIpLocation();
+            visitorPlace = [origin.city, origin.region].filter(Boolean).join(", ");
+            const idx = await indexOfNearestClayResort(resorts, origin);
+            if (idx >= 0) {
+              resortIndex = idx;
+              nearestId = resorts[idx].id;
+            }
+          } catch (err) {
+            console.warn("[hero-montage-map] nearest-by-ip skipped", err);
+          }
+        }
       }
       await mountResort(currentResort());
     } catch (err) {

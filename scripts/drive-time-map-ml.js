@@ -403,4 +403,16 @@ function circleLabelPoint(lon, lat, radiusKm) {
 
   tokenReady();
   if (panel) panel.classList.add('open');
+
+  try {
+    const { lookupIpLocation } = await import('./clay/nearest-resort.js');
+    const loc = await lookupIpLocation();
+    const label = [loc.city, loc.region].filter(Boolean).join(', ') || 'Near you';
+    if (originInput) originInput.value = label;
+    map.flyTo({ center: [loc.lon, loc.lat], zoom: 8, duration: 900 });
+    if (tokenReady()) await runAt([loc.lon, loc.lat], label);
+    else setOrigin(loc.lon, loc.lat, label);
+  } catch (err) {
+    console.warn('[drive-time-map-ml] IP origin skipped', err);
+  }
 })();

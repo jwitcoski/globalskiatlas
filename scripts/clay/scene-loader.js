@@ -103,7 +103,7 @@ export async function loadVectors(base, vectors, resort = null, options = {}) {
   const routesPath = vectors.piste_trails || vectors.route_centers || (regionVectors ? null : "vectors/piste-trails.geojson");
   const liftsPath = vectors.lifts || (regionVectors ? null : "vectors/lifts.geojson");
   const treePointsPath = vectors.tree_points || (regionVectors ? null : "vectors/tree-points.geojson");
-  const forestPath = vectors.forest || (regionVectors ? null : "vectors/forest.geojson");
+  const forestPath = vectors.forest || null;
   const routesUrl = routesPath ? new URL(routesPath, base) : null;
   const liftsUrl = liftsPath ? new URL(liftsPath, base) : null;
   const treePointsUrl = treePointsPath ? new URL(treePointsPath, base) : null;

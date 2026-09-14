@@ -308,12 +308,11 @@
   letter-spacing: 0.01em;
 }
 
-.hero-montage-switch-region {
-  color: #64748b;
+.hero-montage-switch-near {
+  color: #1a4d8c;
   font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  font-weight: 650;
+  letter-spacing: 0.02em;
 }
 
 .hero-montage-trail-schemes {
