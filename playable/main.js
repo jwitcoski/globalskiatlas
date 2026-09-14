@@ -45,7 +45,7 @@ import { atlasStatsHtml, prefetchWikiIndex } from "./atlas-stats.js?v=stats1";
 import { bindFinishChartScope, finishChartsHtml, prefetchFinishCharts } from "./finish-charts.js?v=1";
 import { bindOsmFix, osmFixHtml, osmFixContext } from "./osm-fix.js?v=1";
 import { showPickerMap, destroyPickerMap } from "./picker-map.js?v=lod3";
-import { resolveVisitorNearestClay } from "../scripts/clay/nearest-resort.js";
+import { resolveVisitorNearestClay } from "/scripts/clay/nearest-resort.js";
 import { capDpr, attachDebug } from "./debug.js?v=mob1";
 import { intentsFrom, isTurning, analogAxes } from "./input.js?v=mob1";
 import { bindMobileChrome, bindPads } from "./mobile.js?v=mob2";
@@ -1141,41 +1141,24 @@ async function loadMountain() {
   resetRun({ lobby: true, reframe: true });
 }
 
-function playablePathForNearest(nearest, resorts) {
-  if (!nearest) return "";
-  const ws = String(nearest.winter_sports_id || "");
-  const id = String(nearest.id || "");
-  const list = resorts || [];
-  const hit = list.find((r) => {
-    const rid = String(r.id || r.path || "").replace(/\/+$/, "");
-    const rWs = String(r.winter_sports_id || "");
-    const path = String(r.path || "").replace(/\/+$/, "");
-    return (ws && rWs === ws) || rid === id || path === id || path.startsWith(`${id}/`);
-  });
-  if (hit?.path) return String(hit.path).replace(/^\/+|\/+$/g, "");
-  if (nearest.playable_ver && nearest.id) {
-    return `${nearest.id}/${nearest.playable_ver}`;
-  }
-  return "";
-}
-
 async function bootScene() {
   prefetchWikiIndex();
   prefetchFinishCharts();
   catalogHub = await fetchCatalog();
   let path = scenePathFromUrl();
   const wantNear = new URLSearchParams(location.search).get("near") === "1";
-  if (!path && wantNear && catalogHub?.data?.resorts) {
+  if (wantNear) {
     try {
       const { nearest } = await resolveVisitorNearestClay();
-      path = playablePathForNearest(nearest, catalogHub.data.resorts);
-      if (!path && nearest?.id) {
+      if (nearest?.id) {
         location.replace(`/?resort=${encodeURIComponent(nearest.id)}`);
         return;
       }
     } catch (err) {
-      console.warn("nearest playable scene failed", err);
+      console.warn("nearest clay redirect failed", err);
     }
+    location.replace("/");
+    return;
   }
   if (path) {
     await openMountain(path);

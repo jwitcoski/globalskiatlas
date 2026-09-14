@@ -22,19 +22,22 @@
     css.href = prefix + "css/gsa-job-banner.css";
     document.head.appendChild(css);
   }
+  var homePath = path.replace(/\/+$/, "") || "/";
+  var onHome = homePath === "/" || /\/index\.html$/i.test(homePath);
+
   if (inner) {
     inner.innerHTML =
       '<div class="header-dropdown-group">' +
-      '<a class="header-tab header-links" href="' + href("/playable/?near=1") + '" aria-haspopup="true">3D maps <i class="bi bi-chevron-down tw-text-xs"></i></a>' +
+      '<a class="header-tab header-links" href="' + href("index.html") + '" aria-haspopup="true">3D maps <i class="bi bi-chevron-down tw-text-xs"></i></a>' +
       '<div class="header-dropdown" role="menu">' +
       '<a class="header-links" href="' + href("index.html") + '" role="menuitem">Nearest 3D map</a>' +
-      '<a class="header-links" href="' + href("/playable/?near=1") + '" role="menuitem">Ski Game</a>' +
+      '<a class="header-links" href="' + href("/playable/") + '" role="menuitem">Ski Game</a>' +
       "</div></div>" +
       '<div class="header-dropdown-group">' +
       '<a class="header-tab header-links" href="' + href("DriveTimeMap.html") + '" aria-haspopup="true">Decide <i class="bi bi-chevron-down tw-text-xs"></i></a>' +
       '<div class="header-dropdown" role="menu">' +
       '<a class="header-links" href="' + href("DriveTimeMap.html") + '" role="menuitem">Drive Time</a>' +
-      '<a class="header-links" href="' + href("resort-comparison.html") + '?near=1" role="menuitem">Compare</a>' +
+      '<a class="header-links" href="' + href("resort-comparison.html") + '?near=1"' + (onHome ? " data-compare-current" : "") + ' role="menuitem">Compare</a>' +
       '<a class="header-links" href="' + href("TripPlannerMap.html") + '" role="menuitem">Trip Planner</a>' +
       "</div></div>" +
       '<div class="header-dropdown-group">' +

@@ -97,7 +97,7 @@ import { addAdmin1Regions } from "./clay/admin1-layer.js";
 import { loadSkiAreasAnalyzed } from "./geoparquet-browser.js";
 import { fetchSkiAreaCatalog } from "./pmtiles-core.js";
 import { buildResortStatsIndex } from "./ski-resort-popups.js?v=8";
-import { fetchPlayableCatalog } from "./playable-match.js";
+import { fetchPlayableCatalog, playableHrefFromClayResort } from "./playable-match.js";
 
 function disposeObject(obj) {
   obj.traverse((child) => {
@@ -744,12 +744,21 @@ export async function initHeroMontageMap(container, options = {}) {
         if (entityPanel.setParquetRows) entityPanel.setParquetRows(rows);
       })
       .catch((err) => console.warn("[clay-region] ski_areas_analyzed.parquet failed", err));
-    fetchPlayableCatalog()
-      .then((list) => {
-        if (entityPanel.setPlayableResorts) entityPanel.setPlayableResorts(list);
-      })
-      .catch((err) => console.warn("[clay-region] playable catalog failed", err));
   }
+
+  let gameResorts = [];
+  const gameCatalogPromise = fetchPlayableCatalog()
+    .then((list) => {
+      gameResorts = list;
+      if (entityPanel.setPlayableResorts) entityPanel.setPlayableResorts(list);
+      const shown = currentResort();
+      if (shown) syncChrome(shown);
+      return list;
+    })
+    .catch((err) => {
+      console.warn("[hero-montage-map] playable catalog failed", err);
+      return [];
+    });
 
   const playLink = embed.querySelector("[data-hero-play]");
   const nameEl = embed.querySelector("[data-hero-resort-name]");
@@ -765,6 +774,15 @@ export async function initHeroMontageMap(container, options = {}) {
   if (regionMode) {
     embed.classList.add("hero-montage-embed--region");
     for (const button of trailSchemeBtns()) button.hidden = true;
+  }
+
+  function compareHrefForClay(resort) {
+    const q = new URLSearchParams();
+    if (resort?.winter_sports_id) q.set("ws", String(resort.winter_sports_id));
+    const name = resort?.display_name || resort?.short_name || "";
+    if (name) q.set("name", name);
+    const qs = q.toString();
+    return qs ? `resort-comparison.html?${qs}` : "resort-comparison.html?near=1";
   }
 
   function currentResort() {
@@ -786,7 +804,11 @@ export async function initHeroMontageMap(container, options = {}) {
         : "";
     }
     embed.setAttribute("aria-label", `${resort.display_name || label} 3D clay map`);
-    const href = playableHref(resort);
+    const compareHref = compareHrefForClay(resort);
+    for (const link of document.querySelectorAll("[data-compare-current]")) {
+      link.href = compareHref;
+    }
+    const href = playableHrefFromClayResort(resort, gameResorts) || playableHref(resort);
     if (playLink) {
       if (href) {
         playLink.href = href;
@@ -1024,6 +1046,26 @@ export async function initHeroMontageMap(container, options = {}) {
     if (!scheme || event.detail?.source === "clay") return;
     applyClayTrailScheme(scheme);
   }
+  const missingDialog = document.getElementById("ski-game-missing");
+  const skiIn3dLinks = [...document.querySelectorAll("[data-ski-in-3d]")];
+  async function openCurrentResortGame(event) {
+    event.preventDefault();
+    gameResorts = await gameCatalogPromise;
+    const href = playableHrefFromClayResort(currentResort(), gameResorts) || playableHref(currentResort());
+    if (href) {
+      window.location.assign(href);
+      return;
+    }
+    if (missingDialog?.showModal) missingDialog.showModal();
+    else window.location.assign("/playable/");
+  }
+  document.getElementById("ski-game-missing-stay")?.addEventListener("click", () => {
+    missingDialog?.close();
+  });
+  for (const link of skiIn3dLinks) {
+    link.addEventListener("click", openCurrentResortGame);
+  }
+
   prevBtn?.addEventListener("click", onPrev);
   nextBtn?.addEventListener("click", onNext);
   document.addEventListener("click", onTrailScheme);
@@ -1135,6 +1177,9 @@ export async function initHeroMontageMap(container, options = {}) {
       window.removeEventListener("resize", resize);
       prevBtn?.removeEventListener("click", onPrev);
       nextBtn?.removeEventListener("click", onNext);
+      for (const link of skiIn3dLinks) {
+        link.removeEventListener("click", openCurrentResortGame);
+      }
       document.removeEventListener("click", onTrailScheme);
       document.removeEventListener("gsa-trail-scheme-change", onSchemeEvent);
       disposeObject(world);

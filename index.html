@@ -66,7 +66,7 @@
             referrerpolicy="no-referrer"
         />
         <link rel="preconnect" href="https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com" crossorigin />
-        <link rel="stylesheet" href="css/index-hero-montage.css?v=56" />
+        <link rel="stylesheet" href="css/index-hero-montage.css?v=57" />
         <script type="importmap">
         {
             "imports": {
@@ -168,9 +168,9 @@
                     >
                         This is the ski area nearest you, in 3D. Flip through the arrows to try somewhere farther — a local hill with the kids, or a daydream in the Alps.
                         <div class="tw-mt-4 tw-flex tw-flex-wrap tw-gap-3">
-                            <a href="/playable/?near=1" class="tw-inline-flex tw-h-11 tw-place-items-center tw-rounded-lg tw-px-5 tw-font-semibold tw-text-white" style="background-color:#1a4d8c;">Ski in 3D</a>
+                            <a href="/playable/" data-ski-in-3d class="tw-inline-flex tw-h-11 tw-place-items-center tw-rounded-lg tw-px-5 tw-font-semibold tw-text-white" style="background-color:#1a4d8c;">Ski in 3D</a>
                             <a href="DriveTimeMap.html" class="tw-inline-flex tw-h-11 tw-place-items-center tw-rounded-lg tw-border tw-border-gray-400 tw-px-5 tw-font-semibold tw-text-black">Drive from home</a>
-                            <a href="resort-comparison.html?near=1" class="tw-inline-flex tw-h-11 tw-place-items-center tw-rounded-lg tw-border tw-border-gray-400 tw-px-5 tw-font-semibold tw-text-black">Compare</a>
+                            <a href="resort-comparison.html?near=1" data-compare-current class="tw-inline-flex tw-h-11 tw-place-items-center tw-rounded-lg tw-border tw-border-gray-400 tw-px-5 tw-font-semibold tw-text-black">Compare</a>
                         </div>
                     </div>
                 </div>
@@ -181,6 +181,7 @@
                 >
                     <div
                         class="hero-montage-embed reveal-hero-img tw-relative tw-z-[1] tw-h-[420px] tw-w-full tw-max-w-[560px] max-lg:tw-h-[280px] max-lg:tw-max-w-[320px]"
+                        id="hero-3d"
                         aria-label="Montage Mountain 3D clay map"
                     >
                         <div id="hero-montage-stage" class="hero-montage-stage"></div>
@@ -225,7 +226,7 @@
                     Then decide
                 </h2>
                 <div class="features-grid">
-                    <a href="/playable/?near=1" class="reveal-up job-card tw-flex tw-flex-col tw-place-items-center tw-text-center tw-no-underline tw-text-inherit">
+                    <a href="/playable/" data-ski-in-3d class="reveal-up job-card tw-flex tw-flex-col tw-place-items-center tw-text-center tw-no-underline tw-text-inherit">
                         <h3 class="tw-mt-4 tw-text-xl tw-font-bold">Ski in 3D</h3>
                         <p class="tw-mt-2 tw-text-sm tw-leading-relaxed tw-text-gray-600">Clay maps and the ski game are why this site exists. Start with the mountain nearest you, then try Japan, the Andes, or the Alps.</p>
                     </a>
@@ -233,7 +234,7 @@
                         <h3 class="tw-mt-4 tw-text-xl tw-font-bold">Drive from home</h3>
                         <p class="tw-mt-2 tw-text-sm tw-leading-relaxed tw-text-gray-600">Kids, a pass day, or a Friday escape: 1–4 hour rings to the nearest hills.</p>
                     </a>
-                    <a href="resort-comparison.html?near=1" class="reveal-up job-card tw-flex tw-flex-col tw-place-items-center tw-text-center tw-no-underline tw-text-inherit">
+                    <a href="resort-comparison.html?near=1" data-compare-current class="reveal-up job-card tw-flex tw-flex-col tw-place-items-center tw-text-center tw-no-underline tw-text-inherit">
                         <h3 class="tw-mt-4 tw-text-xl tw-font-bold">Compare options</h3>
                         <p class="tw-mt-2 tw-text-sm tw-leading-relaxed tw-text-gray-600">Two mountains, one table — then ski the winner in 3D before you book.</p>
                     </a>
@@ -746,7 +747,7 @@
                 </div>
             </div>
         </footer>
-    <script src="scripts/site-nav.js?v=3" defer></script>
+    <script src="scripts/site-nav.js?v=5" defer></script>
 
     <link
         rel="stylesheet"
@@ -842,7 +843,7 @@
         .stat-lifts-legend .lift-symbol-img { width: 100%; height: 100%; object-fit: contain; display: block; }
     </style>
 
-    <script type="module" src="scripts/hero-montage-map.js?v=110"></script>
+    <script type="module" src="scripts/hero-montage-map.js?v=112"></script>
     <script type="module">
         import { fetchSkiAreaCatalog, loadPmtilesLayerFeatures } from './scripts/pmtiles-core.js';
         (async function () {
@@ -1063,5 +1064,13 @@
             },
         });
     </script>
+    <dialog id="ski-game-missing" aria-labelledby="ski-game-missing-title">
+        <h2 id="ski-game-missing-title">This resort isn’t a game yet</h2>
+        <p>Would you like to open the ski game and find a mountain that is playable?</p>
+        <div id="ski-game-missing-actions">
+            <button type="button" id="ski-game-missing-stay">Not now</button>
+            <a id="ski-game-missing-go" href="/playable/">Open ski game</a>
+        </div>
+    </dialog>
 </body>
 </html>

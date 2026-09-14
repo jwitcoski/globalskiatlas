@@ -41,20 +41,47 @@ export function matchPlayableResort(lon, lat, name, properties, playableResorts)
   return best;
 }
 
+let playableCatalogPromise;
+
 export async function fetchPlayableCatalog() {
-  const urls = ["/game_scenes/catalog.json", config.GAME_SCENES_CATALOG_URL];
-  for (const url of urls) {
-    try {
-      const r = await fetch(url);
-      if (!r.ok) continue;
-      const data = await r.json();
-      const list = Array.isArray(data?.resorts) ? data.resorts : [];
-      if (list.length) return list;
-    } catch {
-      /* try next */
-    }
+  if (!playableCatalogPromise) {
+    playableCatalogPromise = (async () => {
+      const urls = ["/game_scenes/catalog.json", config.GAME_SCENES_CATALOG_URL];
+      for (const url of urls) {
+        try {
+          const r = await fetch(url);
+          if (!r.ok) continue;
+          const data = await r.json();
+          const list = Array.isArray(data?.resorts) ? data.resorts : [];
+          if (list.length) return list;
+        } catch {
+          /* try next */
+        }
+      }
+      throw new Error("Playable catalog fetch failed");
+    })();
   }
-  throw new Error("Playable catalog fetch failed");
+  return playableCatalogPromise;
+}
+
+export function playableHrefFromClayResort(clay, playableResorts) {
+  if (!clay) return "";
+  const ws = String(clay.winter_sports_id || "");
+  const id = String(clay.id || "");
+  const list = playableResorts || [];
+  const hit = list.find((r) => {
+    if (ws && String(r.winter_sports_id || "") === ws) return true;
+    if (id && String(r.id || "") === id) return true;
+    const path = String(r.path || "").replace(/\/+$/, "");
+    return Boolean(id) && (path === id || path.startsWith(`${id}/`));
+  });
+  if (hit?.path) return playableHrefFromPath(hit.path);
+  const ver = hit?.scene_version || hit?.playable_ver || clay.playable_ver;
+  const rid = hit?.id || clay.id;
+  if (rid && ver) {
+    return `/playable/?resort=${encodeURIComponent(rid)}&ver=${encodeURIComponent(ver)}`;
+  }
+  return "";
 }
 
 export function playableHrefFromPath(path) {

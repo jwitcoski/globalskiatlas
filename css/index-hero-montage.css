@@ -504,3 +504,50 @@
     height: 24px;
   }
 }
+
+#ski-game-missing {
+  border: none;
+  border-radius: 12px;
+  padding: 1.5rem 1.75rem;
+  max-width: 26rem;
+  color: #111;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.28);
+}
+#ski-game-missing::backdrop {
+  background: rgba(0, 0, 0, 0.45);
+}
+#ski-game-missing h2 {
+  margin: 0 0 0.6rem;
+  font-size: 1.15rem;
+}
+#ski-game-missing p {
+  margin: 0 0 1.15rem;
+  line-height: 1.45;
+  color: #333;
+}
+#ski-game-missing-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  justify-content: flex-end;
+}
+#ski-game-missing-go {
+  display: inline-flex;
+  align-items: center;
+  height: 2.5rem;
+  padding: 0 1rem;
+  border-radius: 8px;
+  background: #1a4d8c;
+  color: #fff;
+  font-weight: 600;
+  text-decoration: none;
+}
+#ski-game-missing-stay {
+  height: 2.5rem;
+  padding: 0 1rem;
+  border-radius: 8px;
+  border: 1px solid #bbb;
+  background: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}

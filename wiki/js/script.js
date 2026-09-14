@@ -291,7 +291,7 @@ function ensureResortClayMounted() {
       RESORT_CLAY_REGION_ID = regionId;
       showResortClaySoon(false);
       embed.hidden = false;
-      return import('/scripts/hero-montage-map.js?v=110').then(function (mod) {
+      return import('/scripts/hero-montage-map.js?v=112').then(function (mod) {
         if (RESORT_CLAY_REGION_ID !== regionId) return null;
         return mod.initHeroMontageMap(stage, {
           regionMode: true,
@@ -354,7 +354,7 @@ function ensureResortClayMounted() {
     showResortClaySoon(false);
     embed.hidden = false;
 
-    return import('/scripts/hero-montage-map.js?v=110').then(function (mod) {
+    return import('/scripts/hero-montage-map.js?v=112').then(function (mod) {
       if (RESORT_CLAY_WINTER_ID !== wsId) return null;
       return mod.initHeroMontageMap(stage, { resortId: resortId, lockResort: true });
     }).then(function (api) {
