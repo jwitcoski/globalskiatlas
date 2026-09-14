@@ -1,6 +1,7 @@
 /**
- * Drive-time map — Mapbox Matrix ETAs plus labeled 2 / 3 / 4 hour rings.
- * Ring radius is calibrated from Mapbox drive times (km per hour in that region).
+ * Drive-time map — Mapbox Matrix ETAs plus road-following 2 / 3 / 4 hour zones.
+ * Sample destinations around the origin are timed via Matrix; Turf.js interpolates
+ * them into isobands. If the grid is too sparse, a duration heatmap is shown instead.
  * Entry for DriveTimeMap.html.
  */
 import { config } from './map-config.js?v=mb4';
@@ -13,6 +14,10 @@ const MAX_HOURS = 4;
 const RING_COLORS = { 2: '#0d9488', 3: '#2563eb', 4: '#d97706' };
 const EARTH_RADIUS_KM = 6371;
 const FALLBACK_KMH = 70;
+const ISO_BREAKS = [0, 120, 180, 240];
+const LAYER_PREFIXES = ['dt-iso-', 'dt-heat-', 'dt-circle-', 'dt-label-'];
+
+let turfIso = null;
 
 function haversineKm(lng0, lat0, lng1, lat1) {
   const toRad = (d) => (d * Math.PI) / 180;
@@ -22,6 +27,18 @@ function haversineKm(lng0, lat0, lng1, lat1) {
   const Δλ = toRad(lng1 - lng0);
   const a = Math.sin(Δφ / 2) ** 2 + Math.cos(φ0) * Math.cos(φ1) * Math.sin(Δλ / 2) ** 2;
   return 2 * EARTH_RADIUS_KM * Math.asin(Math.sqrt(a));
+}
+
+function destAt(lon, lat, bearingDeg, radiusKm) {
+  const toRad = (d) => (d * Math.PI) / 180;
+  const toDeg = (r) => (r * 180) / Math.PI;
+  const φ0 = toRad(lat);
+  const λ0 = toRad(lon);
+  const δ = radiusKm / EARTH_RADIUS_KM;
+  const θ = toRad(bearingDeg);
+  const φ1 = Math.asin(Math.sin(φ0) * Math.cos(δ) + Math.cos(φ0) * Math.sin(δ) * Math.cos(θ));
+  const λ1 = λ0 + Math.atan2(Math.sin(θ) * Math.sin(δ) * Math.cos(φ0), Math.cos(δ) - Math.sin(φ0) * Math.sin(φ1));
+  return [toDeg(λ1), toDeg(φ1)];
 }
 
 function bandLabel(minutes) {
@@ -59,24 +76,135 @@ function median(values) {
 }
 
 function circleLineString(lon, lat, radiusKm, numPoints = 96) {
-  const toRad = (d) => (d * Math.PI) / 180;
-  const toDeg = (r) => (r * 180) / Math.PI;
-  const R = EARTH_RADIUS_KM;
   const coords = [];
   for (let i = 0; i <= numPoints; i++) {
-    const bearing = (i / numPoints) * 2 * Math.PI;
-    const φ0 = toRad(lat);
-    const λ0 = toRad(lon);
-    const δ = radiusKm / R;
-    const φ1 = Math.asin(Math.sin(φ0) * Math.cos(δ) + Math.cos(φ0) * Math.sin(δ) * Math.cos(bearing));
-    const λ1 = λ0 + Math.atan2(Math.sin(bearing) * Math.sin(δ) * Math.cos(φ0), Math.cos(δ) - Math.sin(φ0) * Math.sin(φ1));
-    coords.push([toDeg(λ1), toDeg(φ1)]);
+    coords.push(destAt(lon, lat, (i / numPoints) * 360, radiusKm));
   }
   return { type: 'LineString', coordinates: coords };
 }
 
 function circleLabelPoint(lon, lat, radiusKm) {
-  return { type: 'Point', coordinates: [lon, lat + radiusKm / 111.32] };
+  return { type: 'Point', coordinates: destAt(lon, lat, 0, radiusKm) };
+}
+
+function matrixDestLimit(profile) {
+  return profile === 'driving-traffic' ? 9 : 24;
+}
+
+/** Polar sample grid so Matrix times follow roads instead of air circles. */
+function buildSamplePoints(lng, lat, radiusKm, profile) {
+  const pts = [];
+  const rings = profile === 'driving-traffic' ? [0.28, 0.52, 0.76, 1.0] : [0.2, 0.4, 0.6, 0.8, 1.0];
+  const nBearings = profile === 'driving-traffic' ? 8 : 12;
+  for (let r = 0; r < rings.length; r++) {
+    const dist = radiusKm * rings[r];
+    for (let i = 0; i < nBearings; i++) {
+      const bearing = i * (360 / nBearings);
+      pts.push({ xy: destAt(lng, lat, bearing, dist), bearing, dist });
+    }
+  }
+  return pts;
+}
+
+/** Along each bearing, find how far you can drive in `targetMin` minutes. */
+function radiusAlongBearing(samples, targetMin) {
+  const seq = samples.slice().sort((a, b) => a.dist - b.dist);
+  if (!seq.length) return 0;
+  if (seq[0].minutes >= targetMin) {
+    return seq[0].dist * (targetMin / Math.max(seq[0].minutes, 1));
+  }
+  for (let i = 1; i < seq.length; i++) {
+    const a = seq[i - 1];
+    const b = seq[i];
+    if (b.minutes >= targetMin) {
+      const t = (targetMin - a.minutes) / Math.max(b.minutes - a.minutes, 0.01);
+      return a.dist + t * (b.dist - a.dist);
+    }
+  }
+  const last = seq[seq.length - 1];
+  const extra = targetMin / Math.max(last.minutes, 1);
+  return Math.min(last.dist * extra, last.dist * 1.15);
+}
+
+function samplesToZonePolygons(lng, lat, timedSamples) {
+  const byBearing = new Map();
+  timedSamples.forEach((s) => {
+    const key = s.bearing.toFixed(2);
+    if (!byBearing.has(key)) byBearing.set(key, []);
+    byBearing.get(key).push(s);
+  });
+  const bearings = [...byBearing.keys()].map(Number).sort((a, b) => a - b);
+  if (bearings.length < 6) return null;
+  const features = [];
+  const labels = [];
+  HOURS.slice().reverse().forEach((H) => {
+    const ring = bearings.map((b) => {
+      const km = radiusAlongBearing(byBearing.get(b.toFixed(2)), H * 60);
+      return destAt(lng, lat, b, Math.max(km, 2));
+    });
+    ring.push(ring[0]);
+    const north = destAt(lng, lat, 0, Math.max(radiusAlongBearing(byBearing.get((0).toFixed(2)) || byBearing.get(bearings[0].toFixed(2)), H * 60), 2));
+    features.push({
+      type: 'Feature',
+      properties: {
+        hours: H,
+        label: `${H} hrs`,
+        fill: H === 2 ? '0-120' : H === 3 ? '120-180' : '180-240'
+      },
+      geometry: { type: 'Polygon', coordinates: [ring] }
+    });
+    labels.push({
+      type: 'Feature',
+      properties: { hours: H, label: `${H} hrs` },
+      geometry: { type: 'Point', coordinates: north }
+    });
+  });
+  return { type: 'FeatureCollection', features, labels };
+}
+
+function northernmostPoint(coords) {
+  let best = coords[0];
+  for (const c of coords) {
+    if (c && c.length >= 2 && (!best || c[1] > best[1])) best = c;
+  }
+  return best;
+}
+
+function labelFeaturesFromBands(bands) {
+  if (bands.labels && bands.labels.length) return bands.labels;
+  return (bands.features || []).map((f) => {
+    const ring = (f.geometry && f.geometry.coordinates && f.geometry.coordinates[0]) || [];
+    const hours = f.properties && f.properties.hours;
+    return {
+      type: 'Feature',
+      properties: { hours, label: (f.properties && f.properties.label) || `${hours} hrs` },
+      geometry: { type: 'Point', coordinates: northernmostPoint(ring) }
+    };
+  }).filter((f) => f.geometry.coordinates);
+}
+
+async function getTurfIso() {
+  if (turfIso) return turfIso;
+  const [interpMod, isoMod, helpersMod, bboxMod] = await Promise.all([
+    import('https://esm.sh/@turf/interpolate@7.2.0'),
+    import('https://esm.sh/@turf/isobands@7.2.0'),
+    import('https://esm.sh/@turf/helpers@7.2.0'),
+    import('https://esm.sh/@turf/bbox@7.2.0')
+  ]);
+  turfIso = {
+    interpolate: interpMod.default ?? interpMod.interpolate,
+    isobands: isoMod.default ?? isoMod.isobands,
+    point: helpersMod.point,
+    featureCollection: helpersMod.featureCollection,
+    bbox: bboxMod.default ?? bboxMod.bbox
+  };
+  return turfIso;
+}
+
+function firstSymbolLayerId(map) {
+  const layers = (map.getStyle() && map.getStyle().layers) || [];
+  const symbol = layers.find((l) => l.type === 'symbol');
+  return symbol ? symbol.id : undefined;
 }
 
 (async function main() {
@@ -135,18 +263,18 @@ function circleLabelPoint(lon, lat, radiusKm) {
     }
   }
 
-  function clearRings() {
+  function clearDriveLayers() {
     const style = map.getStyle();
     const layers = (style && style.layers) || [];
     layers.slice().forEach((layer) => {
-      if (layer.id.startsWith('dt-circle-') || layer.id.startsWith('dt-label-')) {
-        if (map.getLayer(layer.id)) map.removeLayer(layer.id);
+      if (LAYER_PREFIXES.some((p) => layer.id.startsWith(p)) && map.getLayer(layer.id)) {
+        map.removeLayer(layer.id);
       }
     });
     const sources = (style && style.sources) || {};
     Object.keys(sources).forEach((id) => {
-      if (id.startsWith('dt-circle-') || id.startsWith('dt-label-')) {
-        if (map.getSource(id)) map.removeSource(id);
+      if (LAYER_PREFIXES.some((p) => id.startsWith(p)) && map.getSource(id)) {
+        map.removeSource(id);
       }
     });
   }
@@ -177,25 +305,226 @@ function circleLabelPoint(lon, lat, radiusKm) {
     return { lng: f.center[0], lat: f.center[1], display_name: f.place_name };
   }
 
+  async function matrixDurations(lngLat, destLngLats, profile) {
+    const maxDest = matrixDestLimit(profile);
+    const out = new Array(destLngLats.length).fill(null);
+    for (let i = 0; i < destLngLats.length; i += maxDest) {
+      const chunk = destLngLats.slice(i, i + maxDest);
+      const coords = [lngLat]
+        .concat(chunk)
+        .map((c) => c.join(','))
+        .join(';');
+      const url =
+        'https://api.mapbox.com/directions-matrix/v1/mapbox/' +
+        profile +
+        '/' +
+        coords +
+        '?sources=0&annotations=duration&access_token=' +
+        token;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('Matrix HTTP ' + res.status);
+      const data = await res.json();
+      const durations = (data.durations && data.durations[0]) || [];
+      chunk.forEach((_, j) => {
+        const sec = durations[j + 1];
+        out[i + j] = typeof sec === 'number' && Number.isFinite(sec) ? sec : null;
+      });
+    }
+    return out;
+  }
+
   async function loadMatrix(lngLat, destinations, profile) {
     if (!destinations.length) return [];
     const chunk = destinations.slice(0, MATRIX_LIMIT);
-    const coords = [lngLat]
-      .concat(chunk.map((d) => [d.resort.latlng.lng, d.resort.latlng.lat]))
-      .map((c) => c.join(','))
-      .join(';');
-    const url =
-      'https://api.mapbox.com/directions-matrix/v1/mapbox/' +
-      profile +
-      '/' +
-      coords +
-      '?sources=0&annotations=duration,distance&access_token=' +
-      token;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error('Matrix HTTP ' + res.status);
-    const data = await res.json();
-    const durations = (data.durations && data.durations[0]) || [];
-    return chunk.map((d, j) => ({ ...d, durationSec: durations[j + 1], airEst: false }));
+    const secs = await matrixDurations(
+      lngLat,
+      chunk.map((d) => [d.resort.latlng.lng, d.resort.latlng.lat]),
+      profile
+    );
+    return chunk.map((d, j) => ({ ...d, durationSec: secs[j], airEst: false }));
+  }
+
+  async function sampleDriveTimes(lngLat, radiusKm, profile) {
+    const dests = buildSamplePoints(lngLat[0], lngLat[1], radiusKm, profile);
+    const secs = await matrixDurations(lngLat, dests.map((d) => d.xy), profile);
+    const features = [
+      { type: 'Feature', geometry: { type: 'Point', coordinates: lngLat }, properties: { minutes: 0 } }
+    ];
+    const timed = [];
+    dests.forEach((d, i) => {
+      if (secs[i] == null) return;
+      const minutes = secs[i] / 60;
+      if (minutes < 0 || minutes > 360) return;
+      timed.push({ ...d, minutes });
+      features.push({
+        type: 'Feature',
+        geometry: { type: 'Point', coordinates: d.xy },
+        properties: { minutes, bearing: d.bearing }
+      });
+    });
+    return { type: 'FeatureCollection', features, timed };
+  }
+
+  async function pointsToIsobands(pointFc, radiusKm) {
+    const t = await getTurfIso();
+    const fc = t.featureCollection(
+      pointFc.features.map((f) => t.point(f.geometry.coordinates, f.properties))
+    );
+    const cell = Math.max(12, Math.min(28, radiusKm / 10));
+    const grid = t.interpolate(fc, cell, {
+      gridType: 'points',
+      property: 'minutes',
+      units: 'kilometers'
+    });
+    const bands = t.isobands(grid, ISO_BREAKS, { zProperty: 'minutes' });
+    (bands.features || []).forEach((f) => {
+      const raw = String((f.properties && (f.properties.fill || f.properties.level)) || '');
+      const low = parseFloat(raw.split('-')[0]);
+      if (low < 120) f.properties.hours = 2;
+      else if (low < 180) f.properties.hours = 3;
+      else f.properties.hours = 4;
+      f.properties.label = `${f.properties.hours} hrs`;
+    });
+    return bands;
+  }
+
+  function paintIsochrones(bands) {
+    const beforeId = firstSymbolLayerId(map);
+    map.addSource('dt-iso-src', { type: 'geojson', data: bands });
+    map.addLayer(
+      {
+        id: 'dt-iso-fill',
+        type: 'fill',
+        source: 'dt-iso-src',
+        paint: {
+          'fill-color': [
+            'match',
+            ['get', 'hours'],
+            2,
+            RING_COLORS[2],
+            3,
+            RING_COLORS[3],
+            4,
+            RING_COLORS[4],
+            RING_COLORS[4]
+          ],
+          'fill-opacity': [
+            'match',
+            ['get', 'hours'],
+            2,
+            0.38,
+            3,
+            0.26,
+            4,
+            0.16,
+            0.12
+          ]
+        }
+      },
+      beforeId
+    );
+    map.addLayer(
+      {
+        id: 'dt-iso-line',
+        type: 'line',
+        source: 'dt-iso-src',
+        paint: {
+          'line-color': [
+            'match',
+            ['get', 'hours'],
+            2,
+            RING_COLORS[2],
+            3,
+            RING_COLORS[3],
+            4,
+            RING_COLORS[4],
+            RING_COLORS[4]
+          ],
+          'line-width': 2,
+          'line-opacity': 0.9
+        }
+      },
+      beforeId
+    );
+    map.addLayer({
+      id: 'dt-iso-label',
+      type: 'symbol',
+      source: 'dt-iso-src',
+      layout: {
+        'symbol-placement': 'line',
+        'text-field': ['coalesce', ['get', 'label'], ['concat', ['to-string', ['get', 'hours']], ' hrs']],
+        'text-size': 13,
+        'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
+        'symbol-spacing': 220,
+        'text-max-angle': 40,
+        'text-padding': 1,
+        'text-allow-overlap': true,
+        'text-ignore-placement': true
+      },
+      paint: {
+        'text-color': [
+          'match',
+          ['get', 'hours'],
+          2,
+          RING_COLORS[2],
+          3,
+          RING_COLORS[3],
+          4,
+          RING_COLORS[4],
+          RING_COLORS[4]
+        ],
+        'text-halo-color': '#ffffff',
+        'text-halo-width': 2.2
+      }
+    });
+  }
+
+  function paintHeatmap(pointFc) {
+    const beforeId = firstSymbolLayerId(map);
+    map.addSource('dt-heat-src', { type: 'geojson', data: pointFc });
+    map.addLayer(
+      {
+        id: 'dt-heat-layer',
+        type: 'heatmap',
+        source: 'dt-heat-src',
+        paint: {
+          'heatmap-weight': [
+            'interpolate',
+            ['linear'],
+            ['get', 'minutes'],
+            0,
+            1,
+            120,
+            0.7,
+            180,
+            0.4,
+            240,
+            0.15,
+            360,
+            0
+          ],
+          'heatmap-intensity': 0.9,
+          'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 4, 18, 8, 42, 11, 70],
+          'heatmap-color': [
+            'interpolate',
+            ['linear'],
+            ['heatmap-density'],
+            0,
+            'rgba(0,0,0,0)',
+            0.2,
+            'rgba(217,119,6,0.35)',
+            0.45,
+            'rgba(37,99,235,0.45)',
+            0.75,
+            'rgba(13,148,136,0.65)',
+            1,
+            'rgba(13,148,136,0.9)'
+          ],
+          'heatmap-opacity': 0.85
+        }
+      },
+      beforeId
+    );
   }
 
   function paintRings(lng, lat, radiusByHour) {
@@ -242,6 +571,24 @@ function circleLabelPoint(lon, lat, radiusKm) {
         }
       });
     });
+  }
+
+  function fitToData(lngLat, geojson, radiusKm) {
+    try {
+      if (geojson && geojson.features && geojson.features.length) {
+        const t = turfIso;
+        if (t && t.bbox) {
+          const b = t.bbox(geojson);
+          map.fitBounds([[b[0], b[1]], [b[2], b[3]]], { padding: 80, duration: 800, maxZoom: 8 });
+          return;
+        }
+      }
+    } catch (_) { /* fall through */ }
+    const pad = 1.1 * (radiusKm / 111);
+    map.fitBounds(
+      [[lngLat[0] - pad, lngLat[1] - pad], [lngLat[0] + pad, lngLat[1] + pad]],
+      { padding: 80, duration: 800, maxZoom: 8 }
+    );
   }
 
   function renderBands(withEta) {
@@ -293,7 +640,7 @@ function circleLabelPoint(lon, lat, radiusKm) {
     drawBtn.disabled = true;
     setStatus('Loading drive times…');
     if (apiWarning) apiWarning.style.display = 'none';
-    clearRings();
+    clearDriveLayers();
 
     try {
       const allNear = nearestResorts(lngLat, searchResorts.length);
@@ -319,19 +666,45 @@ function circleLabelPoint(lon, lat, radiusKm) {
         });
       }
 
-      paintRings(lngLat[0], lngLat[1], radiusByHour);
-      renderBands(listed);
+      setStatus('Building road-time zones…');
+      const sampleFc = await sampleDriveTimes(lngLat, maxKm * 1.05, profile);
+      let zoneFc = samplesToZonePolygons(lngLat[0], lngLat[1], sampleFc.timed || []);
+      let mode = 'circles';
+      if (zoneFc && zoneFc.features.length) {
+        paintIsochrones(zoneFc);
+        mode = 'isobands';
+      } else if (sampleFc.features.length >= 12) {
+        try {
+          zoneFc = await pointsToIsobands(sampleFc, maxKm);
+          if (zoneFc && zoneFc.features && zoneFc.features.length) {
+            paintIsochrones(zoneFc);
+            mode = 'isobands';
+          }
+        } catch (isoErr) {
+          console.warn('[drive-time-map-ml] isobands failed:', isoErr);
+        }
+      }
+      if (mode !== 'isobands') {
+        if (sampleFc.features.length >= 8) {
+          paintHeatmap(sampleFc);
+          mode = 'heatmap';
+        } else {
+          paintRings(lngLat[0], lngLat[1], radiusByHour);
+        }
+      }
 
-      const maxR = radiusByHour[4];
-      const pad = 1.1 * (maxR / 111);
-      map.fitBounds(
-        [[lngLat[0] - pad, lngLat[1] - pad], [lngLat[0] + pad, lngLat[1] + pad]],
-        { padding: 80, duration: 800, maxZoom: 8 }
-      );
-      setStatus((placeLabel || 'Origin') + ' · Mapbox driving');
+      renderBands(listed);
+      fitToData(lngLat, zoneFc || sampleFc, maxKm);
+      const modeNote =
+        mode === 'isobands'
+          ? 'road-time zones'
+          : mode === 'heatmap'
+            ? 'drive-time heatmap'
+            : 'air rings (fallback)';
+      setStatus((placeLabel || 'Origin') + ' · ' + modeNote);
     } catch (err) {
       console.warn('[drive-time-map-ml] error:', err);
-      clearRings();
+      clearDriveLayers();
       setStatus((err && err.message) ? err.message : 'Drive-time request failed.');
     }
     drawBtn.disabled = !originLngLat;

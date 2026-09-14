@@ -89,7 +89,7 @@
         <button class="dt-close-btn" id="dtClose" aria-label="Close">&#x2715;</button>
       </div>
       <div class="dt-body">
-        <p class="dt-hint">Labeled 2 / 3 / 4 hour rings. Only day-trip range (up to 4 hours). The nearest 24 resorts use Mapbox drive times; the rest use air distance.</p>
+        <p class="dt-hint">2 / 3 / 4 hour zones follow real roads (Matrix sample points + Turf isobands). Day-trip range only. The nearest 24 resorts use Mapbox drive times; farther ones use air-distance estimates.</p>
         <div>
           <div class="dt-label">Starting point</div>
           <div class="dt-input-row">
@@ -116,7 +116,7 @@
         <div id="dtApiWarning" class="dt-warning" style="display:none;"></div>
         <div>
           <button class="dt-btn dt-btn-full" id="dtDrawBtn" disabled>Show drive-time areas</button>
-          <p class="dt-hint" style="margin-top:6px">About 25 Matrix elements per search. Resorts beyond that show air-distance estimates. Click a name to fly there.</p>
+          <p class="dt-hint" style="margin-top:6px">A few Matrix batches time a grid around you, then Turf draws isobands. If the grid is too sparse, a drive-time heatmap is shown instead. Click a name to fly there.</p>
         </div>
         <div id="dtResults" class="dt-results">
           <div id="dtBandList"></div>
@@ -146,7 +146,7 @@
 
   <script src="scripts/header-toggle.js"></script>
   <script defer src="https://cdn.maptiler.com/maptiler-sdk-js/v3.10.2/maptiler-sdk.umd.min.js"></script>
-  <script type="module" src="scripts/drive-time-map-ml.js?v=near1"></script>
+  <script type="module" src="scripts/drive-time-map-ml.js?v=iso3"></script>
 <script src="scripts/site-nav.js?v=4" defer></script>
 </body>
 </html>
