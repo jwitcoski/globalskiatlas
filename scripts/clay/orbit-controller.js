@@ -8,7 +8,7 @@ function pointerDistance(a, b) {
   return Math.hypot(a.x - b.x, a.y - b.y);
 }
 
-export function createOrbitController({ camera, canvas, container, renderer, getBounds, reduceMotion = false }) {
+export function createOrbitController({ camera, canvas, container, renderer, getBounds, reduceMotion = false, autoRotateOnly = false }) {
   let az = 0.55;
   let polar = 0.78;
   let zoom = 1;
@@ -26,6 +26,7 @@ export function createOrbitController({ camera, canvas, container, renderer, get
   let pinch = null;
 
   function markInteracted() {
+    if (autoRotateOnly) return;
     resumeSpinAt = performance.now() + idleResumeMs;
   }
 
@@ -68,6 +69,7 @@ export function createOrbitController({ camera, canvas, container, renderer, get
   }
 
   function onPointerDown(e) {
+    if (autoRotateOnly) return;
     if (e.pointerType === "mouse" && e.button !== 0) return;
     pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (pointers.size >= 2) {
@@ -130,6 +132,10 @@ export function createOrbitController({ camera, canvas, container, renderer, get
   }
 
   function onWheel(e) {
+    if (autoRotateOnly) {
+      e.preventDefault();
+      return;
+    }
     e.preventDefault();
     applyZoomFactor(Math.exp(e.deltaY * 0.00115));
     markInteracted();
@@ -137,6 +143,7 @@ export function createOrbitController({ camera, canvas, container, renderer, get
 
   function onDoubleClick(e) {
     e.preventDefault();
+    if (autoRotateOnly) return;
     reset();
   }
 
@@ -169,9 +176,11 @@ export function createOrbitController({ camera, canvas, container, renderer, get
     camera.lookAt(center.x, center.y, center.z);
   }
 
-  canvas.style.touchAction = "none";
-  canvas.style.cursor = "grab";
-  canvas.setAttribute("aria-label", "Drag to orbit the 3D map; pinch or scroll to zoom");
+  canvas.style.touchAction = autoRotateOnly ? "pan-y" : "none";
+  canvas.style.cursor = autoRotateOnly ? "default" : "grab";
+  canvas.setAttribute("aria-label", autoRotateOnly
+    ? "Auto-rotating 3D ski resort map"
+    : "Drag to orbit the 3D map; pinch or scroll to zoom");
   canvas.addEventListener("pointerdown", onPointerDown);
   canvas.addEventListener("pointermove", onPointerMove, { passive: false });
   canvas.addEventListener("pointerup", onPointerUp);

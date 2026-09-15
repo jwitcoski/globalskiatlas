@@ -647,11 +647,12 @@ export async function initHeroMontageMap(container, options = {}) {
   if (!container) return null;
 
   const params = typeof location !== "undefined" ? new URLSearchParams(location.search) : null;
+  const preview = Boolean(options.preview);
   const preferredId = String(options.resortId || params?.get("resort") || "");
-  const skipNearest = options.skipNearest === true || params?.get("nearest") === "0";
+  const skipNearest = options.skipNearest === true || preview || params?.get("nearest") === "0";
   const regionMode = Boolean(options.regionMode);
   const regionId = options.regionId ? String(options.regionId) : "";
-  const lockResort = Boolean(options.lockResort || preferredId || regionMode);
+  const lockResort = Boolean(options.lockResort || preferredId || regionMode || preview);
 
   const embed = container.closest(".hero-montage-embed") || container;
 
@@ -660,7 +661,9 @@ export async function initHeroMontageMap(container, options = {}) {
   scene.fog = null;
 
   const camera = new THREE.PerspectiveCamera(36, 1, 0.5, 1200);
-  const quality = getClayQuality();
+  const quality = preview
+    ? { tier: "preview", dpr: 1, shadows: false, powerPreference: "low-power" }
+    : getClayQuality();
   const renderer = new THREE.WebGLRenderer({
     antialias: true,
     alpha: false,
@@ -701,9 +704,10 @@ export async function initHeroMontageMap(container, options = {}) {
   let lastT = performance.now();
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const canvas = renderer.domElement;
-  const entityPanel = createClayEntityPanel(embed);
-  const entityTooltip = createClayEntityTooltip(embed);
-  const entityPicker = createClayEntityPicker({
+  const noopUi = { hide() {}, show() {}, dispose() {}, setPlayableResorts() {}, setResortStats() {}, setParquetRows() {} };
+  const entityPanel = preview ? noopUi : createClayEntityPanel(embed);
+  const entityTooltip = preview ? noopUi : createClayEntityTooltip(embed);
+  const entityPicker = preview ? { dispose() {} } : createClayEntityPicker({
     canvas,
     camera,
     getPickables: () => entityPickables,
@@ -722,6 +726,7 @@ export async function initHeroMontageMap(container, options = {}) {
     renderer,
     getBounds: () => bounds,
     reduceMotion,
+    autoRotateOnly: preview,
   });
   let nearestId = "";
   let visitorPlace = "";
@@ -747,18 +752,20 @@ export async function initHeroMontageMap(container, options = {}) {
   }
 
   let gameResorts = [];
-  const gameCatalogPromise = fetchPlayableCatalog()
-    .then((list) => {
-      gameResorts = list;
-      if (entityPanel.setPlayableResorts) entityPanel.setPlayableResorts(list);
-      const shown = currentResort();
-      if (shown) syncChrome(shown);
-      return list;
-    })
-    .catch((err) => {
-      console.warn("[hero-montage-map] playable catalog failed", err);
-      return [];
-    });
+  const gameCatalogPromise = preview
+    ? Promise.resolve([])
+    : fetchPlayableCatalog()
+      .then((list) => {
+        gameResorts = list;
+        if (entityPanel.setPlayableResorts) entityPanel.setPlayableResorts(list);
+        const shown = currentResort();
+        if (shown) syncChrome(shown);
+        return list;
+      })
+      .catch((err) => {
+        console.warn("[hero-montage-map] playable catalog failed", err);
+        return [];
+      });
 
   const playLink = embed.querySelector("[data-hero-play]");
   const nameEl = embed.querySelector("[data-hero-resort-name]");
@@ -1047,7 +1054,7 @@ export async function initHeroMontageMap(container, options = {}) {
     applyClayTrailScheme(scheme);
   }
   const missingDialog = document.getElementById("ski-game-missing");
-  const skiIn3dLinks = [...document.querySelectorAll("[data-ski-in-3d]")];
+  const skiIn3dLinks = preview ? [] : [...document.querySelectorAll("[data-ski-in-3d]")];
   async function openCurrentResortGame(event) {
     event.preventDefault();
     gameResorts = await gameCatalogPromise;
@@ -1059,17 +1066,18 @@ export async function initHeroMontageMap(container, options = {}) {
     if (missingDialog?.showModal) missingDialog.showModal();
     else window.location.assign("/playable/");
   }
-  document.getElementById("ski-game-missing-stay")?.addEventListener("click", () => {
-    missingDialog?.close();
-  });
-  for (const link of skiIn3dLinks) {
-    link.addEventListener("click", openCurrentResortGame);
+  if (!preview) {
+    document.getElementById("ski-game-missing-stay")?.addEventListener("click", () => {
+      missingDialog?.close();
+    });
+    for (const link of skiIn3dLinks) {
+      link.addEventListener("click", openCurrentResortGame);
+    }
+    prevBtn?.addEventListener("click", onPrev);
+    nextBtn?.addEventListener("click", onNext);
+    document.addEventListener("click", onTrailScheme);
+    document.addEventListener("gsa-trail-scheme-change", onSchemeEvent);
   }
-
-  prevBtn?.addEventListener("click", onPrev);
-  nextBtn?.addEventListener("click", onNext);
-  document.addEventListener("click", onTrailScheme);
-  document.addEventListener("gsa-trail-scheme-change", onSchemeEvent);
 
   function resize() {
     orbit.resize();

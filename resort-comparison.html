@@ -35,6 +35,15 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" integrity="sha512-dPXYcDub/aeb08c63jRq/k6GaKccl256JQy/AnOq7CAnEZ9FzSL9wSbcZkMp4R26vBsMLFYH4kQ67/bbV8XaCQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="css/index-hero-montage.css?v=59" />
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { height: 100%; font-family: system-ui, -apple-system, sans-serif; background: #fff; }
@@ -57,6 +66,39 @@
       box-shadow: 0 2px 12px rgba(0,0,0,0.06);
       overflow: hidden;
       border: 1px solid #eee;
+    }
+    #clay-compare {
+      display: none;
+      gap: 10px;
+      min-height: 640px;
+      padding: 12px;
+      background: #fafafa;
+      border-radius: 12px;
+      border: 1px solid #eee;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    }
+    body.compare-3d #map-container { display: none; }
+    body.compare-3d #clay-compare { display: grid; }
+    body.compare-3d #print-chart-btn { display: none !important; }
+    .clay-compare-cell { min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+    .clay-compare-name { font-size: 13px; font-weight: 600; color: #374151; text-align: center; }
+    .clay-compare-embed {
+      position: relative;
+      width: 100%;
+      max-width: none;
+      height: 220px;
+      border-radius: 10px;
+    }
+    .clay-compare-empty {
+      height: 220px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #6b7280;
+      font-size: 13px;
+      background: #fff;
+      border: 1px dashed #d1d5db;
+      border-radius: 10px;
     }
     .map-container svg {
       display: block;
@@ -450,6 +492,7 @@
         <div class="map-container" id="map-container">
           <div class="loading" id="loading">Loading resort outlines and metadata…</div>
         </div>
+        <div id="clay-compare" aria-label="3D clay maps"></div>
         <button type="button" id="print-chart-btn" class="print-chart-btn" aria-label="Print comparison chart">
           <i class="bi bi-printer"></i> Print
         </button>
@@ -462,6 +505,10 @@
           <div class="layout-seg" role="group" aria-label="Layout">
             <button type="button" id="layout-overlay" class="on">Overlay</button>
             <button type="button" id="layout-spread">Spread</button>
+          </div>
+          <div class="layout-seg" role="group" aria-label="View" style="margin-top:8px">
+            <button type="button" id="view-2d" class="on">2D</button>
+            <button type="button" id="view-3d">3D</button>
           </div>
           <div class="control-buttons" style="margin-top:10px">
             <button type="button" id="deselect-all">Clear</button>
@@ -736,6 +783,7 @@
     let passFilter = 'all';
     const MAX_COMPARE = 12;
     let layoutMode = 'auto';
+    let viewMode = '2d';
     let resortTransforms = []; // { resortMinX, resortMinY, globalScaleFactor } per index
     let globalScaleFactorCache = 0;
 
@@ -1252,6 +1300,25 @@
         loadPistesForSelected(selectedIndices).catch(() => {});
       }
       applyOffsetToResorts();
+      syncClayView();
+    }
+
+    function syncClayView() {
+      const host = document.getElementById('clay-compare');
+      document.body.classList.toggle('compare-3d', viewMode === '3d');
+      d3.select('#view-2d').classed('on', viewMode === '2d');
+      d3.select('#view-3d').classed('on', viewMode === '3d');
+      if (viewMode !== '3d') {
+        window.dispatchEvent(new CustomEvent('gsa-compare-view', { detail: { mode: '2d' } }));
+        return;
+      }
+      const visible = getSelectedIndices();
+      const cols = spreadGrid(Math.max(visible.length, 1)).cols;
+      const items = visible.map((idx) => ({
+        name: resortData[idx].name,
+        ws: winterSportsId(idx)
+      }));
+      window.dispatchEvent(new CustomEvent('gsa-compare-view', { detail: { mode: '3d', host, items, cols } }));
     }
 
     function updateMapTitle() {
@@ -1360,6 +1427,7 @@
     }
 
     function autoZoomToSelection() {
+      if (viewMode === '3d') return;
       if (!d3.select('#auto-zoom-toggle').property('checked')) return;
       const visible = getSelectedIndices();
       if (visible.length === 0) return;
@@ -1533,6 +1601,15 @@
         syncLayoutButtons();
         applyOffsetToResorts();
       });
+      d3.select('#view-2d').on('click', () => {
+        viewMode = '2d';
+        syncClayView();
+        applyOffsetToResorts();
+      });
+      d3.select('#view-3d').on('click', () => {
+        viewMode = '3d';
+        syncClayView();
+      });
       d3.select('#resort-search').on('input', () => {
         applyListFilters();
         renderSearchHits();
@@ -1622,6 +1699,7 @@
         console.error(err);
       });
   </script>
+<script type="module" src="scripts/compare-clay.js?v=1"></script>
 <script src="scripts/site-nav.js?v=4" defer></script>
 </body>
 </html>
