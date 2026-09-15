@@ -1,6 +1,11 @@
 {
   "season": "2026-27",
-  "generated_at": "2026-09-15T11:50:13.227Z",
+  "generated_at": "2026-09-15T12:28:52.841Z",
+  "source": {
+    "name": "The Storm Skiing Journal",
+    "toolkit": "https://www.stormskiing.com/p/a-big-dumb-toolkit-for-2026-27-ski",
+    "workbook": "https://docs.google.com/spreadsheets/d/1G2-l2DVg7-QwroOi7EqRDrJYJ4ICYLcJbLx-nARJdrA"
+  },
   "by_id": {
     "43441045": {
       "winter_sports_id": "43441045",
@@ -12,7 +17,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "45096232": {
       "winter_sports_id": "45096232",
@@ -24,7 +30,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "45117869": {
       "winter_sports_id": "45117869",
@@ -36,7 +43,8 @@
         "epic"
       ],
       "season": "2026-27",
-      "confidence": "alias"
+      "confidence": "alias",
+      "review_confirmed": false
     },
     "45147901": {
       "winter_sports_id": "45147901",
@@ -48,7 +56,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_country"
+      "confidence": "exact_country",
+      "review_confirmed": false
     },
     "48782596": {
       "winter_sports_id": "48782596",
@@ -60,7 +69,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "52067284": {
       "winter_sports_id": "52067284",
@@ -72,7 +82,8 @@
         "ikon"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "68519530": {
       "winter_sports_id": "68519530",
@@ -84,7 +95,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "178133225": {
       "winter_sports_id": "178133225",
@@ -96,7 +108,8 @@
         "epic"
       ],
       "season": "2026-27",
-      "confidence": "exact_country"
+      "confidence": "override",
+      "review_confirmed": true
     },
     "184326663": {
       "winter_sports_id": "184326663",
@@ -108,7 +121,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "184326673": {
       "winter_sports_id": "184326673",
@@ -120,7 +134,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "233886400": {
       "winter_sports_id": "233886400",
@@ -130,7 +145,8 @@
       ],
       "passes": [],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "242382005": {
       "winter_sports_id": "242382005",
@@ -142,7 +158,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "251260219": {
       "winter_sports_id": "251260219",
@@ -154,7 +171,8 @@
         "epic"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "252782489": {
       "winter_sports_id": "252782489",
@@ -166,7 +184,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "255571392": {
       "winter_sports_id": "255571392",
@@ -178,7 +197,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "255716854": {
       "winter_sports_id": "255716854",
@@ -190,7 +210,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "256024127": {
       "winter_sports_id": "256024127",
@@ -202,7 +223,8 @@
         "epic"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "256455529": {
       "winter_sports_id": "256455529",
@@ -214,7 +236,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "256580493": {
       "winter_sports_id": "256580493",
@@ -226,7 +249,8 @@
         "epic"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "256781770": {
       "winter_sports_id": "256781770",
@@ -238,7 +262,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "258880201": {
       "winter_sports_id": "258880201",
@@ -250,7 +275,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_country"
+      "confidence": "exact_country",
+      "review_confirmed": false
     },
     "281594168": {
       "winter_sports_id": "281594168",
@@ -262,7 +288,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "containment"
+      "confidence": "containment",
+      "review_confirmed": false
     },
     "290283443": {
       "winter_sports_id": "290283443",
@@ -274,7 +301,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "294826110": {
       "winter_sports_id": "294826110",
@@ -286,7 +314,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_country"
+      "confidence": "exact_country",
+      "review_confirmed": false
     },
     "302670313": {
       "winter_sports_id": "302670313",
@@ -298,7 +327,8 @@
         "ikon"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "304469711": {
       "winter_sports_id": "304469711",
@@ -310,7 +340,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "containment"
+      "confidence": "containment",
+      "review_confirmed": false
     },
     "308152532": {
       "winter_sports_id": "308152532",
@@ -320,7 +351,8 @@
       ],
       "passes": [],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "313781036": {
       "winter_sports_id": "313781036",
@@ -332,7 +364,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "317142448": {
       "winter_sports_id": "317142448",
@@ -344,7 +377,8 @@
         "ikon"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "319472357": {
       "winter_sports_id": "319472357",
@@ -356,7 +390,8 @@
         "epic"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "324162841": {
       "winter_sports_id": "324162841",
@@ -368,7 +403,8 @@
         "epic"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "334089267": {
       "winter_sports_id": "334089267",
@@ -380,7 +416,8 @@
         "ikon"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "334246239": {
       "winter_sports_id": "334246239",
@@ -392,7 +429,8 @@
         "ikon"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "334259037": {
       "winter_sports_id": "334259037",
@@ -404,7 +442,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "341899728": {
       "winter_sports_id": "341899728",
@@ -416,7 +455,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_country"
+      "confidence": "exact_country",
+      "review_confirmed": false
     },
     "341908909": {
       "winter_sports_id": "341908909",
@@ -428,7 +468,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "containment"
+      "confidence": "containment",
+      "review_confirmed": false
     },
     "361561697": {
       "winter_sports_id": "361561697",
@@ -440,7 +481,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "375130755": {
       "winter_sports_id": "375130755",
@@ -452,7 +494,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "379478843": {
       "winter_sports_id": "379478843",
@@ -464,7 +507,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "387976209": {
       "winter_sports_id": "387976209",
@@ -476,7 +520,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "387976210": {
       "winter_sports_id": "387976210",
@@ -488,7 +533,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "387979659": {
       "winter_sports_id": "387979659",
@@ -500,7 +546,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "390163427": {
       "winter_sports_id": "390163427",
@@ -512,7 +559,8 @@
         "epic"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "390166745": {
       "winter_sports_id": "390166745",
@@ -524,7 +572,8 @@
         "epic"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "390274626": {
       "winter_sports_id": "390274626",
@@ -536,7 +585,8 @@
         "epic"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "390536570": {
       "winter_sports_id": "390536570",
@@ -548,7 +598,8 @@
         "ikon"
       ],
       "season": "2026-27",
-      "confidence": "containment"
+      "confidence": "containment",
+      "review_confirmed": false
     },
     "390539624": {
       "winter_sports_id": "390539624",
@@ -560,7 +611,8 @@
         "epic"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "390809151": {
       "winter_sports_id": "390809151",
@@ -570,7 +622,8 @@
       ],
       "passes": [],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "391284413": {
       "winter_sports_id": "391284413",
@@ -582,7 +635,8 @@
         "ikon"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "391681261": {
       "winter_sports_id": "391681261",
@@ -594,7 +648,8 @@
         "epic"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "391698033": {
       "winter_sports_id": "391698033",
@@ -606,7 +661,8 @@
         "epic"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "392376125": {
       "winter_sports_id": "392376125",
@@ -618,7 +674,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "397735832": {
       "winter_sports_id": "397735832",
@@ -630,7 +687,8 @@
         "ikon"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "397906930": {
       "winter_sports_id": "397906930",
@@ -642,7 +700,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "397906934": {
       "winter_sports_id": "397906934",
@@ -654,7 +713,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "397906935": {
       "winter_sports_id": "397906935",
@@ -666,7 +726,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "containment"
+      "confidence": "containment",
+      "review_confirmed": false
     },
     "400692634": {
       "winter_sports_id": "400692634",
@@ -678,7 +739,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "containment"
+      "confidence": "containment",
+      "review_confirmed": false
     },
     "415176032": {
       "winter_sports_id": "415176032",
@@ -690,7 +752,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "415878204": {
       "winter_sports_id": "415878204",
@@ -702,7 +765,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "427517284": {
       "winter_sports_id": "427517284",
@@ -714,7 +778,8 @@
         "ikon"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "428125408": {
       "winter_sports_id": "428125408",
@@ -726,7 +791,8 @@
         "mountain_collective"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "438793320": {
       "winter_sports_id": "438793320",
@@ -738,7 +804,8 @@
         "epic"
       ],
       "season": "2026-27",
-      "confidence": "exact_country"
+      "confidence": "exact_country",
+      "review_confirmed": false
     },
     "442940109": {
       "winter_sports_id": "442940109",
@@ -750,7 +817,8 @@
         "epic"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "452295412": {
       "winter_sports_id": "452295412",
@@ -762,7 +830,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "452323654": {
       "winter_sports_id": "452323654",
@@ -774,7 +843,8 @@
         "epic"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "460246666": {
       "winter_sports_id": "460246666",
@@ -786,7 +856,8 @@
         "ikon"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "460247056": {
       "winter_sports_id": "460247056",
@@ -798,7 +869,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "461239598": {
       "winter_sports_id": "461239598",
@@ -810,7 +882,8 @@
         "ikon"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "473859024": {
       "winter_sports_id": "473859024",
@@ -822,7 +895,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "474288286": {
       "winter_sports_id": "474288286",
@@ -834,7 +908,8 @@
         "epic"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "475720359": {
       "winter_sports_id": "475720359",
@@ -847,7 +922,8 @@
         "mountain_collective"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "476836855": {
       "winter_sports_id": "476836855",
@@ -859,7 +935,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "476840539": {
       "winter_sports_id": "476840539",
@@ -871,7 +948,8 @@
         "ikon"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "476842734": {
       "winter_sports_id": "476842734",
@@ -883,7 +961,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "476843455": {
       "winter_sports_id": "476843455",
@@ -895,7 +974,8 @@
         "epic"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "476844342": {
       "winter_sports_id": "476844342",
@@ -908,7 +988,8 @@
         "mountain_collective"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "477982773": {
       "winter_sports_id": "477982773",
@@ -920,7 +1001,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "containment"
+      "confidence": "containment",
+      "review_confirmed": false
     },
     "479915906": {
       "winter_sports_id": "479915906",
@@ -932,7 +1014,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "482928468": {
       "winter_sports_id": "482928468",
@@ -945,7 +1028,8 @@
         "mountain_collective"
       ],
       "season": "2026-27",
-      "confidence": "exact_country"
+      "confidence": "exact_country",
+      "review_confirmed": false
     },
     "482928475": {
       "winter_sports_id": "482928475",
@@ -958,7 +1042,8 @@
         "mountain_collective"
       ],
       "season": "2026-27",
-      "confidence": "exact_country"
+      "confidence": "exact_country",
+      "review_confirmed": false
     },
     "488305112": {
       "winter_sports_id": "488305112",
@@ -970,7 +1055,8 @@
         "ikon"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "498378487": {
       "winter_sports_id": "498378487",
@@ -982,7 +1068,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "499034347": {
       "winter_sports_id": "499034347",
@@ -994,7 +1081,8 @@
         "ikon"
       ],
       "season": "2026-27",
-      "confidence": "exact_country"
+      "confidence": "override",
+      "review_confirmed": true
     },
     "528965906": {
       "winter_sports_id": "528965906",
@@ -1006,7 +1094,8 @@
         "epic"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "529997955": {
       "winter_sports_id": "529997955",
@@ -1016,7 +1105,8 @@
       ],
       "passes": [],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "530521512": {
       "winter_sports_id": "530521512",
@@ -1028,7 +1118,8 @@
         "epic"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "530530657": {
       "winter_sports_id": "530530657",
@@ -1040,7 +1131,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "530531925": {
       "winter_sports_id": "530531925",
@@ -1053,7 +1145,8 @@
         "mountain_collective"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "530531926": {
       "winter_sports_id": "530531926",
@@ -1066,7 +1159,8 @@
         "mountain_collective"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "530538581": {
       "winter_sports_id": "530538581",
@@ -1079,7 +1173,8 @@
         "mountain_collective"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "530998526": {
       "winter_sports_id": "530998526",
@@ -1091,7 +1186,8 @@
         "ikon"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "530998534": {
       "winter_sports_id": "530998534",
@@ -1103,7 +1199,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "531000583": {
       "winter_sports_id": "531000583",
@@ -1115,7 +1212,8 @@
         "epic"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "531005985": {
       "winter_sports_id": "531005985",
@@ -1127,7 +1225,8 @@
         "epic"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "531005986": {
       "winter_sports_id": "531005986",
@@ -1139,7 +1238,8 @@
         "ikon"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "531009607": {
       "winter_sports_id": "531009607",
@@ -1151,7 +1251,8 @@
         "epic"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "531009608": {
       "winter_sports_id": "531009608",
@@ -1163,7 +1264,8 @@
         "epic"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "539015308": {
       "winter_sports_id": "539015308",
@@ -1175,7 +1277,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "containment"
+      "confidence": "containment",
+      "review_confirmed": false
     },
     "539395530": {
       "winter_sports_id": "539395530",
@@ -1187,7 +1290,8 @@
         "ikon"
       ],
       "season": "2026-27",
-      "confidence": "alias"
+      "confidence": "alias",
+      "review_confirmed": false
     },
     "539400408": {
       "winter_sports_id": "539400408",
@@ -1199,7 +1303,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "containment"
+      "confidence": "containment",
+      "review_confirmed": false
     },
     "539407909": {
       "winter_sports_id": "539407909",
@@ -1211,7 +1316,8 @@
         "epic"
       ],
       "season": "2026-27",
-      "confidence": "exact_country"
+      "confidence": "exact_country",
+      "review_confirmed": false
     },
     "539421257": {
       "winter_sports_id": "539421257",
@@ -1223,7 +1329,8 @@
         "epic"
       ],
       "season": "2026-27",
-      "confidence": "exact_country"
+      "confidence": "exact_country",
+      "review_confirmed": false
     },
     "543145559": {
       "winter_sports_id": "543145559",
@@ -1235,7 +1342,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "543987749": {
       "winter_sports_id": "543987749",
@@ -1247,7 +1355,8 @@
         "epic"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "546849385": {
       "winter_sports_id": "546849385",
@@ -1259,7 +1368,8 @@
         "epic"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "584094054": {
       "winter_sports_id": "584094054",
@@ -1271,7 +1381,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "598421263": {
       "winter_sports_id": "598421263",
@@ -1283,7 +1394,8 @@
         "ikon"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "599002420": {
       "winter_sports_id": "599002420",
@@ -1295,7 +1407,8 @@
         "epic"
       ],
       "season": "2026-27",
-      "confidence": "exact_country"
+      "confidence": "exact_country",
+      "review_confirmed": false
     },
     "601126561": {
       "winter_sports_id": "601126561",
@@ -1307,7 +1420,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_country"
+      "confidence": "exact_country",
+      "review_confirmed": false
     },
     "601131988": {
       "winter_sports_id": "601131988",
@@ -1319,7 +1433,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_country"
+      "confidence": "exact_country",
+      "review_confirmed": false
     },
     "601132890": {
       "winter_sports_id": "601132890",
@@ -1331,7 +1446,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_country"
+      "confidence": "exact_country",
+      "review_confirmed": false
     },
     "613145242": {
       "winter_sports_id": "613145242",
@@ -1343,7 +1459,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "containment"
+      "confidence": "containment",
+      "review_confirmed": false
     },
     "620836496": {
       "winter_sports_id": "620836496",
@@ -1355,7 +1472,8 @@
         "epic"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "626857453": {
       "winter_sports_id": "626857453",
@@ -1367,7 +1485,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "627625381": {
       "winter_sports_id": "627625381",
@@ -1379,7 +1498,8 @@
         "ikon"
       ],
       "season": "2026-27",
-      "confidence": "exact_country"
+      "confidence": "exact_country",
+      "review_confirmed": false
     },
     "642476176": {
       "winter_sports_id": "642476176",
@@ -1391,7 +1511,8 @@
         "ikon"
       ],
       "season": "2026-27",
-      "confidence": "exact_country"
+      "confidence": "exact_country",
+      "review_confirmed": false
     },
     "654073584": {
       "winter_sports_id": "654073584",
@@ -1403,7 +1524,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "656372511": {
       "winter_sports_id": "656372511",
@@ -1415,7 +1537,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "660203241": {
       "winter_sports_id": "660203241",
@@ -1427,7 +1550,8 @@
         "epic"
       ],
       "season": "2026-27",
-      "confidence": "containment"
+      "confidence": "containment",
+      "review_confirmed": false
     },
     "662615625": {
       "winter_sports_id": "662615625",
@@ -1439,7 +1563,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "667593226": {
       "winter_sports_id": "667593226",
@@ -1451,7 +1576,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "670137935": {
       "winter_sports_id": "670137935",
@@ -1463,7 +1589,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "671144531": {
       "winter_sports_id": "671144531",
@@ -1475,7 +1602,8 @@
         "ikon"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "677033105": {
       "winter_sports_id": "677033105",
@@ -1487,7 +1615,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "679253285": {
       "winter_sports_id": "679253285",
@@ -1499,7 +1628,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "679909874": {
       "winter_sports_id": "679909874",
@@ -1511,7 +1641,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "680041845": {
       "winter_sports_id": "680041845",
@@ -1523,7 +1654,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "682230006": {
       "winter_sports_id": "682230006",
@@ -1535,7 +1667,8 @@
         "ikon"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "682230007": {
       "winter_sports_id": "682230007",
@@ -1547,7 +1680,8 @@
         "ikon"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "682231907": {
       "winter_sports_id": "682231907",
@@ -1559,7 +1693,8 @@
         "ikon"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "682241434": {
       "winter_sports_id": "682241434",
@@ -1571,7 +1706,8 @@
         "ikon"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "691080634": {
       "winter_sports_id": "691080634",
@@ -1583,7 +1719,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_country"
+      "confidence": "exact_country",
+      "review_confirmed": false
     },
     "691516993": {
       "winter_sports_id": "691516993",
@@ -1593,7 +1730,8 @@
       ],
       "passes": [],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "691518491": {
       "winter_sports_id": "691518491",
@@ -1605,7 +1743,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "691521201": {
       "winter_sports_id": "691521201",
@@ -1617,7 +1756,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "702101323": {
       "winter_sports_id": "702101323",
@@ -1629,7 +1769,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "713467426": {
       "winter_sports_id": "713467426",
@@ -1641,7 +1782,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "734596223": {
       "winter_sports_id": "734596223",
@@ -1653,7 +1795,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "containment"
+      "confidence": "containment",
+      "review_confirmed": false
     },
     "734696805": {
       "winter_sports_id": "734696805",
@@ -1665,7 +1808,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "739168515": {
       "winter_sports_id": "739168515",
@@ -1678,7 +1822,8 @@
         "mountain_collective"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "override",
+      "review_confirmed": true
     },
     "755762044": {
       "winter_sports_id": "755762044",
@@ -1688,7 +1833,8 @@
       ],
       "passes": [],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "766056081": {
       "winter_sports_id": "766056081",
@@ -1700,7 +1846,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "override",
+      "review_confirmed": true
     },
     "767350052": {
       "winter_sports_id": "767350052",
@@ -1712,7 +1859,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "771668333": {
       "winter_sports_id": "771668333",
@@ -1724,7 +1872,8 @@
         "epic"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "773558919": {
       "winter_sports_id": "773558919",
@@ -1736,7 +1885,8 @@
         "epic"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "815651521": {
       "winter_sports_id": "815651521",
@@ -1748,7 +1898,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_country"
+      "confidence": "exact_country",
+      "review_confirmed": false
     },
     "817289254": {
       "winter_sports_id": "817289254",
@@ -1760,7 +1911,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "834317212": {
       "winter_sports_id": "834317212",
@@ -1772,7 +1924,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "839939642": {
       "winter_sports_id": "839939642",
@@ -1784,7 +1937,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "846739537": {
       "winter_sports_id": "846739537",
@@ -1796,7 +1950,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "859046254": {
       "winter_sports_id": "859046254",
@@ -1808,7 +1963,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "860260235": {
       "winter_sports_id": "860260235",
@@ -1820,7 +1976,8 @@
         "epic"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "860486037": {
       "winter_sports_id": "860486037",
@@ -1832,7 +1989,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "866496711": {
       "winter_sports_id": "866496711",
@@ -1844,7 +2002,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "867570853": {
       "winter_sports_id": "867570853",
@@ -1856,7 +2015,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "884007908": {
       "winter_sports_id": "884007908",
@@ -1868,7 +2028,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "893138900": {
       "winter_sports_id": "893138900",
@@ -1880,7 +2041,8 @@
         "epic"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "896064328": {
       "winter_sports_id": "896064328",
@@ -1892,7 +2054,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "905237707": {
       "winter_sports_id": "905237707",
@@ -1904,7 +2067,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "908172888": {
       "winter_sports_id": "908172888",
@@ -1916,7 +2080,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "908946630": {
       "winter_sports_id": "908946630",
@@ -1928,7 +2093,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "918681867": {
       "winter_sports_id": "918681867",
@@ -1940,7 +2106,8 @@
         "epic"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "934351305": {
       "winter_sports_id": "934351305",
@@ -1952,7 +2119,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "934351306": {
       "winter_sports_id": "934351306",
@@ -1964,7 +2132,8 @@
         "ikon"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "936983347": {
       "winter_sports_id": "936983347",
@@ -1976,7 +2145,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "937080875": {
       "winter_sports_id": "937080875",
@@ -1988,7 +2158,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "937086872": {
       "winter_sports_id": "937086872",
@@ -2000,7 +2171,8 @@
         "ikon"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "937101624": {
       "winter_sports_id": "937101624",
@@ -2012,7 +2184,8 @@
         "ikon"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "938362715": {
       "winter_sports_id": "938362715",
@@ -2024,7 +2197,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "952802401": {
       "winter_sports_id": "952802401",
@@ -2036,7 +2210,8 @@
         "mountain_collective"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "956685533": {
       "winter_sports_id": "956685533",
@@ -2048,7 +2223,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "972064114": {
       "winter_sports_id": "972064114",
@@ -2058,7 +2234,8 @@
       ],
       "passes": [],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "980981935": {
       "winter_sports_id": "980981935",
@@ -2070,7 +2247,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "990531013": {
       "winter_sports_id": "990531013",
@@ -2082,7 +2260,8 @@
         "epic"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "997044731": {
       "winter_sports_id": "997044731",
@@ -2094,7 +2273,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "containment"
+      "confidence": "containment",
+      "review_confirmed": false
     },
     "997044732": {
       "winter_sports_id": "997044732",
@@ -2106,7 +2286,8 @@
         "ikon"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "997159129": {
       "winter_sports_id": "997159129",
@@ -2118,7 +2299,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1010406137": {
       "winter_sports_id": "1010406137",
@@ -2130,7 +2312,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1010412985": {
       "winter_sports_id": "1010412985",
@@ -2142,7 +2325,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1010720455": {
       "winter_sports_id": "1010720455",
@@ -2154,7 +2338,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1021872776": {
       "winter_sports_id": "1021872776",
@@ -2166,7 +2351,8 @@
         "ikon"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1023308077": {
       "winter_sports_id": "1023308077",
@@ -2179,7 +2365,8 @@
         "mountain_collective"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1023308078": {
       "winter_sports_id": "1023308078",
@@ -2192,7 +2379,8 @@
         "mountain_collective"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1023791593": {
       "winter_sports_id": "1023791593",
@@ -2204,7 +2392,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1024235364": {
       "winter_sports_id": "1024235364",
@@ -2216,7 +2405,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1026073030": {
       "winter_sports_id": "1026073030",
@@ -2228,7 +2418,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1026204281": {
       "winter_sports_id": "1026204281",
@@ -2240,7 +2431,8 @@
         "epic"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1040649718": {
       "winter_sports_id": "1040649718",
@@ -2252,7 +2444,8 @@
         "ikon"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1043087316": {
       "winter_sports_id": "1043087316",
@@ -2264,7 +2457,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1057550035": {
       "winter_sports_id": "1057550035",
@@ -2276,7 +2470,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1057669089": {
       "winter_sports_id": "1057669089",
@@ -2288,7 +2483,8 @@
         "epic"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1070694657": {
       "winter_sports_id": "1070694657",
@@ -2300,7 +2496,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1074335726": {
       "winter_sports_id": "1074335726",
@@ -2313,7 +2510,8 @@
         "mountain_collective"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1076348034": {
       "winter_sports_id": "1076348034",
@@ -2325,7 +2523,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1079343060": {
       "winter_sports_id": "1079343060",
@@ -2337,7 +2536,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1081650641": {
       "winter_sports_id": "1081650641",
@@ -2349,7 +2549,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1081650975": {
       "winter_sports_id": "1081650975",
@@ -2361,7 +2562,8 @@
         "epic"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1083653058": {
       "winter_sports_id": "1083653058",
@@ -2373,7 +2575,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1087368359": {
       "winter_sports_id": "1087368359",
@@ -2385,7 +2588,8 @@
         "ikon"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1094522661": {
       "winter_sports_id": "1094522661",
@@ -2397,7 +2601,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1094524069": {
       "winter_sports_id": "1094524069",
@@ -2409,7 +2614,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1094579154": {
       "winter_sports_id": "1094579154",
@@ -2421,7 +2627,8 @@
         "ikon"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1094586461": {
       "winter_sports_id": "1094586461",
@@ -2433,7 +2640,8 @@
         "ikon"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1107815765": {
       "winter_sports_id": "1107815765",
@@ -2445,7 +2653,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_country"
+      "confidence": "exact_country",
+      "review_confirmed": false
     },
     "1117698962": {
       "winter_sports_id": "1117698962",
@@ -2455,7 +2664,8 @@
       ],
       "passes": [],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1117929987": {
       "winter_sports_id": "1117929987",
@@ -2467,7 +2677,8 @@
         "ikon"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1122543074": {
       "winter_sports_id": "1122543074",
@@ -2479,7 +2690,8 @@
         "ikon"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1126110799": {
       "winter_sports_id": "1126110799",
@@ -2491,7 +2703,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1132263707": {
       "winter_sports_id": "1132263707",
@@ -2503,7 +2716,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1135215380": {
       "winter_sports_id": "1135215380",
@@ -2515,7 +2729,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1138470815": {
       "winter_sports_id": "1138470815",
@@ -2528,7 +2743,8 @@
         "mountain_collective"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1138569632": {
       "winter_sports_id": "1138569632",
@@ -2540,7 +2756,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "override",
+      "review_confirmed": true
     },
     "1154067051": {
       "winter_sports_id": "1154067051",
@@ -2552,7 +2769,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1154306823": {
       "winter_sports_id": "1154306823",
@@ -2564,7 +2782,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1155757094": {
       "winter_sports_id": "1155757094",
@@ -2576,7 +2795,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "containment"
+      "confidence": "containment",
+      "review_confirmed": false
     },
     "1162245573": {
       "winter_sports_id": "1162245573",
@@ -2588,7 +2808,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1174493817": {
       "winter_sports_id": "1174493817",
@@ -2600,7 +2821,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1183389371": {
       "winter_sports_id": "1183389371",
@@ -2612,7 +2834,8 @@
         "epic"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1188381817": {
       "winter_sports_id": "1188381817",
@@ -2624,7 +2847,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "containment"
+      "confidence": "containment",
+      "review_confirmed": false
     },
     "1189278314": {
       "winter_sports_id": "1189278314",
@@ -2636,7 +2860,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1189279617": {
       "winter_sports_id": "1189279617",
@@ -2648,7 +2873,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1200712921": {
       "winter_sports_id": "1200712921",
@@ -2660,7 +2886,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1201185853": {
       "winter_sports_id": "1201185853",
@@ -2673,7 +2900,8 @@
         "mountain_collective"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1201571470": {
       "winter_sports_id": "1201571470",
@@ -2685,7 +2913,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1201573017": {
       "winter_sports_id": "1201573017",
@@ -2697,7 +2926,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1201573953": {
       "winter_sports_id": "1201573953",
@@ -2709,7 +2939,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1208479232": {
       "winter_sports_id": "1208479232",
@@ -2721,7 +2952,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1210011762": {
       "winter_sports_id": "1210011762",
@@ -2733,7 +2965,8 @@
         "epic"
       ],
       "season": "2026-27",
-      "confidence": "exact_country"
+      "confidence": "override",
+      "review_confirmed": true
     },
     "1212155021": {
       "winter_sports_id": "1212155021",
@@ -2745,7 +2978,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1213960940": {
       "winter_sports_id": "1213960940",
@@ -2757,7 +2991,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1214114449": {
       "winter_sports_id": "1214114449",
@@ -2769,7 +3004,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "containment"
+      "confidence": "containment",
+      "review_confirmed": false
     },
     "1214147821": {
       "winter_sports_id": "1214147821",
@@ -2781,7 +3017,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1221231986": {
       "winter_sports_id": "1221231986",
@@ -2793,7 +3030,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1221894855": {
       "winter_sports_id": "1221894855",
@@ -2805,7 +3043,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1223350355": {
       "winter_sports_id": "1223350355",
@@ -2817,7 +3056,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1223977161": {
       "winter_sports_id": "1223977161",
@@ -2829,7 +3069,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1225428207": {
       "winter_sports_id": "1225428207",
@@ -2841,7 +3082,8 @@
         "epic"
       ],
       "season": "2026-27",
-      "confidence": "containment"
+      "confidence": "override",
+      "review_confirmed": true
     },
     "1225432526": {
       "winter_sports_id": "1225432526",
@@ -2854,7 +3096,8 @@
         "mountain_collective"
       ],
       "season": "2026-27",
-      "confidence": "exact_country"
+      "confidence": "override",
+      "review_confirmed": true
     },
     "1226017306": {
       "winter_sports_id": "1226017306",
@@ -2866,7 +3109,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "containment"
+      "confidence": "containment",
+      "review_confirmed": false
     },
     "1228354294": {
       "winter_sports_id": "1228354294",
@@ -2878,7 +3122,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1228623824": {
       "winter_sports_id": "1228623824",
@@ -2888,7 +3133,8 @@
       ],
       "passes": [],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1228774360": {
       "winter_sports_id": "1228774360",
@@ -2900,7 +3146,8 @@
         "ikon"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1230198090": {
       "winter_sports_id": "1230198090",
@@ -2912,7 +3159,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1230199887": {
       "winter_sports_id": "1230199887",
@@ -2924,7 +3172,8 @@
         "epic"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1230308747": {
       "winter_sports_id": "1230308747",
@@ -2934,7 +3183,8 @@
       ],
       "passes": [],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1232163832": {
       "winter_sports_id": "1232163832",
@@ -2946,7 +3196,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1232164006": {
       "winter_sports_id": "1232164006",
@@ -2958,7 +3209,8 @@
         "ikon"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1232164322": {
       "winter_sports_id": "1232164322",
@@ -2970,7 +3222,8 @@
         "ikon"
       ],
       "season": "2026-27",
-      "confidence": "containment"
+      "confidence": "containment",
+      "review_confirmed": false
     },
     "1236284348": {
       "winter_sports_id": "1236284348",
@@ -2982,7 +3235,8 @@
         "epic"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1238042221": {
       "winter_sports_id": "1238042221",
@@ -2992,7 +3246,8 @@
       ],
       "passes": [],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1241940633": {
       "winter_sports_id": "1241940633",
@@ -3004,7 +3259,8 @@
         "ikon"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1243345428": {
       "winter_sports_id": "1243345428",
@@ -3016,7 +3272,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1243554890": {
       "winter_sports_id": "1243554890",
@@ -3028,7 +3285,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_country"
+      "confidence": "exact_country",
+      "review_confirmed": false
     },
     "1244066741": {
       "winter_sports_id": "1244066741",
@@ -3040,7 +3298,8 @@
         "mountain_collective"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "override",
+      "review_confirmed": true
     },
     "1244085914": {
       "winter_sports_id": "1244085914",
@@ -3052,7 +3311,8 @@
         "ikon"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1244098768": {
       "winter_sports_id": "1244098768",
@@ -3065,7 +3325,8 @@
         "mountain_collective"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1246948337": {
       "winter_sports_id": "1246948337",
@@ -3077,7 +3338,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1254863688": {
       "winter_sports_id": "1254863688",
@@ -3090,7 +3352,8 @@
         "mountain_collective"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1254864194": {
       "winter_sports_id": "1254864194",
@@ -3102,7 +3365,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1254864403": {
       "winter_sports_id": "1254864403",
@@ -3114,7 +3378,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1257430570": {
       "winter_sports_id": "1257430570",
@@ -3124,7 +3389,8 @@
       ],
       "passes": [],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1258231242": {
       "winter_sports_id": "1258231242",
@@ -3136,7 +3402,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "containment"
+      "confidence": "containment",
+      "review_confirmed": false
     },
     "1260579139": {
       "winter_sports_id": "1260579139",
@@ -3148,7 +3415,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1263732068": {
       "winter_sports_id": "1263732068",
@@ -3160,7 +3428,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1263732880": {
       "winter_sports_id": "1263732880",
@@ -3172,7 +3441,8 @@
         "epic"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1266090145": {
       "winter_sports_id": "1266090145",
@@ -3184,7 +3454,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1266093483": {
       "winter_sports_id": "1266093483",
@@ -3196,7 +3467,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_country"
+      "confidence": "exact_country",
+      "review_confirmed": false
     },
     "1266097397": {
       "winter_sports_id": "1266097397",
@@ -3208,7 +3480,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1266571967": {
       "winter_sports_id": "1266571967",
@@ -3220,7 +3493,8 @@
         "epic"
       ],
       "season": "2026-27",
-      "confidence": "exact_country"
+      "confidence": "exact_country",
+      "review_confirmed": false
     },
     "1275118072": {
       "winter_sports_id": "1275118072",
@@ -3232,7 +3506,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1278124828": {
       "winter_sports_id": "1278124828",
@@ -3242,7 +3517,8 @@
       ],
       "passes": [],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1278125600": {
       "winter_sports_id": "1278125600",
@@ -3254,7 +3530,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1282431650": {
       "winter_sports_id": "1282431650",
@@ -3266,7 +3543,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1290903952": {
       "winter_sports_id": "1290903952",
@@ -3278,7 +3556,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1303060558": {
       "winter_sports_id": "1303060558",
@@ -3290,7 +3569,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1306486693": {
       "winter_sports_id": "1306486693",
@@ -3302,7 +3582,8 @@
         "ikon"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1311290835": {
       "winter_sports_id": "1311290835",
@@ -3314,7 +3595,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1314867881": {
       "winter_sports_id": "1314867881",
@@ -3326,7 +3608,8 @@
         "ikon"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1335348646": {
       "winter_sports_id": "1335348646",
@@ -3338,7 +3621,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1340416269": {
       "winter_sports_id": "1340416269",
@@ -3350,7 +3634,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1344641638": {
       "winter_sports_id": "1344641638",
@@ -3362,7 +3647,8 @@
         "ikon"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1351013953": {
       "winter_sports_id": "1351013953",
@@ -3374,7 +3660,8 @@
         "ikon"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1362922705": {
       "winter_sports_id": "1362922705",
@@ -3386,7 +3673,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1363000015": {
       "winter_sports_id": "1363000015",
@@ -3398,7 +3686,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1363084977": {
       "winter_sports_id": "1363084977",
@@ -3410,7 +3699,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1363577242": {
       "winter_sports_id": "1363577242",
@@ -3422,7 +3712,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1366642639": {
       "winter_sports_id": "1366642639",
@@ -3434,7 +3725,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1367181096": {
       "winter_sports_id": "1367181096",
@@ -3446,7 +3738,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1367311040": {
       "winter_sports_id": "1367311040",
@@ -3458,7 +3751,8 @@
         "ikon"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1388583977": {
       "winter_sports_id": "1388583977",
@@ -3470,7 +3764,8 @@
         "ikon"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1388611703": {
       "winter_sports_id": "1388611703",
@@ -3483,7 +3778,8 @@
         "mountain_collective"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "override",
+      "review_confirmed": true
     },
     "1388612283": {
       "winter_sports_id": "1388612283",
@@ -3495,7 +3791,8 @@
         "epic"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1388616336": {
       "winter_sports_id": "1388616336",
@@ -3507,7 +3804,8 @@
         "epic"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1412281678": {
       "winter_sports_id": "1412281678",
@@ -3519,7 +3817,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_country"
+      "confidence": "exact_country",
+      "review_confirmed": false
     },
     "1443608615": {
       "winter_sports_id": "1443608615",
@@ -3531,7 +3830,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1449657505": {
       "winter_sports_id": "1449657505",
@@ -3543,7 +3843,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_country"
+      "confidence": "exact_country",
+      "review_confirmed": false
     },
     "1458695224": {
       "winter_sports_id": "1458695224",
@@ -3555,7 +3856,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1458947806": {
       "winter_sports_id": "1458947806",
@@ -3567,7 +3869,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1464128439": {
       "winter_sports_id": "1464128439",
@@ -3579,7 +3882,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1470435942": {
       "winter_sports_id": "1470435942",
@@ -3591,7 +3895,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1472725361": {
       "winter_sports_id": "1472725361",
@@ -3603,7 +3908,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_state"
+      "confidence": "exact_state",
+      "review_confirmed": false
     },
     "1476486723": {
       "winter_sports_id": "1476486723",
@@ -3615,7 +3921,8 @@
         "indy"
       ],
       "season": "2026-27",
-      "confidence": "exact_country"
+      "confidence": "exact_country",
+      "review_confirmed": false
     }
   }
 }

@@ -248,3 +248,60 @@ p {
   color: var(--ink);
   text-decoration: none;
 }
+
+.segmented {
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--line);
+  margin: 8px 0 12px;
+}
+
+.segmented span {
+  flex: 1;
+  text-align: center;
+  padding: 8px;
+  font-size: 0.8rem;
+}
+
+.segmented span.on {
+  background: var(--accent);
+  color: #fff;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0;
+}
+
+.chip {
+  border: 1px solid var(--line);
+  background: var(--card);
+  padding: 4px 10px;
+  font-size: 0.78rem;
+  border-radius: 999px;
+}
+
+.chip.on {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.search-stub {
+  border: 1px solid var(--line);
+  background: var(--card);
+  padding: 10px 12px;
+  font-size: 0.9rem;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.compare-canvas {
+  min-height: 220px;
+}
+
+.compare-grid .tile {
+  min-height: 72px;
+}

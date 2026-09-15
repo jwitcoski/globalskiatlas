@@ -1,1 +1,173 @@
-[]
+[
+  {
+    "storm_name": "Apex Mountain",
+    "country": "canada",
+    "region": "Canada - British Columbia",
+    "atlas_name": "Apex Mountain Resort",
+    "winter_sports_id": "1138569632",
+    "passes": [
+      "indy"
+    ],
+    "notes": "review confirm",
+    "skip": false
+  },
+  {
+    "storm_name": "Baldy Mountain Resort",
+    "country": "canada",
+    "region": "Canada - British Columbia",
+    "atlas_name": "",
+    "winter_sports_id": "",
+    "passes": [
+      "indy"
+    ],
+    "notes": "review skip",
+    "skip": true
+  },
+  {
+    "storm_name": "Banff Sunshine",
+    "country": "canada",
+    "region": "Canada - Alberta",
+    "atlas_name": "Banff Sunshine Village",
+    "winter_sports_id": "739168515",
+    "passes": [
+      "ikon",
+      "mountain_collective"
+    ],
+    "notes": "review confirm",
+    "skip": false
+  },
+  {
+    "storm_name": "Castle Mountain",
+    "country": "canada",
+    "region": "Canada - Alberta",
+    "atlas_name": "Castle Mountain Resort",
+    "winter_sports_id": "766056081",
+    "passes": [
+      "indy"
+    ],
+    "notes": "review confirm",
+    "skip": false
+  },
+  {
+    "storm_name": "Falls Creek",
+    "country": "australia",
+    "region": "Australia",
+    "atlas_name": "Falls Creek",
+    "winter_sports_id": "1210011762",
+    "passes": [
+      "epic"
+    ],
+    "notes": "review confirm",
+    "skip": false
+  },
+  {
+    "storm_name": "Hotham",
+    "country": "australia",
+    "region": "Australia",
+    "atlas_name": "Mount Hotham",
+    "winter_sports_id": "1225428207",
+    "passes": [
+      "epic"
+    ],
+    "notes": "review confirm",
+    "skip": false
+  },
+  {
+    "storm_name": "Lake Louise",
+    "country": "canada",
+    "region": "Canada - Alberta",
+    "atlas_name": "Lake Louise Ski Area",
+    "winter_sports_id": "1388611703",
+    "passes": [
+      "ikon",
+      "mountain_collective"
+    ],
+    "notes": "review confirm",
+    "skip": false
+  },
+  {
+    "storm_name": "Marmot Basin",
+    "country": "canada",
+    "region": "Canada - Alberta",
+    "atlas_name": "Marmot Basin",
+    "winter_sports_id": "1244066741",
+    "passes": [
+      "mountain_collective"
+    ],
+    "notes": "review confirm",
+    "skip": false
+  },
+  {
+    "storm_name": "Mt. Buller",
+    "country": "australia",
+    "region": "Australia",
+    "atlas_name": "Mount Buller",
+    "winter_sports_id": "1225432526",
+    "passes": [
+      "ikon",
+      "mountain_collective"
+    ],
+    "notes": "review confirm",
+    "skip": false
+  },
+  {
+    "storm_name": "Mt. Norquay",
+    "country": "canada",
+    "region": "Canada - Alberta",
+    "atlas_name": "",
+    "winter_sports_id": "",
+    "passes": [
+      "ikon"
+    ],
+    "notes": "review skip",
+    "skip": true
+  },
+  {
+    "storm_name": "Nakiska",
+    "country": "canada",
+    "region": "Canada - Alberta",
+    "atlas_name": "",
+    "winter_sports_id": "",
+    "passes": [
+      "epic"
+    ],
+    "notes": "review skip",
+    "skip": true
+  },
+  {
+    "storm_name": "Pass Powderkeg",
+    "country": "canada",
+    "region": "Canada - Alberta",
+    "atlas_name": "",
+    "winter_sports_id": "",
+    "passes": [
+      "indy"
+    ],
+    "notes": "review skip",
+    "skip": true
+  },
+  {
+    "storm_name": "Perisher",
+    "country": "australia",
+    "region": "Australia",
+    "atlas_name": "Perisher",
+    "winter_sports_id": "178133225",
+    "passes": [
+      "epic"
+    ],
+    "notes": "review confirm",
+    "skip": false
+  },
+  {
+    "storm_name": "Thredbo",
+    "country": "australia",
+    "region": "Australia",
+    "atlas_name": "Thredbo Resort",
+    "winter_sports_id": "499034347",
+    "passes": [
+      "ikon"
+    ],
+    "notes": "review confirm",
+    "skip": false
+  }
+]

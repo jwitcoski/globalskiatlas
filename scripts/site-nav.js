@@ -38,6 +38,7 @@
       '<div class="header-dropdown" role="menu">' +
       '<a class="header-links" href="' + href("DriveTimeMap.html") + '" role="menuitem">Drive Time</a>' +
       '<a class="header-links" href="' + href("resort-comparison.html") + '?near=1"' + (onHome ? " data-compare-current" : "") + ' role="menuitem">Compare</a>' +
+      '<a class="header-links" href="' + href("pass-review.html") + '" role="menuitem">Pass match review</a>' +
       '<a class="header-links" href="' + href("TripPlannerMap.html") + '" role="menuitem">Trip Planner</a>' +
       "</div></div>" +
       '<div class="header-dropdown-group">' +

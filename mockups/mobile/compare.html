@@ -13,33 +13,46 @@
         <span>Compare</span>
       </header>
       <main>
-        <h1>Two mountains, one table</h1>
-        <p>Pass or no pass: pick on stats, then ski the winner in 3D before you book.</p>
-        <div class="compare">
-          <div class="col">
-            <strong>Montage</strong>
-            <dl>
-              <dt>Trails</dt>
-              <dd>26</dd>
-              <dt>Lifts</dt>
-              <dd>7</dd>
-              <dt>Job</dt>
-              <dd>Local</dd>
-            </dl>
-          </div>
-          <div class="col">
-            <strong>Hakuba</strong>
-            <dl>
-              <dt>Trails</dt>
-              <dd>—</dt>
-              <dt>Lifts</dt>
-              <dd>—</dt>
-              <dt>Job</dt>
-              <dd>Dream</dd>
-            </dl>
-          </div>
+        <h1>Ski resort size</h1>
+        <p class="lede">Vail vs Whistler</p>
+        <div class="hero compare-canvas" aria-label="Shared-scale overlay">
+          <strong>Overlay</strong>
+          <span>Two outlines at the same scale</span>
         </div>
-        <a class="btn" href="3d.html">Ski the winner in 3D</a>
+        <div class="segmented" aria-label="Layout">
+          <span class="on">Overlay</span>
+          <span>Spread</span>
+        </div>
+        <div class="chips">
+          <span class="chip">Vail ×</span>
+          <span class="chip">Whistler ×</span>
+        </div>
+        <p class="muted">2 of 6</p>
+        <a class="btn" href="#add">Add a resort</a>
+
+        <h2>N = 4, spread</h2>
+        <div class="tiles compare-grid">
+          <div class="tile"><strong>A</strong><span>same scale</span></div>
+          <div class="tile"><strong>B</strong><span>same scale</span></div>
+          <div class="tile"><strong>C</strong><span>same scale</span></div>
+          <div class="tile"><strong>D</strong><span>same scale</span></div>
+        </div>
+
+        <h2 id="add">Search sheet</h2>
+        <p>Pass chips live in search, not a second page.</p>
+        <div class="search-stub">Search resorts</div>
+        <div class="chips pass-chips">
+          <span class="chip on">All</span>
+          <span class="chip">Epic</span>
+          <span class="chip">Ikon</span>
+          <span class="chip">Indy</span>
+          <span class="chip">MC</span>
+          <span class="chip">Independent</span>
+        </div>
+        <div class="list">
+          <a href="#"><span>Palisades Tahoe<br /><small>California · Ikon · MC</small></span><small>mega</small></a>
+          <a href="#"><span>Vail<br /><small>Colorado · Epic</small></span><small>mega</small></a>
+        </div>
       </main>
       <nav class="nav" aria-label="Primary">
         <a href="3d.html">3D</a>

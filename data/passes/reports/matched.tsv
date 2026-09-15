@@ -1,14 +1,14 @@
 storm_name	region	passes	status	atlas_name	winter_sports_id
-Falls Creek	Australia	epic	exact_country	Falls Creek	1210011762
-Hotham	Australia	epic	containment	Mount Hotham	1225428207
-Mt. Buller	Australia	ikon,mountain_collective	exact_country	Mount Buller	1225432526
-Perisher	Australia	epic	exact_country	Perisher	178133225
-Thredbo	Australia	ikon	exact_country	Thredbo Resort	499034347
-Banff Sunshine	Canada - Alberta	ikon,mountain_collective	exact_state	Banff Sunshine Village	739168515
-Castle Mountain	Canada - Alberta	indy	exact_state	Castle Mountain Resort	766056081
-Lake Louise	Canada - Alberta	ikon,mountain_collective	exact_state	Lake Louise Ski Area	1388611703
-Marmot Basin	Canada - Alberta	mountain_collective	exact_state	Marmot Basin	1244066741
-Apex Mountain	Canada - British Columbia	indy	exact_state	Apex Mountain Resort	1138569632
+Falls Creek	Australia	epic	override	Falls Creek	1210011762
+Hotham	Australia	epic	override	Mount Hotham	1225428207
+Mt. Buller	Australia	ikon,mountain_collective	override	Mount Buller	1225432526
+Perisher	Australia	epic	override	Perisher	178133225
+Thredbo	Australia	ikon	override	Thredbo Resort	499034347
+Banff Sunshine	Canada - Alberta	ikon,mountain_collective	override	Banff Sunshine Village	739168515
+Castle Mountain	Canada - Alberta	indy	override	Castle Mountain Resort	766056081
+Lake Louise	Canada - Alberta	ikon,mountain_collective	override	Lake Louise Ski Area	1388611703
+Marmot Basin	Canada - Alberta	mountain_collective	override	Marmot Basin	1244066741
+Apex Mountain	Canada - British Columbia	indy	override	Apex Mountain Resort	1138569632
 Big White	Canada - British Columbia	indy	exact_state	Big White Ski Resort	476836855
 Fernie	Canada - British Columbia	epic	exact_state	Fernie Alpine Resort	1388612283
 Grouse Mountain	Canada - British Columbia	ikon	exact_state	Grouse Mountain	1122543074

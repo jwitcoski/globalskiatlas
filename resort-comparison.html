@@ -106,7 +106,34 @@
       flex-wrap: wrap;
     }
     .control-option-row label { font-size: 14px; color: #374151; cursor: pointer; }
-    .search-container { position: relative; }
+    .pass-filter { display: flex; flex-wrap: wrap; gap: 6px; }
+    .pass-chip {
+      border: 1px solid #d1d5db;
+      background: #fff;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .pass-chip.on { border-color: #111; background: #111; color: #fff; }
+    .pass-chip.epic.on { background: #1d4ed8; border-color: #1d4ed8; }
+    .pass-chip.ikon.on { background: #0f766e; border-color: #0f766e; }
+    .pass-chip.indy.on { background: #b45309; border-color: #b45309; }
+    .pass-chip.mc.on { background: #6d28d9; border-color: #6d28d9; }
+    .pass-badges { display: inline-flex; gap: 3px; margin-left: 6px; }
+    .pass-badge {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      padding: 1px 4px;
+      border-radius: 3px;
+      color: #fff;
+      vertical-align: middle;
+    }
+    .pass-badge.epic { background: #1d4ed8; }
+    .pass-badge.ikon { background: #0f766e; }
+    .pass-badge.indy { background: #b45309; }
+    .pass-badge.mountain_collective { background: #6d28d9; }
     .search-container input {
       width: 100%;
       padding: 10px 14px 10px 38px;
@@ -343,6 +370,7 @@
           <a class="header-tab header-links" href="resort-comparison.html" aria-haspopup="true">Compare <i class="bi bi-chevron-down tw-text-xs"></i></a>
           <div class="header-dropdown" role="menu">
             <a class="header-links" href="resort-comparison.html" role="menuitem">Resort Comparison</a>
+            <a class="header-links" href="pass-review.html" role="menuitem">Pass match review</a>
             <a class="header-links" href="resort-tier-rank.html" role="menuitem">Tier Ranking</a>
           </div>
         </div>
@@ -399,6 +427,17 @@
           </div>
         </div>
         <div class="controls-section">
+          <div class="controls-section-title">Pass</div>
+          <div class="pass-filter" id="pass-filter" role="group" aria-label="Pass filter">
+            <button type="button" class="pass-chip on" data-pass="all">All</button>
+            <button type="button" class="pass-chip epic" data-pass="epic">Epic</button>
+            <button type="button" class="pass-chip ikon" data-pass="ikon">Ikon</button>
+            <button type="button" class="pass-chip indy" data-pass="indy">Indy</button>
+            <button type="button" class="pass-chip mc" data-pass="mountain_collective">MC</button>
+            <button type="button" class="pass-chip" data-pass="independent">Independent</button>
+          </div>
+        </div>
+        <div class="controls-section">
           <div class="controls-section-title">Search</div>
           <div class="search-container">
             <i class="fas fa-search search-icon"></i>
@@ -427,6 +466,7 @@
 
     <div class="citation-section">
       <p>Resort and piste data from OpenStreetMap. © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors. <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">ODbL</a>.</p>
+      <p>Pass membership for 2026–27 is joined from <a href="https://www.stormskiing.com/p/a-big-dumb-toolkit-for-2026-27-ski" target="_blank" rel="noopener">The Storm Skiing Journal</a> roster charts. We do not sell passes; check official Epic, Ikon, Indy, and Mountain Collective lists before you buy. Help confirm matches on the <a href="pass-review.html">pass match review</a>.</p>
     </div>
   </div>
   </div>
@@ -638,6 +678,8 @@
     const colorScale = d3.scaleOrdinal(d3.schemeCategory10);
     let resortBounds = [];
     let resortData = []; // { name, outlineFeature, pisteFeatures }
+    let passById = {};
+    let passFilter = 'all';
     let resortTransforms = []; // { resortMinX, resortMinY, globalScaleFactor } per index
     let globalScaleFactorCache = 0;
 
@@ -699,10 +741,12 @@
 
     /** Load outlines + analyzed only (fast). Pistes load lazily when user selects resorts. */
     async function loadData() {
-      const [dataOutlines, dataAnalyzed] = await Promise.all([
+      const [dataOutlines, dataAnalyzed, passJson] = await Promise.all([
         loadSkiAreasOutlines(),
-        loadSkiAreasAnalyzed()
+        loadSkiAreasAnalyzed(),
+        fetch('./data/pass-affiliations.json').then((r) => (r.ok ? r.json() : { by_id: {} })).catch(() => ({ by_id: {} }))
       ]);
+      passById = passJson.by_id || {};
 
       const analyzedByName = new Map();
       (dataAnalyzed || []).forEach((row) => {
@@ -733,11 +777,16 @@
           const state = (analyzedRow && getProp(analyzedRow, STATE_KEYS)) != null
             ? String(getProp(analyzedRow, STATE_KEYS)).trim()
             : '';
+          const ws = analyzedRow && analyzedRow.winter_sports_id != null
+            ? String(analyzedRow.winter_sports_id)
+            : '';
           return {
             name: displayName,
             key,
             country: country || 'Other',
             state: state || '',
+            winterSportsId: ws,
+            passes: (passById[ws] && passById[ws].passes) || [],
             outlineFeature: f,
             pisteFeatures: [], // loaded lazily when user selects resorts
             analyzedRow: analyzedRow || null
@@ -978,6 +1027,13 @@
           this.innerHTML = getSizeIconHtml(r);
         });
         item.append('label').attr('for', `checkbox-${index}`).text(r.name);
+        if (r.passes && r.passes.length) {
+          const badges = item.append('span').attr('class', 'pass-badges');
+          r.passes.forEach((p) => {
+            const short = p === 'mountain_collective' ? 'MC' : p.slice(0, 2).toUpperCase();
+            badges.append('span').attr('class', 'pass-badge ' + p).text(short);
+          });
+        }
       }
 
       const resortList = d3.select('#resort-list');
@@ -1026,6 +1082,7 @@
       }
 
       setupControlButtons();
+      applyListFilters();
       selectRandomResorts(2);
       setTimeout(autoZoomToSelection, 400);
     }
@@ -1116,10 +1173,56 @@
       if (d3.select('#auto-zoom-toggle').property('checked')) setTimeout(autoZoomToSelection, 600);
     }
 
+    function resortMatchesPassFilter(r) {
+      if (passFilter === 'all') return true;
+      const passes = r.passes || [];
+      if (passFilter === 'independent') return passes.length === 0;
+      return passes.includes(passFilter);
+    }
+
+    function applyListFilters() {
+      const q = foldDiacritics(d3.select('#resort-search').property('value') || '').toLowerCase().trim();
+      let visibleCount = 0;
+      d3.selectAll('.resort-item').each(function () {
+        const idx = parseInt(d3.select(this).select('input').attr('id').replace('checkbox-', ''), 10);
+        const r = resortData[idx];
+        const name = foldDiacritics((r && r.name) || '').toLowerCase();
+        const passHit = !q || (r.passes || []).join(' ').includes(q) || name.includes(q);
+        const show = resortMatchesPassFilter(r || {}) && passHit;
+        d3.select(this).style('display', show ? 'flex' : 'none');
+        if (show) visibleCount++;
+      });
+      d3.selectAll('.accordion-section').each(function () {
+        const section = d3.select(this);
+        const body = section.select('.resort-country-body');
+        const hasVisible = body.selectAll('.resort-item').filter(function () { return d3.select(this).style('display') === 'flex'; }).size() > 0;
+        section.style('display', hasVisible ? 'block' : 'none');
+        if ((q || passFilter !== 'all') && hasVisible) {
+          section.classed('open', true);
+          section.selectAll('.resort-state-section').each(function () {
+            const stateSec = d3.select(this);
+            const stateHasVisible = stateSec.selectAll('.resort-item').filter(function () { return d3.select(this).style('display') === 'flex'; }).size() > 0;
+            stateSec.classed('open', stateHasVisible);
+          });
+        }
+        if (!q && passFilter === 'all') {
+          section.classed('open', false);
+          section.selectAll('.resort-state-section').classed('open', false);
+        }
+      });
+      d3.select('#resort-list').selectAll('.no-results').remove();
+      if (visibleCount === 0) d3.select('#resort-list').append('div').attr('class', 'no-results').text('No resorts found');
+    }
+
     function setupControlButtons() {
       d3.select('#select-all').on('click', () => {
-        d3.selectAll('.resort-checkbox').property('checked', true);
-        d3.selectAll('.resort-group').classed('hidden', false);
+        d3.selectAll('.resort-item').each(function () {
+          if (d3.select(this).style('display') === 'none') return;
+          const box = d3.select(this).select('.resort-checkbox');
+          box.property('checked', true);
+          const idx = parseInt(box.attr('id').replace('checkbox-', ''), 10);
+          if (!Number.isNaN(idx)) d3.select(`#resort-${idx}`).classed('hidden', false);
+        });
         updateMapTitle();
         if (d3.select('#offset-toggle').property('checked')) applyOffsetToResorts();
         else autoZoomToSelection();
@@ -1130,35 +1233,12 @@
         updateMapTitle();
       });
       d3.select('#offset-toggle').on('change', applyOffsetToResorts);
-      d3.select('#resort-search').on('input', function () {
-        const q = foldDiacritics(this.value).toLowerCase().trim();
-        let visibleCount = 0;
-        d3.selectAll('.resort-item').each(function () {
-          const name = foldDiacritics(d3.select(this).select('label').text()).toLowerCase();
-          const show = !q || name.includes(q);
-          d3.select(this).style('display', show ? 'flex' : 'none');
-          if (show) visibleCount++;
-        });
-        d3.selectAll('.accordion-section').each(function () {
-          const section = d3.select(this);
-          const body = section.select('.resort-country-body');
-          const hasVisible = body.selectAll('.resort-item').filter(function () { return d3.select(this).style('display') === 'flex'; }).size() > 0;
-          section.style('display', hasVisible ? 'block' : 'none');
-          if (q && hasVisible) {
-            section.classed('open', true);
-            section.selectAll('.resort-state-section').each(function () {
-              const stateSec = d3.select(this);
-              const stateHasVisible = stateSec.selectAll('.resort-item').filter(function () { return d3.select(this).style('display') === 'flex'; }).size() > 0;
-              stateSec.classed('open', stateHasVisible);
-            });
-          }
-          if (!q) {
-            section.classed('open', false);
-            section.selectAll('.resort-state-section').classed('open', false);
-          }
-        });
-        d3.select('#resort-list').selectAll('.no-results').remove();
-        if (q && visibleCount === 0) d3.select('#resort-list').append('div').attr('class', 'no-results').text('No resorts found');
+      d3.select('#resort-search').on('input', applyListFilters);
+      d3.selectAll('#pass-filter .pass-chip').on('click', function () {
+        passFilter = this.getAttribute('data-pass') || 'all';
+        d3.selectAll('#pass-filter .pass-chip').classed('on', false);
+        d3.select(this).classed('on', true);
+        applyListFilters();
       });
     }
 

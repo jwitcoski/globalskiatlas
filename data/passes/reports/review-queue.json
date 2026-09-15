@@ -10,7 +10,7 @@
         "epic"
       ],
       "pass_raw": "Epic",
-      "status": "exact_country",
+      "status": "override",
       "confidence": "high",
       "suggested": {
         "atlas_name": "Falls Creek",
@@ -28,7 +28,7 @@
         "epic"
       ],
       "pass_raw": "Epic",
-      "status": "containment",
+      "status": "override",
       "confidence": "high",
       "suggested": {
         "atlas_name": "Mount Hotham",
@@ -47,7 +47,7 @@
         "mountain_collective"
       ],
       "pass_raw": "Ikon, MC",
-      "status": "exact_country",
+      "status": "override",
       "confidence": "high",
       "suggested": {
         "atlas_name": "Mount Buller",
@@ -65,7 +65,7 @@
         "epic"
       ],
       "pass_raw": "Epic",
-      "status": "exact_country",
+      "status": "override",
       "confidence": "high",
       "suggested": {
         "atlas_name": "Perisher",
@@ -83,7 +83,7 @@
         "ikon"
       ],
       "pass_raw": "Ikon",
-      "status": "exact_country",
+      "status": "override",
       "confidence": "high",
       "suggested": {
         "atlas_name": "Thredbo Resort",
@@ -102,7 +102,7 @@
         "mountain_collective"
       ],
       "pass_raw": "Ikon, MC",
-      "status": "exact_state",
+      "status": "override",
       "confidence": "high",
       "suggested": {
         "atlas_name": "Banff Sunshine Village",
@@ -120,7 +120,7 @@
         "indy"
       ],
       "pass_raw": "Indy",
-      "status": "exact_state",
+      "status": "override",
       "confidence": "high",
       "suggested": {
         "atlas_name": "Castle Mountain Resort",
@@ -139,7 +139,7 @@
         "mountain_collective"
       ],
       "pass_raw": "Ikon, MC",
-      "status": "exact_state",
+      "status": "override",
       "confidence": "high",
       "suggested": {
         "atlas_name": "Lake Louise Ski Area",
@@ -157,7 +157,7 @@
         "mountain_collective"
       ],
       "pass_raw": "MC",
-      "status": "exact_state",
+      "status": "override",
       "confidence": "high",
       "suggested": {
         "atlas_name": "Marmot Basin",
@@ -175,7 +175,7 @@
         "ikon"
       ],
       "pass_raw": "Ikon",
-      "status": "unmatched",
+      "status": "skipped",
       "confidence": "none",
       "suggested": null,
       "guesses": []
@@ -189,7 +189,7 @@
         "epic"
       ],
       "pass_raw": "Epic",
-      "status": "unmatched",
+      "status": "skipped",
       "confidence": "none",
       "suggested": null,
       "guesses": []
@@ -203,7 +203,7 @@
         "indy"
       ],
       "pass_raw": "Indy",
-      "status": "unmatched",
+      "status": "skipped",
       "confidence": "none",
       "suggested": null,
       "guesses": []
@@ -217,7 +217,7 @@
         "indy"
       ],
       "pass_raw": "Indy",
-      "status": "exact_state",
+      "status": "override",
       "confidence": "high",
       "suggested": {
         "atlas_name": "Apex Mountain Resort",
@@ -235,7 +235,7 @@
         "indy"
       ],
       "pass_raw": "Indy",
-      "status": "unmatched",
+      "status": "skipped",
       "confidence": "none",
       "suggested": null,
       "guesses": []

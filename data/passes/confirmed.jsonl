@@ -12,3 +12,4 @@
 {"action":"skip","storm_name":"Pass Powderkeg","atlas_name":"","pass":"indy","region":"Canada - Alberta","confirmed_at":"2026-09-15T12:20:12.336Z"}
 {"action":"confirm","storm_name":"Apex Mountain","atlas_name":"Apex Mountain Resort","pass":"indy","passes":["indy"],"region":"Canada - British Columbia","winter_sports_id":"1138569632","page_id":"apex-mountain-resort-british-columbia","confirmed_at":"2026-09-15T12:20:37.998Z"}
 {"action":"skip","storm_name":"Baldy Mountain Resort","atlas_name":"","pass":"indy","region":"Canada - British Columbia","confirmed_at":"2026-09-15T12:20:55.953Z"}
+{"action":"confirm","storm_name":"Big White","atlas_name":"Big White Ski Resort","pass":"indy","passes":["indy"],"region":"Canada - British Columbia","winter_sports_id":"476836855","page_id":"big-white-ski-resort-british-columbia","confirmed_at":"2026-09-15T12:34:11.663Z"}

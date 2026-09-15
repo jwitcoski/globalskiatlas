@@ -209,26 +209,37 @@ function esc(s) {
     .replace(/>/g, '&gt;');
 }
 
+async function postReview(path, body) {
+  try {
+    const res = await fetch(path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (res.ok) return true;
+  } catch {
+    /* static host */
+  }
+  const storeKey = 'gsa-pass-review';
+  const prev = JSON.parse(localStorage.getItem(storeKey) || '[]');
+  prev.push({ ...body, stored_at: new Date().toISOString() });
+  localStorage.setItem(storeKey, JSON.stringify(prev));
+  return false;
+}
+
 async function confirmItem(item, pageId) {
   const atlas_name = selected?.atlas_name || item.suggested?.atlas_name;
   if (!atlas_name) return;
-  const res = await fetch('/api/pass-review/confirm', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      storm_name: item.storm_name,
-      atlas_name,
-      pass: (item.passes || []).join(','),
-      passes: item.passes || [],
-      region: item.region,
-      winter_sports_id: selected?.winter_sports_id || item.suggested?.winter_sports_id || '',
-      page_id: pageId
-    })
+  await postReview('/api/pass-review/confirm', {
+    storm_name: item.storm_name,
+    atlas_name,
+    pass: (item.passes || []).join(','),
+    passes: item.passes || [],
+    region: item.region,
+    winter_sports_id: selected?.winter_sports_id || item.suggested?.winter_sports_id || '',
+    page_id: pageId,
+    action: 'confirm'
   });
-  if (!res.ok) {
-    alert('Could not save confirm');
-    return;
-  }
   confirmedKeys.add(keyOf(item));
   score += item.suggested && !selected?.pageId ? 10 : 15;
   streak += 1;
@@ -237,14 +248,11 @@ async function confirmItem(item, pageId) {
 }
 
 async function skipItem(item) {
-  await fetch('/api/pass-review/skip', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      storm_name: item.storm_name,
-      region: item.region,
-      pass: (item.passes || []).join(',')
-    })
+  await postReview('/api/pass-review/skip', {
+    storm_name: item.storm_name,
+    region: item.region,
+    pass: (item.passes || []).join(','),
+    action: 'skip'
   });
   skippedKeys.add(keyOf(item));
   streak = 0;
@@ -258,12 +266,26 @@ unmatchedToggle.addEventListener('change', () => {
   render();
 });
 
-const [queueRes, wikiRes] = await Promise.all([
-  fetch('/api/pass-review/queue'),
-  fetch('/api/wiki/index')
-]);
+function applyLocalReview() {
+  try {
+    const prev = JSON.parse(localStorage.getItem('gsa-pass-review') || '[]');
+    prev.forEach((r) => {
+      const k = (r.storm_name || '') + '|' + (r.region || '');
+      if (r.action === 'skip') skippedKeys.add(k);
+      else confirmedKeys.add(k);
+    });
+  } catch {
+    /* ignore */
+  }
+}
+
+let queueRes = await fetch('/api/pass-review/queue');
 if (!queueRes.ok) {
-  leftEl.innerHTML = '<p class="empty">Run <code>node scripts/join-pass-affiliations.mjs</code> then restart the server.</p>';
+  queueRes = await fetch('./data/passes/reports/review-queue.json');
+}
+const wikiRes = await fetch('/api/wiki/index');
+if (!queueRes.ok) {
+  leftEl.innerHTML = '<p class="empty">Pass review queue is missing from this deploy.</p>';
   throw new Error('no queue');
 }
 const data = await queueRes.json();
@@ -272,5 +294,19 @@ queue = data.items || [];
   if (r.action === 'confirm') confirmedKeys.add(r.storm_name + '|' + (r.region || ''));
 });
 (data.skipped || []).forEach((k) => skippedKeys.add(k));
-wikiPages = ((await wikiRes.json()).pages || []).filter((p) => p.pageType !== 'continent');
+try {
+  const confText = await fetch('./data/passes/confirmed.jsonl');
+  if (confText.ok) {
+    (await confText.text()).split(/\n/).filter(Boolean).forEach((line) => {
+      const r = JSON.parse(line);
+      const k = r.storm_name + '|' + (r.region || '');
+      if (r.action === 'skip') skippedKeys.add(k);
+      else if (r.action === 'confirm') confirmedKeys.add(k);
+    });
+  }
+} catch {
+  /* optional */
+}
+applyLocalReview();
+wikiPages = wikiRes.ok ? ((await wikiRes.json()).pages || []).filter((p) => p.pageType !== 'continent') : [];
 render();

@@ -23,6 +23,7 @@ import {
   extraTokensAreWeak,
   tokensContained
 } from './pass-join/normalize.mjs';
+import { mergeOverrides } from './sync-pass-overrides.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
@@ -283,6 +284,9 @@ function matchOne(storm, idx, aliases, overrides) {
       fold(o.storm_name) === fold(storm.name) &&
       (!o.country || normalizeCountry(o.country) === storm.country)
   );
+  if (ovr?.skip) {
+    return { status: 'skipped', confidence: 'none', hits: [], guesses: [] };
+  }
   if (ovr?.winter_sports_id && idx.byWs.has(String(ovr.winter_sports_id))) {
     return {
       status: 'override',
@@ -370,7 +374,7 @@ const atlas = await loadAtlas();
 console.error(`Atlas rows: ${atlas.length}`);
 const idx = atlasIndexes(atlas);
 const aliases = loadJsonArray(ALIAS_PATH);
-const overrides = loadJsonArray(OVERRIDE_PATH);
+const overrides = mergeOverrides();
 
 const results = storm.map((s) => ({ storm: s, match: matchOne(s, idx, aliases, overrides) }));
 
@@ -420,7 +424,8 @@ for (const r of high) {
       storm_names: [],
       passes: [],
       season: SEASON,
-      confidence: r.match.status
+      confidence: r.match.status,
+      review_confirmed: r.match.status === 'override'
     };
   }
   if (!affiliations[ws].storm_names.includes(r.storm.name)) {
@@ -429,10 +434,20 @@ for (const r of high) {
   for (const p of r.storm.passes) {
     if (!affiliations[ws].passes.includes(p)) affiliations[ws].passes.push(p);
   }
+  if (r.match.status === 'override') affiliations[ws].review_confirmed = true;
 }
 
 fs.mkdirSync(REPORT_DIR, { recursive: true });
-fs.writeFileSync(OUT_JSON, JSON.stringify({ season: SEASON, generated_at: new Date().toISOString(), by_id: affiliations }, null, 2));
+fs.writeFileSync(OUT_JSON, JSON.stringify({
+  season: SEASON,
+  generated_at: new Date().toISOString(),
+  source: {
+    name: 'The Storm Skiing Journal',
+    toolkit: 'https://www.stormskiing.com/p/a-big-dumb-toolkit-for-2026-27-ski',
+    workbook: 'https://docs.google.com/spreadsheets/d/1G2-l2DVg7-QwroOi7EqRDrJYJ4ICYLcJbLx-nARJdrA'
+  },
+  by_id: affiliations
+}, null, 2));
 
 const guessCol = (r) =>
   (r.match.guesses || r.match.hits || [])

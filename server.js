@@ -400,6 +400,14 @@ app.post('/api/pass-review/confirm', (req, res) => {
     confirmed_at: new Date().toISOString(),
   };
   fs.appendFileSync(PASS_CONFIRMED_JSONL, JSON.stringify(record) + '\n');
+  try {
+    require('child_process').execFileSync(process.execPath, [path.join(__dirname, 'scripts/sync-pass-overrides.mjs')], {
+      cwd: __dirname,
+      stdio: 'ignore'
+    });
+  } catch (err) {
+    console.warn('sync-pass-overrides', err.message);
+  }
   res.json({ ok: true, record });
 });
 
@@ -416,6 +424,14 @@ app.post('/api/pass-review/skip', (req, res) => {
     confirmed_at: new Date().toISOString(),
   };
   fs.appendFileSync(PASS_CONFIRMED_JSONL, JSON.stringify(record) + '\n');
+  try {
+    require('child_process').execFileSync(process.execPath, [path.join(__dirname, 'scripts/sync-pass-overrides.mjs')], {
+      cwd: __dirname,
+      stdio: 'ignore'
+    });
+  } catch (err) {
+    console.warn('sync-pass-overrides', err.message);
+  }
   res.json({ ok: true, record });
 });
 
