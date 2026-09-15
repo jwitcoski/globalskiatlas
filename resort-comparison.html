@@ -1187,7 +1187,22 @@
       const b = resortBounds[idx];
       const cx = (b.minX + b.maxX) / 2;
       const cy = (b.minY + b.maxY) / 2;
-      return { x: col * cell.w + cell.w / 2 - cx, y: row * cell.h + cell.h / 2 - cy };
+      // Outlines are drawn at y = -geoY, so row 0 sits above the origin and later rows go up.
+      return {
+        x: col * cell.w + cell.w / 2 - cx,
+        y: cy - (row * cell.h + cell.h / 2)
+      };
+    }
+
+    function displayBounds(idx, o) {
+      const b = resortBounds[idx];
+      const label = 18;
+      return {
+        minX: b.minX + o.x,
+        maxX: b.maxX + o.x,
+        minY: -b.maxY - label + o.y,
+        maxY: -b.minY + o.y
+      };
     }
 
     function syncCompareUrl() {
@@ -1221,6 +1236,8 @@
       syncCompareUrl();
       syncLayoutButtons();
       const selectedIndices = getSelectedIndices();
+      d3.selectAll('.resort-group').classed('hidden', true);
+      selectedIndices.forEach((idx) => d3.select(`#resort-${idx}`).classed('hidden', false));
       if (selectedIndices.length > 0 && selectedIndices.length <= MAX_COMPARE) {
         loadPistesForSelected(selectedIndices).catch(() => {});
       }
@@ -1242,19 +1259,25 @@
       if (visible.length === 0) return;
       let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
       visible.forEach((idx, i) => {
-        const b = resortBounds[idx];
-        const o = cellOrigin(idx, i, visible);
-        minX = Math.min(minX, b.minX + o.x);
-        minY = Math.min(minY, b.minY + o.y);
-        maxX = Math.max(maxX, b.maxX + o.x);
-        maxY = Math.max(maxY, b.maxY + o.y);
+        const db = displayBounds(idx, cellOrigin(idx, i, visible));
+        minX = Math.min(minX, db.minX);
+        minY = Math.min(minY, db.minY);
+        maxX = Math.max(maxX, db.maxX);
+        maxY = Math.max(maxY, db.maxY);
       });
-      const pad = 0.1;
-      const w = maxX - minX, h = maxY - minY;
-      minX -= w * pad; maxX += w * pad; minY -= h * pad; maxY += h * pad;
-      const scale = Math.min((width - 2 * padding) / (maxX - minX), (height - 2 * padding) / (maxY - minY));
+      const pad = 0.08;
+      const bw = Math.max(maxX - minX, 1) * (1 + 2 * pad);
+      const bh = Math.max(maxY - minY, 1) * (1 + 2 * pad);
+      const cx = (minX + maxX) / 2;
+      const cy = (minY + maxY) / 2;
+      const titleSpace = 40;
+      const availW = width - 2 * padding;
+      const availH = height - padding - titleSpace;
+      const scale = Math.min(availW / bw, availH / bh);
+      const tx = width / 2 - scale * cx;
+      const ty = titleSpace + availH / 2 - scale * cy;
       resortsGroup.transition().duration(750)
-        .attr('transform', `translate(${padding - minX * scale}, ${height - padding - minY * scale}) scale(${scale})`);
+        .attr('transform', `translate(${tx}, ${ty}) scale(${scale})`);
       d3.selectAll('.resort-label').style('font-size', `${12 / scale}px`);
     }
 
