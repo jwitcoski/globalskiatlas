@@ -443,7 +443,7 @@
   <div class="map-wrapper tw-flex-1 tw-min-h-0 tw-px-[5%] tw-pt-2 tw-pb-6 max-lg:tw-px-4">
     <div class="page">
     <h1 class="tw-text-4xl tw-font-medium tw-text-gray-900 tw-mb-2">Ski Resort Size Comparison</h1>
-    <p class="tw-text-xl tw-font-medium tw-text-gray-700 tw-mb-3 tw-max-w-2xl">Compare up to six ski resorts. Overlay two, or spread three or more as small multiples.</p>
+    <p class="tw-text-xl tw-font-medium tw-text-gray-700 tw-mb-3 tw-max-w-2xl">Compare up to twelve ski resorts. Overlay two, or spread three or more as small multiples.</p>
 
     <div class="content-wrapper">
       <div class="map-chart-wrapper">
@@ -458,7 +458,7 @@
         <div class="controls-section">
           <div class="controls-section-title">Selected</div>
           <div class="selected-chips" id="selected-chips"></div>
-          <p class="sel-hint" id="sel-hint">0 of 6</p>
+          <p class="sel-hint" id="sel-hint">0 of 12</p>
           <div class="layout-seg" role="group" aria-label="Layout">
             <button type="button" id="layout-overlay" class="on">Overlay</button>
             <button type="button" id="layout-spread">Spread</button>
@@ -734,7 +734,7 @@
     let resortData = []; // { name, outlineFeature, pisteFeatures }
     let passById = {};
     let passFilter = 'all';
-    const MAX_COMPARE = 6;
+    const MAX_COMPARE = 12;
     let layoutMode = 'auto';
     let resortTransforms = []; // { resortMinX, resortMinY, globalScaleFactor } per index
     let globalScaleFactorCache = 0;
@@ -1065,7 +1065,7 @@
             const box = d3.select(this);
             if (box.property('checked') && getSelectedIndices().length > MAX_COMPARE) {
               box.property('checked', false);
-              d3.select('#sel-hint').text('Cap is 6 resorts');
+              d3.select('#sel-hint').text('Cap is ' + MAX_COMPARE + ' resorts');
               return;
             }
             d3.select(`#resort-${index}`).classed('hidden', !box.property('checked'));
@@ -1172,9 +1172,10 @@
     }
 
     function spreadGrid(n) {
-      if (n <= 2) return { cols: n, rows: 1 };
+      if (n <= 2) return { cols: Math.max(n, 1), rows: 1 };
       if (n <= 4) return { cols: 2, rows: 2 };
-      return { cols: 3, rows: 2 };
+      const cols = n <= 9 ? 3 : 4;
+      return { cols, rows: Math.ceil(n / cols) };
     }
 
     function cellSizeFor(visible) {
@@ -1501,7 +1502,7 @@
           const box = d3.select(`#checkbox-${hit.i}`);
           if (!box.property('checked')) {
             if (getSelectedIndices().length >= MAX_COMPARE) {
-              d3.select('#sel-hint').text('Cap is 6 resorts');
+              d3.select('#sel-hint').text('Cap is ' + MAX_COMPARE + ' resorts');
               return;
             }
             box.property('checked', true);
