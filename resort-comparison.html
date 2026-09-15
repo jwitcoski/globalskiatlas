@@ -80,6 +80,7 @@
     body.compare-3d #map-container { display: none; }
     body.compare-3d #clay-compare { display: grid; }
     body.compare-3d #print-chart-btn { display: none !important; }
+    body.compare-3d #layout-overlay { display: none; }
     .clay-compare-cell { min-width: 0; display: flex; flex-direction: column; gap: 6px; }
     .clay-compare-name { font-size: 13px; font-weight: 600; color: #374151; text-align: center; }
     .clay-compare-embed {
@@ -1214,7 +1215,7 @@
     }
 
     function syncLayoutButtons() {
-      const spread = usesSpread();
+      const spread = viewMode === '3d' || usesSpread();
       d3.select('#layout-overlay').classed('on', !spread);
       d3.select('#layout-spread').classed('on', spread);
     }
@@ -1308,6 +1309,7 @@
       document.body.classList.toggle('compare-3d', viewMode === '3d');
       d3.select('#view-2d').classed('on', viewMode === '2d');
       d3.select('#view-3d').classed('on', viewMode === '3d');
+      syncLayoutButtons();
       if (viewMode !== '3d') {
         window.dispatchEvent(new CustomEvent('gsa-compare-view', { detail: { mode: '2d' } }));
         return;
