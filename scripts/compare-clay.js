@@ -32,6 +32,8 @@ function markMissing3dChips(clayByWs) {
     if (mark) mark.textContent = missing ? "No 3D" : "";
   });
 }
+
+async function disposeHandles() {
   const dying = live.splice(0, live.length);
   for (const handle of dying) {
     try { handle.dispose(); } catch (_) { /* ignore */ }
