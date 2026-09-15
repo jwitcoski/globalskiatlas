@@ -303,7 +303,15 @@
     .error { padding: 12px; background: #fee; color: #c00; border-radius: 6px; margin-top: 8px; }
     .polygon { stroke-width: 1; vector-effect: non-scaling-stroke; }
     .trail-line { vector-effect: non-scaling-stroke; }
-    .resort-label { pointer-events: none; }
+    .resort-label, .overlay-label {
+      pointer-events: none;
+      paint-order: stroke;
+      stroke: #fff;
+      stroke-width: 4px;
+      stroke-linejoin: round;
+    }
+    .overlay-leader { fill: none; vector-effect: non-scaling-stroke; stroke-width: 1.4; opacity: 0.9; }
+    .overlay-dot { vector-effect: non-scaling-stroke; }
     .difficulty-legend {
       padding: 12px 0 0 0;
       font-size: 13px;
@@ -719,6 +727,7 @@
     const resortsGroup = svg.append('g')
       .attr('transform', `translate(${padding}, ${height - padding})`)
       .attr('id', 'resorts-group');
+    const overlayLabels = resortsGroup.append('g').attr('id', 'overlay-labels');
 
     const colorScale = d3.scaleOrdinal(d3.schemeCategory10);
     let resortBounds = [];
@@ -1253,10 +1262,107 @@
       else mapTitle.text('Ski Resort Comparison');
     }
 
+    function mountainDisplay(idx, o) {
+      const b = resortBounds[idx];
+      return {
+        minX: b.minX + o.x,
+        maxX: b.maxX + o.x,
+        minY: -b.maxY + o.y,
+        maxY: -b.minY + o.y,
+        cx: (b.minX + b.maxX) / 2 + o.x,
+        cy: -(b.minY + b.maxY) / 2 + o.y
+      };
+    }
+
+    function perimeterPoint(minX, minY, maxX, maxY, t) {
+      const w = Math.max(maxX - minX, 1);
+      const h = Math.max(maxY - minY, 1);
+      const peri = 2 * (w + h);
+      let d = (((t % 1) + 1) % 1) * peri;
+      d = (d + w / 2) % peri;
+      if (d < w) return { x: minX + d, y: minY };
+      d -= w;
+      if (d < h) return { x: maxX, y: minY + d };
+      d -= h;
+      if (d < w) return { x: maxX - d, y: maxY };
+      d -= w;
+      return { x: minX, y: maxY - d };
+    }
+
+    function overlayLabelLayout(visible) {
+      if (usesSpread() || visible.length < 2) return [];
+      const mountains = visible.map((idx, i) => ({ idx, i, ...mountainDisplay(idx, cellOrigin(idx, i, visible)) }));
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      mountains.forEach((m) => {
+        minX = Math.min(minX, m.minX);
+        minY = Math.min(minY, m.minY);
+        maxX = Math.max(maxX, m.maxX);
+        maxY = Math.max(maxY, m.maxY);
+      });
+      const gx = Math.max(28, (maxX - minX) * 0.2);
+      const gy = Math.max(28, (maxY - minY) * 0.22);
+      minX -= gx; maxX += gx; minY -= gy; maxY += gy;
+      const ucx = (minX + maxX) / 2;
+      const ucy = (minY + maxY) / 2;
+      const n = mountains.length;
+      const slots = mountains.map((_, i) => {
+        const p = perimeterPoint(minX, minY, maxX, maxY, (i + 0.5) / n);
+        return { ...p, ang: Math.atan2(p.y - ucy, p.x - ucx) };
+      }).sort((a, b) => a.ang - b.ang);
+      const ordered = mountains
+        .map((m) => ({ ...m, ang: Math.atan2(m.cy - ucy, m.cx - ucx) }))
+        .sort((a, b) => a.ang - b.ang);
+      return ordered.map((m, i) => {
+        const s = slots[i];
+        let anchor = 'middle';
+        if (s.x < ucx - 1) anchor = 'end';
+        else if (s.x > ucx + 1) anchor = 'start';
+        return { idx: m.idx, x: s.x, y: s.y, anchor, cx: m.cx, cy: m.cy };
+      });
+    }
+
+    function drawOverlayLabels(visible) {
+      overlayLabels.selectAll('*').remove();
+      overlayLabels.raise();
+      const labels = overlayLabelLayout(visible);
+      if (!labels.length) {
+        d3.selectAll('.resort-label').style('display', null);
+        return;
+      }
+      d3.selectAll('.resort-label').style('display', 'none');
+      labels.forEach((lab) => {
+        const color = d3.rgb(colorScale(lab.idx)).darker();
+        overlayLabels.append('line')
+          .attr('class', 'overlay-leader')
+          .attr('x1', lab.cx)
+          .attr('y1', lab.cy)
+          .attr('x2', lab.x)
+          .attr('y2', lab.y)
+          .attr('stroke', color);
+        overlayLabels.append('circle')
+          .attr('class', 'overlay-dot')
+          .attr('cx', lab.cx)
+          .attr('cy', lab.cy)
+          .attr('r', 3)
+          .attr('fill', color);
+        overlayLabels.append('text')
+          .attr('class', 'overlay-label')
+          .attr('x', lab.x)
+          .attr('y', lab.y)
+          .attr('text-anchor', lab.anchor)
+          .attr('dominant-baseline', 'middle')
+          .style('fill', color)
+          .style('font-size', '12px')
+          .style('font-weight', 600)
+          .text(resortData[lab.idx].name);
+      });
+    }
+
     function autoZoomToSelection() {
       if (!d3.select('#auto-zoom-toggle').property('checked')) return;
       const visible = getSelectedIndices();
       if (visible.length === 0) return;
+      drawOverlayLabels(visible);
       let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
       visible.forEach((idx, i) => {
         const db = displayBounds(idx, cellOrigin(idx, i, visible));
@@ -1265,20 +1371,47 @@
         maxX = Math.max(maxX, db.maxX);
         maxY = Math.max(maxY, db.maxY);
       });
-      const pad = 0.08;
-      const bw = Math.max(maxX - minX, 1) * (1 + 2 * pad);
-      const bh = Math.max(maxY - minY, 1) * (1 + 2 * pad);
-      const cx = (minX + maxX) / 2;
-      const cy = (minY + maxY) / 2;
+      const labels = overlayLabelLayout(visible);
+      labels.forEach((lab) => {
+        minX = Math.min(minX, lab.x);
+        minY = Math.min(minY, lab.y);
+        maxX = Math.max(maxX, lab.x);
+        maxY = Math.max(maxY, lab.y);
+      });
+      const pad = usesSpread() ? 0.08 : 0.1;
       const titleSpace = 40;
       const availW = width - 2 * padding;
       const availH = height - padding - titleSpace;
-      const scale = Math.min(availW / bw, availH / bh);
-      const tx = width / 2 - scale * cx;
-      const ty = titleSpace + availH / 2 - scale * cy;
+      function fit(x0, y0, x1, y1) {
+        const bw = Math.max(x1 - x0, 1) * (1 + 2 * pad);
+        const bh = Math.max(y1 - y0, 1) * (1 + 2 * pad);
+        const scale = Math.min(availW / bw, availH / bh);
+        const cx = (x0 + x1) / 2;
+        const cy = (y0 + y1) / 2;
+        return {
+          scale,
+          tx: width / 2 - scale * cx,
+          ty: titleSpace + availH / 2 - scale * cy
+        };
+      }
+      let fitted = fit(minX, minY, maxX, maxY);
+      labels.forEach((lab) => {
+        const tw = (String(resortData[lab.idx].name || '').length * 7.2) / fitted.scale;
+        const th = 10 / fitted.scale;
+        if (lab.anchor === 'end') minX = Math.min(minX, lab.x - tw);
+        else if (lab.anchor === 'start') maxX = Math.max(maxX, lab.x + tw);
+        else {
+          minX = Math.min(minX, lab.x - tw / 2);
+          maxX = Math.max(maxX, lab.x + tw / 2);
+        }
+        minY = Math.min(minY, lab.y - th);
+        maxY = Math.max(maxY, lab.y + th);
+      });
+      fitted = fit(minX, minY, maxX, maxY);
       resortsGroup.transition().duration(750)
-        .attr('transform', `translate(${tx}, ${ty}) scale(${scale})`);
-      d3.selectAll('.resort-label').style('font-size', `${12 / scale}px`);
+        .attr('transform', `translate(${fitted.tx}, ${fitted.ty}) scale(${fitted.scale})`);
+      d3.selectAll('.resort-label, .overlay-label').style('font-size', `${12 / fitted.scale}px`);
+      d3.selectAll('.overlay-dot').attr('r', 3.2 / fitted.scale);
     }
 
     function applyOffsetToResorts() {
@@ -1289,6 +1422,7 @@
         d3.select(`#resort-${resortIndex}`).transition().duration(500)
           .attr('transform', `translate(${o.x}, ${o.y})`);
       });
+      drawOverlayLabels(visible);
       if (d3.select('#auto-zoom-toggle').property('checked')) setTimeout(autoZoomToSelection, 500);
     }
 
