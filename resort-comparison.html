@@ -1160,11 +1160,21 @@
 
       const resortList = d3.select('#resort-list');
       resortList.selectAll('*').remove();
-      Object.keys(byCountryState).sort().forEach((country) => {
+      function countrySize(country) {
+        return Object.values(byCountryState[country]).reduce((n, arr) => n + arr.length, 0);
+      }
+      const countryOrder = Object.keys(byCountryState).sort((a, b) => {
+        const d = countrySize(b) - countrySize(a);
+        return d !== 0 ? d : a.localeCompare(b);
+      });
+      countryOrder.forEach((country) => {
         const stateMap = byCountryState[country];
         const allIndices = Object.values(stateMap).flat();
         const totalCount = allIndices.length;
-        const stateKeys = Object.keys(stateMap).filter((k) => k !== '\u200b').sort();
+        const stateKeys = Object.keys(stateMap).filter((k) => k !== '\u200b').sort((a, b) => {
+          const d = (stateMap[b] || []).length - (stateMap[a] || []).length;
+          return d !== 0 ? d : a.localeCompare(b);
+        });
         const hasNoState = stateMap['\u200b'];
         const useStateDrilldown = totalCount >= STATE_DRILLDOWN_THRESHOLD && (stateKeys.length > 0 || (hasNoState && Object.keys(stateMap).length > 1));
 
