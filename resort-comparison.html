@@ -1318,7 +1318,10 @@
         host.selectAll('.sel-chip').each(function () {
           const chip = d3.select(this);
           const ws = String(chip.attr('data-ws') || '');
-          const missing = !(ws && clayByWs.get(ws) && clayByWs.get(ws).id);
+          const hit = clayByWs.get(ws);
+          const readyId = hit && hit.id;
+          const sceneOk = readyId && window.__gsaClaySceneReady && window.__gsaClaySceneReady.get(readyId);
+          const missing = !(ws && sceneOk);
           chip.classed('no-3d', missing);
           chip.select('.chip-3d-mark').text(missing ? 'No 3D' : '');
         });
@@ -1737,7 +1740,7 @@
         console.error(err);
       });
   </script>
-<script type="module" src="scripts/compare-clay.js?v=3"></script>
+<script type="module" src="scripts/compare-clay.js?v=4"></script>
 <script src="scripts/site-nav.js?v=4" defer></script>
 </body>
 </html>

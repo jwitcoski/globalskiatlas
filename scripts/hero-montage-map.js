@@ -683,6 +683,7 @@ export async function initHeroMontageMap(container, options = {}) {
   world.name = "montage-world";
   scene.add(world);
   let trueSpanMeters = 1;
+  let sceneLoaded = false;
 
   let trailRiders = null;
   let parkRiders = null;
@@ -849,6 +850,7 @@ export async function initHeroMontageMap(container, options = {}) {
     loading = true;
     world.scale.setScalar(1);
     compareRadiusLock = null;
+    sceneLoaded = false;
     syncChrome(resort);
     embed.classList.add("is-loading");
 
@@ -865,6 +867,7 @@ export async function initHeroMontageMap(container, options = {}) {
 
       const { root, center, mesh, span } = fitted;
       trueSpanMeters = Number(span) > 0 ? Number(span) : 1;
+      sceneLoaded = true;
       const decor = new THREE.Group();
       decor.name = "montage-decor";
       root.add(decor);
@@ -1154,6 +1157,9 @@ export async function initHeroMontageMap(container, options = {}) {
       const all = await loadCatalog(catalogUrl);
       if (preferredId) {
         const hit = all.find((r) => r.id === preferredId);
+        if (preview && !hit) {
+          return;
+        }
         resorts = hit ? [hit] : [{ ...fallback, id: preferredId }];
         resortIndex = 0;
       } else {
@@ -1192,6 +1198,9 @@ export async function initHeroMontageMap(container, options = {}) {
     whenReady,
     getTrueSpan() {
       return trueSpanMeters;
+    },
+    sceneLoaded() {
+      return sceneLoaded;
     },
     readRadius() {
       return bounds?.radius || 1;

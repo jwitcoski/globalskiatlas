@@ -1,8 +1,17 @@
-import { initHeroMontageMap } from "./hero-montage-map.js?v=114";
+import { initHeroMontageMap } from "./hero-montage-map.js?v=115";
 
 let live = [];
 let catalogPromise = null;
 let mountToken = 0;
+const sceneReadyCache = new Map();
+const CLAY_SCENES_WITH_FILES = new Set([
+  "montage_mountain_pa",
+  "pal_arinsal_andorra",
+  "perisher_australia",
+  "cerro_perito_moreno_argentina",
+  "killington_resort_united_states_of_america",
+  "hakuba_cortina_japan",
+]);
 
 function loadClayByWs() {
   catalogPromise ||= fetch("/clay_scenes/catalog.json")
@@ -22,15 +31,49 @@ function loadClayByWs() {
   return catalogPromise;
 }
 
-function markMissing3dChips(clayByWs) {
+async function claySceneReady(id) {
+  const key = String(id || "");
+  if (!key) return false;
+  if (CLAY_SCENES_WITH_FILES.has(key)) {
+    sceneReadyCache.set(key, true);
+    window.__gsaClaySceneReady = sceneReadyCache;
+    return true;
+  }
+  if (sceneReadyCache.has(key)) return sceneReadyCache.get(key);
+  sceneReadyCache.set(key, false);
+  window.__gsaClaySceneReady = sceneReadyCache;
+  return false;
+}
+
+function fillMissingCell(cell) {
+  cell.classList.add("is-missing");
+  cell.querySelector(".clay-compare-embed")?.remove();
+  if (cell.querySelector(".clay-compare-empty")) return;
+  const empty = document.createElement("div");
+  empty.className = "clay-compare-empty";
+  empty.setAttribute("role", "status");
+  const badge = document.createElement("span");
+  badge.className = "clay-missing-badge";
+  badge.textContent = "No 3D map";
+  const hint = document.createElement("span");
+  hint.className = "clay-missing-hint";
+  hint.textContent = "Scene is not available yet";
+  empty.append(badge, hint);
+  cell.appendChild(empty);
+}
+
+async function markMissing3dChips(clayByWs) {
   const in3d = document.body.classList.contains("compare-3d");
-  document.querySelectorAll("#selected-chips .sel-chip").forEach((chip) => {
+  const chips = [...document.querySelectorAll("#selected-chips .sel-chip")];
+  for (const chip of chips) {
     const ws = String(chip.getAttribute("data-ws") || "");
-    const missing = in3d && !(ws && clayByWs.get(ws)?.id);
+    const hit = clayByWs?.get(ws);
+    const ready = in3d && hit?.id ? await claySceneReady(hit.id) : false;
+    const missing = in3d && !ready;
     chip.classList.toggle("no-3d", missing);
     const mark = chip.querySelector(".chip-3d-mark");
     if (mark) mark.textContent = missing ? "No 3D" : "";
-  });
+  }
 }
 
 async function disposeHandles() {
@@ -54,7 +97,7 @@ export async function syncCompareClay({ host, items, cols }) {
   host.style.gridTemplateColumns = `repeat(${Math.max(1, cols || 1)}, minmax(0, 1fr))`;
   const clayByWs = await loadClayByWs();
   if (token !== mountToken) return;
-  markMissing3dChips(clayByWs);
+  await markMissing3dChips(clayByWs);
   const queued = [];
   for (const item of items || []) {
     const cell = document.createElement("div");
@@ -64,19 +107,9 @@ export async function syncCompareClay({ host, items, cols }) {
     title.textContent = item.name || "Resort";
     cell.appendChild(title);
     const hit = clayByWs.get(String(item.ws || ""));
-    if (!hit?.id) {
-      cell.classList.add("is-missing");
-      const empty = document.createElement("div");
-      empty.className = "clay-compare-empty";
-      empty.setAttribute("role", "status");
-      const badge = document.createElement("span");
-      badge.className = "clay-missing-badge";
-      badge.textContent = "No 3D map";
-      const hint = document.createElement("span");
-      hint.className = "clay-missing-hint";
-      hint.textContent = "Not in the clay catalog yet";
-      empty.append(badge, hint);
-      cell.appendChild(empty);
+    const ready = hit?.id ? await claySceneReady(hit.id) : false;
+    if (!ready) {
+      fillMissingCell(cell);
       host.appendChild(cell);
       continue;
     }
@@ -87,7 +120,7 @@ export async function syncCompareClay({ host, items, cols }) {
     embed.appendChild(stage);
     cell.appendChild(embed);
     host.appendChild(cell);
-    queued.push({ stage, id: hit.id });
+    queued.push({ stage, id: hit.id, cell });
   }
   for (const job of queued) {
     if (token !== mountToken) return;
@@ -107,7 +140,14 @@ export async function syncCompareClay({ host, items, cols }) {
         try { handle.dispose(); } catch (_) { /* ignore */ }
         return;
       }
+      if (!handle.sceneLoaded()) {
+        try { handle.dispose(); } catch (_) { /* ignore */ }
+        fillMissingCell(job.cell);
+        continue;
+      }
       live.push(handle);
+    } else {
+      fillMissingCell(job.cell);
     }
   }
   if (token !== mountToken || live.length === 0) return;
