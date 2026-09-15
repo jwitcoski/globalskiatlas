@@ -1,0 +1,3621 @@
+{
+  "season": "2026-27",
+  "generated_at": "2026-09-15T11:50:13.227Z",
+  "by_id": {
+    "43441045": {
+      "winter_sports_id": "43441045",
+      "atlas_name": "Powder Ridge Ski Area",
+      "storm_names": [
+        "Powder Ridge"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "45096232": {
+      "winter_sports_id": "45096232",
+      "atlas_name": "Montage Mountain Ski Area",
+      "storm_names": [
+        "Montage"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "45117869": {
+      "winter_sports_id": "45117869",
+      "atlas_name": "The 3 Valleys",
+      "storm_names": [
+        "Les 3 Vallées"
+      ],
+      "passes": [
+        "epic"
+      ],
+      "season": "2026-27",
+      "confidence": "alias"
+    },
+    "45147901": {
+      "winter_sports_id": "45147901",
+      "atlas_name": "Pila",
+      "storm_names": [
+        "Pila"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_country"
+    },
+    "48782596": {
+      "winter_sports_id": "48782596",
+      "atlas_name": "Tussey Mountain",
+      "storm_names": [
+        "Tussey"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "52067284": {
+      "winter_sports_id": "52067284",
+      "atlas_name": "Camelback Mountain Resort",
+      "storm_names": [
+        "Camelback"
+      ],
+      "passes": [
+        "ikon"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "68519530": {
+      "winter_sports_id": "68519530",
+      "atlas_name": "Mohawk Mountain Ski Area",
+      "storm_names": [
+        "Mohawk Mountain"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "178133225": {
+      "winter_sports_id": "178133225",
+      "atlas_name": "Perisher",
+      "storm_names": [
+        "Perisher"
+      ],
+      "passes": [
+        "epic"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_country"
+    },
+    "184326663": {
+      "winter_sports_id": "184326663",
+      "atlas_name": "Loveland Valley Ski Area",
+      "storm_names": [
+        "Loveland Valley"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "184326673": {
+      "winter_sports_id": "184326673",
+      "atlas_name": "Loveland Basin Ski Area",
+      "storm_names": [
+        "Loveland Basin"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "233886400": {
+      "winter_sports_id": "233886400",
+      "atlas_name": "Ski Martock",
+      "storm_names": [
+        "Ski Martock"
+      ],
+      "passes": [],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "242382005": {
+      "winter_sports_id": "242382005",
+      "atlas_name": "Dodge Ridge Ski Area",
+      "storm_names": [
+        "Dodge Ridge"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "251260219": {
+      "winter_sports_id": "251260219",
+      "atlas_name": "Wildcat Mountain",
+      "storm_names": [
+        "Wildcat"
+      ],
+      "passes": [
+        "epic"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "252782489": {
+      "winter_sports_id": "252782489",
+      "atlas_name": "Whaleback Mountain",
+      "storm_names": [
+        "Whaleback Mountain"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "255571392": {
+      "winter_sports_id": "255571392",
+      "atlas_name": "Saddleback Mountain",
+      "storm_names": [
+        "Saddleback"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "255716854": {
+      "winter_sports_id": "255716854",
+      "atlas_name": "Ragged Mountain Resort",
+      "storm_names": [
+        "Ragged"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "256024127": {
+      "winter_sports_id": "256024127",
+      "atlas_name": "Attitash Mountain Resort",
+      "storm_names": [
+        "Attitash"
+      ],
+      "passes": [
+        "epic"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "256455529": {
+      "winter_sports_id": "256455529",
+      "atlas_name": "West Mountain Ski Resort",
+      "storm_names": [
+        "West Mountain"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "256580493": {
+      "winter_sports_id": "256580493",
+      "atlas_name": "Seven Springs Mountain Resort",
+      "storm_names": [
+        "Seven Springs"
+      ],
+      "passes": [
+        "epic"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "256781770": {
+      "winter_sports_id": "256781770",
+      "atlas_name": "Berkshire East Ski Resort",
+      "storm_names": [
+        "Berkshire East"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "258880201": {
+      "winter_sports_id": "258880201",
+      "atlas_name": "Glencoe Mountain Resort",
+      "storm_names": [
+        "Glencoe"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_country"
+    },
+    "281594168": {
+      "winter_sports_id": "281594168",
+      "atlas_name": "Bear Creek Mountain Resort Ski Slopes",
+      "storm_names": [
+        "Bear Creek"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "containment"
+    },
+    "290283443": {
+      "winter_sports_id": "290283443",
+      "atlas_name": "Nayoro Piyashiri",
+      "storm_names": [
+        "Nayoro Piyashiri"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "294826110": {
+      "winter_sports_id": "294826110",
+      "atlas_name": "Les 7 Laux",
+      "storm_names": [
+        "Les 7 Laux"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_country"
+    },
+    "302670313": {
+      "winter_sports_id": "302670313",
+      "atlas_name": "Devil's Head Ski Area",
+      "storm_names": [
+        "Devil’s Head"
+      ],
+      "passes": [
+        "ikon"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "304469711": {
+      "winter_sports_id": "304469711",
+      "atlas_name": "Tyrol Basin Ski And Snowboard Area",
+      "storm_names": [
+        "Tyrol Basin"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "containment"
+    },
+    "308152532": {
+      "winter_sports_id": "308152532",
+      "atlas_name": "Monarch Mountain",
+      "storm_names": [
+        "Monarch"
+      ],
+      "passes": [],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "313781036": {
+      "winter_sports_id": "313781036",
+      "atlas_name": "Andes Tower Hills",
+      "storm_names": [
+        "Andes Tower Hills"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "317142448": {
+      "winter_sports_id": "317142448",
+      "atlas_name": "Granite Peak Ski Area",
+      "storm_names": [
+        "Granite Peak"
+      ],
+      "passes": [
+        "ikon"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "319472357": {
+      "winter_sports_id": "319472357",
+      "atlas_name": "Kirkwood Mountain Resort",
+      "storm_names": [
+        "Kirkwood"
+      ],
+      "passes": [
+        "epic"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "324162841": {
+      "winter_sports_id": "324162841",
+      "atlas_name": "Jiigatake Snow Resort",
+      "storm_names": [
+        "Jiigatake Snow Resort"
+      ],
+      "passes": [
+        "epic"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "334089267": {
+      "winter_sports_id": "334089267",
+      "atlas_name": "Cranmore Mountain Resort",
+      "storm_names": [
+        "Cranmore"
+      ],
+      "passes": [
+        "ikon"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "334246239": {
+      "winter_sports_id": "334246239",
+      "atlas_name": "Loon Mountain Resort",
+      "storm_names": [
+        "Loon"
+      ],
+      "passes": [
+        "ikon"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "334259037": {
+      "winter_sports_id": "334259037",
+      "atlas_name": "Cannon Mountain",
+      "storm_names": [
+        "Cannon"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "341899728": {
+      "winter_sports_id": "341899728",
+      "atlas_name": "Obertauern",
+      "storm_names": [
+        "Obertauern"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_country"
+    },
+    "341908909": {
+      "winter_sports_id": "341908909",
+      "atlas_name": "Großglockner Heiligenblut ski area",
+      "storm_names": [
+        "Heiligenblut am Großglockner"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "containment"
+    },
+    "361561697": {
+      "winter_sports_id": "361561697",
+      "atlas_name": "McIntyre Ski Area",
+      "storm_names": [
+        "McIntyre"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "375130755": {
+      "winter_sports_id": "375130755",
+      "atlas_name": "Kelly Canyon Ski Resort",
+      "storm_names": [
+        "Kelly Canyon"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "379478843": {
+      "winter_sports_id": "379478843",
+      "atlas_name": "Big Moose Mountain Ski Area",
+      "storm_names": [
+        "Big Moose"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "387976209": {
+      "winter_sports_id": "387976209",
+      "atlas_name": "Camp Fortune",
+      "storm_names": [
+        "Camp Fortune"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "387976210": {
+      "winter_sports_id": "387976210",
+      "atlas_name": "Centre Vorlage",
+      "storm_names": [
+        "Centre Vorlage"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "387979659": {
+      "winter_sports_id": "387979659",
+      "atlas_name": "Calabogie Peaks",
+      "storm_names": [
+        "Calabogie Peaks"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "390163427": {
+      "winter_sports_id": "390163427",
+      "atlas_name": "Jack Frost Mountain Resort",
+      "storm_names": [
+        "Jack Frost"
+      ],
+      "passes": [
+        "epic"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "390166745": {
+      "winter_sports_id": "390166745",
+      "atlas_name": "Big Boulder Ski Resort Area",
+      "storm_names": [
+        "Big Boulder"
+      ],
+      "passes": [
+        "epic"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "390274626": {
+      "winter_sports_id": "390274626",
+      "atlas_name": "Liberty Mountain Resort",
+      "storm_names": [
+        "Liberty"
+      ],
+      "passes": [
+        "epic"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "390536570": {
+      "winter_sports_id": "390536570",
+      "atlas_name": "Blue Mountain Resort",
+      "storm_names": [
+        "Blue Mountain PA"
+      ],
+      "passes": [
+        "ikon"
+      ],
+      "season": "2026-27",
+      "confidence": "containment"
+    },
+    "390539624": {
+      "winter_sports_id": "390539624",
+      "atlas_name": "Roundtop Mountain Resort",
+      "storm_names": [
+        "Roundtop"
+      ],
+      "passes": [
+        "epic"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "390809151": {
+      "winter_sports_id": "390809151",
+      "atlas_name": "Mount Southington Ski Area",
+      "storm_names": [
+        "Mount Southington"
+      ],
+      "passes": [],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "391284413": {
+      "winter_sports_id": "391284413",
+      "atlas_name": "Snowy Range Ski Area",
+      "storm_names": [
+        "Snowy Range"
+      ],
+      "passes": [
+        "ikon"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "391681261": {
+      "winter_sports_id": "391681261",
+      "atlas_name": "Mont-Sainte-Anne",
+      "storm_names": [
+        "Mont-Sainte Anne"
+      ],
+      "passes": [
+        "epic"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "391698033": {
+      "winter_sports_id": "391698033",
+      "atlas_name": "Brandywine Ski Resort",
+      "storm_names": [
+        "Brandywine"
+      ],
+      "passes": [
+        "epic"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "392376125": {
+      "winter_sports_id": "392376125",
+      "atlas_name": "Big Bear Ski Resort",
+      "storm_names": [
+        "Ski Big Bear"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "397735832": {
+      "winter_sports_id": "397735832",
+      "atlas_name": "Red Mountain Resort",
+      "storm_names": [
+        "Red Mountain"
+      ],
+      "passes": [
+        "ikon"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "397906930": {
+      "winter_sports_id": "397906930",
+      "atlas_name": "Mont Habitant",
+      "storm_names": [
+        "Mont Habitant"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "397906934": {
+      "winter_sports_id": "397906934",
+      "atlas_name": "Ski Mont Rigaud",
+      "storm_names": [
+        "Mont Rigaud"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "397906935": {
+      "winter_sports_id": "397906935",
+      "atlas_name": "Ski Mont Saint-Bruno",
+      "storm_names": [
+        "Ski Saint-Bruno"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "containment"
+    },
+    "400692634": {
+      "winter_sports_id": "400692634",
+      "atlas_name": "Parc régional de Val-d'Irène",
+      "storm_names": [
+        "Val D'Irene"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "containment"
+    },
+    "415176032": {
+      "winter_sports_id": "415176032",
+      "atlas_name": "Mount Abram",
+      "storm_names": [
+        "Mount Abram"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "415878204": {
+      "winter_sports_id": "415878204",
+      "atlas_name": "Christie Mountain Ski Area",
+      "storm_names": [
+        "Christie Mountain"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "427517284": {
+      "winter_sports_id": "427517284",
+      "atlas_name": "Eldora",
+      "storm_names": [
+        "Eldora"
+      ],
+      "passes": [
+        "ikon"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "428125408": {
+      "winter_sports_id": "428125408",
+      "atlas_name": "Whiteface Mountain Ski Center",
+      "storm_names": [
+        "Whiteface"
+      ],
+      "passes": [
+        "mountain_collective"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "438793320": {
+      "winter_sports_id": "438793320",
+      "atlas_name": "Sold",
+      "storm_names": [
+        "Sölden"
+      ],
+      "passes": [
+        "epic"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_country"
+    },
+    "442940109": {
+      "winter_sports_id": "442940109",
+      "atlas_name": "Snow Creek",
+      "storm_names": [
+        "Snow Creek"
+      ],
+      "passes": [
+        "epic"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "452295412": {
+      "winter_sports_id": "452295412",
+      "atlas_name": "Magic Mountain Ski Area",
+      "storm_names": [
+        "Magic Mountain"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "452323654": {
+      "winter_sports_id": "452323654",
+      "atlas_name": "Boston Mills Ski Resort",
+      "storm_names": [
+        "Boston Mills"
+      ],
+      "passes": [
+        "epic"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "460246666": {
+      "winter_sports_id": "460246666",
+      "atlas_name": "Winter Park Resort",
+      "storm_names": [
+        "Winter Park"
+      ],
+      "passes": [
+        "ikon"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "460247056": {
+      "winter_sports_id": "460247056",
+      "atlas_name": "Powderhorn Ski Area",
+      "storm_names": [
+        "Powderhorn"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "461239598": {
+      "winter_sports_id": "461239598",
+      "atlas_name": "Arapahoe Basin Ski Area",
+      "storm_names": [
+        "Arapahoe Basin"
+      ],
+      "passes": [
+        "ikon"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "473859024": {
+      "winter_sports_id": "473859024",
+      "atlas_name": "Big Powderhorn Mountain Resort",
+      "storm_names": [
+        "Big Powderhorn (UP)"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "474288286": {
+      "winter_sports_id": "474288286",
+      "atlas_name": "Whistler Blackcomb",
+      "storm_names": [
+        "Whistler Blackcomb"
+      ],
+      "passes": [
+        "epic"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "475720359": {
+      "winter_sports_id": "475720359",
+      "atlas_name": "Revelstoke Mountain Resort",
+      "storm_names": [
+        "Revelstoke"
+      ],
+      "passes": [
+        "ikon",
+        "mountain_collective"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "476836855": {
+      "winter_sports_id": "476836855",
+      "atlas_name": "Big White Ski Resort",
+      "storm_names": [
+        "Big White"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "476840539": {
+      "winter_sports_id": "476840539",
+      "atlas_name": "Silver Star Mountain Resort",
+      "storm_names": [
+        "Silver Star"
+      ],
+      "passes": [
+        "ikon"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "476842734": {
+      "winter_sports_id": "476842734",
+      "atlas_name": "Sasquatch Mountain Resort",
+      "storm_names": [
+        "Sasquatch"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "476843455": {
+      "winter_sports_id": "476843455",
+      "atlas_name": "Kicking Horse Resort",
+      "storm_names": [
+        "Kicking Horse"
+      ],
+      "passes": [
+        "epic"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "476844342": {
+      "winter_sports_id": "476844342",
+      "atlas_name": "Panorama Mountain Resort",
+      "storm_names": [
+        "Panorama"
+      ],
+      "passes": [
+        "ikon",
+        "mountain_collective"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "477982773": {
+      "winter_sports_id": "477982773",
+      "atlas_name": "Bear Valley Adventure Company",
+      "storm_names": [
+        "Bear Valley"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "containment"
+    },
+    "479915906": {
+      "winter_sports_id": "479915906",
+      "atlas_name": "Kamui Ski Links",
+      "storm_names": [
+        "Kamui Ski Links"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "482928468": {
+      "winter_sports_id": "482928468",
+      "atlas_name": "The Remarkables Ski Area",
+      "storm_names": [
+        "The Remarkables"
+      ],
+      "passes": [
+        "ikon",
+        "mountain_collective"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_country"
+    },
+    "482928475": {
+      "winter_sports_id": "482928475",
+      "atlas_name": "Coronet Peak Ski Area",
+      "storm_names": [
+        "Coronet Peak"
+      ],
+      "passes": [
+        "ikon",
+        "mountain_collective"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_country"
+    },
+    "488305112": {
+      "winter_sports_id": "488305112",
+      "atlas_name": "Zao Onsen Ski Resort",
+      "storm_names": [
+        "Zao Onsen"
+      ],
+      "passes": [
+        "ikon"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "498378487": {
+      "winter_sports_id": "498378487",
+      "atlas_name": "Vallée Bleue",
+      "storm_names": [
+        "Vallee Bleue"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "499034347": {
+      "winter_sports_id": "499034347",
+      "atlas_name": "Thredbo Resort",
+      "storm_names": [
+        "Thredbo"
+      ],
+      "passes": [
+        "ikon"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_country"
+    },
+    "528965906": {
+      "winter_sports_id": "528965906",
+      "atlas_name": "Telluride Ski Area",
+      "storm_names": [
+        "Telluride"
+      ],
+      "passes": [
+        "epic"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "529997955": {
+      "winter_sports_id": "529997955",
+      "atlas_name": "Purgatory Resort",
+      "storm_names": [
+        "Purgatory"
+      ],
+      "passes": [],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "530521512": {
+      "winter_sports_id": "530521512",
+      "atlas_name": "Crested Butte Mountain Resort",
+      "storm_names": [
+        "Crested Butte"
+      ],
+      "passes": [
+        "epic"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "530530657": {
+      "winter_sports_id": "530530657",
+      "atlas_name": "Sunlight Mountain Resort",
+      "storm_names": [
+        "Sunlight"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "530531925": {
+      "winter_sports_id": "530531925",
+      "atlas_name": "Aspen Mountain",
+      "storm_names": [
+        "Aspen Mountain"
+      ],
+      "passes": [
+        "ikon",
+        "mountain_collective"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "530531926": {
+      "winter_sports_id": "530531926",
+      "atlas_name": "Aspen Highlands",
+      "storm_names": [
+        "Aspen Highlands"
+      ],
+      "passes": [
+        "ikon",
+        "mountain_collective"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "530538581": {
+      "winter_sports_id": "530538581",
+      "atlas_name": "Buttermilk",
+      "storm_names": [
+        "Buttermilk"
+      ],
+      "passes": [
+        "ikon",
+        "mountain_collective"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "530998526": {
+      "winter_sports_id": "530998526",
+      "atlas_name": "Steamboat Ski Resort",
+      "storm_names": [
+        "Steamboat"
+      ],
+      "passes": [
+        "ikon"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "530998534": {
+      "winter_sports_id": "530998534",
+      "atlas_name": "Echo Mountain",
+      "storm_names": [
+        "Echo Mountain"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "531000583": {
+      "winter_sports_id": "531000583",
+      "atlas_name": "Keystone",
+      "storm_names": [
+        "Keystone"
+      ],
+      "passes": [
+        "epic"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "531005985": {
+      "winter_sports_id": "531005985",
+      "atlas_name": "Breckenridge",
+      "storm_names": [
+        "Breckenridge"
+      ],
+      "passes": [
+        "epic"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "531005986": {
+      "winter_sports_id": "531005986",
+      "atlas_name": "Copper Mountain",
+      "storm_names": [
+        "Copper Mountain"
+      ],
+      "passes": [
+        "ikon"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "531009607": {
+      "winter_sports_id": "531009607",
+      "atlas_name": "Vail",
+      "storm_names": [
+        "Vail Mountain"
+      ],
+      "passes": [
+        "epic"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "531009608": {
+      "winter_sports_id": "531009608",
+      "atlas_name": "Beaver Creek",
+      "storm_names": [
+        "Beaver Creek"
+      ],
+      "passes": [
+        "epic"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "539015308": {
+      "winter_sports_id": "539015308",
+      "atlas_name": "St. Johann in Tirol",
+      "storm_names": [
+        "St. Johann (in Tirol/Oberndorf-Harschbichl)"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "containment"
+    },
+    "539395530": {
+      "winter_sports_id": "539395530",
+      "atlas_name": "Ischgl-Samnaun",
+      "storm_names": [
+        "Ischgl"
+      ],
+      "passes": [
+        "ikon"
+      ],
+      "season": "2026-27",
+      "confidence": "alias"
+    },
+    "539400408": {
+      "winter_sports_id": "539400408",
+      "atlas_name": "Hochzeiger",
+      "storm_names": [
+        "Hochzeiger Bergbahnen Pitztal AG"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "containment"
+    },
+    "539407909": {
+      "winter_sports_id": "539407909",
+      "atlas_name": "Ski Arlberg",
+      "storm_names": [
+        "Ski Arlberg"
+      ],
+      "passes": [
+        "epic"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_country"
+    },
+    "539421257": {
+      "winter_sports_id": "539421257",
+      "atlas_name": "Silvretta Montafon",
+      "storm_names": [
+        "Silvretta Montafon"
+      ],
+      "passes": [
+        "epic"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_country"
+    },
+    "543145559": {
+      "winter_sports_id": "543145559",
+      "atlas_name": "Massanutten Resort Ski Area",
+      "storm_names": [
+        "Massanutten"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "543987749": {
+      "winter_sports_id": "543987749",
+      "atlas_name": "Afton Alps",
+      "storm_names": [
+        "Afton Alps"
+      ],
+      "passes": [
+        "epic"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "546849385": {
+      "winter_sports_id": "546849385",
+      "atlas_name": "Hakuba Norikura Onsen Ski Resort",
+      "storm_names": [
+        "Hakuba Norikura Onsen Snow Resort"
+      ],
+      "passes": [
+        "epic"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "584094054": {
+      "winter_sports_id": "584094054",
+      "atlas_name": "Trollhaugen Ski Area",
+      "storm_names": [
+        "Trollhaugen"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "598421263": {
+      "winter_sports_id": "598421263",
+      "atlas_name": "Furano ski resort",
+      "storm_names": [
+        "Furano"
+      ],
+      "passes": [
+        "ikon"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "599002420": {
+      "winter_sports_id": "599002420",
+      "atlas_name": "Crans-Montana",
+      "storm_names": [
+        "Crans-Montana"
+      ],
+      "passes": [
+        "epic"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_country"
+    },
+    "601126561": {
+      "winter_sports_id": "601126561",
+      "atlas_name": "Krvavec",
+      "storm_names": [
+        "Krvavec"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_country"
+    },
+    "601131988": {
+      "winter_sports_id": "601131988",
+      "atlas_name": "Le Grand Domaine",
+      "storm_names": [
+        "Valmorel (Le Grand Domaine)"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_country"
+    },
+    "601132890": {
+      "winter_sports_id": "601132890",
+      "atlas_name": "Tschiertschen",
+      "storm_names": [
+        "Tschiertschen"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_country"
+    },
+    "613145242": {
+      "winter_sports_id": "613145242",
+      "atlas_name": "Bruce Mound Winter Sports Area",
+      "storm_names": [
+        "Bruce Mound"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "containment"
+    },
+    "620836496": {
+      "winter_sports_id": "620836496",
+      "atlas_name": "Stowe Mountain Resort",
+      "storm_names": [
+        "Stowe"
+      ],
+      "passes": [
+        "epic"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "626857453": {
+      "winter_sports_id": "626857453",
+      "atlas_name": "Muica Snow Resort",
+      "storm_names": [
+        "Muica Snow Resort"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "627625381": {
+      "winter_sports_id": "627625381",
+      "atlas_name": "Mount Hutt Ski Area",
+      "storm_names": [
+        "Mt. Hutt"
+      ],
+      "passes": [
+        "ikon"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_country"
+    },
+    "642476176": {
+      "winter_sports_id": "642476176",
+      "atlas_name": "Samedan (St. Moritz)",
+      "storm_names": [
+        "St. Moritz"
+      ],
+      "passes": [
+        "ikon"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_country"
+    },
+    "654073584": {
+      "winter_sports_id": "654073584",
+      "atlas_name": "White Pine",
+      "storm_names": [
+        "White Pine"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "656372511": {
+      "winter_sports_id": "656372511",
+      "atlas_name": "Frost Fire Park",
+      "storm_names": [
+        "Frost Fire"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "660203241": {
+      "winter_sports_id": "660203241",
+      "atlas_name": "4 Valleys – Verbier/La Tzoumaz/Nendaz/Veysonnaz/Thyon",
+      "storm_names": [
+        "Verbier 4 Vallées"
+      ],
+      "passes": [
+        "epic"
+      ],
+      "season": "2026-27",
+      "confidence": "containment"
+    },
+    "662615625": {
+      "winter_sports_id": "662615625",
+      "atlas_name": "Pats Peak",
+      "storm_names": [
+        "Pats Peak"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "667593226": {
+      "winter_sports_id": "667593226",
+      "atlas_name": "Canmore Ski Resort",
+      "storm_names": [
+        "Canmore Ski Village"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "670137935": {
+      "winter_sports_id": "670137935",
+      "atlas_name": "Ski Cape Smokey",
+      "storm_names": [
+        "Cape Smokey"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "671144531": {
+      "winter_sports_id": "671144531",
+      "atlas_name": "Mont Tremblant Resort",
+      "storm_names": [
+        "Mont Tremblant"
+      ],
+      "passes": [
+        "ikon"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "677033105": {
+      "winter_sports_id": "677033105",
+      "atlas_name": "Aomori Spring Resort",
+      "storm_names": [
+        "Aomori Spring"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "679253285": {
+      "winter_sports_id": "679253285",
+      "atlas_name": "Maiko Snow Resort",
+      "storm_names": [
+        "Maiko Snow Resort"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "679909874": {
+      "winter_sports_id": "679909874",
+      "atlas_name": "Dry Hill Ski Area",
+      "storm_names": [
+        "Dry Hill"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "680041845": {
+      "winter_sports_id": "680041845",
+      "atlas_name": "Yuzawa Nakazato Ski Resort",
+      "storm_names": [
+        "Yuzawa Nakazato"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "682230006": {
+      "winter_sports_id": "682230006",
+      "atlas_name": "Solitude Mountain Resort",
+      "storm_names": [
+        "Solitude"
+      ],
+      "passes": [
+        "ikon"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "682230007": {
+      "winter_sports_id": "682230007",
+      "atlas_name": "Brighton Resort",
+      "storm_names": [
+        "Brighton"
+      ],
+      "passes": [
+        "ikon"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "682231907": {
+      "winter_sports_id": "682231907",
+      "atlas_name": "Mammoth Mountain",
+      "storm_names": [
+        "Mammoth"
+      ],
+      "passes": [
+        "ikon"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "682241434": {
+      "winter_sports_id": "682241434",
+      "atlas_name": "Deer Valley Resort",
+      "storm_names": [
+        "Deer Valley"
+      ],
+      "passes": [
+        "ikon"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "691080634": {
+      "winter_sports_id": "691080634",
+      "atlas_name": "Björkliden",
+      "storm_names": [
+        "Björkliden"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_country"
+    },
+    "691516993": {
+      "winter_sports_id": "691516993",
+      "atlas_name": "Holimont",
+      "storm_names": [
+        "Holimont"
+      ],
+      "passes": [],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "691518491": {
+      "winter_sports_id": "691518491",
+      "atlas_name": "Titus Mountain",
+      "storm_names": [
+        "Titus"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "691521201": {
+      "winter_sports_id": "691521201",
+      "atlas_name": "Greek Peak Mountain Resort",
+      "storm_names": [
+        "Greek Peak"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "702101323": {
+      "winter_sports_id": "702101323",
+      "atlas_name": "Nutt Hill",
+      "storm_names": [
+        "Nutt Hill"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "713467426": {
+      "winter_sports_id": "713467426",
+      "atlas_name": "Mount Kato Ski Area",
+      "storm_names": [
+        "Mount Kato"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "734596223": {
+      "winter_sports_id": "734596223",
+      "atlas_name": "Coffee Mill Ski & Snowboard Resort",
+      "storm_names": [
+        "Coffee Mill"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "containment"
+    },
+    "734696805": {
+      "winter_sports_id": "734696805",
+      "atlas_name": "Sunburst Ski Area",
+      "storm_names": [
+        "Sunburst"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "739168515": {
+      "winter_sports_id": "739168515",
+      "atlas_name": "Banff Sunshine Village",
+      "storm_names": [
+        "Banff Sunshine"
+      ],
+      "passes": [
+        "ikon",
+        "mountain_collective"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "755762044": {
+      "winter_sports_id": "755762044",
+      "atlas_name": "Big Snow American Dream",
+      "storm_names": [
+        "Big Snow American Dream"
+      ],
+      "passes": [],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "766056081": {
+      "winter_sports_id": "766056081",
+      "atlas_name": "Castle Mountain Resort",
+      "storm_names": [
+        "Castle Mountain"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "767350052": {
+      "winter_sports_id": "767350052",
+      "atlas_name": "Little Ski Hill",
+      "storm_names": [
+        "Little Ski Hill"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "771668333": {
+      "winter_sports_id": "771668333",
+      "atlas_name": "Hakuba Happo One",
+      "storm_names": [
+        "Hakuba Happo-One Snow Resort"
+      ],
+      "passes": [
+        "epic"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "773558919": {
+      "winter_sports_id": "773558919",
+      "atlas_name": "Hakuba Cortina",
+      "storm_names": [
+        "Hakuba Cortina Snow Resort"
+      ],
+      "passes": [
+        "epic"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "815651521": {
+      "winter_sports_id": "815651521",
+      "atlas_name": "Erciyes Ski Resort",
+      "storm_names": [
+        "Erciyes"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_country"
+    },
+    "817289254": {
+      "winter_sports_id": "817289254",
+      "atlas_name": "Mt. La Crosse",
+      "storm_names": [
+        "Mount La Crosse"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "834317212": {
+      "winter_sports_id": "834317212",
+      "atlas_name": "Sundown Mountain Resort",
+      "storm_names": [
+        "Sundown"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "839939642": {
+      "winter_sports_id": "839939642",
+      "atlas_name": "Hilltop Ski Area",
+      "storm_names": [
+        "Hilltop"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "846739537": {
+      "winter_sports_id": "846739537",
+      "atlas_name": "Huff Hills Ski Resort",
+      "storm_names": [
+        "Huff Hills"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "859046254": {
+      "winter_sports_id": "859046254",
+      "atlas_name": "Powder Ridge",
+      "storm_names": [
+        "Powder Ridge"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "860260235": {
+      "winter_sports_id": "860260235",
+      "atlas_name": "Mount Snow",
+      "storm_names": [
+        "Mount Snow"
+      ],
+      "passes": [
+        "epic"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "860486037": {
+      "winter_sports_id": "860486037",
+      "atlas_name": "Lost Valley Ski Area",
+      "storm_names": [
+        "Lost Valley"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "866496711": {
+      "winter_sports_id": "866496711",
+      "atlas_name": "Mt. Hood Meadows Ski Resort",
+      "storm_names": [
+        "Mount Hood Meadows"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "867570853": {
+      "winter_sports_id": "867570853",
+      "atlas_name": "Chestnut Mountain Resort",
+      "storm_names": [
+        "Chestnut"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "884007908": {
+      "winter_sports_id": "884007908",
+      "atlas_name": "49° North Mountain Resort",
+      "storm_names": [
+        "49° North"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "893138900": {
+      "winter_sports_id": "893138900",
+      "atlas_name": "Whitetail Resort",
+      "storm_names": [
+        "Whitetail"
+      ],
+      "passes": [
+        "epic"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "896064328": {
+      "winter_sports_id": "896064328",
+      "atlas_name": "Mt. Holiday",
+      "storm_names": [
+        "Mount Holiday"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "905237707": {
+      "winter_sports_id": "905237707",
+      "atlas_name": "Bolton Valley Resort",
+      "storm_names": [
+        "Bolton Valley"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "908172888": {
+      "winter_sports_id": "908172888",
+      "atlas_name": "Canaan Valley Ski Resort",
+      "storm_names": [
+        "Canaan Valley"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "908946630": {
+      "winter_sports_id": "908946630",
+      "atlas_name": "Hodaigi Ski Resort",
+      "storm_names": [
+        "Hodaigi"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "918681867": {
+      "winter_sports_id": "918681867",
+      "atlas_name": "Park City Mountain Resort",
+      "storm_names": [
+        "Park City"
+      ],
+      "passes": [
+        "epic"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "934351305": {
+      "winter_sports_id": "934351305",
+      "atlas_name": "Skeetawk",
+      "storm_names": [
+        "Skeetawk"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "934351306": {
+      "winter_sports_id": "934351306",
+      "atlas_name": "Alyeska Resort",
+      "storm_names": [
+        "Alyeska"
+      ],
+      "passes": [
+        "ikon"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "936983347": {
+      "winter_sports_id": "936983347",
+      "atlas_name": "Togakushi Ski Area",
+      "storm_names": [
+        "Togakushi"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "937080875": {
+      "winter_sports_id": "937080875",
+      "atlas_name": "Kurohime Kogen",
+      "storm_names": [
+        "Kurohime Kogen Snow Park"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "937086872": {
+      "winter_sports_id": "937086872",
+      "atlas_name": "Myoko Suginohara Ski Resort",
+      "storm_names": [
+        "Myoko Suginohara Ski Resort"
+      ],
+      "passes": [
+        "ikon"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "937101624": {
+      "winter_sports_id": "937101624",
+      "atlas_name": "ARAI SNOW RESORT",
+      "storm_names": [
+        "Arai Snow Resort"
+      ],
+      "passes": [
+        "ikon"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "938362715": {
+      "winter_sports_id": "938362715",
+      "atlas_name": "Moose Mountain Ski Resort",
+      "storm_names": [
+        "Moose Mountain"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "952802401": {
+      "winter_sports_id": "952802401",
+      "atlas_name": "Grand Targhee Resort",
+      "storm_names": [
+        "Grand Targhee"
+      ],
+      "passes": [
+        "mountain_collective"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "956685533": {
+      "winter_sports_id": "956685533",
+      "atlas_name": "Hyland Hills Ski Area",
+      "storm_names": [
+        "Hyland Hills"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "972064114": {
+      "winter_sports_id": "972064114",
+      "atlas_name": "Mountain Creek",
+      "storm_names": [
+        "Mountain Creek"
+      ],
+      "passes": [],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "980981935": {
+      "winter_sports_id": "980981935",
+      "atlas_name": "Wisp Resort",
+      "storm_names": [
+        "Wisp"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "990531013": {
+      "winter_sports_id": "990531013",
+      "atlas_name": "Hidden Valley",
+      "storm_names": [
+        "Hidden Valley"
+      ],
+      "passes": [
+        "epic"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "997044731": {
+      "winter_sports_id": "997044731",
+      "atlas_name": "Tangram Madarao Ski Circus",
+      "storm_names": [
+        "Tangram Ski Circus (Tangram Madarao)"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "containment"
+    },
+    "997044732": {
+      "winter_sports_id": "997044732",
+      "atlas_name": "Madarao Kogen Mountain Resort",
+      "storm_names": [
+        "Madarao Kogen"
+      ],
+      "passes": [
+        "ikon"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "997159129": {
+      "winter_sports_id": "997159129",
+      "atlas_name": "Nub's Nob",
+      "storm_names": [
+        "Nub’s Nob"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1010406137": {
+      "winter_sports_id": "1010406137",
+      "atlas_name": "Mount Eyak Ski Area",
+      "storm_names": [
+        "Mount Eyak"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1010412985": {
+      "winter_sports_id": "1010412985",
+      "atlas_name": "Eaglecrest Ski Area",
+      "storm_names": [
+        "Eaglecrest"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1010720455": {
+      "winter_sports_id": "1010720455",
+      "atlas_name": "Bryce Resort",
+      "storm_names": [
+        "Bryce"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1021872776": {
+      "winter_sports_id": "1021872776",
+      "atlas_name": "Jiminy Peak Resort",
+      "storm_names": [
+        "Jiminy Peak"
+      ],
+      "passes": [
+        "ikon"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1023308077": {
+      "winter_sports_id": "1023308077",
+      "atlas_name": "Alta Ski Area",
+      "storm_names": [
+        "Alta"
+      ],
+      "passes": [
+        "ikon",
+        "mountain_collective"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1023308078": {
+      "winter_sports_id": "1023308078",
+      "atlas_name": "Snowbird",
+      "storm_names": [
+        "Snowbird"
+      ],
+      "passes": [
+        "ikon",
+        "mountain_collective"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1023791593": {
+      "winter_sports_id": "1023791593",
+      "atlas_name": "Wintergreen Ski Resort",
+      "storm_names": [
+        "Wintergreen"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1024235364": {
+      "winter_sports_id": "1024235364",
+      "atlas_name": "Peek'n Peak Ski Area",
+      "storm_names": [
+        "Peek’n Peak"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1026073030": {
+      "winter_sports_id": "1026073030",
+      "atlas_name": "Buffalo Ski Club",
+      "storm_names": [
+        "Buffalo Ski Center"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1026204281": {
+      "winter_sports_id": "1026204281",
+      "atlas_name": "Laurel Mountain Ski Resort",
+      "storm_names": [
+        "Laurel"
+      ],
+      "passes": [
+        "epic"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1040649718": {
+      "winter_sports_id": "1040649718",
+      "atlas_name": "Blue Mountain Ski Resort",
+      "storm_names": [
+        "Blue Mountain"
+      ],
+      "passes": [
+        "ikon"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1043087316": {
+      "winter_sports_id": "1043087316",
+      "atlas_name": "Pine Mountain Ski Hill",
+      "storm_names": [
+        "Pine Mountain (UP)"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1057550035": {
+      "winter_sports_id": "1057550035",
+      "atlas_name": "Norway Mountain Ski Resort",
+      "storm_names": [
+        "Norway Mountain (UP)"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1057669089": {
+      "winter_sports_id": "1057669089",
+      "atlas_name": "Mt Brighton",
+      "storm_names": [
+        "Mount Brighton"
+      ],
+      "passes": [
+        "epic"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1070694657": {
+      "winter_sports_id": "1070694657",
+      "atlas_name": "Beaver Mountain",
+      "storm_names": [
+        "Beaver Mountain"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1074335726": {
+      "winter_sports_id": "1074335726",
+      "atlas_name": "Jackson Hole Mountain Resort",
+      "storm_names": [
+        "Jackson Hole"
+      ],
+      "passes": [
+        "ikon",
+        "mountain_collective"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1076348034": {
+      "winter_sports_id": "1076348034",
+      "atlas_name": "Snow King Mountain",
+      "storm_names": [
+        "Snow King"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1079343060": {
+      "winter_sports_id": "1079343060",
+      "atlas_name": "Saskadena Six",
+      "storm_names": [
+        "Saskadena Six"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1081650641": {
+      "winter_sports_id": "1081650641",
+      "atlas_name": "Kiroro Resort",
+      "storm_names": [
+        "Kiroro"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1081650975": {
+      "winter_sports_id": "1081650975",
+      "atlas_name": "Rusutsu Resort Ski Area",
+      "storm_names": [
+        "Rusutsu"
+      ],
+      "passes": [
+        "epic"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1083653058": {
+      "winter_sports_id": "1083653058",
+      "atlas_name": "Mount Racey",
+      "storm_names": [
+        "Yubari (Mount Racey)"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1087368359": {
+      "winter_sports_id": "1087368359",
+      "atlas_name": "Appi Kogen Ski Resort",
+      "storm_names": [
+        "Appi Kogen Resort"
+      ],
+      "passes": [
+        "ikon"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1094522661": {
+      "winter_sports_id": "1094522661",
+      "atlas_name": "Jay Peak Resort",
+      "storm_names": [
+        "Jay Peak"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1094524069": {
+      "winter_sports_id": "1094524069",
+      "atlas_name": "Burke Mountain Resort",
+      "storm_names": [
+        "Burke"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1094579154": {
+      "winter_sports_id": "1094579154",
+      "atlas_name": "Sugarbush Resort",
+      "storm_names": [
+        "Sugarbush"
+      ],
+      "passes": [
+        "ikon"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1094586461": {
+      "winter_sports_id": "1094586461",
+      "atlas_name": "Pico Mountain Resort",
+      "storm_names": [
+        "Pico"
+      ],
+      "passes": [
+        "ikon"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1107815765": {
+      "winter_sports_id": "1107815765",
+      "atlas_name": "Levi Ski Resort",
+      "storm_names": [
+        "Levi"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_country"
+    },
+    "1117698962": {
+      "winter_sports_id": "1117698962",
+      "atlas_name": "Sundance Resort",
+      "storm_names": [
+        "Sundance"
+      ],
+      "passes": [],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1117929987": {
+      "winter_sports_id": "1117929987",
+      "atlas_name": "Lutsen Mountains",
+      "storm_names": [
+        "Lutsen Mountains"
+      ],
+      "passes": [
+        "ikon"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1122543074": {
+      "winter_sports_id": "1122543074",
+      "atlas_name": "Grouse Mountain",
+      "storm_names": [
+        "Grouse Mountain"
+      ],
+      "passes": [
+        "ikon"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1126110799": {
+      "winter_sports_id": "1126110799",
+      "atlas_name": "Hatley Pointe",
+      "storm_names": [
+        "Hatley Pointe"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1132263707": {
+      "winter_sports_id": "1132263707",
+      "atlas_name": "Manning Park Resort",
+      "storm_names": [
+        "Manning Park"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1135215380": {
+      "winter_sports_id": "1135215380",
+      "atlas_name": "Hudson Bay Mountain",
+      "storm_names": [
+        "Hudson Bay Mountain"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1138470815": {
+      "winter_sports_id": "1138470815",
+      "atlas_name": "Sun Peaks Resort",
+      "storm_names": [
+        "Sun Peaks"
+      ],
+      "passes": [
+        "ikon",
+        "mountain_collective"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1138569632": {
+      "winter_sports_id": "1138569632",
+      "atlas_name": "Apex Mountain Resort",
+      "storm_names": [
+        "Apex Mountain"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1154067051": {
+      "winter_sports_id": "1154067051",
+      "atlas_name": "Spirit Mountain",
+      "storm_names": [
+        "Spirit Mountain"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1154306823": {
+      "winter_sports_id": "1154306823",
+      "atlas_name": "Black Mountain",
+      "storm_names": [
+        "Black Mountain"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1155757094": {
+      "winter_sports_id": "1155757094",
+      "atlas_name": "Crystal Mountain",
+      "storm_names": [
+        "Crystal Mountain MI"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "containment"
+    },
+    "1162245573": {
+      "winter_sports_id": "1162245573",
+      "atlas_name": "China Peak Mountain Resort",
+      "storm_names": [
+        "China Peak"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1174493817": {
+      "winter_sports_id": "1174493817",
+      "atlas_name": "Togari Onsen Ski Resort",
+      "storm_names": [
+        "Togari Onsen Ski Area"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1183389371": {
+      "winter_sports_id": "1183389371",
+      "atlas_name": "Wilmot Mountain",
+      "storm_names": [
+        "Wilmot"
+      ],
+      "passes": [
+        "epic"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1188381817": {
+      "winter_sports_id": "1188381817",
+      "atlas_name": "Palcall Tsumagoi Resort Ski & Hotel",
+      "storm_names": [
+        "Palcall Tsumagoi"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "containment"
+    },
+    "1189278314": {
+      "winter_sports_id": "1189278314",
+      "atlas_name": "Takasu Snow Park",
+      "storm_names": [
+        "Takasu Snow Park"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1189279617": {
+      "winter_sports_id": "1189279617",
+      "atlas_name": "Hirugano Kogen Ski Resort",
+      "storm_names": [
+        "Hirugano Kogen Ski Resort"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1200712921": {
+      "winter_sports_id": "1200712921",
+      "atlas_name": "National Winter Activity Center",
+      "storm_names": [
+        "National Winter Activity Center"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1201185853": {
+      "winter_sports_id": "1201185853",
+      "atlas_name": "Snowbasin Resort",
+      "storm_names": [
+        "Snowbasin"
+      ],
+      "passes": [
+        "ikon",
+        "mountain_collective"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1201571470": {
+      "winter_sports_id": "1201571470",
+      "atlas_name": "Geto Kogen",
+      "storm_names": [
+        "Geto Kogen"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1201573017": {
+      "winter_sports_id": "1201573017",
+      "atlas_name": "Tazawako Ski Resort",
+      "storm_names": [
+        "Tazawako"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1201573953": {
+      "winter_sports_id": "1201573953",
+      "atlas_name": "Ani Ski Resort (Mt. Moriyoshi)",
+      "storm_names": [
+        "Ani Ski Resort (Mt. Moriyoshi)"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1208479232": {
+      "winter_sports_id": "1208479232",
+      "atlas_name": "Ninox Snow Park",
+      "storm_names": [
+        "Ninox Snow Park"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1210011762": {
+      "winter_sports_id": "1210011762",
+      "atlas_name": "Falls Creek",
+      "storm_names": [
+        "Falls Creek"
+      ],
+      "passes": [
+        "epic"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_country"
+    },
+    "1212155021": {
+      "winter_sports_id": "1212155021",
+      "atlas_name": "Cuchara Mountain Resort",
+      "storm_names": [
+        "Cuchara"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1213960940": {
+      "winter_sports_id": "1213960940",
+      "atlas_name": "Pomerelle Mountain Resort",
+      "storm_names": [
+        "Pomerelle"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1214114449": {
+      "winter_sports_id": "1214114449",
+      "atlas_name": "Great Bear Recreation Park",
+      "storm_names": [
+        "Great Bear"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "containment"
+    },
+    "1214147821": {
+      "winter_sports_id": "1214147821",
+      "atlas_name": "Terry Peak Ski Area",
+      "storm_names": [
+        "Terry Peak"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1221231986": {
+      "winter_sports_id": "1221231986",
+      "atlas_name": "Washigatake Ski Area",
+      "storm_names": [
+        "Washigatake"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1221894855": {
+      "winter_sports_id": "1221894855",
+      "atlas_name": "Blue Knob",
+      "storm_names": [
+        "Blue Knob"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1223350355": {
+      "winter_sports_id": "1223350355",
+      "atlas_name": "Shawnee Mountain",
+      "storm_names": [
+        "Shawnee Mountain"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1223977161": {
+      "winter_sports_id": "1223977161",
+      "atlas_name": "Spring Mountain Ski Area",
+      "storm_names": [
+        "Spring Mountain"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1225428207": {
+      "winter_sports_id": "1225428207",
+      "atlas_name": "Mount Hotham",
+      "storm_names": [
+        "Hotham"
+      ],
+      "passes": [
+        "epic"
+      ],
+      "season": "2026-27",
+      "confidence": "containment"
+    },
+    "1225432526": {
+      "winter_sports_id": "1225432526",
+      "atlas_name": "Mount Buller",
+      "storm_names": [
+        "Mt. Buller"
+      ],
+      "passes": [
+        "ikon",
+        "mountain_collective"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_country"
+    },
+    "1226017306": {
+      "winter_sports_id": "1226017306",
+      "atlas_name": "Leukerbad (Torrent)",
+      "storm_names": [
+        "Leukerbad Torrent Ski Resort (& Gemmi for Magic only?)"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "containment"
+    },
+    "1228354294": {
+      "winter_sports_id": "1228354294",
+      "atlas_name": "Smugglers' Notch Resort",
+      "storm_names": [
+        "Smugglers' Notch"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1228623824": {
+      "winter_sports_id": "1228623824",
+      "atlas_name": "Pleasant Mountain",
+      "storm_names": [
+        "Pleasant Mountain"
+      ],
+      "passes": [],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1228774360": {
+      "winter_sports_id": "1228774360",
+      "atlas_name": "Killington Resort",
+      "storm_names": [
+        "Killington"
+      ],
+      "passes": [
+        "ikon"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1230198090": {
+      "winter_sports_id": "1230198090",
+      "atlas_name": "Tenney Mountain Resort",
+      "storm_names": [
+        "Tenney"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1230199887": {
+      "winter_sports_id": "1230199887",
+      "atlas_name": "Mount Sunapee",
+      "storm_names": [
+        "Mount Sunapee"
+      ],
+      "passes": [
+        "epic"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1230308747": {
+      "winter_sports_id": "1230308747",
+      "atlas_name": "Brian Head Resort",
+      "storm_names": [
+        "Brian Head"
+      ],
+      "passes": [],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1232163832": {
+      "winter_sports_id": "1232163832",
+      "atlas_name": "Owl's Head",
+      "storm_names": [
+        "Owl's Head"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1232164006": {
+      "winter_sports_id": "1232164006",
+      "atlas_name": "Tamarack Resort",
+      "storm_names": [
+        "Tamarack"
+      ],
+      "passes": [
+        "ikon"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1232164322": {
+      "winter_sports_id": "1232164322",
+      "atlas_name": "Beidahu Ski Resort",
+      "storm_names": [
+        "Qiaoshan Beidahu"
+      ],
+      "passes": [
+        "ikon"
+      ],
+      "season": "2026-27",
+      "confidence": "containment"
+    },
+    "1236284348": {
+      "winter_sports_id": "1236284348",
+      "atlas_name": "Okemo Mountain",
+      "storm_names": [
+        "Okemo"
+      ],
+      "passes": [
+        "epic"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1238042221": {
+      "winter_sports_id": "1238042221",
+      "atlas_name": "Gore Mountain",
+      "storm_names": [
+        "Gore"
+      ],
+      "passes": [],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1241940633": {
+      "winter_sports_id": "1241940633",
+      "atlas_name": "Caberfae Peaks",
+      "storm_names": [
+        "Caberfae Peaks"
+      ],
+      "passes": [
+        "ikon"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1243345428": {
+      "winter_sports_id": "1243345428",
+      "atlas_name": "Winterplace Ski Resort",
+      "storm_names": [
+        "Winterplace"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1243554890": {
+      "winter_sports_id": "1243554890",
+      "atlas_name": "The shock in Sälen",
+      "storm_names": [
+        "Stöten i Sälen"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_country"
+    },
+    "1244066741": {
+      "winter_sports_id": "1244066741",
+      "atlas_name": "Marmot Basin",
+      "storm_names": [
+        "Marmot Basin"
+      ],
+      "passes": [
+        "mountain_collective"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1244085914": {
+      "winter_sports_id": "1244085914",
+      "atlas_name": "Ski Butternut",
+      "storm_names": [
+        "Butternut"
+      ],
+      "passes": [
+        "ikon"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1244098768": {
+      "winter_sports_id": "1244098768",
+      "atlas_name": "Sun Valley - Dollar Mountain",
+      "storm_names": [
+        "Sun Valley: Dollar"
+      ],
+      "passes": [
+        "ikon",
+        "mountain_collective"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1246948337": {
+      "winter_sports_id": "1246948337",
+      "atlas_name": "Detroit Mountain",
+      "storm_names": [
+        "Detroit Mountain"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1254863688": {
+      "winter_sports_id": "1254863688",
+      "atlas_name": "Big Sky Resort",
+      "storm_names": [
+        "Big Sky"
+      ],
+      "passes": [
+        "ikon",
+        "mountain_collective"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1254864194": {
+      "winter_sports_id": "1254864194",
+      "atlas_name": "White Pass Ski Area",
+      "storm_names": [
+        "White Pass"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1254864403": {
+      "winter_sports_id": "1254864403",
+      "atlas_name": "Hockley Valley Resort",
+      "storm_names": [
+        "Hockley Valley"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1257430570": {
+      "winter_sports_id": "1257430570",
+      "atlas_name": "Lee Canyon",
+      "storm_names": [
+        "Lee Canyon"
+      ],
+      "passes": [],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1258231242": {
+      "winter_sports_id": "1258231242",
+      "atlas_name": "Camp 10 Ski n Snowboard",
+      "storm_names": [
+        "Camp 10"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "containment"
+    },
+    "1260579139": {
+      "winter_sports_id": "1260579139",
+      "atlas_name": "Hoodoo Ski Area",
+      "storm_names": [
+        "Hoodoo"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1263732068": {
+      "winter_sports_id": "1263732068",
+      "atlas_name": "Silver Mountain Resort",
+      "storm_names": [
+        "Silver Mountain"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1263732880": {
+      "winter_sports_id": "1263732880",
+      "atlas_name": "Mad River Mountain",
+      "storm_names": [
+        "Mad River"
+      ],
+      "passes": [
+        "epic"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1266090145": {
+      "winter_sports_id": "1266090145",
+      "atlas_name": "Red Lodge Mountain",
+      "storm_names": [
+        "Red Lodge"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1266093483": {
+      "winter_sports_id": "1266093483",
+      "atlas_name": "Glenshee Ski Center",
+      "storm_names": [
+        "Glenshee"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_country"
+    },
+    "1266097397": {
+      "winter_sports_id": "1266097397",
+      "atlas_name": "Granby Ranch",
+      "storm_names": [
+        "Granby Ranch"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1266571967": {
+      "winter_sports_id": "1266571967",
+      "atlas_name": "Kitzsteinhorn",
+      "storm_names": [
+        "Kitzsteinhorn"
+      ],
+      "passes": [
+        "epic"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_country"
+    },
+    "1275118072": {
+      "winter_sports_id": "1275118072",
+      "atlas_name": "Cherry Peak Ski Area",
+      "storm_names": [
+        "Cherry Peak"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1278124828": {
+      "winter_sports_id": "1278124828",
+      "atlas_name": "Willamette Pass",
+      "storm_names": [
+        "Willamette Pass"
+      ],
+      "passes": [],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1278125600": {
+      "winter_sports_id": "1278125600",
+      "atlas_name": "Bousquet Mountain",
+      "storm_names": [
+        "Bousquet"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1282431650": {
+      "winter_sports_id": "1282431650",
+      "atlas_name": "Ober Mountain",
+      "storm_names": [
+        "Ober Mountain"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1290903952": {
+      "winter_sports_id": "1290903952",
+      "atlas_name": "Lost Trail",
+      "storm_names": [
+        "Lost Trail"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1303060558": {
+      "winter_sports_id": "1303060558",
+      "atlas_name": "Hunt Hollow Ski Club",
+      "storm_names": [
+        "Hunt Hollow"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1306486693": {
+      "winter_sports_id": "1306486693",
+      "atlas_name": "Mt. Bachelor",
+      "storm_names": [
+        "Mount Bachelor"
+      ],
+      "passes": [
+        "ikon"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1311290835": {
+      "winter_sports_id": "1311290835",
+      "atlas_name": "Cataloochee Ski Area",
+      "storm_names": [
+        "Cataloochee"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1314867881": {
+      "winter_sports_id": "1314867881",
+      "atlas_name": "Giants Ridge Resort",
+      "storm_names": [
+        "Giants Ridge"
+      ],
+      "passes": [
+        "ikon"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1335348646": {
+      "winter_sports_id": "1335348646",
+      "atlas_name": "Montana Snowbowl",
+      "storm_names": [
+        "Montana Snowbowl"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1340416269": {
+      "winter_sports_id": "1340416269",
+      "atlas_name": "Whitecap Mountain",
+      "storm_names": [
+        "Whitecap Mountains"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1344641638": {
+      "winter_sports_id": "1344641638",
+      "atlas_name": "Buck Hill",
+      "storm_names": [
+        "Buck Hill"
+      ],
+      "passes": [
+        "ikon"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1351013953": {
+      "winter_sports_id": "1351013953",
+      "atlas_name": "Boyne Mountain",
+      "storm_names": [
+        "Boyne Mountain"
+      ],
+      "passes": [
+        "ikon"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1362922705": {
+      "winter_sports_id": "1362922705",
+      "atlas_name": "Waterville Valley Resort",
+      "storm_names": [
+        "Waterville Valley"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1363000015": {
+      "winter_sports_id": "1363000015",
+      "atlas_name": "Shames Mountain",
+      "storm_names": [
+        "Shames Mountain"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1363084977": {
+      "winter_sports_id": "1363084977",
+      "atlas_name": "Veterans Memorial Ski Area",
+      "storm_names": [
+        "Veterans Memorial"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1363577242": {
+      "winter_sports_id": "1363577242",
+      "atlas_name": "King Pine",
+      "storm_names": [
+        "King Pine"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1366642639": {
+      "winter_sports_id": "1366642639",
+      "atlas_name": "Camden Snow Bowl",
+      "storm_names": [
+        "Camden Snow Bowl"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1367181096": {
+      "winter_sports_id": "1367181096",
+      "atlas_name": "Maple Ski Ridge",
+      "storm_names": [
+        "Maple Ski Ridge"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1367311040": {
+      "winter_sports_id": "1367311040",
+      "atlas_name": "Stratton Mountain Resort",
+      "storm_names": [
+        "Stratton"
+      ],
+      "passes": [
+        "ikon"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1388583977": {
+      "winter_sports_id": "1388583977",
+      "atlas_name": "Schweitzer Mountain Resort",
+      "storm_names": [
+        "Schweitzer"
+      ],
+      "passes": [
+        "ikon"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1388611703": {
+      "winter_sports_id": "1388611703",
+      "atlas_name": "Lake Louise Ski Area",
+      "storm_names": [
+        "Lake Louise"
+      ],
+      "passes": [
+        "ikon",
+        "mountain_collective"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1388612283": {
+      "winter_sports_id": "1388612283",
+      "atlas_name": "Fernie Alpine Resort",
+      "storm_names": [
+        "Fernie"
+      ],
+      "passes": [
+        "epic"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1388616336": {
+      "winter_sports_id": "1388616336",
+      "atlas_name": "Kimberley Alpine Resort",
+      "storm_names": [
+        "Kimberley"
+      ],
+      "passes": [
+        "epic"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1412281678": {
+      "winter_sports_id": "1412281678",
+      "atlas_name": "Corralco",
+      "storm_names": [
+        "Corralco"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_country"
+    },
+    "1443608615": {
+      "winter_sports_id": "1443608615",
+      "atlas_name": "Hoedown Hill",
+      "storm_names": [
+        "Hoedown Hill"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1449657505": {
+      "winter_sports_id": "1449657505",
+      "atlas_name": "Engstligenalp",
+      "storm_names": [
+        "Engstligenalp (-Adelboden)"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_country"
+    },
+    "1458695224": {
+      "winter_sports_id": "1458695224",
+      "atlas_name": "Cupid Valley Ski Area",
+      "storm_names": [
+        "Cupid Valley Ski Resort"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1458947806": {
+      "winter_sports_id": "1458947806",
+      "atlas_name": "Dynaland Ski Area",
+      "storm_names": [
+        "Dynaland Ski Resort"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1464128439": {
+      "winter_sports_id": "1464128439",
+      "atlas_name": "Mount Pisgah Ski Center",
+      "storm_names": [
+        "Mount Pisgah"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1470435942": {
+      "winter_sports_id": "1470435942",
+      "atlas_name": "Soldier Mountain Ski Area",
+      "storm_names": [
+        "Soldier Mountain"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1472725361": {
+      "winter_sports_id": "1472725361",
+      "atlas_name": "Brundage Mountain",
+      "storm_names": [
+        "Brundage"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_state"
+    },
+    "1476486723": {
+      "winter_sports_id": "1476486723",
+      "atlas_name": "Palandöken Ski Center",
+      "storm_names": [
+        "Palandoken Ski Resort"
+      ],
+      "passes": [
+        "indy"
+      ],
+      "season": "2026-27",
+      "confidence": "exact_country"
+    }
+  }
+}

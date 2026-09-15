@@ -335,6 +335,90 @@ app.get('/api/wiki/admin/me', requireCognito, (req, res) => {
   res.json({ admin: isAdmin(req.cognitoPrincipal) });
 });
 
+const PASS_CONFIRMED_TSV = path.join(__dirname, 'data/passes/confirmed.tsv');
+const PASS_CONFIRMED_JSONL = path.join(__dirname, 'data/passes/confirmed.jsonl');
+const PASS_REVIEW_QUEUE = path.join(__dirname, 'data/passes/reports/review-queue.json');
+
+function readConfirmedRows() {
+  if (!fs.existsSync(PASS_CONFIRMED_JSONL)) return [];
+  return fs.readFileSync(PASS_CONFIRMED_JSONL, 'utf8')
+    .split(/\r?\n/)
+    .filter(Boolean)
+    .map((line) => {
+      try { return JSON.parse(line); } catch { return null; }
+    })
+    .filter(Boolean);
+}
+
+app.get('/api/pass-review/queue', (req, res) => {
+  if (!fs.existsSync(PASS_REVIEW_QUEUE)) {
+    return res.status(404).json({
+      error: 'Review queue missing',
+      message: 'Run: node scripts/join-pass-affiliations.mjs',
+    });
+  }
+  const queue = JSON.parse(fs.readFileSync(PASS_REVIEW_QUEUE, 'utf8'));
+  const confirmed = readConfirmedRows().filter((r) => r.action === 'confirm');
+  const skipped = new Set(
+    readConfirmedRows().filter((r) => r.action === 'skip').map((r) => r.storm_name + '|' + (r.region || ''))
+  );
+  res.json({
+    season: queue.season,
+    confirmed_count: confirmed.length,
+    items: queue.items || [],
+    confirmed,
+    skipped: [...skipped],
+  });
+});
+
+app.get('/api/pass-review/confirmed', (req, res) => {
+  res.json({ rows: readConfirmedRows() });
+});
+
+app.post('/api/pass-review/confirm', (req, res) => {
+  const body = req.body || {};
+  const storm_name = String(body.storm_name || '').trim();
+  const atlas_name = String(body.atlas_name || '').trim();
+  const pass = String(body.pass || (Array.isArray(body.passes) ? body.passes.join(',') : '')).trim();
+  if (!storm_name || !atlas_name) {
+    return res.status(400).json({ error: 'storm_name and atlas_name required' });
+  }
+  fs.mkdirSync(path.dirname(PASS_CONFIRMED_TSV), { recursive: true });
+  if (!fs.existsSync(PASS_CONFIRMED_TSV)) {
+    fs.writeFileSync(PASS_CONFIRMED_TSV, 'storm_name\tatlas_name\tpass\n');
+  }
+  fs.appendFileSync(PASS_CONFIRMED_TSV, [storm_name, atlas_name, pass].join('\t') + '\n');
+  const record = {
+    action: 'confirm',
+    storm_name,
+    atlas_name,
+    pass,
+    passes: Array.isArray(body.passes) ? body.passes : pass.split(',').filter(Boolean),
+    region: String(body.region || ''),
+    winter_sports_id: String(body.winter_sports_id || ''),
+    page_id: String(body.page_id || ''),
+    confirmed_at: new Date().toISOString(),
+  };
+  fs.appendFileSync(PASS_CONFIRMED_JSONL, JSON.stringify(record) + '\n');
+  res.json({ ok: true, record });
+});
+
+app.post('/api/pass-review/skip', (req, res) => {
+  const storm_name = String((req.body || {}).storm_name || '').trim();
+  if (!storm_name) return res.status(400).json({ error: 'storm_name required' });
+  fs.mkdirSync(path.dirname(PASS_CONFIRMED_JSONL), { recursive: true });
+  const record = {
+    action: 'skip',
+    storm_name,
+    atlas_name: '',
+    pass: String((req.body || {}).pass || ''),
+    region: String((req.body || {}).region || ''),
+    confirmed_at: new Date().toISOString(),
+  };
+  fs.appendFileSync(PASS_CONFIRMED_JSONL, JSON.stringify(record) + '\n');
+  res.json({ ok: true, record });
+});
+
 // Iceberg stats (local dev: empty; prod: Lambda serves from S3 iceberg-stats/latest.json)
 app.get('/api/iceberg-stats', (req, res) => {
   res.set('Access-Control-Allow-Origin', '*');

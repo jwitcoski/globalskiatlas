@@ -1,0 +1,23 @@
+storm_name	region	passes	status	guesses
+Marble Mountain	Canada - Newfoundland & Labrador	indy	country_vs_state	Marble Mountain [canada/newfoundland and labrador 1252353163]
+Lake Songhua Ski Course (Vanke Songhua Lake)	China - Jilin	ikon	overlap_unique	Songhua Lake Ski Resort [china/jilin 1236753988] 0.67
+Orcières Merlette 1850	Europe - France	indy	overlap_unique	Orcières Merlette [france/hautes alpes 1137686002] 0.67
+Hohsaas - Saas-Grund	Europe - Switzerland	indy	overlap_unique	Saas-Grund [switzerland/valais 1225712315] 0.67
+Able Hakuba Goryu Snow Resort	Japan (Nagano)	epic	overlap_unique	Hakuba Goryu [japan/nagano 771665618] 0.67
+Hakuba Iwatake Snow Field	Japan (Nagano)	epic	overlap_unique	Hakuba Iwatake [japan/nagano 773558921] 0.67
+Shiga Kogen (18 Combined Ski Areas)	Japan (Nagano)	ikon	ambiguous_containment	Shiga Kogen Okushiga Kogen Ski Area [japan/nagano 937384804] | Shiga Kogen Yakebitaiyama Ski Area [japan/nagano 937384805] | Shiga Kogen Ichinose Yamanokami Ski Area [japan/nagano 937384806] | Shiga Kogen Ichinose Diamond Ski Area [japan/nagano 937384807] | Shiga Kogen Ichinose Family Ski Area [japan/nagano 937384808]
+White Resort Hakuba Sanosaka (Sun Alpina Sanosaka)	Japan (Nagano)	epic	overlap_unique	Hakuba Sanosaka Snow Resort [japan/nagano 936978931] 0.67
+Bear Mountain (Big Bear)	U.S. - California	ikon	country_vs_state	Big Bear Ski Resort [united states/pennsylvania 392376125]
+Heavenly	U.S. - California	epic	country_vs_state	Heavenly Hill [united states/massachusetts 1474579830]
+Mountain High: West	U.S. - California	indy	country_vs_state	West Mountain Ski Resort [united states/new york 256455529]
+Snow Summit (Big Bear)	U.S. - California	ikon	ambiguous_country	Summit Mountain [united states/michigan 1021916703] | Big Bear Ski Resort [united states/pennsylvania 392376125]
+Snow Valley	U.S. - California	ikon	ambiguous_country	Alpine Valley Ski Area [united states/michigan 278930064] | Alpine Valley [united states/ohio 1432101063] | Alpine Valley [united states/ohio 1432790358] | Alpine Valley Resort [united states/wisconsin 758644690]
+Sun Valley: Bald	U.S. - Idaho	ikon,mountain_collective	ambiguous_state	Sun Valley - Bald Mountain [united states/idaho 1244099443] | Bald Mountain Ski Area [united states/idaho 923545035]
+Blue Hills	U.S. - Massachusetts		country_vs_state	Blue Mountain Resort [united states/pennsylvania 390536570]
+Catamount	U.S. - Massachusetts	indy	country_vs_state	Catamount Mountain Resort [united states/new york 1176086204]
+Wild Mountain	U.S. - Minnesota	ikon	country_vs_state	Wild Mountain [united states/wisconsin 1240327159]
+Alpine Valley OH	U.S. - Ohio	epic	ambiguous_containment	Alpine Valley [united states/ohio 1432101063] | Alpine Valley [united states/ohio 1432790358]
+Hidden Valley PA	U.S. - Pennsylvania	epic	overlap_unique	Hidden Valley Resort [united states/pennsylvania 398100052] 0.67
+Bluewood	U.S. - Washington	indy	ambiguous_state	Bluewood Ski Area [united states/washington 186084312] | Ski Bluewood [united states/washington 1458661286]
+Snoqualmie: Summit	U.S. - Washington	ikon	country_vs_state	Summit Mountain [united states/michigan 1021916703]
+Silver Creek (Snowshoe)	U.S. - West Virginia	ikon	ambiguous_state	Snowshoe Mountain [united states/west virginia 1244062674] | Snowshoe Mountain [united states/west virginia 1311361876]

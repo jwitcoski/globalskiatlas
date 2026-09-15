@@ -1,0 +1,303 @@
+storm_name	region	passes	status	atlas_name	winter_sports_id
+Falls Creek	Australia	epic	exact_country	Falls Creek	1210011762
+Hotham	Australia	epic	containment	Mount Hotham	1225428207
+Mt. Buller	Australia	ikon,mountain_collective	exact_country	Mount Buller	1225432526
+Perisher	Australia	epic	exact_country	Perisher	178133225
+Thredbo	Australia	ikon	exact_country	Thredbo Resort	499034347
+Banff Sunshine	Canada - Alberta	ikon,mountain_collective	exact_state	Banff Sunshine Village	739168515
+Castle Mountain	Canada - Alberta	indy	exact_state	Castle Mountain Resort	766056081
+Lake Louise	Canada - Alberta	ikon,mountain_collective	exact_state	Lake Louise Ski Area	1388611703
+Marmot Basin	Canada - Alberta	mountain_collective	exact_state	Marmot Basin	1244066741
+Apex Mountain	Canada - British Columbia	indy	exact_state	Apex Mountain Resort	1138569632
+Big White	Canada - British Columbia	indy	exact_state	Big White Ski Resort	476836855
+Fernie	Canada - British Columbia	epic	exact_state	Fernie Alpine Resort	1388612283
+Grouse Mountain	Canada - British Columbia	ikon	exact_state	Grouse Mountain	1122543074
+Hudson Bay Mountain	Canada - British Columbia	indy	exact_state	Hudson Bay Mountain	1135215380
+Kicking Horse	Canada - British Columbia	epic	exact_state	Kicking Horse Resort	476843455
+Kimberley	Canada - British Columbia	epic	exact_state	Kimberley Alpine Resort	1388616336
+Manning Park	Canada - British Columbia	indy	exact_state	Manning Park Resort	1132263707
+Panorama	Canada - British Columbia	ikon,mountain_collective	exact_state	Panorama Mountain Resort	476844342
+Red Mountain	Canada - British Columbia	ikon	exact_state	Red Mountain Resort	397735832
+Revelstoke	Canada - British Columbia	ikon,mountain_collective	exact_state	Revelstoke Mountain Resort	475720359
+Sasquatch	Canada - British Columbia	indy	exact_state	Sasquatch Mountain Resort	476842734
+Shames Mountain	Canada - British Columbia	indy	exact_state	Shames Mountain	1363000015
+Silver Star	Canada - British Columbia	ikon	exact_state	Silver Star Mountain Resort	476840539
+Sun Peaks	Canada - British Columbia	ikon,mountain_collective	exact_state	Sun Peaks Resort	1138470815
+Whistler Blackcomb	Canada - British Columbia	epic	exact_state	Whistler Blackcomb	474288286
+Cape Smokey	Canada - Nova Scotia	indy	exact_state	Ski Cape Smokey	670137935
+Ski Martock	Canada - Nova Scotia		exact_state	Ski Martock	233886400
+Blue Mountain	Canada - Ontario	ikon	exact_state	Blue Mountain Ski Resort	1040649718
+Calabogie Peaks	Canada - Ontario	indy	exact_state	Calabogie Peaks	387979659
+Hockley Valley	Canada - Ontario	indy	exact_state	Hockley Valley Resort	1254864403
+Camp Fortune	Canada - Quebec	indy	exact_state	Camp Fortune	387976209
+Centre Vorlage	Canada - Quebec	indy	exact_state	Centre Vorlage	387976210
+Mont Habitant	Canada - Quebec	indy	exact_state	Mont Habitant	397906930
+Mont Rigaud	Canada - Quebec	indy	exact_state	Ski Mont Rigaud	397906934
+Mont Tremblant	Canada - Quebec	ikon	exact_state	Mont Tremblant Resort	671144531
+Mont-Sainte Anne	Canada - Quebec	epic	exact_state	Mont-Sainte-Anne	391681261
+Owl's Head	Canada - Quebec	indy	exact_state	Owl's Head	1232163832
+Ski Saint-Bruno	Canada - Quebec	indy	containment	Ski Mont Saint-Bruno	397906935
+Val D'Irene	Canada - Quebec	indy	containment	Parc régional de Val-d'Irène	400692634
+Vallee Bleue	Canada - Quebec	indy	exact_state	Vallée Bleue	498378487
+Corralco	Chile	indy	exact_country	Corralco	1412281678
+Qiaoshan Beidahu	China - Jilin	ikon	containment	Beidahu Ski Resort	1232164322
+Heiligenblut am Großglockner	Europe - Austria	indy	containment	Großglockner Heiligenblut ski area	341908909
+Hochzeiger Bergbahnen Pitztal AG	Europe - Austria	indy	containment	Hochzeiger	539400408
+Ischgl	Europe - Austria	ikon	alias	Ischgl-Samnaun	539395530
+Kitzsteinhorn	Europe - Austria	epic	exact_country	Kitzsteinhorn	1266571967
+Obertauern	Europe - Austria	indy	exact_country	Obertauern	341899728
+Silvretta Montafon	Europe - Austria	epic	exact_country	Silvretta Montafon	539421257
+Ski Arlberg	Europe - Austria	epic	exact_country	Ski Arlberg	539407909
+Sölden	Europe - Austria	epic	exact_country	Sold	438793320
+St. Johann (in Tirol/Oberndorf-Harschbichl)	Europe - Austria	indy	containment	St. Johann in Tirol	539015308
+Levi	Europe - Finland	indy	exact_country	Levi Ski Resort	1107815765
+Les 3 Vallées	Europe - France	epic	alias	The 3 Valleys	45117869
+Les 7 Laux	Europe - France	indy	exact_country	Les 7 Laux	294826110
+Valmorel (Le Grand Domaine)	Europe - France	indy	exact_country	Le Grand Domaine	601131988
+Pila	Europe - Italy	indy	exact_country	Pila	45147901
+Glencoe	Europe - Scotland	indy	exact_country	Glencoe Mountain Resort	258880201
+Glenshee	Europe - Scotland	indy	exact_country	Glenshee Ski Center	1266093483
+Krvavec	Europe - Slovenia	indy	exact_country	Krvavec	601126561
+Björkliden	Europe - Sweden	indy	exact_country	Björkliden	691080634
+Stöten i Sälen	Europe - Sweden	indy	exact_country	The shock in Sälen	1243554890
+Crans-Montana	Europe - Switzerland	epic	exact_country	Crans-Montana	599002420
+Engstligenalp (-Adelboden)	Europe - Switzerland	indy	exact_country	Engstligenalp	1449657505
+Leukerbad Torrent Ski Resort (& Gemmi for Magic only?)	Europe - Switzerland	indy	containment	Leukerbad (Torrent)	1226017306
+St. Moritz	Europe - Switzerland	ikon	exact_country	Samedan (St. Moritz)	642476176
+Tschiertschen	Europe - Switzerland	indy	exact_country	Tschiertschen	601132890
+Verbier 4 Vallées	Europe - Switzerland	epic	containment	4 Valleys – Verbier/La Tzoumaz/Nendaz/Veysonnaz/Thyon	660203241
+Erciyes	Europe - Turkey	indy	exact_country	Erciyes Ski Resort	815651521
+Palandoken Ski Resort	Europe - Turkey	indy	exact_country	Palandöken Ski Center	1476486723
+Ani Ski Resort (Mt. Moriyoshi)	Japan (Akita)	indy	exact_state	Ani Ski Resort (Mt. Moriyoshi)	1201573953
+Tazawako	Japan (Akita)	indy	exact_state	Tazawako Ski Resort	1201573017
+Aomori Spring	Japan (Aomori)	indy	exact_state	Aomori Spring Resort	677033105
+Dynaland Ski Resort	Japan (Gifu)	indy	exact_state	Dynaland Ski Area	1458947806
+Hirugano Kogen Ski Resort	Japan (Gifu)	indy	exact_state	Hirugano Kogen Ski Resort	1189279617
+Takasu Snow Park	Japan (Gifu)	indy	exact_state	Takasu Snow Park	1189278314
+Washigatake	Japan (Gifu)	indy	exact_state	Washigatake Ski Area	1221231986
+Hodaigi	Japan (Gunma)	indy	exact_state	Hodaigi Ski Resort	908946630
+Palcall Tsumagoi	Japan (Gunma)	indy	containment	Palcall Tsumagoi Resort Ski & Hotel	1188381817
+Canmore Ski Village	Japan (Hokkaido)	indy	exact_state	Canmore Ski Resort	667593226
+Furano	Japan (Hokkaido)	ikon	exact_state	Furano ski resort	598421263
+Kamui Ski Links	Japan (Hokkaido)	indy	exact_state	Kamui Ski Links	479915906
+Kiroro	Japan (Hokkaido)	indy	exact_state	Kiroro Resort	1081650641
+Nayoro Piyashiri	Japan (Hokkaido)	indy	exact_state	Nayoro Piyashiri	290283443
+Rusutsu	Japan (Hokkaido)	epic	exact_state	Rusutsu Resort Ski Area	1081650975
+Yubari (Mount Racey)	Japan (Hokkaido)	indy	exact_state	Mount Racey	1083653058
+Appi Kogen Resort	Japan (Iwate)	ikon	exact_state	Appi Kogen Ski Resort	1087368359
+Geto Kogen	Japan (Iwate)	indy	exact_state	Geto Kogen	1201571470
+Hakuba Cortina Snow Resort	Japan (Nagano)	epic	exact_state	Hakuba Cortina	773558919
+Hakuba Happo-One Snow Resort	Japan (Nagano)	epic	exact_state	Hakuba Happo One	771668333
+Hakuba Norikura Onsen Snow Resort	Japan (Nagano)	epic	exact_state	Hakuba Norikura Onsen Ski Resort	546849385
+Jiigatake Snow Resort	Japan (Nagano)	epic	exact_state	Jiigatake Snow Resort	324162841
+Kurohime Kogen Snow Park	Japan (Nagano)	indy	exact_state	Kurohime Kogen	937080875
+Madarao Kogen	Japan (Nagano)	ikon	exact_state	Madarao Kogen Mountain Resort	997044732
+Tangram Ski Circus (Tangram Madarao)	Japan (Nagano)	indy	containment	Tangram Madarao Ski Circus	997044731
+Togakushi	Japan (Nagano)	indy	exact_state	Togakushi Ski Area	936983347
+Togari Onsen Ski Area	Japan (Nagano)	indy	exact_state	Togari Onsen Ski Resort	1174493817
+Arai Snow Resort	Japan (Niigata)	ikon	exact_state	ARAI SNOW RESORT	937101624
+Cupid Valley Ski Resort	Japan (Niigata)	indy	exact_state	Cupid Valley Ski Area	1458695224
+Maiko Snow Resort	Japan (Niigata)	indy	exact_state	Maiko Snow Resort	679253285
+Muica Snow Resort	Japan (Niigata)	indy	exact_state	Muica Snow Resort	626857453
+Myoko Suginohara Ski Resort	Japan (Niigata)	ikon	exact_state	Myoko Suginohara Ski Resort	937086872
+Ninox Snow Park	Japan (Niigata)	indy	exact_state	Ninox Snow Park	1208479232
+Yuzawa Nakazato	Japan (Niigata)	indy	exact_state	Yuzawa Nakazato Ski Resort	680041845
+Zao Onsen	Japan (Yamagata)	ikon	exact_state	Zao Onsen Ski Resort	488305112
+Coronet Peak	New Zealand	ikon,mountain_collective	exact_country	Coronet Peak Ski Area	482928475
+Mt. Hutt	New Zealand	ikon	exact_country	Mount Hutt Ski Area	627625381
+The Remarkables	New Zealand	ikon,mountain_collective	exact_country	The Remarkables Ski Area	482928468
+Alyeska	U.S. - Alaska	ikon	exact_state	Alyeska Resort	934351306
+Eaglecrest	U.S. - Alaska	indy	exact_state	Eaglecrest Ski Area	1010412985
+Hilltop	U.S. - Alaska	indy	exact_state	Hilltop Ski Area	839939642
+Moose Mountain	U.S. - Alaska	indy	exact_state	Moose Mountain Ski Resort	938362715
+Mount Eyak	U.S. - Alaska	indy	exact_state	Mount Eyak Ski Area	1010406137
+Skeetawk	U.S. - Alaska	indy	exact_state	Skeetawk	934351305
+Bear Valley	U.S. - California	indy	containment	Bear Valley Adventure Company	477982773
+China Peak	U.S. - California	indy	exact_state	China Peak Mountain Resort	1162245573
+Dodge Ridge	U.S. - California	indy	exact_state	Dodge Ridge Ski Area	242382005
+Kirkwood	U.S. - California	epic	exact_state	Kirkwood Mountain Resort	319472357
+Mammoth	U.S. - California	ikon	exact_state	Mammoth Mountain	682231907
+Arapahoe Basin	U.S. - Colorado	ikon	exact_state	Arapahoe Basin Ski Area	461239598
+Aspen Highlands	U.S. - Colorado	ikon,mountain_collective	exact_state	Aspen Highlands	530531926
+Aspen Mountain	U.S. - Colorado	ikon,mountain_collective	exact_state	Aspen Mountain	530531925
+Beaver Creek	U.S. - Colorado	epic	exact_state	Beaver Creek	531009608
+Breckenridge	U.S. - Colorado	epic	exact_state	Breckenridge	531005985
+Buttermilk	U.S. - Colorado	ikon,mountain_collective	exact_state	Buttermilk	530538581
+Copper Mountain	U.S. - Colorado	ikon	exact_state	Copper Mountain	531005986
+Crested Butte	U.S. - Colorado	epic	exact_state	Crested Butte Mountain Resort	530521512
+Cuchara	U.S. - Colorado	indy	exact_state	Cuchara Mountain Resort	1212155021
+Echo Mountain	U.S. - Colorado	indy	exact_state	Echo Mountain	530998534
+Eldora	U.S. - Colorado	ikon	exact_state	Eldora	427517284
+Granby Ranch	U.S. - Colorado	indy	exact_state	Granby Ranch	1266097397
+Hoedown Hill	U.S. - Colorado	indy	exact_state	Hoedown Hill	1443608615
+Keystone	U.S. - Colorado	epic	exact_state	Keystone	531000583
+Loveland Basin	U.S. - Colorado	indy	exact_state	Loveland Basin Ski Area	184326673
+Loveland Valley	U.S. - Colorado	indy	exact_state	Loveland Valley Ski Area	184326663
+Monarch	U.S. - Colorado		exact_state	Monarch Mountain	308152532
+Powderhorn	U.S. - Colorado	indy	exact_state	Powderhorn Ski Area	460247056
+Purgatory	U.S. - Colorado		exact_state	Purgatory Resort	529997955
+Steamboat	U.S. - Colorado	ikon	exact_state	Steamboat Ski Resort	530998526
+Sunlight	U.S. - Colorado	indy	exact_state	Sunlight Mountain Resort	530530657
+Telluride	U.S. - Colorado	epic	exact_state	Telluride Ski Area	528965906
+Vail Mountain	U.S. - Colorado	epic	exact_state	Vail	531009607
+Winter Park	U.S. - Colorado	ikon	exact_state	Winter Park Resort	460246666
+Mohawk Mountain	U.S. - Connecticut	indy	exact_state	Mohawk Mountain Ski Area	68519530
+Mount Southington	U.S. - Connecticut		exact_state	Mount Southington Ski Area	390809151
+Powder Ridge	U.S. - Connecticut	indy	exact_state	Powder Ridge Ski Area	43441045
+Brundage	U.S. - Idaho	indy	exact_state	Brundage Mountain	1472725361
+Kelly Canyon	U.S. - Idaho	indy	exact_state	Kelly Canyon Ski Resort	375130755
+Little Ski Hill	U.S. - Idaho	indy	exact_state	Little Ski Hill	767350052
+Pomerelle	U.S. - Idaho	indy	exact_state	Pomerelle Mountain Resort	1213960940
+Schweitzer	U.S. - Idaho	ikon	exact_state	Schweitzer Mountain Resort	1388583977
+Silver Mountain	U.S. - Idaho	indy	exact_state	Silver Mountain Resort	1263732068
+Soldier Mountain	U.S. - Idaho	indy	exact_state	Soldier Mountain Ski Area	1470435942
+Sun Valley: Dollar	U.S. - Idaho	ikon,mountain_collective	exact_state	Sun Valley - Dollar Mountain	1244098768
+Tamarack	U.S. - Idaho	ikon	exact_state	Tamarack Resort	1232164006
+Chestnut	U.S. - Illinois	indy	exact_state	Chestnut Mountain Resort	867570853
+Sundown	U.S. - Iowa	indy	exact_state	Sundown Mountain Resort	834317212
+Big Moose	U.S. - Maine	indy	exact_state	Big Moose Mountain Ski Area	379478843
+Camden Snow Bowl	U.S. - Maine	indy	exact_state	Camden Snow Bowl	1366642639
+Lost Valley	U.S. - Maine	indy	exact_state	Lost Valley Ski Area	860486037
+Mount Abram	U.S. - Maine	indy	exact_state	Mount Abram	415176032
+Pleasant Mountain	U.S. - Maine		exact_state	Pleasant Mountain	1228623824
+Saddleback	U.S. - Maine	indy	exact_state	Saddleback Mountain	255571392
+Wisp	U.S. - Maryland	indy	exact_state	Wisp Resort	980981935
+Berkshire East	U.S. - Massachusetts	indy	exact_state	Berkshire East Ski Resort	256781770
+Bousquet	U.S. - Massachusetts	indy	exact_state	Bousquet Mountain	1278125600
+Butternut	U.S. - Massachusetts	ikon	exact_state	Ski Butternut	1244085914
+Jiminy Peak	U.S. - Massachusetts	ikon	exact_state	Jiminy Peak Resort	1021872776
+Big Powderhorn (UP)	U.S. - Michigan	indy	exact_state	Big Powderhorn Mountain Resort	473859024
+Boyne Mountain	U.S. - Michigan	ikon	exact_state	Boyne Mountain	1351013953
+Caberfae Peaks	U.S. - Michigan	ikon	exact_state	Caberfae Peaks	1241940633
+Crystal Mountain MI	U.S. - Michigan	indy	containment	Crystal Mountain	1155757094
+Mount Brighton	U.S. - Michigan	epic	exact_state	Mt Brighton	1057669089
+Mount Holiday	U.S. - Michigan	indy	exact_state	Mt. Holiday	896064328
+Norway Mountain (UP)	U.S. - Michigan	indy	exact_state	Norway Mountain Ski Resort	1057550035
+Nub’s Nob	U.S. - Michigan	indy	exact_state	Nub's Nob	997159129
+Pine Mountain (UP)	U.S. - Michigan	indy	exact_state	Pine Mountain Ski Hill	1043087316
+Afton Alps	U.S. - Minnesota	epic	exact_state	Afton Alps	543987749
+Andes Tower Hills	U.S. - Minnesota	indy	exact_state	Andes Tower Hills	313781036
+Buck Hill	U.S. - Minnesota	ikon	exact_state	Buck Hill	1344641638
+Coffee Mill	U.S. - Minnesota	indy	containment	Coffee Mill Ski & Snowboard Resort	734596223
+Detroit Mountain	U.S. - Minnesota	indy	exact_state	Detroit Mountain	1246948337
+Giants Ridge	U.S. - Minnesota	ikon	exact_state	Giants Ridge Resort	1314867881
+Hyland Hills	U.S. - Minnesota	indy	exact_state	Hyland Hills Ski Area	956685533
+Lutsen Mountains	U.S. - Minnesota	ikon	exact_state	Lutsen Mountains	1117929987
+Mount Kato	U.S. - Minnesota	indy	exact_state	Mount Kato Ski Area	713467426
+Powder Ridge	U.S. - Minnesota	indy	exact_state	Powder Ridge	859046254
+Spirit Mountain	U.S. - Minnesota	indy	exact_state	Spirit Mountain	1154067051
+Hidden Valley	U.S. - Missouri	epic	exact_state	Hidden Valley	990531013
+Snow Creek	U.S. - Missouri	epic	exact_state	Snow Creek	442940109
+Big Sky	U.S. - Montana	ikon,mountain_collective	exact_state	Big Sky Resort	1254863688
+Lost Trail	U.S. - Montana	indy	exact_state	Lost Trail	1290903952
+Montana Snowbowl	U.S. - Montana	indy	exact_state	Montana Snowbowl	1335348646
+Red Lodge	U.S. - Montana	indy	exact_state	Red Lodge Mountain	1266090145
+Lee Canyon	U.S. - Nevada		exact_state	Lee Canyon	1257430570
+Attitash	U.S. - New Hampshire	epic	exact_state	Attitash Mountain Resort	256024127
+Black Mountain	U.S. - New Hampshire	indy	exact_state	Black Mountain	1154306823
+Cannon	U.S. - New Hampshire	indy	exact_state	Cannon Mountain	334259037
+Cranmore	U.S. - New Hampshire	ikon	exact_state	Cranmore Mountain Resort	334089267
+King Pine	U.S. - New Hampshire	indy	exact_state	King Pine	1363577242
+Loon	U.S. - New Hampshire	ikon	exact_state	Loon Mountain Resort	334246239
+McIntyre	U.S. - New Hampshire	indy	exact_state	McIntyre Ski Area	361561697
+Mount Sunapee	U.S. - New Hampshire	epic	exact_state	Mount Sunapee	1230199887
+Pats Peak	U.S. - New Hampshire	indy	exact_state	Pats Peak	662615625
+Ragged	U.S. - New Hampshire	indy	exact_state	Ragged Mountain Resort	255716854
+Tenney	U.S. - New Hampshire	indy	exact_state	Tenney Mountain Resort	1230198090
+Veterans Memorial	U.S. - New Hampshire	indy	exact_state	Veterans Memorial Ski Area	1363084977
+Waterville Valley	U.S. - New Hampshire	indy	exact_state	Waterville Valley Resort	1362922705
+Whaleback Mountain	U.S. - New Hampshire	indy	exact_state	Whaleback Mountain	252782489
+Wildcat	U.S. - New Hampshire	epic	exact_state	Wildcat Mountain	251260219
+Big Snow American Dream	U.S. - New Jersey		exact_state	Big Snow American Dream	755762044
+Mountain Creek	U.S. - New Jersey		exact_state	Mountain Creek	972064114
+National Winter Activity Center	U.S. - New Jersey	indy	exact_state	National Winter Activity Center	1200712921
+Buffalo Ski Center	U.S. - New York	indy	exact_state	Buffalo Ski Club	1026073030
+Dry Hill	U.S. - New York	indy	exact_state	Dry Hill Ski Area	679909874
+Gore	U.S. - New York		exact_state	Gore Mountain	1238042221
+Greek Peak	U.S. - New York	indy	exact_state	Greek Peak Mountain Resort	691521201
+Holimont	U.S. - New York		exact_state	Holimont	691516993
+Hunt Hollow	U.S. - New York	indy	exact_state	Hunt Hollow Ski Club	1303060558
+Maple Ski Ridge	U.S. - New York	indy	exact_state	Maple Ski Ridge	1367181096
+Mount Pisgah	U.S. - New York	indy	exact_state	Mount Pisgah Ski Center	1464128439
+Peek’n Peak	U.S. - New York	indy	exact_state	Peek'n Peak Ski Area	1024235364
+Titus	U.S. - New York	indy	exact_state	Titus Mountain	691518491
+West Mountain	U.S. - New York	indy	exact_state	West Mountain Ski Resort	256455529
+Whiteface	U.S. - New York	mountain_collective	exact_state	Whiteface Mountain Ski Center	428125408
+Cataloochee	U.S. - North Carolina	indy	exact_state	Cataloochee Ski Area	1311290835
+Hatley Pointe	U.S. - North Carolina	indy	exact_state	Hatley Pointe	1126110799
+Frost Fire	U.S. - North Dakota	indy	exact_state	Frost Fire Park	656372511
+Huff Hills	U.S. - North Dakota	indy	exact_state	Huff Hills Ski Resort	846739537
+Boston Mills	U.S. - Ohio	epic	exact_state	Boston Mills Ski Resort	452323654
+Brandywine	U.S. - Ohio	epic	exact_state	Brandywine Ski Resort	391698033
+Mad River	U.S. - Ohio	epic	exact_state	Mad River Mountain	1263732880
+Hoodoo	U.S. - Oregon	indy	exact_state	Hoodoo Ski Area	1260579139
+Mount Bachelor	U.S. - Oregon	ikon	exact_state	Mt. Bachelor	1306486693
+Mount Hood Meadows	U.S. - Oregon	indy	exact_state	Mt. Hood Meadows Ski Resort	866496711
+Willamette Pass	U.S. - Oregon		exact_state	Willamette Pass	1278124828
+Bear Creek	U.S. - Pennsylvania	indy	containment	Bear Creek Mountain Resort Ski Slopes	281594168
+Big Boulder	U.S. - Pennsylvania	epic	exact_state	Big Boulder Ski Resort Area	390166745
+Blue Knob	U.S. - Pennsylvania	indy	exact_state	Blue Knob	1221894855
+Blue Mountain PA	U.S. - Pennsylvania	ikon	containment	Blue Mountain Resort	390536570
+Camelback	U.S. - Pennsylvania	ikon	exact_state	Camelback Mountain Resort	52067284
+Jack Frost	U.S. - Pennsylvania	epic	exact_state	Jack Frost Mountain Resort	390163427
+Laurel	U.S. - Pennsylvania	epic	exact_state	Laurel Mountain Ski Resort	1026204281
+Liberty	U.S. - Pennsylvania	epic	exact_state	Liberty Mountain Resort	390274626
+Montage	U.S. - Pennsylvania	indy	exact_state	Montage Mountain Ski Area	45096232
+Roundtop	U.S. - Pennsylvania	epic	exact_state	Roundtop Mountain Resort	390539624
+Seven Springs	U.S. - Pennsylvania	epic	exact_state	Seven Springs Mountain Resort	256580493
+Shawnee Mountain	U.S. - Pennsylvania	indy	exact_state	Shawnee Mountain	1223350355
+Ski Big Bear	U.S. - Pennsylvania	indy	exact_state	Big Bear Ski Resort	392376125
+Spring Mountain	U.S. - Pennsylvania	indy	exact_state	Spring Mountain Ski Area	1223977161
+Tussey	U.S. - Pennsylvania	indy	exact_state	Tussey Mountain	48782596
+Whitetail	U.S. - Pennsylvania	epic	exact_state	Whitetail Resort	893138900
+Great Bear	U.S. - South Dakota	indy	containment	Great Bear Recreation Park	1214114449
+Terry Peak	U.S. - South Dakota	indy	exact_state	Terry Peak Ski Area	1214147821
+Ober Mountain	U.S. - Tennessee	indy	exact_state	Ober Mountain	1282431650
+Alta	U.S. - Utah	ikon,mountain_collective	exact_state	Alta Ski Area	1023308077
+Beaver Mountain	U.S. - Utah	indy	exact_state	Beaver Mountain	1070694657
+Brian Head	U.S. - Utah		exact_state	Brian Head Resort	1230308747
+Brighton	U.S. - Utah	ikon	exact_state	Brighton Resort	682230007
+Cherry Peak	U.S. - Utah	indy	exact_state	Cherry Peak Ski Area	1275118072
+Deer Valley	U.S. - Utah	ikon	exact_state	Deer Valley Resort	682241434
+Park City	U.S. - Utah	epic	exact_state	Park City Mountain Resort	918681867
+Snowbasin	U.S. - Utah	ikon,mountain_collective	exact_state	Snowbasin Resort	1201185853
+Snowbird	U.S. - Utah	ikon,mountain_collective	exact_state	Snowbird	1023308078
+Solitude	U.S. - Utah	ikon	exact_state	Solitude Mountain Resort	682230006
+Sundance	U.S. - Utah		exact_state	Sundance Resort	1117698962
+Bolton Valley	U.S. - Vermont	indy	exact_state	Bolton Valley Resort	905237707
+Burke	U.S. - Vermont	indy	exact_state	Burke Mountain Resort	1094524069
+Jay Peak	U.S. - Vermont	indy	exact_state	Jay Peak Resort	1094522661
+Killington	U.S. - Vermont	ikon	exact_state	Killington Resort	1228774360
+Magic Mountain	U.S. - Vermont	indy	exact_state	Magic Mountain Ski Area	452295412
+Mount Snow	U.S. - Vermont	epic	exact_state	Mount Snow	860260235
+Okemo	U.S. - Vermont	epic	exact_state	Okemo Mountain	1236284348
+Pico	U.S. - Vermont	ikon	exact_state	Pico Mountain Resort	1094586461
+Saskadena Six	U.S. - Vermont	indy	exact_state	Saskadena Six	1079343060
+Smugglers' Notch	U.S. - Vermont	indy	exact_state	Smugglers' Notch Resort	1228354294
+Stowe	U.S. - Vermont	epic	exact_state	Stowe Mountain Resort	620836496
+Stratton	U.S. - Vermont	ikon	exact_state	Stratton Mountain Resort	1367311040
+Sugarbush	U.S. - Vermont	ikon	exact_state	Sugarbush Resort	1094579154
+Bryce	U.S. - Virginia	indy	exact_state	Bryce Resort	1010720455
+Massanutten	U.S. - Virginia	indy	exact_state	Massanutten Resort Ski Area	543145559
+Wintergreen	U.S. - Virginia	indy	exact_state	Wintergreen Ski Resort	1023791593
+49° North	U.S. - Washington	indy	exact_state	49° North Mountain Resort	884007908
+White Pass	U.S. - Washington	indy	exact_state	White Pass Ski Area	1254864194
+Canaan Valley	U.S. - West Virginia	indy	exact_state	Canaan Valley Ski Resort	908172888
+Winterplace	U.S. - West Virginia	indy	exact_state	Winterplace Ski Resort	1243345428
+Bruce Mound	U.S. - Wisconsin	indy	containment	Bruce Mound Winter Sports Area	613145242
+Camp 10	U.S. - Wisconsin	indy	containment	Camp 10 Ski n Snowboard	1258231242
+Christie Mountain	U.S. - Wisconsin	indy	exact_state	Christie Mountain Ski Area	415878204
+Devil’s Head	U.S. - Wisconsin	ikon	exact_state	Devil's Head Ski Area	302670313
+Granite Peak	U.S. - Wisconsin	ikon	exact_state	Granite Peak Ski Area	317142448
+Mount La Crosse	U.S. - Wisconsin	indy	exact_state	Mt. La Crosse	817289254
+Nutt Hill	U.S. - Wisconsin	indy	exact_state	Nutt Hill	702101323
+Sunburst	U.S. - Wisconsin	indy	exact_state	Sunburst Ski Area	734696805
+Trollhaugen	U.S. - Wisconsin	indy	exact_state	Trollhaugen Ski Area	584094054
+Tyrol Basin	U.S. - Wisconsin	indy	containment	Tyrol Basin Ski And Snowboard Area	304469711
+Whitecap Mountains	U.S. - Wisconsin	indy	exact_state	Whitecap Mountain	1340416269
+Wilmot	U.S. - Wisconsin	epic	exact_state	Wilmot Mountain	1183389371
+Grand Targhee	U.S. - Wyoming	mountain_collective	exact_state	Grand Targhee Resort	952802401
+Jackson Hole	U.S. - Wyoming	ikon,mountain_collective	exact_state	Jackson Hole Mountain Resort	1074335726
+Snow King	U.S. - Wyoming	indy	exact_state	Snow King Mountain	1076348034
+Snowy Range	U.S. - Wyoming	ikon	exact_state	Snowy Range Ski Area	391284413
+White Pine	U.S. - Wyoming	indy	exact_state	White Pine	654073584

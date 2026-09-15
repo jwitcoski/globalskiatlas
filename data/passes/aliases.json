@@ -1,0 +1,14 @@
+[
+  {
+    "storm_name": "Les 3 Vallées",
+    "country": "france",
+    "winter_sports_id": "45117869",
+    "notes": "Storm brand; atlas The 3 Valleys"
+  },
+  {
+    "storm_name": "Ischgl",
+    "country": "austria",
+    "winter_sports_id": "539395530",
+    "notes": "OSM Ischgl-Samnaun listed in Switzerland"
+  }
+]

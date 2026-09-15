@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pass match review – Global Ski Atlas</title>
+  <link rel="stylesheet" href="./css/tailwind-build.css" />
+  <style>
+    html, body { height: 100%; margin: 0; font-family: system-ui, sans-serif; background: #0f172a; color: #e2e8f0; }
+    .shell { display: grid; grid-template-rows: auto 1fr auto; height: 100%; }
+    .top { padding: 12px 16px; border-bottom: 1px solid #1e293b; display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+    .score { font-variant-numeric: tabular-nums; font-weight: 700; color: #fbbf24; }
+    .bar { flex: 1; min-width: 160px; height: 10px; background: #1e293b; border-radius: 99px; overflow: hidden; }
+    .bar > span { display: block; height: 100%; background: #22c55e; width: 0; }
+    .board { display: grid; grid-template-columns: minmax(280px, 380px) 1fr; min-height: 0; }
+    .left { padding: 16px; border-right: 1px solid #1e293b; overflow: auto; display: flex; flex-direction: column; gap: 12px; }
+    .card { background: #1e293b; border-radius: 12px; padding: 16px; }
+    .storm-name { font-size: 1.5rem; font-weight: 700; color: #fff; margin: 0 0 8px; }
+    .pass-pills { display: flex; gap: 6px; flex-wrap: wrap; }
+    .pill { font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; padding: 4px 8px; border-radius: 999px; background: #334155; }
+    .pill.epic { background: #1d4ed8; }
+    .pill.ikon { background: #0f766e; }
+    .pill.indy { background: #b45309; }
+    .pill.mountain_collective { background: #6d28d9; }
+    .muted { color: #94a3b8; font-size: 13px; }
+    .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    button { border: 0; border-radius: 8px; padding: 10px 14px; font-weight: 600; cursor: pointer; }
+    .confirm { background: #22c55e; color: #052e16; }
+    .confirm:disabled { opacity: 0.4; cursor: not-allowed; }
+    .skip { background: #334155; color: #e2e8f0; }
+    .wrong { background: #7f1d1d; color: #fecaca; }
+    input[type="search"] { width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: #fff; }
+    .hits { max-height: 180px; overflow: auto; margin: 0; padding: 0; list-style: none; }
+    .hits li { padding: 8px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+    .hits li:hover, .hits li.active { background: #334155; }
+    iframe { width: 100%; height: 100%; border: 0; background: #fff; }
+    .right { display: grid; grid-template-rows: 1fr 1fr; min-height: 0; min-width: 0; }
+    .pane { min-height: 0; display: flex; flex-direction: column; border-top: 1px solid #1e293b; }
+    .pane:first-child { border-top: 0; }
+    .pane-bar { display: flex; align-items: center; gap: 8px; padding: 6px 10px; background: #1e293b; font-size: 12px; flex-shrink: 0; }
+    .pane-bar a { color: #93c5fd; }
+    .pass-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+    .pass-tabs button { padding: 4px 8px; font-size: 11px; background: #334155; color: #e2e8f0; }
+    .pass-tabs button.on { background: #22c55e; color: #052e16; }
+    .empty { padding: 48px; text-align: center; }
+    @media (max-width: 800px) {
+      .board { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+      .left { border-right: 0; border-bottom: 1px solid #1e293b; }
+      .right { grid-template-rows: minmax(240px, 1fr) minmax(240px, 1fr); }
+      iframe { min-height: 220px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="top">
+      <strong>Match quest</strong>
+      <span class="score" id="score">0 pts</span>
+      <span class="muted" id="streak"></span>
+      <div class="bar" aria-hidden="true"><span id="bar"></span></div>
+      <span class="muted" id="progress">0 / 0</span>
+      <label class="muted"><input type="checkbox" id="only-unmatched" /> unmatched first</label>
+    </div>
+    <div class="board">
+      <aside class="left" id="left"></aside>
+      <div class="right">
+        <div class="pane">
+          <div class="pane-bar">Wiki</div>
+          <iframe id="wiki" title="Wiki" src="/wiki/browse.html"></iframe>
+        </div>
+        <div class="pane">
+          <div class="pane-bar">
+            <span>Pass roster site</span>
+            <div class="pass-tabs" id="pass-tabs"></div>
+            <a id="pass-open" href="#" target="_blank" rel="noopener">Open in new tab</a>
+          </div>
+          <iframe id="pass-site" title="Pass resort list" src="about:blank"></iframe>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script type="module" src="./scripts/pass-review.js"></script>
+</body>
+</html>
