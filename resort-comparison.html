@@ -1089,7 +1089,7 @@
         const section = resortList.append('div').attr('class', 'accordion-section');
         const header = section.append('div').attr('class', 'resort-country-header');
         header.append('span').attr('class', 'accordion-chevron').text('▶');
-        header.append('span').attr('class', 'accordion-country-name').text(country + ' (' + totalCount + ')');
+        header.append('span').attr('class', 'accordion-country-name').attr('data-label', country).text(country + ' (' + totalCount + ')');
         header.on('click', () => section.classed('open', !section.classed('open')));
         const body = section.append('div').attr('class', 'resort-country-body');
 
@@ -1100,8 +1100,9 @@
             const stateIndices = stateMap[sk];
             const stateSection = body.append('div').attr('class', 'resort-state-section');
             const stateHeader = stateSection.append('div').attr('class', 'resort-state-header');
+            const stateLabel = sk === '\u200b' ? 'Other' : sk;
             stateHeader.append('span').attr('class', 'accordion-chevron').text('▶');
-            stateHeader.append('span').text((sk === '\u200b' ? 'Other' : sk) + ' (' + stateIndices.length + ')');
+            stateHeader.append('span').attr('class', 'accordion-state-name').attr('data-label', stateLabel).text(stateLabel + ' (' + stateIndices.length + ')');
             stateHeader.on('click', function (e) { e.stopPropagation(); stateSection.classed('open', !stateSection.classed('open')); });
             const stateBody = stateSection.append('div').attr('class', 'resort-state-body');
             stateIndices.forEach((idx) => appendResortItem(stateBody, idx, country));
@@ -1290,16 +1291,20 @@
       d3.selectAll('.accordion-section').each(function () {
         const section = d3.select(this);
         const body = section.select('.resort-country-body');
-        const hasVisible = body.selectAll('.resort-item').filter(function () { return d3.select(this).style('display') === 'flex'; }).size() > 0;
+        const countryVisible = body.selectAll('.resort-item').filter(function () { return d3.select(this).style('display') === 'flex'; }).size();
+        const hasVisible = countryVisible > 0;
+        const countryLabel = section.select('.accordion-country-name').attr('data-label') || '';
+        section.select('.accordion-country-name').text(countryLabel + ' (' + countryVisible + ')');
         section.style('display', hasVisible ? 'block' : 'none');
-        if ((q || passFilter !== 'all') && hasVisible) {
-          section.classed('open', true);
-          section.selectAll('.resort-state-section').each(function () {
-            const stateSec = d3.select(this);
-            const stateHasVisible = stateSec.selectAll('.resort-item').filter(function () { return d3.select(this).style('display') === 'flex'; }).size() > 0;
-            stateSec.classed('open', stateHasVisible);
-          });
-        }
+        section.selectAll('.resort-state-section').each(function () {
+          const stateSec = d3.select(this);
+          const stateVisible = stateSec.selectAll('.resort-item').filter(function () { return d3.select(this).style('display') === 'flex'; }).size();
+          const stateLabel = stateSec.select('.accordion-state-name').attr('data-label') || '';
+          stateSec.select('.accordion-state-name').text(stateLabel + ' (' + stateVisible + ')');
+          stateSec.style('display', stateVisible > 0 ? 'block' : 'none');
+          if ((q || passFilter !== 'all') && hasVisible) stateSec.classed('open', stateVisible > 0);
+        });
+        if ((q || passFilter !== 'all') && hasVisible) section.classed('open', true);
         if (!q && passFilter === 'all') {
           section.classed('open', false);
           section.selectAll('.resort-state-section').classed('open', false);
