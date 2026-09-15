@@ -134,6 +134,48 @@
     .pass-badge.ikon { background: #0f766e; }
     .pass-badge.indy { background: #b45309; }
     .pass-badge.mountain_collective { background: #6d28d9; }
+    .search-container { position: relative; }
+    .search-hits {
+      position: absolute;
+      left: 0; right: 0; top: 100%;
+      z-index: 20;
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      max-height: 280px;
+      overflow-y: auto;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+      display: none;
+    }
+    .search-hits.open { display: block; }
+    .search-hit {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      text-align: left;
+      padding: 8px 10px;
+      border: 0;
+      background: #fff;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    .search-hit:hover { background: #f3f4f6; }
+    .selected-chips { display: flex; flex-wrap: wrap; gap: 6px; min-height: 28px; }
+    .sel-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: #f3f4f6;
+      font-size: 13px;
+    }
+    .sel-chip button { border: 0; background: transparent; cursor: pointer; font-size: 14px; line-height: 1; }
+    .layout-seg { display: flex; border: 1px solid #d1d5db; border-radius: 8px; overflow: hidden; }
+    .layout-seg button { flex: 1; border: 0; background: #fff; padding: 8px; cursor: pointer; font-size: 13px; }
+    .layout-seg button.on { background: #111; color: #fff; }
+    .sel-hint { font-size: 12px; color: #6b7280; margin-top: 6px; }
     .search-container input {
       width: 100%;
       padding: 10px 14px 10px 38px;
@@ -393,7 +435,7 @@
   <div class="map-wrapper tw-flex-1 tw-min-h-0 tw-px-[5%] tw-pt-2 tw-pb-6 max-lg:tw-px-4">
     <div class="page">
     <h1 class="tw-text-4xl tw-font-medium tw-text-gray-900 tw-mb-2">Ski Resort Size Comparison</h1>
-    <p class="tw-text-xl tw-font-medium tw-text-gray-700 tw-mb-3 tw-max-w-2xl">Compare ski resort outlines and trail layouts from the Global Ski Atlas parquet data. Select resorts to view side by side.</p>
+    <p class="tw-text-xl tw-font-medium tw-text-gray-700 tw-mb-3 tw-max-w-2xl">Compare up to six ski resorts. Overlay two, or spread three or more as small multiples.</p>
 
     <div class="content-wrapper">
       <div class="map-chart-wrapper">
@@ -406,10 +448,15 @@
       </div>
       <div class="controls">
         <div class="controls-section">
-          <div class="controls-section-title">Selection</div>
-          <div class="control-buttons">
-            <button type="button" id="select-all">Select All</button>
-            <button type="button" id="deselect-all">Deselect All</button>
+          <div class="controls-section-title">Selected</div>
+          <div class="selected-chips" id="selected-chips"></div>
+          <p class="sel-hint" id="sel-hint">0 of 6</p>
+          <div class="layout-seg" role="group" aria-label="Layout">
+            <button type="button" id="layout-overlay" class="on">Overlay</button>
+            <button type="button" id="layout-spread">Spread</button>
+          </div>
+          <div class="control-buttons" style="margin-top:10px">
+            <button type="button" id="deselect-all">Clear</button>
           </div>
         </div>
         <div class="controls-section">
@@ -419,10 +466,7 @@
               <input type="checkbox" id="auto-zoom-toggle" checked>
               <label for="auto-zoom-toggle">Auto-zoom to selection</label>
             </div>
-            <div class="control-option-row">
-              <input type="checkbox" id="offset-toggle">
-              <label for="offset-toggle">Offset overlapping resorts</label>
-            </div>
+            <input type="checkbox" id="offset-toggle" hidden>
             <div id="trail-loading" class="tw-text-sm tw-text-gray-500" style="display: none;">Loading trail layouts…</div>
           </div>
         </div>
@@ -441,7 +485,8 @@
           <div class="controls-section-title">Search</div>
           <div class="search-container">
             <i class="fas fa-search search-icon"></i>
-            <input type="text" id="resort-search" placeholder="Search resorts…" autocomplete="off">
+            <input type="text" id="resort-search" placeholder="Add a resort…" autocomplete="off">
+            <div class="search-hits" id="search-hits"></div>
           </div>
         </div>
         <div class="controls-section" id="size-legend-section">
@@ -449,7 +494,7 @@
           <div class="size-legend" id="size-legend"></div>
         </div>
         <div class="controls-section">
-          <div class="controls-section-title">Compare Resorts</div>
+          <div class="controls-section-title">Browse</div>
           <div class="resort-list" id="resort-list"></div>
         </div>
         <div class="controls-section" id="difficulty-legend" style="display: none;">
@@ -680,6 +725,8 @@
     let resortData = []; // { name, outlineFeature, pisteFeatures }
     let passById = {};
     let passFilter = 'all';
+    const MAX_COMPARE = 6;
+    let layoutMode = 'auto';
     let resortTransforms = []; // { resortMinX, resortMinY, globalScaleFactor } per index
     let globalScaleFactorCache = 0;
 
@@ -1005,22 +1052,15 @@
           .attr('id', `checkbox-${index}`)
           .attr('class', 'resort-checkbox')
           .property('checked', false)
-          .on('change', () => {
-            const checked = d3.select(`#checkbox-${index}`).property('checked');
-            d3.select(`#resort-${index}`).classed('hidden', !checked);
-            updateMapTitle();
-            const selectedIndices = [];
-            d3.selectAll('.resort-checkbox').each(function () {
-              if (d3.select(this).property('checked')) {
-                const idx = parseInt(this.id.replace('checkbox-', ''), 10);
-                if (!Number.isNaN(idx)) selectedIndices.push(idx);
-              }
-            });
-            if (selectedIndices.length > 0 && selectedIndices.length <= 20) {
-              loadPistesForSelected(selectedIndices).catch(() => {});
+          .on('change', function () {
+            const box = d3.select(this);
+            if (box.property('checked') && getSelectedIndices().length > MAX_COMPARE) {
+              box.property('checked', false);
+              d3.select('#sel-hint').text('Cap is 6 resorts');
+              return;
             }
-            if (d3.select('#offset-toggle').property('checked')) applyOffsetToResorts();
-            else { clearTimeout(window._zoomTimeout); window._zoomTimeout = setTimeout(autoZoomToSelection, 300); }
+            d3.select(`#resort-${index}`).classed('hidden', !box.property('checked'));
+            afterSelectionChange();
           });
         item.append('span').attr('class', 'color-indicator').style('background-color', color);
         item.append('span').attr('class', 'resort-size-icon-wrapper').each(function () {
@@ -1083,18 +1123,111 @@
 
       setupControlButtons();
       applyListFilters();
-      selectRandomResorts(2);
-      setTimeout(autoZoomToSelection, 400);
+      const q = new URLSearchParams(location.search);
+      const hasDeep = q.get('ws') || q.get('name') || q.get('resort') || q.get('near') === '1';
+      if (!hasDeep) {
+        selectRandomResorts(2);
+        setTimeout(autoZoomToSelection, 400);
+      }
+    }
+
+    function getSelectedIndices() {
+      const visible = [];
+      d3.selectAll('.resort-checkbox').each(function () {
+        if (d3.select(this).property('checked')) {
+          const idx = parseInt(this.id.replace('checkbox-', ''), 10);
+          if (!Number.isNaN(idx)) visible.push(idx);
+        }
+      });
+      return visible;
+    }
+
+    function winterSportsId(idx) {
+      const r = resortData[idx];
+      const p = (r && r.analyzedRow) || (r && r.outlineFeature && r.outlineFeature.properties) || {};
+      return String(p.winter_sports_id || '');
+    }
+
+    function usesSpread() {
+      const n = getSelectedIndices().length;
+      if (layoutMode === 'overlay') return false;
+      if (layoutMode === 'spread') return n >= 2;
+      return n >= 3;
+    }
+
+    function syncLayoutButtons() {
+      const spread = usesSpread();
+      d3.select('#layout-overlay').classed('on', !spread);
+      d3.select('#layout-spread').classed('on', spread);
+    }
+
+    function spreadGrid(n) {
+      if (n <= 2) return { cols: n, rows: 1 };
+      if (n <= 4) return { cols: 2, rows: 2 };
+      return { cols: 3, rows: 2 };
+    }
+
+    function cellSizeFor(visible) {
+      let w = 0, h = 0;
+      visible.forEach((idx) => {
+        const b = resortBounds[idx];
+        w = Math.max(w, b.maxX - b.minX);
+        h = Math.max(h, b.maxY - b.minY);
+      });
+      return { w: w * 1.15, h: h * 1.2 };
+    }
+
+    function cellOrigin(idx, i, visible) {
+      if (!usesSpread()) return { x: 0, y: 0 };
+      const { cols } = spreadGrid(visible.length);
+      const cell = cellSizeFor(visible);
+      const row = Math.floor(i / cols);
+      const col = i % cols;
+      const b = resortBounds[idx];
+      const cx = (b.minX + b.maxX) / 2;
+      const cy = (b.minY + b.maxY) / 2;
+      return { x: col * cell.w + cell.w / 2 - cx, y: row * cell.h + cell.h / 2 - cy };
+    }
+
+    function syncCompareUrl() {
+      const ids = getSelectedIndices().map(winterSportsId).filter(Boolean);
+      const url = new URL(location.href);
+      if (ids.length) url.searchParams.set('ws', ids.join(','));
+      else url.searchParams.delete('ws');
+      history.replaceState({}, '', url);
+    }
+
+    function renderSelectedChips() {
+      const host = d3.select('#selected-chips');
+      host.selectAll('*').remove();
+      const selected = getSelectedIndices();
+      selected.forEach((idx) => {
+        const chip = host.append('span').attr('class', 'sel-chip');
+        chip.append('span').attr('class', 'color-indicator').style('background-color', colorScale(idx));
+        chip.append('span').text(resortData[idx].name);
+        chip.append('button').attr('type', 'button').attr('aria-label', 'Remove').text('×').on('click', () => {
+          d3.select(`#checkbox-${idx}`).property('checked', false);
+          d3.select(`#resort-${idx}`).classed('hidden', true);
+          afterSelectionChange();
+        });
+      });
+      d3.select('#sel-hint').text(selected.length + ' of ' + MAX_COMPARE);
+    }
+
+    function afterSelectionChange() {
+      updateMapTitle();
+      renderSelectedChips();
+      syncCompareUrl();
+      syncLayoutButtons();
+      const selectedIndices = getSelectedIndices();
+      if (selectedIndices.length > 0 && selectedIndices.length <= MAX_COMPARE) {
+        loadPistesForSelected(selectedIndices).catch(() => {});
+      }
+      applyOffsetToResorts();
     }
 
     function updateMapTitle() {
-      const selected = [];
-      d3.selectAll('.resort-checkbox').each(function () {
-        if (d3.select(this).property('checked')) {
-          const label = d3.select(this.parentNode).select('label').text();
-          selected.push(label);
-        }
-      });
+      const selected = getSelectedIndices().map((i) => resortData[i].name);
       if (selected.length === 1) mapTitle.text(selected[0]);
       else if (selected.length === 2) mapTitle.text(`${selected[0]} vs ${selected[1]}`);
       else if (selected.length > 2 && selected.length <= 4) mapTitle.text(selected.join(' vs '));
@@ -1104,73 +1237,35 @@
 
     function autoZoomToSelection() {
       if (!d3.select('#auto-zoom-toggle').property('checked')) return;
-      const visible = [];
-      d3.selectAll('.resort-checkbox').each(function () {
-        if (d3.select(this).property('checked')) {
-          const idx = parseInt(this.id.replace('checkbox-', ''), 10);
-          if (!Number.isNaN(idx)) visible.push(idx);
-        }
-      });
+      const visible = getSelectedIndices();
       if (visible.length === 0) return;
-
-      const useOffset = d3.select('#offset-toggle').property('checked');
-      if (useOffset && visible.length > 1) {
-        const offsetX = 50, offsetY = 50;
-        const cols = Math.min(3, visible.length);
-        const rows = Math.ceil(visible.length / 3);
-        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-        visible.forEach((idx, i) => {
-          const b = resortBounds[idx];
-          const row = Math.floor(i / 3), col = i % 3;
-          minX = Math.min(minX, b.minX + col * offsetX);
-          minY = Math.min(minY, b.minY + row * offsetY);
-          maxX = Math.max(maxX, b.maxX + col * offsetX);
-          maxY = Math.max(maxY, b.maxY + row * offsetY);
-        });
-        const pad = 0.1;
-        const w = maxX - minX, h = maxY - minY;
-        minX -= w * pad; maxX += w * pad; minY -= h * pad; maxY += h * pad;
-        const scale = Math.min((width - 2 * padding) / (maxX - minX), (height - 2 * padding) / (maxY - minY));
-        resortsGroup.transition().duration(750)
-          .attr('transform', `translate(${padding - minX * scale}, ${height - padding - minY * scale}) scale(${scale})`);
-        d3.selectAll('.resort-label').style('font-size', `${12 / scale}px`);
-      } else {
-        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-        visible.forEach((idx) => {
-          const b = resortBounds[idx];
-          minX = Math.min(minX, b.minX);
-          minY = Math.min(minY, b.minY);
-          maxX = Math.max(maxX, b.maxX);
-          maxY = Math.max(maxY, b.maxY);
-        });
-        const pad = 0.1;
-        const w = maxX - minX, h = maxY - minY;
-        minX -= w * pad; maxX += w * pad; minY -= h * pad; maxY += h * pad;
-        const scale = Math.min((width - 2 * padding) / (maxX - minX), (height - 2 * padding) / (maxY - minY));
-        resortsGroup.transition().duration(750)
-          .attr('transform', `translate(${padding - minX * scale}, ${height - padding - minY * scale}) scale(${scale})`);
-        d3.selectAll('.resort-label').style('font-size', `${12 / scale}px`);
-      }
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      visible.forEach((idx, i) => {
+        const b = resortBounds[idx];
+        const o = cellOrigin(idx, i, visible);
+        minX = Math.min(minX, b.minX + o.x);
+        minY = Math.min(minY, b.minY + o.y);
+        maxX = Math.max(maxX, b.maxX + o.x);
+        maxY = Math.max(maxY, b.maxY + o.y);
+      });
+      const pad = 0.1;
+      const w = maxX - minX, h = maxY - minY;
+      minX -= w * pad; maxX += w * pad; minY -= h * pad; maxY += h * pad;
+      const scale = Math.min((width - 2 * padding) / (maxX - minX), (height - 2 * padding) / (maxY - minY));
+      resortsGroup.transition().duration(750)
+        .attr('transform', `translate(${padding - minX * scale}, ${height - padding - minY * scale}) scale(${scale})`);
+      d3.selectAll('.resort-label').style('font-size', `${12 / scale}px`);
     }
 
     function applyOffsetToResorts() {
-      const useOffset = d3.select('#offset-toggle').property('checked');
-      const visible = [];
-      d3.selectAll('.resort-checkbox').each(function () {
-        if (d3.select(this).property('checked')) {
-          const idx = parseInt(this.id.replace('checkbox-', ''), 10);
-          if (!Number.isNaN(idx)) visible.push(idx);
-        }
-      });
-      if (visible.length <= 1) return;
-      const offsetX = useOffset ? 50 : 0, offsetY = useOffset ? 50 : 0;
+      const visible = getSelectedIndices();
+      d3.selectAll('.resort-group').transition().duration(400).attr('transform', 'translate(0, 0)');
       visible.forEach((resortIndex, i) => {
-        const g = d3.select(`#resort-${resortIndex}`);
-        const row = Math.floor(i / 3), col = i % 3;
-        g.transition().duration(500)
-          .attr('transform', useOffset ? `translate(${col * offsetX}, ${row * offsetY})` : 'translate(0, 0)');
+        const o = cellOrigin(resortIndex, i, visible);
+        d3.select(`#resort-${resortIndex}`).transition().duration(500)
+          .attr('transform', `translate(${o.x}, ${o.y})`);
       });
-      if (d3.select('#auto-zoom-toggle').property('checked')) setTimeout(autoZoomToSelection, 600);
+      if (d3.select('#auto-zoom-toggle').property('checked')) setTimeout(autoZoomToSelection, 500);
     }
 
     function resortMatchesPassFilter(r) {
@@ -1214,31 +1309,80 @@
       if (visibleCount === 0) d3.select('#resort-list').append('div').attr('class', 'no-results').text('No resorts found');
     }
 
-    function setupControlButtons() {
-      d3.select('#select-all').on('click', () => {
-        d3.selectAll('.resort-item').each(function () {
-          if (d3.select(this).style('display') === 'none') return;
-          const box = d3.select(this).select('.resort-checkbox');
-          box.property('checked', true);
-          const idx = parseInt(box.attr('id').replace('checkbox-', ''), 10);
-          if (!Number.isNaN(idx)) d3.select(`#resort-${idx}`).classed('hidden', false);
+    function renderSearchHits() {
+      const q = foldDiacritics(d3.select('#resort-search').property('value') || '').toLowerCase().trim();
+      const host = d3.select('#search-hits');
+      host.selectAll('*').remove();
+      if (q.length < 2) {
+        host.classed('open', false);
+        return;
+      }
+      const ranked = resortData
+        .map((r, i) => {
+          const name = foldDiacritics(r.name || '').toLowerCase();
+          let score = 0;
+          if (name === q) score = 3;
+          else if (name.startsWith(q)) score = 2;
+          else if (name.includes(q)) score = 1;
+          else if ((r.passes || []).join(' ').includes(q)) score = 0.5;
+          return { i, score, name };
+        })
+        .filter((x) => x.score > 0 && resortMatchesPassFilter(resortData[x.i]))
+        .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name))
+        .slice(0, 8);
+      ranked.forEach((hit) => {
+        const r = resortData[hit.i];
+        const btn = host.append('button').attr('type', 'button').attr('class', 'search-hit');
+        btn.append('span').attr('class', 'color-indicator').style('background-color', colorScale(hit.i));
+        btn.append('span').text(r.name);
+        btn.on('click', () => {
+          const box = d3.select(`#checkbox-${hit.i}`);
+          if (!box.property('checked')) {
+            if (getSelectedIndices().length >= MAX_COMPARE) {
+              d3.select('#sel-hint').text('Cap is 6 resorts');
+              return;
+            }
+            box.property('checked', true);
+            d3.select(`#resort-${hit.i}`).classed('hidden', false);
+            afterSelectionChange();
+          }
+          d3.select('#resort-search').property('value', '');
+          host.classed('open', false);
+          applyListFilters();
         });
-        updateMapTitle();
-        if (d3.select('#offset-toggle').property('checked')) applyOffsetToResorts();
-        else autoZoomToSelection();
       });
+      host.classed('open', ranked.length > 0);
+    }
+
+    function setupControlButtons() {
       d3.select('#deselect-all').on('click', () => {
         d3.selectAll('.resort-checkbox').property('checked', false);
         d3.selectAll('.resort-group').classed('hidden', true);
-        updateMapTitle();
+        afterSelectionChange();
       });
-      d3.select('#offset-toggle').on('change', applyOffsetToResorts);
-      d3.select('#resort-search').on('input', applyListFilters);
+      d3.select('#layout-overlay').on('click', () => {
+        layoutMode = 'overlay';
+        syncLayoutButtons();
+        applyOffsetToResorts();
+      });
+      d3.select('#layout-spread').on('click', () => {
+        layoutMode = 'spread';
+        syncLayoutButtons();
+        applyOffsetToResorts();
+      });
+      d3.select('#resort-search').on('input', () => {
+        applyListFilters();
+        renderSearchHits();
+      });
+      d3.select('#resort-search').on('blur', () => {
+        setTimeout(() => d3.select('#search-hits').classed('open', false), 180);
+      });
       d3.selectAll('#pass-filter .pass-chip').on('click', function () {
         passFilter = this.getAttribute('data-pass') || 'all';
         d3.selectAll('#pass-filter .pass-chip').classed('on', false);
         d3.select(this).classed('on', true);
         applyListFilters();
+        renderSearchHits();
       });
     }
 
@@ -1255,25 +1399,20 @@
         d3.select(`#checkbox-${i}`).property('checked', true);
         d3.select(`#resort-${i}`).classed('hidden', false);
       });
-      updateMapTitle();
-      if (indices.length > 0) {
-        loadPistesForSelected(indices).catch(() => {});
-      }
-      if (d3.select('#offset-toggle').property('checked')) applyOffsetToResorts();
-      else setTimeout(autoZoomToSelection, 300);
+      afterSelectionChange();
     }
 
     async function preselectNearestResort() {
       const q = new URLSearchParams(location.search);
       if (q.get('near') !== '1' && !q.get('ws') && !q.get('name') && !q.get('resort')) return;
-      let ws = q.get('ws') || '';
+      let wsList = String(q.get('ws') || '').split(',').map((s) => s.trim()).filter(Boolean);
       let nameWant = String(q.get('name') || q.get('resort') || '').toLowerCase().trim();
-      if (!ws && !nameWant) {
+      if (!wsList.length && !nameWant) {
         try {
           const mod = await import('./scripts/clay/nearest-resort.js');
           const { nearest } = await mod.resolveVisitorNearestClay();
           if (nearest) {
-            ws = String(nearest.winter_sports_id || '');
+            wsList = [String(nearest.winter_sports_id || '')].filter(Boolean);
             nameWant = String(nearest.display_name || nearest.short_name || '').toLowerCase().trim();
           }
         } catch (err) {
@@ -1281,23 +1420,32 @@
           return;
         }
       }
-      const idx = resortData.findIndex((r) => {
-        const p = r.analyzedRow || (r.outlineFeature && r.outlineFeature.properties) || {};
-        if (ws && String(p.winter_sports_id || '') === String(ws)) return true;
-        const n = String(r.name || '').toLowerCase();
-        if (!nameWant || !n) return false;
-        return n === nameWant || n.includes(nameWant) || nameWant.includes(n.split('(')[0].trim());
+      const picked = [];
+      wsList.forEach((ws) => {
+        const idx = resortData.findIndex((r) => {
+          const p = r.analyzedRow || (r.outlineFeature && r.outlineFeature.properties) || {};
+          return String(p.winter_sports_id || '') === String(ws);
+        });
+        if (idx >= 0 && !picked.includes(idx)) picked.push(idx);
       });
-      if (idx < 0) return;
-      const box = document.getElementById('checkbox-' + idx);
-      if (!box) return;
-      box.checked = true;
-      box.dispatchEvent(new Event('change'));
-      const country = box.closest('.accordion-section');
-      if (country) country.classList.add('open');
-      const state = box.closest('.resort-state-section');
-      if (state) state.classList.add('open');
-      box.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      if (!picked.length && nameWant) {
+        const idx = resortData.findIndex((r) => {
+          const n = String(r.name || '').toLowerCase();
+          return n === nameWant || n.includes(nameWant) || nameWant.includes(n.split('(')[0].trim());
+        });
+        if (idx >= 0) picked.push(idx);
+      }
+      picked.slice(0, MAX_COMPARE).forEach((idx) => {
+        const box = document.getElementById('checkbox-' + idx);
+        if (!box) return;
+        box.checked = true;
+        d3.select(`#resort-${idx}`).classed('hidden', false);
+        const country = box.closest('.accordion-section');
+        if (country) country.classList.add('open');
+        const state = box.closest('.resort-state-section');
+        if (state) state.classList.add('open');
+      });
+      if (picked.length) afterSelectionChange();
     }
 
     loadData()
