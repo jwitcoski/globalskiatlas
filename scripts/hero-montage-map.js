@@ -16,7 +16,7 @@ import {
   loadRegionCatalog,
   loadVectors as loadSceneVectors,
   yieldFrame as waitForFrame,
-} from "./clay/scene-loader.js?v=11";
+} from "./clay/scene-loader.js?v=12";
 import { indexOfNearestClayResort, lookupIpLocation } from "./clay/nearest-resort.js";
 import {
   addSoftShadow as addIslandShadow,

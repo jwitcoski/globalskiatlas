@@ -5,7 +5,6 @@ import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 import {
   HEIGHT_EXAGGERATE,
   HERO_SPAN,
-  gameSceneBase,
   regionCatalogUrl,
   regionSceneRoot,
   sceneRoot,
@@ -20,7 +19,6 @@ import {
   mergeFeatureCollections,
   mergeTreeArea,
   shadeSnowMesh,
-  waterFeatureCount,
 } from "./index.js?v=4";
 
 let gltfLoader;
@@ -119,7 +117,6 @@ export async function loadVectors(base, vectors, resort = null, options = {}) {
   const clayRoadsPath = vectors.roads || null;
   const clayCliffsPath = vectors.cliffs || null;
   const clayRocksPath = vectors.rocks || null;
-  const gameBase = gameSceneBase(resort);
   const fetches = [
     routesUrl ? fetchJson(routesUrl).catch(() => null) : Promise.resolve(null),
     liftsUrl ? fetchJson(liftsUrl).catch(() => null) : Promise.resolve(null),
@@ -137,17 +134,6 @@ export async function loadVectors(base, vectors, resort = null, options = {}) {
     placesPath ? fetchJson(new URL(placesPath, base)).catch(() => null) : Promise.resolve(null),
     admin1Path ? fetchJson(new URL(admin1Path, base)).catch(() => null) : Promise.resolve(null),
   ];
-  if (gameBase) {
-    fetches.push(
-      fetchJson(new URL("vectors/buildings.geojson", gameBase)).catch(() => null),
-      fetchJson(new URL("vectors/roads.geojson", gameBase)).catch(() => null),
-      fetchJson(new URL("vectors/water.geojson", gameBase)).catch(() => null),
-      fetchJson(new URL("vectors/ski-area.geojson", gameBase)).catch(() => null),
-      fetchJson(new URL("vectors/forest.geojson", gameBase)).catch(() => null),
-      fetchJson(new URL("vectors/cliffs.geojson", gameBase)).catch(() => null),
-      fetchJson(new URL("vectors/rocks.geojson", gameBase)).catch(() => null),
-    );
-  }
   const results = await Promise.all(fetches);
   const forestPoints = results[2];
   const forestHome = results[3];
@@ -156,19 +142,17 @@ export async function loadVectors(base, vectors, resort = null, options = {}) {
   const regionHighways = results[12];
   const regionPlaces = results[13];
   const regionAdmin1 = results[14];
-  const game = gameBase ? results.slice(15) : [];
-  const forest = await mergeTreeArea(mergeFeatureCollections(game[4], forestHome, forestPoints));
-  const waterGame = gameBase ? game[2] : null;
+  const forest = await mergeTreeArea(mergeFeatureCollections(forestHome, forestPoints));
   return {
     routes: results[0],
     lifts: results[1],
     forest,
-    buildings: mergeFeatureCollections(game[0], results[6]),
-    roads: mergeFeatureCollections(game[1], results[7]),
-    cliffs: mergeFeatureCollections(game[5], results[8]),
-    rocks: mergeFeatureCollections(game[6], results[9]),
-    water: waterFeatureCount(waterGame) ? waterGame : results[5],
-    skiArea: gameBase ? game[3] : null,
+    buildings: results[6],
+    roads: results[7],
+    cliffs: results[8],
+    rocks: results[9],
+    water: results[5],
+    skiArea: null,
     skiAreaBuffer: results[4],
     resorts: regionResorts,
     skiAreaFootprints: regionFootprints,

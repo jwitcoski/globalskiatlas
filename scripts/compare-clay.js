@@ -1,17 +1,9 @@
-import { initHeroMontageMap } from "./hero-montage-map.js?v=115";
+import { initHeroMontageMap } from "./hero-montage-map.js?v=116";
 
-let live = [];
+const viewers = new Map();
 let catalogPromise = null;
 let mountToken = 0;
 const sceneReadyCache = new Map();
-const CLAY_SCENES_WITH_FILES = new Set([
-  "montage_mountain_pa",
-  "pal_arinsal_andorra",
-  "perisher_australia",
-  "cerro_perito_moreno_argentina",
-  "killington_resort_united_states_of_america",
-  "hakuba_cortina_japan",
-]);
 
 function loadClayByWs() {
   catalogPromise ||= fetch("/clay_scenes/catalog.json")
@@ -34,15 +26,15 @@ function loadClayByWs() {
 async function claySceneReady(id) {
   const key = String(id || "");
   if (!key) return false;
-  if (CLAY_SCENES_WITH_FILES.has(key)) {
-    sceneReadyCache.set(key, true);
-    window.__gsaClaySceneReady = sceneReadyCache;
-    return true;
-  }
   if (sceneReadyCache.has(key)) return sceneReadyCache.get(key);
-  sceneReadyCache.set(key, false);
+  const pending = fetch(`/clay_scenes/${encodeURIComponent(key)}/scene-manifest.json`)
+    .then((res) => res.ok)
+    .catch(() => false);
+  sceneReadyCache.set(key, pending);
+  const ok = await pending;
+  sceneReadyCache.set(key, ok);
   window.__gsaClaySceneReady = sceneReadyCache;
-  return false;
+  return ok;
 }
 
 function fillMissingCell(cell) {
@@ -62,6 +54,16 @@ function fillMissingCell(cell) {
   cell.appendChild(empty);
 }
 
+function makeCell(name) {
+  const cell = document.createElement("div");
+  cell.className = "clay-compare-cell";
+  const title = document.createElement("div");
+  title.className = "clay-compare-name";
+  title.textContent = name || "Resort";
+  cell.appendChild(title);
+  return { cell, title };
+}
+
 async function markMissing3dChips(clayByWs) {
   const in3d = document.body.classList.contains("compare-3d");
   const chips = [...document.querySelectorAll("#selected-chips .sel-chip")];
@@ -76,85 +78,131 @@ async function markMissing3dChips(clayByWs) {
   }
 }
 
-async function disposeHandles() {
-  const dying = live.splice(0, live.length);
-  for (const handle of dying) {
-    try { handle.dispose(); } catch (_) { /* ignore */ }
+async function disposeAllViewers() {
+  const dying = [...viewers.values()];
+  viewers.clear();
+  for (const slot of dying) {
+    try { slot.handle?.dispose(); } catch (_) { /* ignore */ }
   }
+}
+
+function applySharedScale() {
+  const live = [...viewers.values()].map((slot) => slot.handle).filter(Boolean);
+  if (live.length === 0) return;
+  const maxTrue = Math.max(...live.map((h) => h.getTrueSpan()), 1);
+  live.forEach((h) => h.applySizeCompare(maxTrue, null));
+  const sharedR = Math.max(...live.map((h) => h.readRadius()), 1);
+  live.forEach((h) => h.applySizeCompare(maxTrue, sharedR));
 }
 
 export async function disposeCompareClay() {
   mountToken += 1;
-  await disposeHandles();
+  await disposeAllViewers();
 }
 
 export async function syncCompareClay({ host, items, cols }) {
   const token = ++mountToken;
-  await disposeHandles();
-  if (token !== mountToken) return;
   if (!host) return;
-  host.innerHTML = "";
   host.style.gridTemplateColumns = `repeat(${Math.max(1, cols || 1)}, minmax(0, 1fr))`;
   const clayByWs = await loadClayByWs();
   if (token !== mountToken) return;
   await markMissing3dChips(clayByWs);
-  const queued = [];
+  if (token !== mountToken) return;
+
+  const desired = [];
+  const keepIds = new Set();
   for (const item of items || []) {
-    const cell = document.createElement("div");
-    cell.className = "clay-compare-cell";
-    const title = document.createElement("div");
-    title.className = "clay-compare-name";
-    title.textContent = item.name || "Resort";
-    cell.appendChild(title);
     const hit = clayByWs.get(String(item.ws || ""));
-    const ready = hit?.id ? await claySceneReady(hit.id) : false;
-    if (!ready) {
+    const id = hit?.id ? String(hit.id) : "";
+    const ready = id ? await claySceneReady(id) : false;
+    if (ready) keepIds.add(id);
+    desired.push({
+      name: item.name || "Resort",
+      ws: String(item.ws || ""),
+      id,
+      ready,
+    });
+  }
+  if (token !== mountToken) return;
+
+  for (const [id, slot] of [...viewers.entries()]) {
+    if (keepIds.has(id)) continue;
+    try { slot.handle?.dispose(); } catch (_) { /* ignore */ }
+    slot.cell.remove();
+    viewers.delete(id);
+  }
+  host.querySelectorAll(".clay-compare-cell.is-missing").forEach((el) => el.remove());
+
+  const toMount = [];
+  for (const job of desired) {
+    if (!job.ready) {
+      const { cell } = makeCell(job.name);
       fillMissingCell(cell);
       host.appendChild(cell);
       continue;
     }
+    let slot = viewers.get(job.id);
+    if (slot?.handle) {
+      slot.title.textContent = job.name;
+      host.appendChild(slot.cell);
+      continue;
+    }
+    if (slot) {
+      slot.title.textContent = job.name;
+      host.appendChild(slot.cell);
+      if (!slot.loading) toMount.push({ id: job.id, slot });
+      continue;
+    }
+    const made = makeCell(job.name);
     const embed = document.createElement("div");
     embed.className = "hero-montage-embed clay-compare-embed";
     const stage = document.createElement("div");
     stage.className = "hero-montage-stage";
     embed.appendChild(stage);
-    cell.appendChild(embed);
-    host.appendChild(cell);
-    queued.push({ stage, id: hit.id, cell });
+    made.cell.appendChild(embed);
+    host.appendChild(made.cell);
+    slot = { cell: made.cell, title: made.title, handle: null, stage, loading: true };
+    viewers.set(job.id, slot);
+    toMount.push({ id: job.id, slot });
   }
-  for (const job of queued) {
-    if (token !== mountToken) return;
-    const handle = await initHeroMontageMap(job.stage, {
+
+  for (const job of toMount) {
+    job.slot.loading = true;
+    const handle = await initHeroMontageMap(job.slot.stage, {
       resortId: job.id,
       lockResort: true,
       skipNearest: true,
       preview: true,
     });
-    if (token !== mountToken) {
+    const slot = viewers.get(job.id);
+    if (!slot) {
       try { handle?.dispose(); } catch (_) { /* ignore */ }
-      return;
+      continue;
     }
     if (handle) {
       await handle.whenReady;
-      if (token !== mountToken) {
+      if (viewers.get(job.id) !== slot) {
         try { handle.dispose(); } catch (_) { /* ignore */ }
-        return;
+        continue;
       }
       if (!handle.sceneLoaded()) {
         try { handle.dispose(); } catch (_) { /* ignore */ }
-        fillMissingCell(job.cell);
+        viewers.delete(job.id);
+        fillMissingCell(slot.cell);
         continue;
       }
-      live.push(handle);
-    } else {
-      fillMissingCell(job.cell);
+      if (slot.handle && slot.handle !== handle) {
+        try { handle.dispose(); } catch (_) { /* ignore */ }
+      } else {
+        slot.handle = handle;
+      }
+    } else if (!slot.handle) {
+      viewers.delete(job.id);
+      fillMissingCell(slot.cell);
     }
+    slot.loading = false;
   }
-  if (token !== mountToken || live.length === 0) return;
-  const maxTrue = Math.max(...live.map((h) => h.getTrueSpan()), 1);
-  live.forEach((h) => h.applySizeCompare(maxTrue, null));
-  const sharedR = Math.max(...live.map((h) => h.readRadius()), 1);
-  live.forEach((h) => h.applySizeCompare(maxTrue, sharedR));
+  applySharedScale();
 }
 
 window.addEventListener("gsa-compare-view", (event) => {
