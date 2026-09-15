@@ -83,6 +83,7 @@
     body.compare-3d #layout-overlay { display: none; }
     .clay-compare-cell { min-width: 0; display: flex; flex-direction: column; gap: 6px; }
     .clay-compare-name { font-size: 13px; font-weight: 600; color: #374151; text-align: center; }
+    .clay-compare-cell.is-missing .clay-compare-name { color: #6b7280; }
     .clay-compare-embed {
       position: relative;
       width: 100%;
@@ -93,13 +94,36 @@
     .clay-compare-empty {
       height: 220px;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
+      gap: 8px;
       color: #6b7280;
       font-size: 13px;
-      background: #fff;
-      border: 1px dashed #d1d5db;
+      background: repeating-linear-gradient(-45deg, #f9fafb, #f9fafb 8px, #f3f4f6 8px, #f3f4f6 16px);
+      border: 1px dashed #9ca3af;
       border-radius: 10px;
+      text-align: center;
+      padding: 12px;
+    }
+    .clay-missing-badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: #111;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .clay-missing-hint { font-size: 12px; color: #6b7280; }
+    body.compare-3d .sel-chip.no-3d .chip-3d-mark {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      color: #6b7280;
     }
     .map-container svg {
       display: block;
@@ -1278,8 +1302,10 @@
       const selected = getSelectedIndices();
       selected.forEach((idx) => {
         const chip = host.append('span').attr('class', 'sel-chip');
+        chip.attr('data-ws', winterSportsId(idx));
         chip.append('span').attr('class', 'color-indicator').style('background-color', colorScale(idx));
         chip.append('span').text(resortData[idx].name);
+        chip.append('span').attr('class', 'chip-3d-mark');
         chip.append('button').attr('type', 'button').attr('aria-label', 'Remove').text('×').on('click', () => {
           d3.select(`#checkbox-${idx}`).property('checked', false);
           d3.select(`#resort-${idx}`).classed('hidden', true);
@@ -1287,6 +1313,16 @@
         });
       });
       d3.select('#sel-hint').text(selected.length + ' of ' + MAX_COMPARE);
+      const clayByWs = window.__gsaClayByWs;
+      if (viewMode === '3d' && clayByWs) {
+        host.selectAll('.sel-chip').each(function () {
+          const chip = d3.select(this);
+          const ws = String(chip.attr('data-ws') || '');
+          const missing = !(ws && clayByWs.get(ws) && clayByWs.get(ws).id);
+          chip.classed('no-3d', missing);
+          chip.select('.chip-3d-mark').text(missing ? 'No 3D' : '');
+        });
+      }
     }
 
     function afterSelectionChange() {
@@ -1701,7 +1737,7 @@
         console.error(err);
       });
   </script>
-<script type="module" src="scripts/compare-clay.js?v=2"></script>
+<script type="module" src="scripts/compare-clay.js?v=3"></script>
 <script src="scripts/site-nav.js?v=4" defer></script>
 </body>
 </html>

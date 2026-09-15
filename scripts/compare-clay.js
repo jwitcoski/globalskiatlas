@@ -16,12 +16,22 @@ function loadClayByWs() {
         const ws = String(row.winter_sports_id || "");
         if (ws) map.set(ws, row);
       }
+      window.__gsaClayByWs = map;
       return map;
     });
   return catalogPromise;
 }
 
-async function disposeHandles() {
+function markMissing3dChips(clayByWs) {
+  const in3d = document.body.classList.contains("compare-3d");
+  document.querySelectorAll("#selected-chips .sel-chip").forEach((chip) => {
+    const ws = String(chip.getAttribute("data-ws") || "");
+    const missing = in3d && !(ws && clayByWs.get(ws)?.id);
+    chip.classList.toggle("no-3d", missing);
+    const mark = chip.querySelector(".chip-3d-mark");
+    if (mark) mark.textContent = missing ? "No 3D" : "";
+  });
+}
   const dying = live.splice(0, live.length);
   for (const handle of dying) {
     try { handle.dispose(); } catch (_) { /* ignore */ }
@@ -42,6 +52,7 @@ export async function syncCompareClay({ host, items, cols }) {
   host.style.gridTemplateColumns = `repeat(${Math.max(1, cols || 1)}, minmax(0, 1fr))`;
   const clayByWs = await loadClayByWs();
   if (token !== mountToken) return;
+  markMissing3dChips(clayByWs);
   const queued = [];
   for (const item of items || []) {
     const cell = document.createElement("div");
@@ -52,9 +63,17 @@ export async function syncCompareClay({ host, items, cols }) {
     cell.appendChild(title);
     const hit = clayByWs.get(String(item.ws || ""));
     if (!hit?.id) {
+      cell.classList.add("is-missing");
       const empty = document.createElement("div");
       empty.className = "clay-compare-empty";
-      empty.textContent = "No 3D map yet";
+      empty.setAttribute("role", "status");
+      const badge = document.createElement("span");
+      badge.className = "clay-missing-badge";
+      badge.textContent = "No 3D map";
+      const hint = document.createElement("span");
+      hint.className = "clay-missing-hint";
+      hint.textContent = "Not in the clay catalog yet";
+      empty.append(badge, hint);
       cell.appendChild(empty);
       host.appendChild(cell);
       continue;
@@ -100,6 +119,11 @@ window.addEventListener("gsa-compare-view", (event) => {
   const detail = event.detail || {};
   if (detail.mode !== "3d") {
     disposeCompareClay();
+    document.querySelectorAll("#selected-chips .sel-chip").forEach((chip) => {
+      chip.classList.remove("no-3d");
+      const mark = chip.querySelector(".chip-3d-mark");
+      if (mark) mark.textContent = "";
+    });
     return;
   }
   syncCompareClay(detail).catch((err) => console.warn("compare clay failed", err));
