@@ -682,6 +682,7 @@ export async function initHeroMontageMap(container, options = {}) {
   const world = new THREE.Group();
   world.name = "montage-world";
   scene.add(world);
+  let trueSpanMeters = 1;
 
   let trailRiders = null;
   let parkRiders = null;
@@ -719,12 +720,17 @@ export async function initHeroMontageMap(container, options = {}) {
       else entityTooltip.hide();
     },
   });
+  let compareRadiusLock = null;
   const orbit = createOrbitController({
     camera,
     canvas,
     container,
     renderer,
-    getBounds: () => bounds,
+    getBounds: () => ({
+      center: bounds.center,
+      radius: compareRadiusLock || bounds.radius,
+      size: bounds.size,
+    }),
     reduceMotion,
     autoRotateOnly: preview,
   });
@@ -841,6 +847,8 @@ export async function initHeroMontageMap(container, options = {}) {
     if (!resort?.id) return;
     const token = ++loadToken;
     loading = true;
+    world.scale.setScalar(1);
+    compareRadiusLock = null;
     syncChrome(resort);
     embed.classList.add("is-loading");
 
@@ -856,6 +864,7 @@ export async function initHeroMontageMap(container, options = {}) {
       const skipSkiFootprints = regionPageType === "country";
 
       const { root, center, mesh, span } = fitted;
+      trueSpanMeters = Number(span) > 0 ? Number(span) : 1;
       const decor = new THREE.Group();
       decor.name = "montage-decor";
       root.add(decor);
@@ -1110,6 +1119,9 @@ export async function initHeroMontageMap(container, options = {}) {
   });
   runtime.start();
 
+  let readyResolve;
+  const whenReady = new Promise((resolve) => { readyResolve = resolve; });
+
   (async () => {
     const fallback = {
       id: preferredId || "montage_mountain_pa",
@@ -1170,11 +1182,30 @@ export async function initHeroMontageMap(container, options = {}) {
       resorts = [fallback];
       resortIndex = 0;
       await mountResort(currentResort());
+    } finally {
+      readyResolve?.();
     }
   })();
 
   return {
     resize,
+    whenReady,
+    getTrueSpan() {
+      return trueSpanMeters;
+    },
+    readRadius() {
+      return bounds?.radius || 1;
+    },
+    applySizeCompare(maxTrueSpan, sharedRadius) {
+      const span = Math.max(1, maxTrueSpan);
+      world.scale.setScalar(Math.max(0.03, trueSpanMeters / span));
+      world.updateMatrixWorld(true);
+      bounds = framingBoundsFromRoot(world, new THREE.Vector3(0, 0, 0));
+      if (sharedRadius) {
+        compareRadiusLock = sharedRadius;
+        orbit.syncFromBounds();
+      }
+    },
     dispose() {
       loadToken += 1;
       runtime.dispose();

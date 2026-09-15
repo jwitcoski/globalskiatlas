@@ -1,4 +1,4 @@
-import { initHeroMontageMap } from "./hero-montage-map.js?v=113";
+import { initHeroMontageMap } from "./hero-montage-map.js?v=114";
 
 let live = [];
 let catalogPromise = null;
@@ -80,8 +80,20 @@ export async function syncCompareClay({ host, items, cols }) {
       try { handle?.dispose(); } catch (_) { /* ignore */ }
       return;
     }
-    if (handle) live.push(handle);
+    if (handle) {
+      await handle.whenReady;
+      if (token !== mountToken) {
+        try { handle.dispose(); } catch (_) { /* ignore */ }
+        return;
+      }
+      live.push(handle);
+    }
   }
+  if (token !== mountToken || live.length === 0) return;
+  const maxTrue = Math.max(...live.map((h) => h.getTrueSpan()), 1);
+  live.forEach((h) => h.applySizeCompare(maxTrue, null));
+  const sharedR = Math.max(...live.map((h) => h.readRadius()), 1);
+  live.forEach((h) => h.applySizeCompare(maxTrue, sharedR));
 }
 
 window.addEventListener("gsa-compare-view", (event) => {
