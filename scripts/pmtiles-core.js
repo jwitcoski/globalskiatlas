@@ -973,15 +973,26 @@ export async function queryAllSkiAreaPoints(map) {
   }));
 }
 
+let skiAreaCatalogPromise;
+
 /** Fetch resort metadata for lookup (MapTiler Data API — not parquet). */
 export async function fetchSkiAreaCatalog() {
-  const r = await fetch(config.SKI_AREAS_MAPTILER_URL);
-  if (!r.ok) throw new Error(`Ski areas catalog fetch failed: ${r.status}`);
-  const gj = await r.json();
-  return (gj.features || []).map((f) => ({
-    geometry: f.geometry,
-    properties: f.properties || {}
-  }));
+  if (!skiAreaCatalogPromise) {
+    skiAreaCatalogPromise = (async () => {
+      const t0 = performance.now();
+      const r = await fetch(config.SKI_AREAS_MAPTILER_URL);
+      if (!r.ok) throw new Error(`Ski areas catalog fetch failed: ${r.status}`);
+      const gj = await r.json();
+      const rows = (gj.features || []).map((f) => ({
+        geometry: f.geometry,
+        properties: f.properties || {}
+      }));
+      console.log('[ski-catalog]', Math.round(performance.now() - t0) + 'ms', rows.length, 'rows');
+      globalThis.__gsaMapLoad = Object.assign(globalThis.__gsaMapLoad || {}, { catalogMs: Math.round(performance.now() - t0), rows: rows.length });
+      return rows;
+    })();
+  }
+  return skiAreaCatalogPromise;
 }
 
 /**

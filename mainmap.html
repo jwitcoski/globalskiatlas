@@ -32,6 +32,7 @@
   <!-- Preconnect to critical origins for faster tile and PMTiles fetches -->
   <link rel="preconnect" href="https://api.maptiler.com" crossorigin />
   <link rel="preconnect" href="https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com" crossorigin />
+  <link rel="preload" as="fetch" crossorigin href="https://api.maptiler.com/data/019c9294-30cd-7aa0-96a0-e552ef79eee8/features.json?key=0P06ORgY8WvmMOnPr0p2" />
   <link rel="shortcut icon" href="./assets/logo.png?v=2" type="image/x-icon" />
   <link rel="stylesheet" href="./css/tailwind-build.css" />
   <link rel="stylesheet" href="css/index.css" />
@@ -195,7 +196,7 @@
   <script src="scripts/header-toggle.js"></script>
   <script defer src="https://cdn.maptiler.com/maptiler-sdk-js/v3.10.2/maptiler-sdk.umd.min.js"></script>
   <script type="module" src="scripts/pmtiles-protocol-init.js"></script>
-  <script type="module" src="scripts/mainmap-ml-main.js?v=5"></script>
+  <script type="module" src="scripts/mainmap-ml-main.js?v=10"></script>
 <script src="scripts/site-nav.js?v=4" defer></script>
 </body>
 </html>

@@ -52,7 +52,10 @@ export async function createMapLibre(options = {}) {
     navigationControl: !noControl
   });
 
+  const tStyle = performance.now();
   await new Promise(resolve => map.once('load', resolve));
+  console.log('[ski-map] basemap load', Math.round(performance.now() - tStyle) + 'ms');
+  globalThis.__gsaMapLoad = Object.assign(globalThis.__gsaMapLoad || {}, { basemapMs: Math.round(performance.now() - tStyle) });
 
   return { map };
 }
