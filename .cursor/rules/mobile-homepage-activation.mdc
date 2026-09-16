@@ -1,0 +1,57 @@
+---
+description: Mobile homepage activation sprint — one-tap mountain/map/search, no new deps
+alwaysApply: true
+---
+
+# Global Ski Atlas: Mobile Homepage Activation Rules
+
+Follow this before changing homepage, hero, search, ads, or related GA4 events. Canonical copy also lives in `AGENTS.md`.
+
+## Product objective
+On mobile, a nameless visitor must reach a named mountain, map context,
+or useful search result within one intentional tap from the homepage.
+
+## Current sprint scope
+Implement only the homepage activation flow:
+- one primary CTA: Open this mountain
+- a visible homepage search entry
+- static hero poster before WebGL is ready
+- WebGL enhancement when ready
+- a 2D map/snapshot fallback after 2.5 seconds or if WebGL is unavailable
+- GA4 event instrumentation
+
+## Requirements
+- Do not add libraries, UI frameworks, analytics vendors, map SDKs, or 3D engines.
+- Reuse existing hero-montage-map, nearest-mountain lookup, mainmap.html?q=,
+  current sheet CSS, and existing gtag.
+- Preserve desktop behavior unless a change is necessary for a shared component.
+- The homepage must remain useful with JavaScript delayed or WebGL unavailable.
+- Do not silently switch the visitor’s hero mountain after it is initially shown.
+- Do not auto-redirect into the playable/game experience.
+- Do not initialize or render ads before first meaningful content is ready.
+- Use system-ui/Roboto and the existing navy (#1a4d8c) and OSM teal (#0f766e).
+- Use a 48px primary CTA height and 44px minimum hit areas for icon controls.
+- Respect prefers-reduced-motion.
+- No 60vh marketing panels may be added.
+- No data-model changes.
+
+## Desired events
+homepage_view
+hero_primary_tap
+home_search_focus
+home_search_submit
+hero_webgl_ready
+hero_webgl_fallback
+nearest_mismatch_tap
+nav_job_tap
+playable_start
+
+## Definition of done
+- Mobile page displays meaningful hero content before WebGL.
+- The primary CTA and search are usable in the initial viewport.
+- CTA opens a named mountain or existing mountain/map context.
+- Search routes to the current main map query path.
+- Fallback works with WebGL unavailable and after a 2.5-second readiness timeout.
+- Events fire once per intended interaction without duplicate page-view events.
+- Tests/lint/build pass.
+- Agent reports changed files, removed code, dependency changes, and manual QA steps.

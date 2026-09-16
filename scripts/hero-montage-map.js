@@ -655,6 +655,43 @@ export async function initHeroMontageMap(container, options = {}) {
   const lockResort = Boolean(options.lockResort || preferredId || regionMode || preview);
 
   const embed = container.closest(".hero-montage-embed") || container;
+  const homepageHero = embed.id === "hero-3d";
+  const HERO_LOCK_KEY = "gsaHeroMountainId";
+
+  function lockedHeroId() {
+    try {
+      return sessionStorage.getItem(HERO_LOCK_KEY) || "";
+    } catch {
+      return "";
+    }
+  }
+
+  function persistHeroId(id) {
+    if (!id || !homepageHero) return;
+    try {
+      sessionStorage.setItem(HERO_LOCK_KEY, id);
+    } catch {
+      /* ignore */
+    }
+  }
+
+  function mapHrefForClay(resort) {
+    const name = resort?.display_name || resort?.short_name || "";
+    return name ? `mainmap.html?q=${encodeURIComponent(name)}` : "mainmap.html";
+  }
+
+  function markHeroFallback(reason) {
+    if (!homepageHero) return;
+    embed.classList.add("is-fallback");
+    window.gsaEventOnce?.("hero_webgl_fallback", { reason: reason || "unavailable" });
+  }
+
+  function markHeroWebglReady() {
+    if (!homepageHero) return;
+    embed.classList.add("is-webgl-ready");
+    embed.classList.remove("is-fallback");
+    window.gsaEventOnce?.("hero_webgl_ready");
+  }
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PALETTE.bg);
@@ -664,11 +701,18 @@ export async function initHeroMontageMap(container, options = {}) {
   const quality = preview
     ? { tier: "preview", dpr: 1, shadows: false, powerPreference: "low-power" }
     : getClayQuality();
-  const renderer = new THREE.WebGLRenderer({
-    antialias: true,
-    alpha: false,
-    powerPreference: quality.powerPreference,
-  });
+  let renderer;
+  try {
+    renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      alpha: false,
+      powerPreference: quality.powerPreference,
+    });
+  } catch (err) {
+    console.warn("[hero-montage-map] WebGL unavailable", err);
+    markHeroFallback("unavailable");
+    return null;
+  }
   renderer.setPixelRatio(Math.min(capDpr(), quality.dpr));
   renderer.shadowMap.enabled = quality.shadows;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -702,6 +746,11 @@ export async function initHeroMontageMap(container, options = {}) {
     1,
   );
   embed.classList.add("is-ready");
+  if (homepageHero) {
+    window.setTimeout(() => {
+      if (!sceneLoaded) markHeroFallback("timeout");
+    }, 2500);
+  }
 
   let lastT = performance.now();
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -775,6 +824,10 @@ export async function initHeroMontageMap(container, options = {}) {
       });
 
   const playLink = embed.querySelector("[data-hero-play]");
+  const openLink = document.querySelector("[data-hero-open-mountain]");
+  const closerWrap = document.querySelector(".hero-closer");
+  const closerBtn = document.querySelector("[data-hero-closer]");
+  const posterEl = embed.querySelector(".hero-poster");
   const nameEl = embed.querySelector("[data-hero-resort-name]");
   const regionEl = embed.querySelector("[data-hero-region]");
   const prevBtn = embed.querySelector("[data-hero-prev]");
@@ -822,6 +875,13 @@ export async function initHeroMontageMap(container, options = {}) {
     for (const link of document.querySelectorAll("[data-compare-current]")) {
       link.href = compareHref;
     }
+    if (openLink && homepageHero) {
+      openLink.href = mapHrefForClay(resort);
+      openLink.setAttribute("data-mountain", resort.display_name || label);
+    }
+    if (posterEl) {
+      posterEl.alt = `${resort.display_name || label} on the Global Ski Atlas`;
+    }
     const href = playableHrefFromClayResort(resort, gameResorts) || playableHref(resort);
     if (playLink) {
       if (href) {
@@ -868,6 +928,7 @@ export async function initHeroMontageMap(container, options = {}) {
       const { root, center, mesh, span } = fitted;
       trueSpanMeters = Number(span) > 0 ? Number(span) : 1;
       sceneLoaded = true;
+      if (homepageHero) markHeroWebglReady();
       const decor = new THREE.Group();
       decor.name = "montage-decor";
       root.add(decor);
@@ -1035,6 +1096,8 @@ export async function initHeroMontageMap(container, options = {}) {
   function stepResort(delta) {
     if (lockResort || !resorts.length || loading) return;
     resortIndex = (resortIndex + delta + resorts.length) % resorts.length;
+    persistHeroId(currentResort()?.id);
+    if (closerWrap) closerWrap.hidden = true;
     mountResort(currentResort());
   }
 
@@ -1087,6 +1150,18 @@ export async function initHeroMontageMap(container, options = {}) {
     }
     prevBtn?.addEventListener("click", onPrev);
     nextBtn?.addEventListener("click", onNext);
+    closerBtn?.addEventListener("click", () => {
+      const idx = resorts.findIndex((r) => r.id === nearestId);
+      if (idx < 0) return;
+      window.gsaEvent?.("nearest_mismatch_tap", {
+        from: currentResort()?.id || "",
+        to: nearestId,
+      });
+      resortIndex = idx;
+      persistHeroId(nearestId);
+      if (closerWrap) closerWrap.hidden = true;
+      mountResort(currentResort());
+    });
     document.addEventListener("click", onTrailScheme);
     document.addEventListener("gsa-trail-scheme-change", onSchemeEvent);
   }
@@ -1166,23 +1241,34 @@ export async function initHeroMontageMap(container, options = {}) {
         resorts = all.length
           ? all
           : [{ id: "montage_mountain_pa", display_name: "Montage Mountain", short_name: "Montage", playable_ver: "v0-107b3a77b75f", region_label: "North America" }];
-        resortIndex = Math.max(0, resorts.findIndex((r) => r.id === "montage_mountain_pa"));
-        if (resortIndex < 0) resortIndex = 0;
-        if (!skipNearest && resorts.length > 1) {
-          try {
-            const origin = await lookupIpLocation();
-            visitorPlace = [origin.city, origin.region].filter(Boolean).join(", ");
-            const idx = await indexOfNearestClayResort(resorts, origin);
-            if (idx >= 0) {
-              resortIndex = idx;
-              nearestId = resorts[idx].id;
-            }
-          } catch (err) {
-            console.warn("[hero-montage-map] nearest-by-ip skipped", err);
-          }
-        }
+        const locked = homepageHero ? lockedHeroId() : "";
+        let idx = locked ? resorts.findIndex((r) => r.id === locked) : -1;
+        if (idx < 0) idx = resorts.findIndex((r) => r.id === "montage_mountain_pa");
+        if (idx < 0) idx = 0;
+        resortIndex = idx;
+        persistHeroId(resorts[resortIndex]?.id);
       }
       await mountResort(currentResort());
+      if (homepageHero && !preferredId && !skipNearest && resorts.length > 1) {
+        try {
+          const origin = await lookupIpLocation();
+          visitorPlace = [origin.city, origin.region].filter(Boolean).join(", ");
+          const nearIdx = await indexOfNearestClayResort(resorts, origin);
+          if (nearIdx >= 0) {
+            nearestId = resorts[nearIdx].id;
+            if (nearIdx !== resortIndex && closerBtn && closerWrap) {
+              const n = resorts[nearIdx];
+              const label = n.short_name || n.display_name || n.id;
+              closerBtn.textContent = visitorPlace
+                ? `Closer mountain found: ${label} · ${visitorPlace}`
+                : `Closer mountain found: ${label}`;
+              closerWrap.hidden = false;
+            }
+          }
+        } catch (err) {
+          console.warn("[hero-montage-map] nearest-by-ip skipped", err);
+        }
+      }
     } catch (err) {
       console.warn("[hero-montage-map] catalog load failed", err);
       resorts = [fallback];

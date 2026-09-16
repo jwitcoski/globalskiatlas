@@ -680,6 +680,14 @@ export async function initSkiResortMap(options = {}) {
       const q = foldDiacritics(searchInput.value).toLowerCase().trim();
       renderDropdown(q ? searchResorts.filter(r => searchable(r).includes(q)).slice(0, maxSuggestions) : []);
     });
+    const initialQ = new URLSearchParams(location.search).get('q');
+    if (initialQ) {
+      searchInput.value = initialQ;
+      const needle = foldDiacritics(initialQ).toLowerCase().trim();
+      const pick = searchResorts.find((r) => searchable(r).includes(needle));
+      if (pick) selectMatch(pick);
+      else renderDropdown(searchResorts.filter((r) => searchable(r).includes(needle)).slice(0, maxSuggestions));
+    }
     searchInput.addEventListener('keydown', (e) => {
       if (!searchDropdown.classList.contains('visible') || !currentMatches.length) return;
       if (e.key === 'ArrowDown') {
