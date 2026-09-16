@@ -3,7 +3,6 @@
  */
 
 import * as THREE from "three";
-import { PALETTE } from "./config.js";
 import {
   rng,
   localXZ,
@@ -14,19 +13,16 @@ import {
   smoothTrailPts,
   polylineLen,
   alongPolyline,
-  distToRingEdges,
   clipPointRuns,
   insideIslandRing,
   featureOsmWayId,
-  featureLiftOsmId,
 } from "./math-utils.js";
-import { gamePoint, isSnowParkFeature, trailGeomScore } from "./trails.js";
+import { gamePoint, isSnowParkFeature, trailGeomScore, ensureDownhillPath } from "./trails.js";
 import { makeClayRider, RIDER_SUITS, RIDER_SKIS } from "./skiers.js";
 
 export function snowParkFeatureSeed(feature) {
   const id =
     featureOsmWayId(feature) ||
-    featureLiftOsmId(feature) ||
     String(feature?.properties?.name || feature?.properties?.id || "park");
   let h = 2166136261;
   const s = String(id);
@@ -663,7 +659,7 @@ export function addSnowParks(
 
   const parksByKey = new Map();
   for (const feature of parksRaw) {
-    const osm = featureOsmWayId(feature) || featureLiftOsmId(feature);
+    const osm = featureOsmWayId(feature);
     const name = String(feature?.properties?.name || "").toLowerCase();
     let key = osm ? `way:${osm}` : "";
     if (!key) {

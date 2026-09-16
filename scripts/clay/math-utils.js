@@ -100,10 +100,6 @@ export function featureOsmWayId(feature) {
   return "";
 }
 
-export function featureLiftOsmId(feature) {
-  return featureOsmWayId(feature);
-}
-
 export function isWoodFeature(feature) {
   const natural = featureTag(feature, "natural");
   const landuse = featureTag(feature, "landuse");
@@ -408,28 +404,7 @@ export function clipPointRuns(pts, ring) {
 }
 
 export function resampleHull(hull, count) {
-  const pts = [];
-  const n = hull.length;
-  let total = 0;
-  for (let i = 0; i < n; i++) {
-    total += Math.hypot(hull[(i + 1) % n].x - hull[i].x, hull[(i + 1) % n].z - hull[i].z);
-  }
-  const step = total / count;
-  let edge = 0;
-  let consumed = 0;
-  for (let i = 0; i < count; i++) {
-    const target = i * step;
-    while (edge < n && consumed + Math.hypot(hull[(edge + 1) % n].x - hull[edge].x, hull[(edge + 1) % n].z - hull[edge].z) < target) {
-      consumed += Math.hypot(hull[(edge + 1) % n].x - hull[edge].x, hull[(edge + 1) % n].z - hull[edge].z);
-      edge++;
-    }
-    const a = hull[edge % n];
-    const b = hull[(edge + 1) % n];
-    const len = Math.hypot(b.x - a.x, b.z - a.z) || 1;
-    const t = (target - consumed) / len;
-    pts.push({ x: a.x + (b.x - a.x) * t, z: a.z + (b.z - a.z) * t });
-  }
-  return pts;
+  return resampleRingArc(hull, count);
 }
 
 export function downsampleLine(coords, maxPts = 18) {

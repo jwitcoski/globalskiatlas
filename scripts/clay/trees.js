@@ -14,21 +14,6 @@ import {
   insideIslandRing,
 } from "./math-utils.js";
 
-let turfUnion;
-let turfFeatureCollection;
-
-async function getTurfUnion() {
-  if (!turfUnion) {
-    const [unionMod, helpersMod] = await Promise.all([
-      import("https://esm.sh/@turf/union@7.2.0"),
-      import("https://esm.sh/@turf/helpers@7.2.0"),
-    ]);
-    turfUnion = unionMod.default ?? unionMod.union;
-    turfFeatureCollection = helpersMod.featureCollection;
-  }
-  return { union: turfUnion, featureCollection: turfFeatureCollection };
-}
-
 export function collectWoodPolygons(features) {
   const polys = [];
   for (const feature of features || []) {
@@ -43,32 +28,7 @@ export function collectWoodPolygons(features) {
   return polys;
 }
 
-export async function mergeTreeArea(featureCollection) {
-  const features = featureCollection?.features || [];
-  const polygonFeatures = features.filter((feature) =>
-    isWoodFeature(feature) &&
-    (feature.geometry?.type === "Polygon" || feature.geometry?.type === "MultiPolygon"),
-  );
-  if (polygonFeatures.length < 2) return featureCollection;
-
-  try {
-    const { union, featureCollection: makeFeatureCollection } = await getTurfUnion();
-    let merged = polygonFeatures[0];
-    for (let i = 1; i < polygonFeatures.length; i++) {
-      const result = union(makeFeatureCollection([merged, polygonFeatures[i]]));
-      if (result) merged = { type: "Feature", geometry: result.geometry, properties: { natural: "wood" } };
-    }
-    const nonPolygons = features.filter((feature) => !polygonFeatures.includes(feature));
-    return { type: "FeatureCollection", features: [merged, ...nonPolygons] };
-  } catch {
-    return featureCollection;
-  }
-}
-
-/**
- * Treat all wood/forest polygons as one woodland and plant an even grid
- * across the union. Points are inset so they stay inside the original polys.
- */
+/** Grid-sample wood polygons; points stay inset in the original rings. */
 export function sampleWoodUnion(polys, maxPts) {
   if (!polys?.length) return [];
   let minX = Infinity;

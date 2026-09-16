@@ -97,10 +97,3 @@ export function addOsmCliffs(parent, featureCollection, center, sample, unitScal
   parent.add(group);
   return group;
 }
-
-export function rockFeatureCount(featureCollection) {
-  return (featureCollection?.features || []).filter((feature) => {
-    const natural = featureTag(feature, "natural");
-    return natural === "rock" || natural === "scree" || featureTag(feature, "geology") === "stone";
-  }).length;
-}

@@ -12,7 +12,7 @@ import {
   normCountry,
   stateRegionKey,
 } from "../ski-feature-utils.js";
-import { featureLiftOsmId, featureOsmWayId } from "./math-utils.js";
+import { featureOsmWayId } from "./math-utils.js";
 import { calculateTrailProfile } from "./trail-profile.js";
 
 function cleanId(value) {
@@ -30,7 +30,7 @@ function propertyValue(props, keys) {
 }
 
 export function entityOsmId(kind, feature) {
-  return cleanId(kind === "lift" ? featureLiftOsmId(feature) : featureOsmWayId(feature));
+  return cleanId(featureOsmWayId(feature));
 }
 
 export function entityName(kind, props) {

@@ -1,6 +1,6 @@
 /**
  * Clay floating-island ski resorts from clay_scenes/ (homepage hero + wiki 3D Map).
- * Procedural island first, then upgrades to a catalog resort; homepage can cycle resorts.
+ * Catalog / wiki clay scenes; homepage can cycle resorts.
  */
 
 import * as THREE from "three";
@@ -21,7 +21,6 @@ import { indexOfNearestClayResort, lookupIpLocation } from "./clay/nearest-resor
 import {
   addSoftShadow as addIslandShadow,
   addIslandUnderside,
-  buildProceduralIsland as createProceduralIsland,
 } from "./clay/island.js";
 
 import {
@@ -65,7 +64,6 @@ import {
   shadeSnowGeometry,
   shadeSnowMesh,
   makeHeightGrid,
-  mountainHeight,
   addTrees,
   addBuildings,
   addProceduralBuildings,
@@ -736,16 +734,7 @@ export async function initHeroMontageMap(container, options = {}) {
   let liftTbars = null;
   let liftCarpets = null;
   let entityPickables = [];
-  const procedural = createProceduralIsland(world);
-  let bounds = procedural.bounds;
-  const procTrails = procedural.decor?.getObjectByName("montage-trails-proc");
-  trailRiders = addTrailRiders(
-    procedural.decor,
-    procTrails?.userData?.paths || [],
-    mountainHeight,
-    1,
-  );
-  embed.classList.add("is-ready");
+  let bounds = { center: new THREE.Vector3(0, 16, 0), radius: 46 };
   if (homepageHero) {
     window.setTimeout(() => {
       if (!sceneLoaded) markHeroFallback("timeout");
@@ -928,6 +917,7 @@ export async function initHeroMontageMap(container, options = {}) {
       const { root, center, mesh, span } = fitted;
       trueSpanMeters = Number(span) > 0 ? Number(span) : 1;
       sceneLoaded = true;
+      embed.classList.add("is-ready");
       if (homepageHero) markHeroWebglReady();
       const decor = new THREE.Group();
       decor.name = "montage-decor";
@@ -1201,13 +1191,6 @@ export async function initHeroMontageMap(container, options = {}) {
   const whenReady = new Promise((resolve) => { readyResolve = resolve; });
 
   (async () => {
-    const fallback = {
-      id: preferredId || "montage_mountain_pa",
-      display_name: preferredId || "Montage Mountain",
-      short_name: preferredId || "Montage",
-      playable_ver: preferredId ? null : "v0-107b3a77b75f",
-      region_label: "",
-    };
     try {
       if (regionMode) {
         let hit = options.region && options.region.id ? options.region : null;
@@ -1232,18 +1215,14 @@ export async function initHeroMontageMap(container, options = {}) {
       const all = await loadCatalog(catalogUrl);
       if (preferredId) {
         const hit = all.find((r) => r.id === preferredId);
-        if (preview && !hit) {
-          return;
-        }
-        resorts = hit ? [hit] : [{ ...fallback, id: preferredId }];
+        if (preview && !hit) return;
+        resorts = hit ? [hit] : [{ id: preferredId, display_name: preferredId, short_name: preferredId }];
         resortIndex = 0;
       } else {
-        resorts = all.length
-          ? all
-          : [{ id: "montage_mountain_pa", display_name: "Montage Mountain", short_name: "Montage", playable_ver: "v0-107b3a77b75f", region_label: "North America" }];
+        if (!all.length) return;
+        resorts = all;
         const locked = homepageHero ? lockedHeroId() : "";
         let idx = locked ? resorts.findIndex((r) => r.id === locked) : -1;
-        if (idx < 0) idx = resorts.findIndex((r) => r.id === "montage_mountain_pa");
         if (idx < 0) idx = 0;
         resortIndex = idx;
         persistHeroId(resorts[resortIndex]?.id);
@@ -1271,9 +1250,6 @@ export async function initHeroMontageMap(container, options = {}) {
       }
     } catch (err) {
       console.warn("[hero-montage-map] catalog load failed", err);
-      resorts = [fallback];
-      resortIndex = 0;
-      await mountResort(currentResort());
     } finally {
       readyResolve?.();
     }

@@ -3,23 +3,22 @@
  */
 
 import * as THREE from "three";
-import { PALETTE } from "./config.js";
 import {
   rng,
   lineParts,
   polylineLen,
   alongPolyline,
-  sampleAlongPolyline,
   horizTangentAt,
   sideVector,
   clipPointRuns,
   downsampleLine,
+  buildSaggedSpan,
 } from "./math-utils.js";
 import { gamePoint } from "./trails.js";
 import { makeClayRider, RIDER_SUITS, RIDER_SKIS } from "./skiers.js";
 import { snowParkFeatureSeed } from "./snowpark.js";
 
-function cableHeightProfile(t, cableH, stationH) {
+export function cableHeightProfile(t, cableH, stationH) {
   const ramp = 0.14;
   let u = 1;
   if (t < ramp) u = t / ramp;
@@ -176,43 +175,15 @@ function createTBarTerminal(position, yaw, type, assets) {
   return g;
 }
 
-function createTBarCable(points, assets) {
-  if (!points || points.length < 2) return null;
-  const curve = new THREE.CatmullRomCurve3(points, false, "catmullrom", 0.35);
-  const segs = Math.min(96, Math.max(16, points.length * 3));
-  const tube = new THREE.TubeGeometry(curve, segs, assets.cableR, 4, false);
-  const mesh = new THREE.Mesh(tube, assets.cableMat);
-  mesh.name = "tbar-cable";
-  mesh.frustumCulled = false;
-  return mesh;
-}
-
-function createTBarCarrier(assets) {
-  const g = new THREE.Group();
-  g.name = "tbar-carrier";
-  const hanger = new THREE.Mesh(assets.hangerGeo, assets.barMat);
-  const stem = new THREE.Mesh(assets.tStemGeo, assets.barMat);
-  const bar = new THREE.Mesh(assets.tBarGeo, assets.barMat);
-  hanger.frustumCulled = false;
-  stem.frustumCulled = false;
-  bar.frustumCulled = false;
-  g.add(hanger, stem, bar);
-  return g;
-}
-
-function createTBarRider(unitScale, board, suit, ski) {
-  return makeClayRider(unitScale, board, suit, ski);
-}
-
 export function orientLiftGround(ground) {
   if (!ground?.length) return ground || [];
   if (ground[0].y <= ground[ground.length - 1].y) return ground;
   return ground.slice().reverse();
 }
 
-/** Adaptive tower spacing in mesh meters (~40–70m), tighter on steep ground. */
+/** Adaptive tower spacing in mesh meters (~90–160m), tighter on steep ground. */
 function tbarTowerStep(ground, totalLen) {
-  if (!(totalLen > 1) || ground.length < 2) return 55;
+  if (!(totalLen > 1) || ground.length < 2) return 120;
   let rise = 0;
   let horiz = 0;
   for (let i = 1; i < ground.length; i++) {
@@ -222,10 +193,10 @@ function tbarTowerStep(ground, totalLen) {
     horiz += Math.hypot(b.x - a.x, b.z - a.z);
   }
   const slope = horiz > 1 ? rise / horiz : 0;
-  let step = 62 - slope * 55;
-  if (totalLen < 180) step = Math.min(step, 48);
-  if (totalLen > 900) step = Math.max(step, 58);
-  return Math.max(40, Math.min(70, step));
+  let step = 130 - slope * 70;
+  if (totalLen < 180) step = Math.min(step, 95);
+  if (totalLen > 900) step = Math.max(step, 125);
+  return Math.max(90, Math.min(160, step));
 }
 
 function sampleTowerStations(ground, step) {
@@ -240,17 +211,6 @@ function sampleTowerStations(ground, step) {
     next += step;
   }
   return out;
-}
-
-function buildSaggedSpan(a, b, samples, sag) {
-  const pts = [];
-  for (let k = 1; k < samples; k++) {
-    const t = k / samples;
-    const p = new THREE.Vector3().lerpVectors(a, b, t);
-    p.y -= sag * 4 * t * (1 - t);
-    pts.push(p);
-  }
-  return pts;
 }
 
 /**
@@ -435,7 +395,7 @@ export function createTBarLift(liftFeature, ctx) {
     let rider = null;
     if (climbing && rng(seed * 0.017 + k * 1.91) < 0.4) {
       const board = rng(seed * 0.031 + k * 2.7) > 0.62;
-      rider = createTBarRider(
+      rider = makeClayRider(
         unitScale,
         board,
         RIDER_SUITS[k % RIDER_SUITS.length],

@@ -12,7 +12,7 @@ import {
   sampleAlongPolyline,
   horizTangentAt,
   sideVector,
-  featureLiftOsmId,
+  featureOsmWayId,
   clipPointRuns,
   downsampleLine,
   buildSaggedSpan,
@@ -24,6 +24,7 @@ import {
   createTBarAssets,
   createTBarLift,
   orientLiftGround,
+  cableHeightProfile,
   MAX_TBAR_LIFTS,
   MAX_TBAR_CARRIERS,
 } from "./lifts-tbar.js";
@@ -78,7 +79,7 @@ export function selectLiftFeatures(features) {
     if (!lineParts(feature.geometry).length) continue;
     const type = featureAerialway(feature);
     if (isLiftPylonOrStation(type)) continue;
-    const osm = featureLiftOsmId(feature);
+    const osm = featureOsmWayId(feature);
     let key = osm ? `way:${osm}` : "";
     if (!key) {
       const coords = lineParts(feature.geometry)[0] || [];
@@ -91,16 +92,6 @@ export function selectLiftFeatures(features) {
     if (!prev || liftGeomScore(feature) > liftGeomScore(prev)) byKey.set(key, feature);
   }
   return [...byKey.values()];
-}
-
-function cableHeightProfile(t, cableH, stationH) {
-  const ramp = 0.14;
-  let u = 1;
-  if (t < ramp) u = t / ramp;
-  else if (t > 1 - ramp) u = (1 - t) / ramp;
-  u = Math.max(0, Math.min(1, u));
-  u = u * u * (3 - 2 * u);
-  return stationH + (cableH - stationH) * u;
 }
 
 function createAerialLiftAssets(unitScale = 1) {

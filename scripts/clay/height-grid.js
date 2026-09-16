@@ -129,6 +129,8 @@ export function makeHeightGrid(mesh, resolution = GRID_RES) {
     if (h00 === -Infinity) return null;
     const a = h00 + (h10 - h00) * tu;
     const b = h01 + (h11 - h01) * tu;
-    return a + (b - a) * tv;
+    const interp = a + (b - a) * tv;
+    const hi = Math.max(h00, h10, h01, h11);
+    return interp + (hi - interp) * 0.45;
   };
 }

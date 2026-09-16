@@ -13,24 +13,40 @@ function findEntityObject(object) {
   return null;
 }
 
-function setHighlight(object, selected) {
+function setHighlight(object, mode) {
   if (!object?.userData?.entity) return;
-  object.userData.selected = selected;
+  object.userData.selected = mode === "select";
   if (typeof object.userData.setPickHighlight === "function") {
-    object.userData.setPickHighlight(selected);
+    object.userData.setPickHighlight(Boolean(mode));
     return;
   }
+  const on = Boolean(mode);
+  const select = mode === "select";
   object.traverse((child) => {
-    const material = child.material;
-    if (!material || Array.isArray(material)) return;
-    if (selected) {
-      child.userData.previousPickOpacity = material.opacity;
-      material.opacity = 0;
-      material.transparent = true;
-    } else if (child.userData.previousPickOpacity != null) {
-      material.opacity = child.userData.previousPickOpacity;
-      delete child.userData.previousPickOpacity;
+    if (!child.isMesh || !child.material || Array.isArray(child.material)) return;
+    if (on) {
+      if (!child.userData._pickOrigMat) {
+        child.userData._pickOrigMat = child.material;
+        child.material = child.material.clone();
+      }
+      const m = child.material;
+      m.transparent = true;
+      m.depthWrite = false;
+      m.depthTest = false;
+      m.opacity = select ? 0.95 : 0.45;
+      if (m.color) m.color.setHex(select ? 0xfff1a8 : 0xffffff);
+      if ("emissive" in m) {
+        m.emissive.setHex(select ? 0xffc107 : 0xe2e8f0);
+        m.emissiveIntensity = select ? 1.15 : 0.4;
+      }
+      child.renderOrder = select ? 32 : 22;
+      return;
     }
+    if (!child.userData._pickOrigMat) return;
+    if (child.material !== child.userData._pickOrigMat) child.material.dispose();
+    child.material = child.userData._pickOrigMat;
+    delete child.userData._pickOrigMat;
+    if (object.name === "montage-trail-pick" || object.name === "montage-lift-pick") child.renderOrder = 10;
   });
 }
 
@@ -61,7 +77,7 @@ export function createClayEntityPicker({ canvas, camera, getPickables, onSelect,
   function select(next) {
     if (selected && selected !== next) setHighlight(selected, false);
     selected = next;
-    if (selected && selected !== hovered) setHighlight(selected, true);
+    if (selected) setHighlight(selected, "select");
     if (!selected) canvas.style.cursor = "grab";
     onSelect?.(selected?.userData?.entity || null);
   }
@@ -89,7 +105,7 @@ export function createClayEntityPicker({ canvas, camera, getPickables, onSelect,
     if (next !== hovered) {
       if (hovered !== selected) setHighlight(hovered, false);
       hovered = next;
-      if (hovered !== selected) setHighlight(hovered, true);
+      if (hovered && hovered !== selected) setHighlight(hovered, "hover");
       canvas.style.cursor = next ? "pointer" : "grab";
       onHover?.(next?.userData?.entity || null, event);
     }

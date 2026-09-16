@@ -10,8 +10,11 @@ import {
   downsampleLine,
   clipPointRuns,
   smoothTrailPts,
+  featureOsmWayId,
 } from "./math-utils.js";
 import { buildEntityMetadata, entityKey } from "./entity-metadata.js";
+
+export { featureOsmWayId };
 
 export const CLAY_TRAIL_SCHEMES = ["american", "european", "japanese"];
 export const CLAY_TRAIL_SCHEME_LABELS = {
@@ -172,25 +175,6 @@ export function featureOtherTagsBlob(feature) {
   return String(tags.other_tags || props.other_tags || "");
 }
 
-export function featureOsmWayId(feature) {
-  const props = feature?.properties || {};
-  const tags = props.tags && typeof props.tags === "object" ? props.tags : {};
-  const candidates = [
-    tags.osm_way_id,
-    props.osm_way_id,
-    props.osm_id,
-    tags.osm_id,
-    props.id,
-    props["@id"],
-  ];
-  for (const value of candidates) {
-    if (value == null || String(value).trim() === "") continue;
-    const match = /(?:way:|node:|relation:|nan:|:)?(\d+)\s*$/i.exec(String(value).trim());
-    if (match) return match[1];
-  }
-  return "";
-}
-
 export function isPisteAreaOutline(feature) {
   const type = feature?.geometry?.type;
   if (type === "Polygon" || type === "MultiPolygon") return true;
@@ -309,7 +293,8 @@ export function addTrails(parent, featureCollection, center, sample, unitScale =
   const features = selectTrailCenterlines(featureCollection?.features || []);
   const stride = Math.max(1, Math.ceil(features.length / MAX_TRAILS));
   const width = TRAIL_WIDTH * unitScale;
-  const trailLift = Math.max(0.4, 0.12 * unitScale);
+  /* Keep world-space hover ~0.45 after island fit so coarse DEM chords stay above snow. */
+  const trailLift = Math.max(1.8, 0.5 * unitScale);
   const riderLift = trailLift + Math.max(0.35, 0.1 * unitScale);
   const paths = [];
   const pickables = [];
@@ -327,7 +312,7 @@ export function addTrails(parent, featureCollection, center, sample, unitScale =
     for (const coords of lineParts(feature.geometry)) {
       const pts = [];
       const ridePts = [];
-      for (const coord of downsampleLine(coords, 96)) {
+      for (const coord of downsampleLine(coords, 160)) {
         const p = gamePoint(coord[0], coord[1], center, sample, trailLift);
         const r = gamePoint(coord[0], coord[1], center, sample, riderLift);
         if (p) pts.push(p);
@@ -369,12 +354,12 @@ export function addTrails(parent, featureCollection, center, sample, unitScale =
       depthWrite: false,
       side: THREE.DoubleSide,
       polygonOffset: true,
-      polygonOffsetFactor: -4,
-      polygonOffsetUnits: -4,
+      polygonOffsetFactor: -16,
+      polygonOffsetUnits: -16,
     });
     const mesh = meshFromPositions(positions, mat);
     if (mesh) {
-      mesh.renderOrder = 2;
+      mesh.renderOrder = 3;
       group.add(mesh);
     }
   }
@@ -422,12 +407,12 @@ export function addProceduralTrails(parent, sample) {
       depthWrite: false,
       side: THREE.DoubleSide,
       polygonOffset: true,
-      polygonOffsetFactor: -4,
-      polygonOffsetUnits: -4,
+      polygonOffsetFactor: -16,
+      polygonOffsetUnits: -16,
     });
     const mesh = meshFromPositions(positions, mat);
     if (mesh) {
-      mesh.renderOrder = 2;
+      mesh.renderOrder = 3;
       group.add(mesh);
     }
   }

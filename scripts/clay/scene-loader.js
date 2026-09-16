@@ -17,7 +17,6 @@ import {
 } from "./island.js?v=5";
 import {
   mergeFeatureCollections,
-  mergeTreeArea,
   shadeSnowMesh,
 } from "./index.js?v=4";
 
@@ -142,7 +141,7 @@ export async function loadVectors(base, vectors, resort = null, options = {}) {
   const regionHighways = results[12];
   const regionPlaces = results[13];
   const regionAdmin1 = results[14];
-  const forest = await mergeTreeArea(mergeFeatureCollections(forestHome, forestPoints));
+  const forest = mergeFeatureCollections(forestHome, forestPoints);
   return {
     routes: results[0],
     lifts: results[1],
