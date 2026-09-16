@@ -104,10 +104,44 @@ export function getMapSizeTier(props) {
 }
 
 export const MAP_TIER_COLORS = {
-  small: '#c44d34',
-  medium: '#e6c229',
-  large: '#2d8a3e',
-  mega: '#1d4ed8'
+  small: '#9ecae1',
+  medium: '#6baed6',
+  large: '#3182bd',
+  mega: '#1a4d8c'
+};
+
+export const MAP_NOT_DOWNHILL_COLOR = '#999999';
+
+/** Circles below this zoom; mountain sprites at and above. */
+export const RESORT_ICON_MIN_ZOOM = 9;
+/** Hide the noisiest class at world/continental zoom. */
+export const SMALL_MARKER_MIN_ZOOM = 6;
+export const MEDIUM_MARKER_MIN_ZOOM = 4;
+
+export const CIRCLE_STROKE_COLOR = 'rgba(255,255,255,0.75)';
+export const CIRCLE_STROKE_WIDTH = 1.4;
+export const SELECTED_STROKE_COLOR = '#0f172a';
+export const SELECTED_STROKE_WIDTH = 3;
+
+export const CIRCLE_RADIUS = {
+  small: ['interpolate', ['linear'], ['zoom'], SMALL_MARKER_MIN_ZOOM, 6, 8, 7],
+  medium: ['interpolate', ['linear'], ['zoom'], MEDIUM_MARKER_MIN_ZOOM, 5, 8, 7.5],
+  large: ['interpolate', ['linear'], ['zoom'], 3, 6, 8, 9],
+  mega: ['interpolate', ['linear'], ['zoom'], 3, 8, 8, 12]
+};
+
+export const CIRCLE_OPACITY = {
+  small: 0.88,
+  medium: ['interpolate', ['linear'], ['zoom'], MEDIUM_MARKER_MIN_ZOOM, 0.55, 6, 0.82, 8, 0.88],
+  large: 0.92,
+  mega: 0.96
+};
+
+export const CIRCLE_LAYER_MINZOOM = {
+  small: SMALL_MARKER_MIN_ZOOM,
+  medium: MEDIUM_MARKER_MIN_ZOOM,
+  large: 0,
+  mega: 0
 };
 
 export function getMapTierColor(tier) {
@@ -118,6 +152,6 @@ export function getMapTierColor(tier) {
 }
 
 export function getMapTierColorForProps(props) {
-  if (isNotDownhill(props)) return '#999999';
+  if (isNotDownhill(props)) return MAP_NOT_DOWNHILL_COLOR;
   return getMapTierColor(getMapSizeTier(props));
 }

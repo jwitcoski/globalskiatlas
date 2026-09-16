@@ -25,8 +25,19 @@ import {
   getMapSizeTier,
   getMapTierColorForProps,
   MAP_TIER_LEGEND,
-  MAP_TIER_COLORS
-} from './resort-categories.js';
+  MAP_TIER_COLORS,
+  MAP_NOT_DOWNHILL_COLOR,
+  RESORT_ICON_MIN_ZOOM,
+  SMALL_MARKER_MIN_ZOOM,
+  MEDIUM_MARKER_MIN_ZOOM,
+  CIRCLE_STROKE_COLOR,
+  CIRCLE_STROKE_WIDTH,
+  SELECTED_STROKE_COLOR,
+  SELECTED_STROKE_WIDTH,
+  CIRCLE_RADIUS,
+  CIRCLE_OPACITY,
+  CIRCLE_LAYER_MINZOOM
+} from './resort-categories.js?v=ramp1';
 import {
   hillSvg,
   mountainSvg,
@@ -74,18 +85,30 @@ const {
   PISTES_MIN_ZOOM
 } = config;
 
-const RESORT_ICON_MIN_ZOOM = 9;
+function selectedStroke(normalColor, normalWidth) {
+  return {
+    'circle-stroke-color': [
+      'case',
+      ['boolean', ['feature-state', 'selected'], false], SELECTED_STROKE_COLOR,
+      normalColor
+    ],
+    'circle-stroke-width': [
+      'case',
+      ['boolean', ['feature-state', 'selected'], false], SELECTED_STROKE_WIDTH,
+      normalWidth
+    ]
+  };
+}
 
-function circlePaintFor(playableMode) {
+function circlePaintFor(playableMode, tier) {
+  const playableStroke = playableMode
+    ? ['case', ['==', ['get', '_playable'], 1], '#0d9488', CIRCLE_STROKE_COLOR]
+    : CIRCLE_STROKE_COLOR;
   return {
     'circle-color': ['get', '_color'],
-    'circle-stroke-color': playableMode
-      ? ['case', ['==', ['get', '_playable'], 1], '#0d9488', 'rgba(255,255,255,0.65)']
-      : 'rgba(255,255,255,0.65)',
-    'circle-stroke-width': playableMode
-      ? ['case', ['==', ['get', '_playable'], 1], 2.2, 1.2]
-      : 1.2,
-    'circle-opacity': 0.85
+    'circle-opacity': CIRCLE_OPACITY[tier],
+    'circle-radius': CIRCLE_RADIUS[tier],
+    ...selectedStroke(playableStroke, CIRCLE_STROKE_WIDTH)
   };
 }
 
@@ -115,24 +138,16 @@ fetchSkiAreaCatalog().catch(() => {});
 async function addResortMarkerLayers(map, resortFeatures) {
   const data = { type: 'FeatureCollection', features: resortFeatures };
   if (!map.getSource('ski-resorts')) {
-    map.addSource('ski-resorts', { type: 'geojson', data });
+    map.addSource('ski-resorts', { type: 'geojson', data, generateId: true });
   } else {
     map.getSource('ski-resorts').setData(data);
   }
 
-  const symbolLayout = {
-    'icon-image': ['get', '_icon'],
-    'icon-size': 1,
-    'icon-allow-overlap': true,
-    'icon-ignore-placement': true,
-    'icon-anchor': 'center'
-  };
-
   const circleLayerDefs = [
-    { id: 'ski-small-circles', tier: 'small', radius: ['interpolate', ['linear'], ['zoom'], 3, 1.5, 8, 4] },
-    { id: 'ski-medium-circles', tier: 'medium', radius: ['interpolate', ['linear'], ['zoom'], 3, 3, 8, 6] },
-    { id: 'ski-large-circles', tier: 'large', radius: ['interpolate', ['linear'], ['zoom'], 3, 3.5, 8, 7] },
-    { id: 'ski-mega-circles', tier: 'mega', radius: ['interpolate', ['linear'], ['zoom'], 3, 4, 8, 8] }
+    { id: 'ski-small-circles', tier: 'small' },
+    { id: 'ski-medium-circles', tier: 'medium' },
+    { id: 'ski-large-circles', tier: 'large' },
+    { id: 'ski-mega-circles', tier: 'mega' }
   ];
 
   for (const def of circleLayerDefs) {
@@ -142,8 +157,9 @@ async function addResortMarkerLayers(map, resortFeatures) {
       type: 'circle',
       source: 'ski-resorts',
       filter: ['==', ['get', '_tier'], def.tier],
+      minzoom: CIRCLE_LAYER_MINZOOM[def.tier],
       maxzoom: RESORT_ICON_MIN_ZOOM,
-      paint: { ...(map._skiCirclePaint || circlePaintFor(false)), 'circle-radius': def.radius }
+      paint: circlePaintFor(!!map._skiPlayableMode, def.tier)
     });
   }
 
@@ -152,13 +168,24 @@ async function addResortMarkerLayers(map, resortFeatures) {
   for (const tier of ['small', 'medium', 'large', 'mega']) {
     const id = `ski-icons-${tier}`;
     if (map.getLayer(id)) continue;
+    const allowOverlap = tier === 'large' || tier === 'mega';
     map.addLayer({
       id,
       type: 'symbol',
       source: 'ski-resorts',
       minzoom: RESORT_ICON_MIN_ZOOM,
       filter: ['==', ['get', '_tier'], tier],
-      layout: symbolLayout
+      layout: {
+        'icon-image': ['get', '_icon'],
+        'icon-size': 1,
+        'icon-allow-overlap': allowOverlap,
+        'icon-ignore-placement': allowOverlap,
+        'icon-anchor': 'center'
+      },
+      paint: {
+        'icon-halo-color': SELECTED_STROKE_COLOR,
+        'icon-halo-width': ['case', ['boolean', ['feature-state', 'selected'], false], 2, 0]
+      }
     });
   }
 
@@ -224,7 +251,7 @@ export async function initSkiResortMap(options = {}) {
   let playableMode = !!(gameResorts.length && onPlayablePick);
   let playableDotsOnly = wantPlayableDotsOnly && gameResorts.length > 0;
 
-  map._skiCirclePaint = circlePaintFor(playableMode);
+  map._skiPlayableMode = playableMode;
   await addSkiPmtilesToMap(map, SKI_PMTILES_OPTIONS);
 
   let adminGeometry = null;
@@ -451,8 +478,8 @@ export async function initSkiResortMap(options = {}) {
       `<div class="legend-row"><span class="legend-mountain-icon">${mountainSvg(MAP_TIER_COLORS.medium, 22, 15)}</span> ${MAP_TIER_LEGEND.medium}</div>` +
       `<div class="legend-row"><span class="legend-mountain-icon">${largeMountainsSvg(MAP_TIER_COLORS.large, 24, 16)}</span> ${MAP_TIER_LEGEND.large}</div>` +
       `<div class="legend-row"><span class="legend-mountain-icon">${megaMountainsSvg(MAP_TIER_COLORS.mega, 26, 16)}</span> ${MAP_TIER_LEGEND.mega}</div>` +
-      `<div class="legend-row" style="margin-top:6px"><span class="legend-mountain-icon">${hillSvg('#999', 18, 12)}</span> Grey = not a downhill ski resort</div>` +
-      `<div class="legend-row" style="margin-top:8px;font-size:11px;color:#64748b">Colored dots at wide zoom; mountain icons from zoom ${RESORT_ICON_MIN_ZOOM}+</div>` +
+      `<div class="legend-row"><span class="legend-mountain-icon">${hillSvg(MAP_NOT_DOWNHILL_COLOR, 18, 12)}</span> Grey = not a downhill ski resort</div>` +
+      `<div class="legend-row" style="margin-top:8px;font-size:11px;color:#64748b">Circles below zoom ${RESORT_ICON_MIN_ZOOM}; mountain icons at zoom ${RESORT_ICON_MIN_ZOOM}+. ${MAP_TIER_LEGEND.small} from zoom ${SMALL_MARKER_MIN_ZOOM}+. Medium from zoom ${MEDIUM_MARKER_MIN_ZOOM}+.</div>` +
       (playableDotsOnly
         ? '<div class="legend-row" style="margin-top:8px"><span class="legend-swatch" style="background:#0d9488;border:2px solid #0d9488;border-radius:50%"></span> Markers = mountains with playable 3D terrain (click to ski)</div>'
         : playableMode
@@ -496,14 +523,16 @@ export async function initSkiResortMap(options = {}) {
   globalThis.__gsaMapLoad = Object.assign(globalThis.__gsaMapLoad || {}, { firstDotsFromInitMs: loadMs(tInit), addLayerMs: loadMs(tDots), features: resortFeatures.length });
 
   function applyCirclePaint() {
-    const paint = circlePaintFor(playableMode);
-    map._skiCirclePaint = paint;
-    for (const id of ['ski-small-circles', 'ski-medium-circles', 'ski-large-circles', 'ski-mega-circles']) {
+    map._skiPlayableMode = playableMode;
+    for (const tier of ['small', 'medium', 'large', 'mega']) {
+      const id = `ski-${tier}-circles`;
       if (!map.getLayer(id)) continue;
+      const paint = circlePaintFor(playableMode, tier);
       map.setPaintProperty(id, 'circle-color', paint['circle-color']);
       map.setPaintProperty(id, 'circle-stroke-color', paint['circle-stroke-color']);
       map.setPaintProperty(id, 'circle-stroke-width', paint['circle-stroke-width']);
       map.setPaintProperty(id, 'circle-opacity', paint['circle-opacity']);
+      map.setPaintProperty(id, 'circle-radius', paint['circle-radius']);
     }
   }
 
@@ -671,6 +700,17 @@ export async function initSkiResortMap(options = {}) {
     });
   }
 
+  let selectedResortId = null;
+  function selectResortFeature(feat) {
+    if (selectedResortId != null) {
+      try { map.setFeatureState({ source: 'ski-resorts', id: selectedResortId }, { selected: false }); } catch (_) { /* style swap */ }
+    }
+    selectedResortId = feat && feat.id != null ? feat.id : null;
+    if (selectedResortId != null) {
+      try { map.setFeatureState({ source: 'ski-resorts', id: selectedResortId }, { selected: true }); } catch (_) { /* style swap */ }
+    }
+  }
+
   function attachResortLayerEvents(layerIds) {
     if (isCountryRegion) return;
     layerIds.forEach((id) => {
@@ -689,6 +729,7 @@ export async function initSkiResortMap(options = {}) {
       map.on('mouseleave', id, () => { map.getCanvas().style.cursor = ''; hideVtTip(); });
       map.on('click', id, (e) => {
         if (!e.features.length) return;
+        selectResortFeature(e.features[0]);
         const p = e.features[0].properties;
         if (playableMode && p._playablePath && onPlayablePick) {
           onPlayablePick(p._playablePath);

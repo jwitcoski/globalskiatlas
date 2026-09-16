@@ -698,6 +698,7 @@
       getTrailCount,
       MAP_TIER_LEGEND,
       MAP_TIER_COLORS,
+      MAP_NOT_DOWNHILL_COLOR,
       isNotDownhill
     } from './scripts/resort-categories.js';
     import {
@@ -1109,11 +1110,11 @@
       const sizeLegendEl = document.getElementById('size-legend');
       if (sizeLegendEl) {
         sizeLegendEl.innerHTML =
-          '<div class="legend-row"><span class="legend-mountain-icon">' + hillSvg('#c44d34', 18, 12) + '</span> ' + MAP_TIER_LEGEND.small + '</div>' +
-          '<div class="legend-row"><span class="legend-mountain-icon">' + mountainSvg('#e6c229', 18, 12) + '</span> ' + MAP_TIER_LEGEND.medium + '</div>' +
-          '<div class="legend-row"><span class="legend-mountain-icon">' + largeMountainsSvg('#2d8a3e', 18, 12) + '</span> ' + MAP_TIER_LEGEND.large + '</div>' +
+          '<div class="legend-row"><span class="legend-mountain-icon">' + hillSvg(MAP_TIER_COLORS.small, 18, 12) + '</span> ' + MAP_TIER_LEGEND.small + '</div>' +
+          '<div class="legend-row"><span class="legend-mountain-icon">' + mountainSvg(MAP_TIER_COLORS.medium, 18, 12) + '</span> ' + MAP_TIER_LEGEND.medium + '</div>' +
+          '<div class="legend-row"><span class="legend-mountain-icon">' + largeMountainsSvg(MAP_TIER_COLORS.large, 18, 12) + '</span> ' + MAP_TIER_LEGEND.large + '</div>' +
           '<div class="legend-row"><span class="legend-mountain-icon">' + megaMountainsSvg(MAP_TIER_COLORS.mega, 20, 13) + '</span> ' + MAP_TIER_LEGEND.mega + '</div>' +
-          '<div class="legend-row"><span class="legend-mountain-icon">' + hillSvg('#999', 16, 11) + '</span> Grey = not downhill</div>';
+          '<div class="legend-row"><span class="legend-mountain-icon">' + hillSvg(MAP_NOT_DOWNHILL_COLOR, 16, 11) + '</span> Grey = not downhill</div>';
       }
 
       const byCountryState = {};

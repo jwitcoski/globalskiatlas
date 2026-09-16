@@ -21,7 +21,7 @@ html, body { height: 100%; font-family: system-ui, -apple-system, sans-serif; }
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0,0,0,0.2);
   font-size: 12px;
-  max-height: 200px;
+  max-height: 280px;
   overflow-y: auto;
 }
 .map-legend h3 { margin: 0 0 8px 0; font-size: 13px; }
@@ -85,7 +85,7 @@ html, body { height: 100%; font-family: system-ui, -apple-system, sans-serif; }
     left: 12px;
     padding: 8px 10px;
     font-size: 11px;
-    max-height: 140px;
+    max-height: 200px;
   }
   .map-legend h3 { font-size: 11px; margin: 0 0 4px 0; }
   .map-legend .legend-row { margin: 2px 0; gap: 6px; }

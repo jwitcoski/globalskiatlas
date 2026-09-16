@@ -15,6 +15,7 @@ import {
   CATEGORY_LABELS,
   getTrailCount,
   isNotDownhill,
+  MAP_TIER_COLORS,
   RESORT_CATEGORY,
   TRAILS_MEGA_GE,
   TRAILS_MEDIUM_LT,
@@ -204,10 +205,10 @@ export function compareResort(record, index) {
 
 export function categoryBadgeHtml(category, escapeHtml) {
   const labels = {
-    [RESORT_CATEGORY.MEGA_RESORT]: ['#1d4ed8', 'Mega resort'],
-    [RESORT_CATEGORY.MULTIPLE_MOUNTAINS]: ['#2d8a3e', 'Large'],
-    [RESORT_CATEGORY.SKI_MOUNTAIN]: ['#e6c229', 'Medium'],
-    [RESORT_CATEGORY.SMALL_HILL]: ['#c44d34', 'Small hill']
+    [RESORT_CATEGORY.MEGA_RESORT]: [MAP_TIER_COLORS.mega, 'Mega resort'],
+    [RESORT_CATEGORY.MULTIPLE_MOUNTAINS]: [MAP_TIER_COLORS.large, 'Large'],
+    [RESORT_CATEGORY.SKI_MOUNTAIN]: [MAP_TIER_COLORS.medium, 'Medium'],
+    [RESORT_CATEGORY.SMALL_HILL]: [MAP_TIER_COLORS.small, 'Small hill']
   };
   const [color, label] = labels[category] || ['#64748b', 'Resort'];
   return `<span class="sr-badge" style="background:${color}22;color:${color};border:1px solid ${color}55">${escapeHtml(label)}</span>`;

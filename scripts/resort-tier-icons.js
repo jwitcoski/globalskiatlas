@@ -1,13 +1,13 @@
 /**
  * Resort size tier map icons — hill → single peak → twin peaks → mega range.
  */
-import { MAP_TIER_COLORS } from './resort-categories.js';
+import { MAP_TIER_COLORS, MAP_NOT_DOWNHILL_COLOR } from './resort-categories.js?v=ramp1';
 
 export const TIER_ICON_COLORS = [
   { key: 'red', hex: MAP_TIER_COLORS.small },
   { key: 'yellow', hex: MAP_TIER_COLORS.medium },
   { key: 'green', hex: MAP_TIER_COLORS.large },
-  { key: 'grey', hex: '#999999' }
+  { key: 'grey', hex: MAP_NOT_DOWNHILL_COLOR }
 ];
 
 const COLOR_TO_KEY = {
@@ -15,7 +15,7 @@ const COLOR_TO_KEY = {
   [MAP_TIER_COLORS.medium]: 'yellow',
   [MAP_TIER_COLORS.large]: 'green',
   [MAP_TIER_COLORS.mega]: 'mega-blue',
-  '#999999': 'grey'
+  [MAP_NOT_DOWNHILL_COLOR]: 'grey'
 };
 
 /** Small — rolling hill */
