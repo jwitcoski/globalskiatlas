@@ -20,7 +20,10 @@ import {
   tickFallPose,
   clearFall,
   standUp,
-} from "./physics.js?v=s1";
+  startShove,
+  shoveShouldHit,
+  markShoveHit,
+} from "./physics.js?v=s7";
 import { featuredCourses, attachPisteDifficulty, courseFinish, createRun, tickRun, formatTime } from "./run.js?v=map4";
 import { coordsToXz, attachPiste, resetScore, tickScore, commitBestScore, formatScore, applyWipeout } from "./score.js?v=feel4";
 import { orientPiste, alongTrack, alongPolyline } from "./gates.js?v=vis18";
@@ -40,7 +43,7 @@ import {
   setInspectAtmosphere,
 } from "./look.js?v=lod4";
 import { addResortIsland, updateIslandDust, updateIslandLod, setIslandOpacity, resetIslandLod } from "./island.js?v=lod3b";
-import { bindUi, setHud, openPanel, closePanel, updateLoading, setOsmMapNote, setResortTitle, compactUi, setFlybyChrome } from "./ui.js?v=s2";
+import { bindUi, setHud, openPanel, closePanel, updateLoading, setOsmMapNote, setResortTitle, compactUi, setFlybyChrome, setHelpTips } from "./ui.js?v=s8";
 import { atlasStatsHtml, prefetchWikiIndex } from "./atlas-stats.js?v=stats1";
 import { bindFinishChartScope, finishChartsHtml, prefetchFinishCharts } from "./finish-charts.js?v=1";
 import { bindOsmFix, osmFixHtml, osmFixContext } from "./osm-fix.js?v=1";
@@ -48,7 +51,7 @@ import { showPickerMap, destroyPickerMap } from "./picker-map.js?v=lod3";
 import { resolveVisitorNearestClay } from "/scripts/clay/nearest-resort.js";
 import { capDpr, attachDebug } from "./debug.js?v=mob1";
 import { intentsFrom, isTurning, analogAxes } from "./input.js?v=s2";
-import { bindMobileChrome, bindPads } from "./mobile.js?v=s2";
+import { bindMobileChrome, bindPads } from "./mobile.js?v=s4";
 import { bakePisteSculpt, drapeSculptOnMesh } from "./piste-sculpt.js?v=feel3";
 import { addTrailMarks, clearTrailMarks, updateTrailMarks } from "./trail-marks.js?v=marks10";
 import { makeYeti, resetYeti, parkYetiAtStart, tickYeti } from "./yeti.js?v=vis16";
@@ -72,7 +75,7 @@ import {
   pisteLineForCourse,
 } from "./trail-map.js?v=mapall2";
 import { makeMinimap } from "./minimap.js?v=mapall1";
-import { createNpcSkiers, clearNpcSkiers, tickNpcSkiers, tryShoveNpc } from "./npc-skiers.js?v=s2";
+import { createNpcSkiers, clearNpcSkiers, tickNpcSkiers, tryShoveNpc } from "./npc-skiers.js?v=s9";
 import { updateTraffic } from "./traffic.js?v=vis16";
 import {
   TRAILER,
@@ -747,12 +750,6 @@ function onUiAct(act, courseId) {
     last = performance.now();
     closePanel(ui);
   }
-  if (act === "help-close") {
-    closePanel(ui);
-    if (run.phase === "ready") showReady();
-    else if (run.phase === "paused") openPanel(ui, "paused", {});
-    return;
-  }
   if (act === "restart") resetRun({ lobby: false });
 }
 
@@ -1241,10 +1238,35 @@ ui.pauseBtn?.addEventListener("click", () => {
     openPanel(ui, "paused", {});
   }
 });
-ui.helpBtn?.addEventListener("click", () => {
+let helpPausedRun = false;
+function closeHelpTips() {
+  setHelpTips(ui, false);
+  if (helpPausedRun && run?.phase === "paused") {
+    run.phase = "running";
+    last = performance.now();
+  }
+  helpPausedRun = false;
+}
+function openHelpTips() {
   if (!run || document.body.classList.contains("picker")) return;
-  openPanel(ui, "help", {});
+  if (document.body.classList.contains("help-on")) {
+    closeHelpTips();
+    return;
+  }
+  if (run.phase === "running") {
+    run.phase = "paused";
+    acc = 0;
+    helpPausedRun = true;
+  } else {
+    helpPausedRun = false;
+  }
+  setHelpTips(ui, true);
+}
+ui.helpBtn?.addEventListener("click", (e) => {
+  e.stopPropagation();
+  openHelpTips();
 });
+ui.helpScrim?.addEventListener("click", closeHelpTips);
 ui.povBtn?.addEventListener("click", () => {
   if (run?.phase === "running" || run?.phase === "paused") cyclePov();
 });
@@ -1298,7 +1320,7 @@ function tick(now) {
   }
   const frameDt = Math.min(0.05, (now - last) / 1000);
   last = now;
-  if (!keys.has("KeyE")) shoveHeld = false;
+  if (!keys.has("KeyQ") && !keys.has("KeyE")) shoveHeld = false;
   fpsEma = fpsEma * 0.9 + (1 / Math.max(0.001, frameDt)) * 0.1;
   try {
   if (hf && run && run.phase !== "paused" && !mobile.blocked()) {
@@ -1327,9 +1349,13 @@ function tick(now) {
       }
       while (acc >= STEP && steps < 5) {
         const extras = TRAILER ? [] : tickNpcSkiers(THREE, npcPack, STEP, skier.position, hf, alongTrack(run.pistePts, skier.position.x, skier.position.z).along);
-        if (!shoveHeld && keys.has("KeyE")) {
-          tryShoveNpc(THREE, extras, skier.position, heading, hf);
+        if (!shoveHeld && (keys.has("KeyQ") || keys.has("KeyE"))) {
+          startShove(skier, keys.has("KeyQ") ? 1 : -1);
           shoveHeld = true;
+        }
+        if (shoveShouldHit(skier)) {
+          markShoveHit(skier);
+          tryShoveNpc(THREE, extras, skier.position, heading, hf, skier.userData.shoveSide || 1, npcPack);
         }
         const st = stepSki(THREE, {
           pos: skier.position,

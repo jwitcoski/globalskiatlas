@@ -526,6 +526,39 @@ function popAir(air, pos, vy) {
   air.height = 0.28;
 }
 
+const SHOVE_S = 0.4;
+const SHOVE_HIT_AT = 0.1;
+
+export function startShove(skier, side = 1) {
+  if (!skier?.userData || (skier.userData.shoveT || 0) > 0) return false;
+  skier.userData.shoveT = SHOVE_S;
+  skier.userData.shoveSide = side >= 0 ? 1 : -1;
+  skier.userData.shoveHit = false;
+  return true;
+}
+
+export function shoveShouldHit(skier) {
+  const t = skier.userData?.shoveT || 0;
+  return t > 0 && !skier.userData.shoveHit && SHOVE_S - t >= SHOVE_HIT_AT;
+}
+
+export function markShoveHit(skier) {
+  if (skier?.userData) skier.userData.shoveHit = true;
+}
+
+function shoveStroke(u) {
+  if (u < 0.28) {
+    const t = smooth01(u / 0.28);
+    return { poleX: lerp(1.24, 0.15, t), poleZ: lerp(0.14, 1.05, t), armX: lerp(0, -1.25, t), armZ: lerp(0, -0.55, t) };
+  }
+  if (u < 0.48) {
+    const t = smooth01((u - 0.28) / 0.2);
+    return { poleX: lerp(0.15, 0.85, t), poleZ: lerp(1.05, -0.95, t), armX: lerp(-1.25, 0.2, t), armZ: lerp(-0.55, 0.35, t) };
+  }
+  const t = smooth01((u - 0.48) / 0.52);
+  return { poleX: lerp(0.85, 1.24, t), poleZ: lerp(-0.95, 0.14, t), armX: lerp(0.2, 0, t), armZ: lerp(0.35, 0, t) };
+}
+
 /** Split velocity into along-ski and sideways, then bleed only the sideways part. */
 function carve(THREE, vel, fwd, edged, powder, dt) {
   const along = vel.dot(fwd);
@@ -758,10 +791,15 @@ function posture(skier, steer, lean, opts) {
   const air = !!opts.air;
   const brake = !!opts.brake;
   const tuck = !!opts.tuck && !opts.pole;
-  const poling = !!opts.pole;
+  const shoving = (skier.userData.shoveT || 0) > 0;
+  const poling = !!opts.pole && !shoving;
 
   let stroke = { poleX: 1.24, fold: 0.18, plant: 0 };
-  if (poling) {
+  if (shoving) {
+    const u = 1 - skier.userData.shoveT / SHOVE_S;
+    skier.userData.shoveT = Math.max(0, skier.userData.shoveT - dt);
+    stroke = shoveStroke(Math.min(1, Math.max(0, u)));
+  } else if (poling) {
     skier.userData.poleT = (skier.userData.poleT || 0) + dt;
     stroke = poleStroke(((skier.userData.poleT % POLE_CYCLE) + POLE_CYCLE) % POLE_CYCLE / POLE_CYCLE);
   } else {
@@ -810,25 +848,38 @@ function posture(skier, steer, lean, opts) {
 
   const poleL = skier.userData.poleL;
   const poleR = skier.userData.poleR;
-  const k = poling ? 0.22 : 0.14;
+  const k = shoving ? 0.38 : poling ? 0.22 : 0.14;
   if (poleL && poleR) {
     const restXL = poleL.userData.restX || 1.24;
     const restXR = poleR.userData.restX || 1.24;
-    const wantX = poling ? stroke.poleX : restXL;
-    poleL.rotation.x += (wantX - poleL.rotation.x) * k;
-    poleR.rotation.x += ((poling ? stroke.poleX : restXR) - poleR.rotation.x) * k;
-    poleL.rotation.z += ((poleL.userData.restZ || -0.14) - poleL.rotation.z) * k;
-    poleR.rotation.z += ((poleR.userData.restZ || 0.14) - poleR.rotation.z) * k;
+    const restZL = poleL.userData.restZ || -0.14;
+    const restZR = poleR.userData.restZ || 0.14;
+    const leftHit = shoving && (skier.userData.shoveSide || 1) < 0;
+    const rightHit = shoving && !leftHit;
+    const wantXL = leftHit ? stroke.poleX : poling ? stroke.poleX : restXL;
+    const wantXR = rightHit ? stroke.poleX : poling ? stroke.poleX : restXR;
+    const wantZL = leftHit ? -stroke.poleZ : restZL;
+    const wantZR = rightHit ? stroke.poleZ : restZR;
+    poleL.rotation.x += (wantXL - poleL.rotation.x) * k;
+    poleR.rotation.x += (wantXR - poleR.rotation.x) * k;
+    poleL.rotation.z += (wantZL - poleL.rotation.z) * k;
+    poleR.rotation.z += (wantZR - poleR.rotation.z) * k;
   }
   const armL = skier.userData.armL;
   const armR = skier.userData.armR;
   if (armL && armR) {
     const reach = poling ? 1.05 - stroke.poleX : 0;
-    const wantArmX = poling ? -0.15 - reach * 0.55 : 0;
-    armL.rotation.x += (wantArmX - armL.rotation.x) * k;
-    armR.rotation.x += (wantArmX - armR.rotation.x) * k;
-    armL.rotation.z += ((poling ? 0.12 : 0) - armL.rotation.z) * k;
-    armR.rotation.z += ((poling ? -0.12 : 0) - armR.rotation.z) * k;
+    const poleArm = poling ? -0.15 - reach * 0.55 : 0;
+    const leftHit = shoving && (skier.userData.shoveSide || 1) < 0;
+    const rightHit = shoving && !leftHit;
+    const wantArmL = leftHit ? stroke.armX : poleArm;
+    const wantArmR = rightHit ? stroke.armX : poleArm;
+    const wantZL = leftHit ? -stroke.armZ : poling ? 0.12 : 0;
+    const wantZR = rightHit ? stroke.armZ : poling ? -0.12 : 0;
+    armL.rotation.x += (wantArmL - armL.rotation.x) * k;
+    armR.rotation.x += (wantArmR - armR.rotation.x) * k;
+    armL.rotation.z += (wantZL - armL.rotation.z) * k;
+    armR.rotation.z += (wantZR - armR.rotation.z) * k;
   }
 }
 

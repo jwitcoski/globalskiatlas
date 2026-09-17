@@ -1,6 +1,6 @@
 /** Other skiers on and across the chevron ribbon. Hit like trees. */
 
-import { makeSkier, orientSkier, beginFall } from "./physics.js?v=s2";
+import { makeSkier, orientSkier, beginFall } from "./physics.js?v=s7";
 import { alongPolyline, polylineLen, alongTrack } from "./gates.js?v=vis18";
 import { tickFallPose } from "./physics.js?v=feel13";
 
@@ -54,7 +54,7 @@ export function createNpcSkiers(THREE, scene, lines, elevFn, _spawn, activePts) 
     slot += 1;
     mesh.scale.setScalar(1.04);
     root.add(mesh);
-    pack.list.push({
+    const rec = {
       mesh,
       pts,
       along: Math.max(14, Math.min(len - 18, along)),
@@ -62,7 +62,9 @@ export function createNpcSkiers(THREE, scene, lines, elevFn, _spawn, activePts) 
       kind,
       len,
       home: !!home,
-    });
+    };
+    mesh.userData.npc = rec;
+    pack.list.push(rec);
   }
 
   const gaps = [18, 32, 46, 62, 80, 102, 28, 70, 54, 90];
@@ -128,25 +130,45 @@ export function npcAlongHint(pack, player) {
   return alongTrack(pack.list[0].pts, player.x, player.z).along;
 }
 
-/** Knock the nearest NPC in a short forward cone. Miss = no-op. */
-export function tryShoveNpc(THREE, extras, pos, heading, hf) {
-  if (!extras?.length || !pos || !hf) return false;
+/** Knock a nearby NPC on that side. Miss = no-op. */
+export function tryShoveNpc(THREE, extras, pos, heading, hf, side = 1, pack) {
+  if (!pos || !hf) return false;
+  const s = side >= 0 ? 1 : -1;
   const fx = Math.sin(heading);
   const fz = Math.cos(heading);
+  const rx = fz;
+  const rz = -fx;
+  const pool = [];
+  for (const e of extras || []) {
+    if (e?.mesh) pool.push(e);
+  }
+  if (pack?.list) {
+    for (const npc of pack.list) {
+      if (!npc.mesh || npc.mesh.userData.fall) continue;
+      pool.push({ x: npc.mesh.position.x, z: npc.mesh.position.z, mesh: npc.mesh });
+    }
+  }
   let best = null;
-  let bestD = 2.8;
-  for (const e of extras) {
+  let bestScore = 2.8;
+  for (const e of pool) {
     if (!e.mesh || e.mesh.userData.fall) continue;
     const dx = e.x - pos.x;
     const dz = e.z - pos.z;
     const d = Math.hypot(dx, dz);
-    if (d < 0.15 || d > bestD) continue;
-    if ((dx * fx + dz * fz) / d < 0.35) continue;
+    if (d < 0.2 || d > 2.7) continue;
+    const fwd = dx * fx + dz * fz;
+    if (fwd < -1) continue;
+    const lat = dx * rx + dz * rz;
+    if (lat * s <= 0.2) continue;
+    if (d >= bestScore) continue;
     best = e.mesh;
-    bestD = d;
+    bestScore = d;
   }
   if (!best) return false;
-  const side = Math.sin(heading) * (best.position.x - pos.x) - Math.cos(heading) * (best.position.z - pos.z) >= 0 ? 1 : -1;
-  beginFall(THREE, best, hf, side);
+  const rec = best.userData.npc;
+  if (rec) rec.along += 16;
+  best.position.x += rx * s * 2.4;
+  best.position.z += rz * s * 2.4;
+  beginFall(THREE, best, hf, s);
   return true;
 }

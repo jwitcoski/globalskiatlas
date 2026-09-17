@@ -117,13 +117,31 @@
     #speed { display: none; }
     #speed-read { font-variant-numeric: tabular-nums; font-size: 12px; font-weight: 500; }
     #help-btn {
-      pointer-events: auto; z-index: 5; position: absolute;
+      pointer-events: auto; z-index: 10; position: absolute;
       top: var(--pad); left: calc(var(--pad-l) + 48px);
       min-width: 44px; min-height: 44px; border-radius: 10px;
       border: 1px solid rgba(255,255,255,.35); background: rgba(255,255,255,.18);
       color: inherit; font: 700 16px/1 system-ui, sans-serif; cursor: pointer;
     }
-    body.picker #help-btn { display: none !important; }
+    #help-scrim {
+      display: none; position: fixed; inset: 0; z-index: 7;
+      background: rgba(16, 24, 32, .35);
+    }
+    body.help-on #help-scrim { display: block; }
+    #help-tips { display: none; position: fixed; inset: 0; z-index: 9; pointer-events: none; }
+    body.help-on #help-tips { display: block; }
+    body.help-on #pads { display: flex !important; }
+    .help-bubble {
+      position: absolute; max-width: 160px;
+      padding: 8px 10px; border-radius: 10px;
+      background: rgba(255,255,255,.94); color: #243038;
+      font: 700 12px/1.3 system-ui, sans-serif;
+      box-shadow: 0 6px 18px rgba(16,24,32,.28);
+    }
+    #tip-steer { left: var(--pad-l); bottom: calc(var(--pad-b) + 128px); }
+    #tip-jump { right: var(--pad-r); bottom: calc(var(--pad-b) + 148px); }
+    #tip-shove { right: calc(var(--pad-r) + 148px); bottom: calc(var(--pad-b) + 10px); }
+    #tip-cam { left: var(--pad-l); top: calc(var(--pad) + 78px); }
     #pause-btn {
       pointer-events: auto; top: var(--pad); left: var(--pad-l);
       min-width: 40px; min-height: 40px; border: 0; background: transparent;
@@ -144,27 +162,37 @@
       max-width: min(92vw, 420px);
     }
     #pads {
-      display: none; position: absolute; z-index: 3; inset: auto var(--pad-r) var(--pad-b) var(--pad-l);
+      display: flex; position: fixed; z-index: 8; inset: auto var(--pad-r) var(--pad-b) var(--pad-l);
       justify-content: space-between; align-items: flex-end; pointer-events: none;
     }
-    #pads .col { display: flex; gap: 8px; pointer-events: auto; }
     #pads button {
-      min-width: 72px; min-height: 72px; border-radius: 16px; border: 1px solid rgba(255,255,255,.35);
-      background: rgba(255,255,255,.18); color: inherit; font-size: 0; touch-action: none;
-      display: grid; place-items: center;
+      min-width: 64px; min-height: 56px; border-radius: 14px; border: 1px solid rgba(255,255,255,.7);
+      background: rgba(22, 32, 42, .55); color: #f4f8fb; font-size: 10px; font-weight: 700;
+      letter-spacing: .06em; text-transform: uppercase; touch-action: none;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+      text-shadow: 0 1px 4px rgba(12,18,24,.75);
     }
-    #pads button svg { width: 28px; height: 28px; display: block; }
-    #pads button.down { background: rgba(255,255,255,.4); }
+    #pads button svg { width: 22px; height: 22px; display: block; }
+    #pads button.down { background: rgba(22, 32, 42, .82); }
+    #pads .col { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; pointer-events: auto; }
+    #pads .shove-row { display: flex; gap: 8px; }
+    .stick-wrap { pointer-events: none; display: flex; flex-direction: column; align-items: center; gap: 6px; }
     .stick-well {
       pointer-events: auto; touch-action: none;
       width: 108px; height: 108px; border-radius: 50%;
-      border: 1px solid rgba(255,255,255,.35); background: rgba(255,255,255,.12);
+      border: 2px solid rgba(255,255,255,.75); background: rgba(22, 32, 42, .4);
       position: relative; display: grid; place-items: center;
     }
-    .stick-well.down { background: rgba(255,255,255,.22); }
+    .stick-well.down { background: rgba(22, 32, 42, .58); }
     .stick-knob {
       width: 44px; height: 44px; border-radius: 50%;
-      background: rgba(255,255,255,.55); box-shadow: 0 2px 8px rgba(20,30,40,.25);
+      background: #f4f8fb; border: 2px solid rgba(26, 50, 80, .45);
+      box-shadow: 0 2px 10px rgba(12,18,24,.4);
+      pointer-events: none;
+    }
+    .pad-label {
+      font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+      color: #f4f8fb; text-shadow: 0 1px 5px rgba(12,18,24,.85);
       pointer-events: none;
     }
     @media (pointer: coarse), (max-width: 720px), (max-height: 520px) {
@@ -583,19 +611,36 @@
   <div id="load-note"></div>
   <pre id="dbg" hidden></pre>
   <div id="pads">
-    <div class="stick-well" data-stick="steer" aria-label="Steer">
-      <div class="stick-knob"></div>
+    <div class="stick-wrap">
+      <div class="stick-well" data-stick="steer" aria-label="Steer">
+        <div class="stick-knob"></div>
+      </div>
+      <span class="pad-label">Steer</span>
     </div>
     <div class="col">
       <button type="button" data-pad="jump" aria-label="Jump">
         <svg viewBox="0 0 32 32" aria-hidden="true"><path fill="currentColor" d="M16 4l10 12h-6v12h-8V16H6z"/></svg>
+        <span>Jump</span>
       </button>
-      <button type="button" data-pad="shove" aria-label="Shove">
-        <svg viewBox="0 0 32 32" aria-hidden="true"><path fill="currentColor" d="M6 14h12v-5l10 8-10 8v-5H6z"/></svg>
-      </button>
+      <div class="shove-row">
+        <button type="button" data-pad="shove-l" aria-label="Shove left">
+          <svg viewBox="0 0 32 32" aria-hidden="true"><path fill="currentColor" d="M26 14H14v-5L4 17l10 8v-5h12z"/></svg>
+          <span>Shove</span>
+        </button>
+        <button type="button" data-pad="shove-r" aria-label="Shove right">
+          <svg viewBox="0 0 32 32" aria-hidden="true"><path fill="currentColor" d="M6 14h12v-5l10 8-10 8v-5H6z"/></svg>
+          <span>Shove</span>
+        </button>
+      </div>
     </div>
   </div>
-  <div id="rotate-lock" hidden>Turn the screen sideways to ski</div>
+  <div id="help-scrim" hidden></div>
+  <div id="help-tips" hidden>
+    <p class="help-bubble" id="tip-steer">Steer with this stick</p>
+    <p class="help-bubble" id="tip-jump">Jump</p>
+    <p class="help-bubble" id="tip-shove">Shove with that pole</p>
+    <p class="help-bubble" id="tip-cam">Switch camera</p>
+  </div>
   <div id="osm-map-note" hidden></div>
   <div id="flyby-bar" hidden role="toolbar" aria-label="Fly-by controls">
     <p class="flyby-hint">Drag · scroll to explore</p>
@@ -609,6 +654,6 @@
     { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
                    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }
   </script>
-  <script type="module" src="./main.js?v=s2"></script>
+  <script type="module" src="./main.js?v=s12"></script>
 </body>
 </html>

@@ -19,6 +19,8 @@ export function bindUi() {
     navNeedle: document.getElementById("nav-needle"),
     povBtn: document.getElementById("pov-btn"),
     helpBtn: document.getElementById("help-btn"),
+    helpScrim: document.getElementById("help-scrim"),
+    helpTips: document.getElementById("help-tips"),
     combo: document.getElementById("combo-read"),
     shout: document.getElementById("air-shout"),
     osmMapNote: document.getElementById("osm-map-note"),
@@ -259,15 +261,6 @@ export function openPanel(ui, kind, data) {
     bindLobbyDetails(ui);
     return;
   }
-  if (kind === "help") {
-    ui.panel.innerHTML = `<p class="kicker">Controls</p>
-      <h2>Thumbs</h2>
-      <p>Left stick steers.</p>
-      <p>Jump hops.</p>
-      <p>Shove bumps another skier.</p>
-      ${actions([["help-close", "Got it", "primary"]])}`;
-    return;
-  }
   if (kind === "paused") {
     ui.panel.innerHTML = `<p class="kicker">Paused</p>
       <h2>Hold</h2>
@@ -328,6 +321,12 @@ export function setOsmMapNote(ui, html) {
   const show = !!html;
   ui.osmMapNote.hidden = !show;
   if (show) ui.osmMapNote.innerHTML = html;
+}
+
+export function setHelpTips(ui, on) {
+  document.body.classList.toggle("help-on", !!on);
+  if (ui.helpScrim) ui.helpScrim.hidden = !on;
+  if (ui.helpTips) ui.helpTips.hidden = !on;
 }
 
 export function closePanel(ui) {
