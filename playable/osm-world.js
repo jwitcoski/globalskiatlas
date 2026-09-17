@@ -7,6 +7,7 @@ import { addOsmTraffic } from "./traffic.js?v=vis16";
 import { alongPolyline, polylineLen } from "./gates.js?v=vis17";
 import { liftType, liftCableHeight, makeLiftTerminal, makeLiftCarrier, makeLiftSkier } from "./lift-graphics.js";
 import { createLiftMotion } from "./lift-motion.js";
+import { PALETTE } from "/scripts/clay/config.js";
 
 const GRID = 12;
 const MAX_FILL_SPAN = 700;
@@ -14,6 +15,29 @@ const MAX_BUILDING_SPAN = 80;
 const TREE_STEP = 10;
 const TREE_STEP_WOOD = 6;
 const MAX_TREES = 8000;
+
+function clayTreeMats() {
+  return {
+    bark: new THREE.MeshLambertMaterial({ color: PALETTE.trunk }),
+    needle: new THREE.MeshLambertMaterial({ color: PALETTE.tree, flatShading: true }),
+    deep: new THREE.MeshLambertMaterial({ color: PALETTE.treeDeep, flatShading: true }),
+  };
+}
+
+function stampClayTree(dummy, trunks, crowns, deeps, i, x, y, z, s) {
+  dummy.rotation.set(0, (i * 0.7) % 6.28, 0);
+  dummy.scale.set(s, s, s);
+  dummy.position.set(x, y + 1.7 * s, z);
+  dummy.updateMatrix();
+  trunks.setMatrixAt(i, dummy.matrix);
+  dummy.position.set(x, y + 5.8 * s, z);
+  dummy.updateMatrix();
+  crowns.setMatrixAt(i, dummy.matrix);
+  dummy.position.set(x, y + 8.0 * s, z);
+  dummy.scale.set(s * 0.72, s * 0.72, s * 0.72);
+  dummy.updateMatrix();
+  deeps.setMatrixAt(i, dummy.matrix);
+}
 
 /** Every vertex of any GeoJSON geometry, including nested multi/collection parts. */
 function eachCoord(geom, fn) {
@@ -930,21 +954,16 @@ export async function addOsmWorld(THREE, scene, sceneRoot, manifest, elevFn) {
     counts.forest_pts = woodPts.length + otherPts.length;
     counts.wood_pts = woodPts.length;
     if (treePts.length) {
-      if (polyKit?.trees?.length) addPolyForest(treePts, polyKit.trees, elevFn, scene, counts);
-      else {
       const n = treePts.length;
+      const matsT = clayTreeMats();
       const trunkG = new THREE.CylinderGeometry(0.11, 0.16, 3.4, 6);
       const crownG = new THREE.ConeGeometry(1.05, 8.2, 6);
-      const snowG = new THREE.ConeGeometry(0.78, 2.6, 6);
       const shrubG = new THREE.IcosahedronGeometry(0.85, 0);
-      const bark = new THREE.MeshLambertMaterial({ color: 0x4a3a2c });
-      const needle = new THREE.MeshLambertMaterial({ color: 0x1e3a2c });
-      const snow = new THREE.MeshLambertMaterial({ color: 0xe8eef2 });
-      const trunks = new THREE.InstancedMesh(trunkG, bark, n);
-      const crowns = new THREE.InstancedMesh(crownG, needle, n);
-      const caps = new THREE.InstancedMesh(snowG, snow, n);
+      const trunks = new THREE.InstancedMesh(trunkG, matsT.bark, n);
+      const crowns = new THREE.InstancedMesh(crownG, matsT.needle, n);
+      const deeps = new THREE.InstancedMesh(crownG, matsT.deep, n);
       const shrubN = Math.min(420, Math.floor(n * 0.18));
-      const shrubs = new THREE.InstancedMesh(shrubG, needle, shrubN);
+      const shrubs = new THREE.InstancedMesh(shrubG, matsT.needle, shrubN);
       const xzr = [];
       const dummy = new THREE.Object3D();
       for (let i = 0; i < n; i++) {
@@ -953,19 +972,7 @@ export async function addOsmWorld(THREE, scene, sceneRoot, manifest, elevFn) {
         const z = -c[1];
         const y = elevFn(x, z);
         const s = 0.75 + ((i * 17) % 11) * 0.05;
-        const tall = 1.12 + (i % 3) * 0.08;
-        dummy.position.set(x, y + 1.7 * s, z);
-        dummy.rotation.set(0, (i * 0.7) % 6.28, 0);
-        dummy.scale.set(s, s * tall, s);
-        dummy.updateMatrix();
-        trunks.setMatrixAt(i, dummy.matrix);
-        dummy.position.set(x, y + 5.8 * s, z);
-        dummy.updateMatrix();
-        crowns.setMatrixAt(i, dummy.matrix);
-        dummy.position.set(x, y + 8.35 * s, z);
-        dummy.scale.set(s * 0.92, s * 0.7, s * 0.92);
-        dummy.updateMatrix();
-        caps.setMatrixAt(i, dummy.matrix);
+        stampClayTree(dummy, trunks, crowns, deeps, i, x, y, z, s);
         xzr.push(x, z, 0.55 * s);
         if (i < shrubN) {
           dummy.position.set(x + ((i * 3) % 5) - 2, y + 0.45 * s, z + ((i * 5) % 5) - 2);
@@ -976,13 +983,12 @@ export async function addOsmWorld(THREE, scene, sceneRoot, manifest, elevFn) {
       }
       trunks.instanceMatrix.needsUpdate = true;
       crowns.instanceMatrix.needsUpdate = true;
-      caps.instanceMatrix.needsUpdate = true;
+      deeps.instanceMatrix.needsUpdate = true;
       shrubs.instanceMatrix.needsUpdate = true;
-      scene.add(trunks, crowns, caps, shrubs);
+      scene.add(trunks, crowns, deeps, shrubs);
       counts.trees = n;
       counts.shrubs = shrubN;
       scene.userData.treeHash = buildTreeHash(xzr);
-      }
     }
   }
 
@@ -1114,12 +1120,11 @@ export function addPisteEdgeScenery(THREE, scene, pistePolys, elevFn) {
     return false;
   }
   const dummy = new THREE.Object3D();
+  const matsT = clayTreeMats();
   const trunkG = new THREE.CylinderGeometry(0.12, 0.18, 3.2, 5);
   const crownG = new THREE.ConeGeometry(1.05, 7.4, 6);
   const rockG = new THREE.DodecahedronGeometry(0.7, 0);
-  const bark = new THREE.MeshLambertMaterial({ color: 0x4a3a2c });
-  const needle = new THREE.MeshLambertMaterial({ color: 0x1e3a2c });
-  const snow = new THREE.MeshLambertMaterial({ color: 0xd8dee4 });
+  const snow = new THREE.MeshLambertMaterial({ color: PALETTE.snowShade, flatShading: true });
   const pts = [];
   for (const poly of pistePolys || []) {
     const len = polylineLen(poly);
@@ -1138,8 +1143,9 @@ export function addPisteEdgeScenery(THREE, scene, pistePolys, elevFn) {
   }
   if (pts.length < 6) return 0;
   const n = Math.min(280, Math.floor(pts.length / 3));
-  const trunks = new THREE.InstancedMesh(trunkG, bark, n);
-  const crowns = new THREE.InstancedMesh(crownG, needle, n);
+  const trunks = new THREE.InstancedMesh(trunkG, matsT.bark, n);
+  const crowns = new THREE.InstancedMesh(crownG, matsT.needle, n);
+  const deeps = new THREE.InstancedMesh(crownG, matsT.deep, n);
   const rocks = new THREE.InstancedMesh(rockG, snow, Math.ceil(n * 0.25));
   let ri = 0;
   let ti = 0;
@@ -1158,25 +1164,21 @@ export function addPisteEdgeScenery(THREE, scene, pistePolys, elevFn) {
       ri += 1;
       continue;
     }
-    dummy.position.set(x, y + 1.6 * s, z);
-    dummy.scale.set(s, s * 1.15, s);
-    dummy.rotation.set(0, i * 0.7, 0);
-    dummy.updateMatrix();
-    trunks.setMatrixAt(ti, dummy.matrix);
-    dummy.position.y = y + 5.2 * s;
-    dummy.updateMatrix();
-    crowns.setMatrixAt(ti, dummy.matrix);
+    stampClayTree(dummy, trunks, crowns, deeps, ti, x, y, z, s);
     ti += 1;
   }
   trunks.count = ti;
   crowns.count = ti;
+  deeps.count = ti;
   rocks.count = ri;
   trunks.instanceMatrix.needsUpdate = true;
   crowns.instanceMatrix.needsUpdate = true;
+  deeps.instanceMatrix.needsUpdate = true;
   rocks.instanceMatrix.needsUpdate = true;
   trunks.castShadow = true;
   crowns.castShadow = true;
-  scene.add(trunks, crowns, rocks);
+  deeps.castShadow = true;
+  scene.add(trunks, crowns, deeps, rocks);
   const xzr = hash?.xzr ? hash.xzr.slice() : [];
   for (let i = 0; i < n; i++) xzr.push(pts[i * 3], pts[i * 3 + 1], 0.55);
   scene.userData.treeHash = buildTreeHash(xzr);
