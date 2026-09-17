@@ -8,6 +8,14 @@ import { liftType, liftCableHeight, makeLiftTerminal, makeLiftCarrier, makeLiftS
 import { createLiftMotion } from "./lift-motion.js";
 import { PALETTE } from "/scripts/clay/config.js";
 import { addClayBuilding } from "/scripts/clay/buildings.js";
+import {
+  SNOW,
+  applyInset,
+  buildTrailCover,
+  forestRingsFromFC,
+  getSnowLevel,
+  loadSnowLevel,
+} from "./snow.js";
 
 const GRID = 12;
 const MAX_FILL_SPAN = 700;
@@ -275,6 +283,72 @@ function densifyXY(ring, maxStep, closed) {
   }
   if (!loop) out.push(src[n - 1]);
   return out;
+}
+
+function xzRingToEn(ring) {
+  return (ring || []).map((p) => [p.x, -p.z]);
+}
+
+const snowCoverFill = new THREE.MeshLambertMaterial({
+  color: 0xf7f4ee,
+  side: THREE.DoubleSide,
+  polygonOffset: true,
+  polygonOffsetFactor: -2,
+  polygonOffsetUnits: -2,
+});
+
+function clearGroup(g) {
+  if (!g) return;
+  const kids = g.children.slice();
+  for (const c of kids) {
+    g.remove(c);
+    c.geometry?.dispose?.();
+  }
+}
+
+function drapePisteSnow(ringXz, holesXz, elevFn) {
+  const outer = xzRingToEn(ringXz);
+  const holes = (holesXz || []).map(xzRingToEn);
+  const mesh = drapePisteFill(outer, holes, elevFn, 0.08, snowCoverFill);
+  if (mesh) {
+    mesh.name = "piste-snow";
+    mesh.userData.pisteKind = "snow";
+    mesh.renderOrder = 5;
+  }
+  return mesh;
+}
+
+function paintTrailCover(root, cover, elevFn) {
+  if (!root || !cover) return;
+  let snowG = root.getObjectByName("snow-cover");
+  if (!snowG) {
+    snowG = new THREE.Group();
+    snowG.name = "snow-cover";
+    root.add(snowG);
+  }
+  clearGroup(snowG);
+  for (const it of cover.items || []) {
+    const ring = it.snow || it.bare;
+    if (!ring || ring.length < 3) continue;
+    const mesh = drapePisteSnow(ring, it.holes, elevFn);
+    if (mesh) snowG.add(mesh);
+  }
+}
+
+export function applySnowLevel(scene) {
+  const cover = scene?.userData?.trailCover;
+  const elevFn = scene?.userData?.drapeElev;
+  const root = scene?.userData?.pisteDecor;
+  const p = SNOW[getSnowLevel()] || SNOW.spring;
+  if (cover && elevFn && root) {
+    applyInset(cover, p.inset);
+    paintTrailCover(root, cover, elevFn);
+  }
+  const mat = scene?.userData?.snowMat;
+  if (mat?.color) mat.color.setHex(p.terrain);
+  for (const mesh of scene?.userData?.island?.tops || []) {
+    if (mesh.material?.color) mesh.material.color.setHex(p.terrain);
+  }
 }
 
 function drapeSmoothFill(outer, holes, elevFn, lift, material) {
@@ -556,13 +630,13 @@ function addLiftKit(fc, elevFn, scene, counts) {
 
 
 /** Sample the polygon on a DEM grid so faces follow the slope instead of one giant plane. */
-function drapeFill(outer, holes, elevFn, lift, material, maxSpan = MAX_FILL_SPAN) {
+function drapeFill(outer, holes, elevFn, lift, material, maxSpan = MAX_FILL_SPAN, step = GRID, maxAxis = 48) {
   const bb = ringBBox(outer);
   if (!Number.isFinite(bb.span) || bb.span < 1) return null;
   if (bb.span > maxSpan) return null;
 
-  const nx = Math.max(1, Math.min(48, Math.ceil((bb.maxX - bb.minX) / GRID)));
-  const ny = Math.max(1, Math.min(48, Math.ceil((bb.maxY - bb.minY) / GRID)));
+  const nx = Math.max(1, Math.min(maxAxis, Math.ceil((bb.maxX - bb.minX) / step)));
+  const ny = Math.max(1, Math.min(maxAxis, Math.ceil((bb.maxY - bb.minY) / step)));
   const sx = (bb.maxX - bb.minX) / nx;
   const sy = (bb.maxY - bb.minY) / ny;
   const positions = [];
@@ -603,6 +677,140 @@ function drapeFill(outer, holes, elevFn, lift, material, maxSpan = MAX_FILL_SPAN
   const mesh = new THREE.Mesh(geo, material);
   mesh.renderOrder = 1;
   return mesh;
+}
+
+/** Piste snow: finer DEM grid + edge lerp so the border follows the OSM ring, not stair-steps. */
+function drapePisteFill(outer, holes, elevFn, lift, material) {
+  const bb = ringBBox(outer);
+  if (!Number.isFinite(bb.span) || bb.span < 1) return null;
+  const step = 3.5;
+  const maxAxis = 220;
+  const nx = Math.max(1, Math.min(maxAxis, Math.ceil((bb.maxX - bb.minX) / step)));
+  const ny = Math.max(1, Math.min(maxAxis, Math.ceil((bb.maxY - bb.minY) / step)));
+  const sx = (bb.maxX - bb.minX) / nx;
+  const sy = (bb.maxY - bb.minY) / ny;
+  const positions = [];
+  const index = [];
+
+  function pushVert(east, north) {
+    const z = -north;
+    positions.push(east, elevFn(east, z) + lift, z);
+    return positions.length / 3 - 1;
+  }
+
+  const inside = [];
+  const vid = [];
+  for (let j = 0; j <= ny; j++) {
+    inside[j] = [];
+    vid[j] = [];
+    const north = bb.minY + j * sy;
+    for (let i = 0; i <= nx; i++) {
+      const east = bb.minX + i * sx;
+      inside[j][i] = inPolygon(east, north, outer, holes);
+      vid[j][i] = -1;
+    }
+  }
+
+  function gridVert(i, j) {
+    if (vid[j][i] >= 0) return vid[j][i];
+    vid[j][i] = pushVert(bb.minX + i * sx, bb.minY + j * sy);
+    return vid[j][i];
+  }
+
+  function lerpVert(i0, j0, i1, j1) {
+    const e0 = bb.minX + i0 * sx;
+    const n0 = bb.minY + j0 * sy;
+    const e1 = bb.minX + i1 * sx;
+    const n1 = bb.minY + j1 * sy;
+    let lo = 0;
+    let hi = 1;
+    const aIn = inside[j0][i0];
+    for (let k = 0; k < 6; k++) {
+      const t = (lo + hi) * 0.5;
+      const hit = inPolygon(e0 + (e1 - e0) * t, n0 + (n1 - n0) * t, outer, holes);
+      if (hit === aIn) lo = t;
+      else hi = t;
+    }
+    const t = (lo + hi) * 0.5;
+    return pushVert(e0 + (e1 - e0) * t, n0 + (n1 - n0) * t);
+  }
+
+  function tri(ia, ib, ic) {
+    index.push(ia, ib, ic);
+  }
+
+  for (let j = 0; j < ny; j++) {
+    for (let i = 0; i < nx; i++) {
+      const bits =
+        (inside[j][i] ? 1 : 0) |
+        (inside[j][i + 1] ? 2 : 0) |
+        (inside[j + 1][i + 1] ? 4 : 0) |
+        (inside[j + 1][i] ? 8 : 0);
+      if (!bits) continue;
+      const a = () => gridVert(i, j);
+      const b = () => gridVert(i + 1, j);
+      const c = () => gridVert(i + 1, j + 1);
+      const d = () => gridVert(i, j + 1);
+      const ab = () => lerpVert(i, j, i + 1, j);
+      const bc = () => lerpVert(i + 1, j, i + 1, j + 1);
+      const cd = () => lerpVert(i + 1, j + 1, i, j + 1);
+      const da = () => lerpVert(i, j + 1, i, j);
+      if (bits === 15) {
+        tri(a(), b(), c());
+        tri(a(), c(), d());
+        continue;
+      }
+      if (bits === 1) tri(a(), ab(), da());
+      else if (bits === 2) tri(b(), bc(), ab());
+      else if (bits === 3) {
+        tri(a(), b(), bc());
+        tri(a(), bc(), da());
+      } else if (bits === 4) tri(c(), cd(), bc());
+      else if (bits === 5) {
+        tri(a(), ab(), bc());
+        tri(a(), bc(), c());
+        tri(a(), c(), cd());
+        tri(a(), cd(), da());
+      } else if (bits === 6) {
+        tri(b(), c(), cd());
+        tri(b(), cd(), ab());
+      } else if (bits === 7) {
+        tri(a(), b(), c());
+        tri(a(), c(), cd());
+        tri(a(), cd(), da());
+      } else if (bits === 8) tri(d(), da(), cd());
+      else if (bits === 9) {
+        tri(a(), ab(), cd());
+        tri(a(), cd(), d());
+      } else if (bits === 10) {
+        tri(b(), bc(), cd());
+        tri(b(), cd(), d());
+        tri(b(), d(), da());
+        tri(b(), da(), ab());
+      } else if (bits === 11) {
+        tri(a(), b(), bc());
+        tri(a(), bc(), cd());
+        tri(a(), cd(), d());
+      } else if (bits === 12) {
+        tri(c(), d(), da());
+        tri(c(), da(), bc());
+      } else if (bits === 13) {
+        tri(a(), ab(), bc());
+        tri(a(), bc(), c());
+        tri(a(), c(), d());
+      } else if (bits === 14) {
+        tri(b(), c(), d());
+        tri(b(), d(), da());
+        tri(b(), da(), ab());
+      }
+    }
+  }
+  if (!index.length) return null;
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+  geo.setIndex(index);
+  geo.computeVertexNormals();
+  return new THREE.Mesh(geo, material);
 }
 
 async function loadFC(url) {
@@ -722,6 +930,7 @@ export async function addOsmWorld(THREE, scene, sceneRoot, manifest, elevFn) {
   addFills(await loadLayer("grassland"), mats.grass, 0.35, "grassland");
 
   const forest = await loadLayer("forest");
+  const forestRings = forestRingsFromFC(forest);
   if (forest) {
     const woodPts = [];
     const otherPts = [];
@@ -792,8 +1001,13 @@ export async function addOsmWorld(THREE, scene, sceneRoot, manifest, elevFn) {
   addLines(water, new THREE.LineBasicMaterial({ color: 0xa8b4bc }), 0.6, "water_line");
 
   const pistes = await loadLayer("pistes");
+  loadSnowLevel();
+  const cover = buildTrailCover(pistes, forestRings);
+  scene.userData.trailCover = cover;
+  scene.userData.drapeElev = elevFn;
   const pisteRoot = new THREE.Group();
   pisteRoot.name = "piste-decor";
+  paintTrailCover(pisteRoot, cover, elevFn);
   if (pistes) {
     for (const f of pistes.features || []) {
       const g = f.geometry;
@@ -806,12 +1020,6 @@ export async function addOsmWorld(THREE, scene, sceneRoot, manifest, elevFn) {
       };
       if (g?.type === "Polygon" || g?.type === "MultiPolygon") {
         for (const poly of polygonParts(g)) {
-          const mesh = drapeSmoothFill(poly[0], poly.slice(1), elevFn, 0.04, pisteFillMat(style.color));
-          if (mesh) {
-            mesh.name = "piste-poly";
-            tagPaint(mesh, "fill");
-            pisteRoot.add(mesh);
-          }
           for (const w of zebraWallMeshes(poly[0], elevFn, style.color, true)) {
             if (w.material !== wallBlack) tagPaint(w, "wall");
             pisteRoot.add(w);

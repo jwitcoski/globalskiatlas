@@ -24,7 +24,7 @@
     html, body { margin: 0; height: 100%; height: 100dvh; height: 100svh; overflow: hidden; background: #7eb8e4; color: var(--type); font-family: "Segoe UI", system-ui, sans-serif; touch-action: none; }
     body.picker { touch-action: auto; }
     canvas { display: block; touch-action: none; }
-    #obj, #clock, #score-box, #piste, #speed-box, #dist-read, #pause-btn, #pov-btn, #load-note, #mini-wrap, #nav-arrow, #resort-title {
+    #obj, #clock, #score-box, #piste, #speed-box, #dist-read, #pause-btn, #pov-btn, #snow-btn, #load-note, #mini-wrap, #nav-arrow, #resort-title {
       position: absolute; z-index: 2; pointer-events: none;
       text-shadow: 0 1px 8px rgba(40,50,60,.35);
       font-weight: 600; letter-spacing: .04em;
@@ -147,12 +147,18 @@
       min-width: 40px; min-height: 40px; border: 0; background: transparent;
       color: inherit; font-weight: 600; letter-spacing: .08em; cursor: pointer; opacity: .75;
     }
-    #pause-btn:hover, #pov-btn:hover { opacity: 1; }
+    #pause-btn:hover, #pov-btn:hover, #snow-btn:hover { opacity: 1; }
     #pov-btn {
       pointer-events: auto; top: calc(var(--pad) + 42px); left: var(--pad-l);
       min-width: 40px; min-height: 32px; border: 0; background: transparent;
       color: inherit; font-weight: 700; letter-spacing: .08em; cursor: pointer; opacity: .75;
       font-size: 11px;
+    }
+    #snow-btn {
+      pointer-events: auto; top: var(--pad); left: calc(var(--pad-l) + 100px);
+      min-width: 44px; min-height: 44px; max-width: 140px; border: 0; background: transparent;
+      color: inherit; font-weight: 700; letter-spacing: .04em; cursor: pointer; opacity: .75;
+      font-size: 10px; text-align: left; line-height: 1.2;
     }
     #load-note { display: none; }
     #dbg {
@@ -395,7 +401,7 @@
       background: #2a3238; color: #f4f6f8; border-color: #2a3238;
     }
     body.lobby #clock, body.lobby #score-box, body.lobby #dist-read, body.lobby #piste,
-    body.lobby #speed-box, body.lobby #obj, body.lobby #pause-btn, body.lobby #pov-btn,
+    body.lobby #speed-box, body.lobby #obj, body.lobby #pause-btn, body.lobby #pov-btn, body.lobby #snow-btn,
     body.lobby #pads, body.lobby #nav-arrow, body.lobby #combo-read, body.lobby #air-shout,
     body.lobby #mini-wrap { display: none !important; }
     body.lobby #resort-title { display: block; }
@@ -459,7 +465,7 @@
     .osm-fix-hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
     .osm-fix-status { margin: 0; font-size: 12px; color: #0f766e; }
     .osm-fix-compact .osm-fix-copy { font-size: 11px; }
-    body.trailer #pause-btn, body.trailer #pov-btn, body.trailer #pads, body.trailer #dbg { display: none !important; }
+    body.trailer #pause-btn, body.trailer #pov-btn, body.trailer #snow-btn, body.trailer #pads, body.trailer #dbg { display: none !important; }
     #overlay.picker {
       align-items: stretch; justify-content: stretch;
       padding: max(12px, env(safe-area-inset-top)) 16px max(12px, env(safe-area-inset-bottom));
@@ -546,7 +552,7 @@
     #overlay.picker .maplibregl-ctrl-attrib, #overlay.picker .maptiler-ctrl-attrib { font-size: 10px; }
     #overlay.picker .maplibregl-popup, #overlay.picker .maptiler-popup { z-index: 1100; }
     body.picker #clock, body.picker #score-box, body.picker #dist-read, body.picker #piste,
-    body.picker #speed-box, body.picker #obj, body.picker #pause-btn, body.picker #pov-btn,
+    body.picker #speed-box, body.picker #obj, body.picker #pause-btn, body.picker #pov-btn, body.picker #snow-btn,
     body.picker #pads, body.picker #nav-arrow, body.picker #mini-wrap { display: none !important; }
     @media (max-width: 640px) {
       #overlay.lobby { align-items: flex-end; background: linear-gradient(180deg, transparent 42%, rgba(232,238,242,.62)); }
@@ -602,6 +608,7 @@
   <button id="pause-btn" type="button" aria-label="Pause">II</button>
   <button id="help-btn" type="button" aria-label="Controls">?</button>
   <button id="pov-btn" type="button" aria-label="Toggle camera">CAM</button>
+  <button id="snow-btn" type="button" aria-label="Snow level">Spring skiing</button>
   <div id="piste" class="ok">ON PISTE</div>
   <div id="speed-box">
     <label>SPEED KM/H</label>
@@ -654,6 +661,6 @@
     { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
                    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }
   </script>
-  <script type="module" src="./main.js?v=s16"></script>
+  <script type="module" src="./main.js?v=snow7"></script>
 </body>
 </html>

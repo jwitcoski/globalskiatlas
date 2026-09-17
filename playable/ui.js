@@ -1,5 +1,7 @@
 /** HUD and overlay helpers. UI reads game state; it does not own piste/DNF rules. */
 
+import { SNOW_LABEL } from "./snow.js";
+
 export function bindUi() {
   return {
     overlay: document.getElementById("overlay"),
@@ -14,6 +16,7 @@ export function bindUi() {
     remainFill: document.getElementById("remain-fill"),
     distRead: document.getElementById("dist-read"),
     pauseBtn: document.getElementById("pause-btn"),
+    snowBtn: document.getElementById("snow-btn"),
     loadNote: document.getElementById("load-note"),
     nav: document.getElementById("nav-arrow"),
     navNeedle: document.getElementById("nav-needle"),
@@ -337,4 +340,9 @@ export function closePanel(ui) {
   document.body.classList.remove("lobby", "picker");
   setResortTitle(ui, "");
   setOsmMapNote(ui, "");
+}
+
+export function paintSnowBtn(ui, level) {
+  if (!ui?.snowBtn) return;
+  ui.snowBtn.textContent = SNOW_LABEL[level] || SNOW_LABEL.spring;
 }

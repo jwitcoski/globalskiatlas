@@ -1,4 +1,6 @@
-/** Arcade piste score: stay on the centerline, carve, catch air. */
+/** Arcade piste score: stay on the snow corridor, carve, catch air. */
+
+import { onPisteAt, snowHalfM } from "./snow.js";
 
 function scoreStore(run) {
   return `montage_best_score:${run.finish?.name || "course"}`;
@@ -34,7 +36,7 @@ export function distToPolyline(x, z, pts) {
 
 export function attachPiste(run, pts) {
   run.pistePts = pts;
-  run.pisteWidth = PISTE_HALF_M;
+  run.pisteWidth = snowHalfM();
   run.score = 0;
   run.onPiste = true;
   run.offTimer = 0;
@@ -129,7 +131,8 @@ export function tickScore(run, pos, speed, turning, dt, extra = {}) {
   tickFlash(run, dt);
   const d = distToPolyline(pos.x, pos.z, run.pistePts);
   run.pisteDist = d;
-  run.onPiste = d <= run.pisteWidth;
+  const coverHit = onPisteAt(pos.x, pos.z, run.trailCover, undefined, run.pistePts);
+  run.onPiste = coverHit == null ? d <= snowHalfM() : coverHit;
   if (!run.clocked) {
     run.styleMult = 1;
     return run;

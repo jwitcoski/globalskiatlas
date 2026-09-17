@@ -24,7 +24,7 @@ const EDGE = 6;
 const SKID_BASE = 2.4;
 const SKID_EDGE = 3.6;
 const TRAVERSE_DRAG = 0.85;
-const POWDER_DRAG = 0.42;
+const BARE_DRAG = 8; // ponytail: dumps speed in ~1s; tune if it feels like a wall
 const POWDER_SKID = 1.4;
 
 /** Short ballistic pops over DEM rollers — never a flight sim. */
@@ -666,7 +666,7 @@ export function stepSki(THREE, { pos, vel, heading, keys, hf, dt, trees, air, on
   const braking = wantBrake(keys);
   const along = vel.dot(fwd);
   let pole = false;
-  if (wantFwd && !braking && along < POLE_ENGAGE) {
+  if (onPiste && wantFwd && !braking && along < POLE_ENGAGE) {
     const look = 2.4;
     const yHere = hf.sample(pos.x, pos.z);
     const yAhead = hf.sample(pos.x + fwd.x * look, pos.z + fwd.z * look);
@@ -679,12 +679,12 @@ export function stepSki(THREE, { pos, vel, heading, keys, hf, dt, trees, air, on
       const next = vel.dot(fwd);
       if (next > POLE_MAX) vel.addScaledVector(fwd, POLE_MAX - next);
     }
-  } else if (wantFwd && !braking) {
+  } else if (onPiste && wantFwd && !braking) {
     vel.addScaledVector(fwd, TUCK * dt);
   }
   if (braking) vel.multiplyScalar(Math.max(0, 1 - BRAKE * dt));
   const across = 1 - Math.max(0, fwd.dot(fall));
-  const drag = DRAG + TRAVERSE_DRAG * across * across + (powder ? POWDER_DRAG : 0);
+  const drag = DRAG + TRAVERSE_DRAG * across * across + (powder ? BARE_DRAG : 0);
   vel.multiplyScalar(Math.max(0, 1 - drag * dt));
   vel.addScaledVector(n, -vel.dot(n));
   if (vel.length() > MAX_SPD) vel.setLength(MAX_SPD);

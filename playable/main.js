@@ -23,11 +23,11 @@ import {
   startShove,
   shoveShouldHit,
   markShoveHit,
-} from "./physics.js?v=s7";
+} from "./physics.js?v=snow1";
 import { featuredCourses, attachPisteDifficulty, courseFinish, createRun, tickRun, formatTime } from "./run.js?v=map4";
-import { coordsToXz, attachPiste, resetScore, tickScore, commitBestScore, formatScore, applyWipeout } from "./score.js?v=feel5";
+import { coordsToXz, attachPiste, resetScore, tickScore, commitBestScore, formatScore, applyWipeout } from "./score.js?v=snow1";
 import { orientPiste, alongTrack, alongPolyline, placeGates, addGateMeshes, clearGateMeshes, resetGates, tickGates } from "./gates.js?v=vis18";
-import { addOsmWorld, applyPisteDecorDifficultyScheme } from "./osm-world.js?v=mapall4";
+import { addOsmWorld, applyPisteDecorDifficultyScheme, applySnowLevel } from "./osm-world.js?v=snow7";
 import {
   snowTerrainMaterial,
   addSkyAndLights,
@@ -43,7 +43,7 @@ import {
   setInspectAtmosphere,
 } from "./look.js?v=lod4";
 import { addResortIsland, updateIslandDust, updateIslandLod, setIslandOpacity, resetIslandLod } from "./island.js?v=lod3b";
-import { bindUi, setHud, openPanel, closePanel, updateLoading, setOsmMapNote, setResortTitle, compactUi, setFlybyChrome, setHelpTips } from "./ui.js?v=s8";
+import { bindUi, setHud, openPanel, closePanel, updateLoading, setOsmMapNote, setResortTitle, compactUi, setFlybyChrome, setHelpTips, paintSnowBtn } from "./ui.js?v=snow1";
 import { atlasStatsHtml, prefetchWikiIndex } from "./atlas-stats.js?v=stats1";
 import { bindFinishChartScope, finishChartsHtml, prefetchFinishCharts } from "./finish-charts.js?v=1";
 import { bindOsmFix, osmFixHtml, osmFixContext } from "./osm-fix.js?v=1";
@@ -76,6 +76,7 @@ import {
 } from "./trail-map.js?v=mapall2";
 import { makeMinimap } from "./minimap.js?v=mapall1";
 import { createNpcSkiers, clearNpcSkiers, tickNpcSkiers, tryShoveNpc } from "./npc-skiers.js?v=s9";
+import { addCoverLines, cycleSnowLevel, getSnowLevel, loadSnowLevel, onPisteAt } from "./snow.js";
 import { updateTraffic } from "./traffic.js?v=vis16";
 import {
   TRAILER,
@@ -136,6 +137,8 @@ async function probeMeshBytes(url) {
 const STEP = 1 / 60;
 
 const ui = bindUi();
+loadSnowLevel();
+paintSnowBtn(ui, getSnowLevel());
 bindFinishChartScope();
 bindOsmFix();
 const LEGAL =
@@ -622,7 +625,10 @@ function tickLobbyHandoff(dt) {
 function setPistePlayMode(playing) {
   const root = scene.userData.pisteDecor;
   if (!root) return;
-  root.visible = !playing;
+  root.visible = true;
+  for (const child of root.children) {
+    child.visible = child.name === "snow-cover" ? true : !playing;
+  }
 }
 
 function setPlayableVisible(on) {
@@ -865,6 +871,7 @@ function applyCourse(course) {
     finish,
   );
   attachPiste(run, pistePts);
+  run.trailCover = scene.userData.trailCover;
   run.courseLen = Math.hypot(finish.x - spawnXZ.x, finish.z - spawnXZ.z) || 1;
   run.clocked = false;
   run.startAlong = 4;
@@ -1003,6 +1010,7 @@ async function loadMountain() {
   hf = makeHeightfield(hfMeta, new Uint16Array(buf));
 
   const snowMat = snowTerrainMaterial(THREE);
+  scene.userData.snowMat = snowMat;
   let terrainRoot = null;
   const meshUrl = new URL(manifest.terrain.mesh, SCENE_ROOT);
   let meshBytes = 0;
@@ -1107,6 +1115,10 @@ async function loadMountain() {
       pts: coordsToXz(f.geometry.coordinates),
     });
   }
+  addCoverLines(
+    scene.userData.trailCover,
+    pisteLines.map((p) => p.pts),
+  );
 
   const first = trailChoices[0];
   const finish0 = courseFinish(first);
@@ -1122,6 +1134,11 @@ async function loadMountain() {
     skiArea = parseSkiArea(skiFC);
   } catch {
     /* boundary is optional; trail extent still frames the lobby */
+  }
+  const cover = scene.userData.trailCover;
+  if (cover) {
+    cover.skiRings = skiArea?.rings || [];
+    cover.bounds = skiArea?.bounds || hf.playBounds || null;
   }
   if (skiArea?.bounds && !hf.playBounds) {
     const pad = 18;
@@ -1148,6 +1165,8 @@ async function loadMountain() {
     console.warn("resort island failed", islandErr);
     if (terrainRoot) terrainRoot.visible = true;
   }
+
+  applySnowLevel(scene);
 
   trailMap = addTrailMap(THREE, scene, trailChoices, pisteLines, drap, skiArea);
   mini = makeMinimap(ui.minimap, trailMap);
@@ -1246,6 +1265,11 @@ ui.pauseBtn?.addEventListener("click", () => {
     acc = 0;
     openPanel(ui, "paused", {});
   }
+});
+ui.snowBtn?.addEventListener("click", () => {
+  cycleSnowLevel();
+  applySnowLevel(scene);
+  paintSnowBtn(ui, getSnowLevel());
 });
 let helpPausedRun = false;
 function closeHelpTips() {
@@ -1366,6 +1390,8 @@ function tick(now) {
           markShoveHit(skier);
           tryShoveNpc(THREE, extras, skier.position, heading, hf, skier.userData.shoveSide || 1, npcPack);
         }
+        const coverHit = onPisteAt(skier.position.x, skier.position.z, run.trailCover, undefined, run.pistePts);
+        if (coverHit != null) run.onPiste = coverHit;
         const st = stepSki(THREE, {
           pos: skier.position,
           vel,
