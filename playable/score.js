@@ -151,6 +151,7 @@ export function tickScore(run, pos, speed, turning, dt, extra = {}) {
     run.combo = Math.max(1, (run.combo || 1) - dt * 0.4);
     run.offTimer += dt;
     run.yetiBoost = Math.min(10, (run.yetiBoost || 0) + dt * 0.7);
+    if (run.offTimer >= DNF_OFF_S) run.yetiWanted = true;
   }
   if (extra.air) {
     run.airScoreT = extra.airTime || (run.airScoreT || 0) + dt;

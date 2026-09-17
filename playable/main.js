@@ -25,8 +25,8 @@ import {
   markShoveHit,
 } from "./physics.js?v=s7";
 import { featuredCourses, attachPisteDifficulty, courseFinish, createRun, tickRun, formatTime } from "./run.js?v=map4";
-import { coordsToXz, attachPiste, resetScore, tickScore, commitBestScore, formatScore, applyWipeout } from "./score.js?v=feel4";
-import { orientPiste, alongTrack, alongPolyline } from "./gates.js?v=vis18";
+import { coordsToXz, attachPiste, resetScore, tickScore, commitBestScore, formatScore, applyWipeout } from "./score.js?v=feel5";
+import { orientPiste, alongTrack, alongPolyline, placeGates, addGateMeshes, clearGateMeshes, resetGates, tickGates } from "./gates.js?v=vis18";
 import { addOsmWorld, applyPisteDecorDifficultyScheme } from "./osm-world.js?v=mapall1";
 import {
   snowTerrainMaterial,
@@ -632,6 +632,7 @@ function setPlayableVisible(on) {
   if (flakes?.pts) flakes.pts.visible = on;
   if (wake) wake.mesh.visible = on && wake.samples.length > 1;
   if (marksRoot) marksRoot.visible = on;
+  if (gateRoot) gateRoot.visible = on;
   if (npcPack?.root) npcPack.root.visible = on && !TRAILER;
   if (yeti) yeti.visible = on && !!run?.yetiOut;
   if (finishMark) finishMark.visible = on;
@@ -805,6 +806,7 @@ let startMark = null;
 let trailChoices = [];
 let activeCourse = null;
 let marksRoot = null;
+let gateRoot = null;
 let npcPack = null;
 let trailMap = null;
 let mini = null;
@@ -876,6 +878,12 @@ function applyCourse(course) {
   clearTrailMarks(marksRoot);
   marksRoot = hf ? addTrailMarks(THREE, scene, pistePts, (x, z) => hf.sample(x, z)) : null;
   if (marksRoot) marksRoot.visible = false;
+  clearGateMeshes(gateRoot);
+  gateRoot = null;
+  run.gates = placeGates(pistePts);
+  gateRoot = hf ? addGateMeshes(THREE, scene, run.gates, (x, z) => hf.sample(x, z)) : null;
+  if (gateRoot) gateRoot.visible = false;
+  resetGates(run);
   clearNpcSkiers(npcPack);
   npcPack = TRAILER || !hf ? null : createNpcSkiers(THREE, scene, pisteLines, (x, z) => hf.sample(x, z), spawnXZ, pistePts);
 }
@@ -887,6 +895,7 @@ function resetRun(opts = {}) {
   run.leftGate = false;
   run.clocked = false;
   resetScore(run);
+  resetGates(run);
   resetYeti(yeti, run);
   clearSkiWake(wake);
   resetAirState(air);
@@ -1389,6 +1398,7 @@ function tick(now) {
         }
         const along = alongTrack(run.pistePts, skier.position.x, skier.position.z).along;
         tickRun(run, skier.position, spawnXZ, STEP, vel.length() > 1.5, along);
+        tickGates(run, skier.position);
         tickScore(run, skier.position, vel.length(), turning, STEP, {
           gap: st.treeHit?.gap,
           grazed: st.treeHit?.hit,
