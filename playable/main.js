@@ -20,7 +20,7 @@ import {
   tickFallPose,
   clearFall,
   standUp,
-} from "./physics.js?v=mob1";
+} from "./physics.js?v=s1";
 import { featuredCourses, attachPisteDifficulty, courseFinish, createRun, tickRun, formatTime } from "./run.js?v=map4";
 import { coordsToXz, attachPiste, resetScore, tickScore, commitBestScore, formatScore, applyWipeout } from "./score.js?v=feel4";
 import { orientPiste, alongTrack, alongPolyline } from "./gates.js?v=vis18";
@@ -47,8 +47,8 @@ import { bindOsmFix, osmFixHtml, osmFixContext } from "./osm-fix.js?v=1";
 import { showPickerMap, destroyPickerMap } from "./picker-map.js?v=lod3";
 import { resolveVisitorNearestClay } from "/scripts/clay/nearest-resort.js";
 import { capDpr, attachDebug } from "./debug.js?v=mob1";
-import { intentsFrom, isTurning, analogAxes } from "./input.js?v=mob1";
-import { bindMobileChrome, bindPads } from "./mobile.js?v=mob2";
+import { intentsFrom, isTurning, analogAxes } from "./input.js?v=s1";
+import { bindMobileChrome, bindPads } from "./mobile.js?v=s1";
 import { bakePisteSculpt, drapeSculptOnMesh } from "./piste-sculpt.js?v=feel3";
 import { addTrailMarks, clearTrailMarks, updateTrailMarks } from "./trail-marks.js?v=marks10";
 import { makeYeti, resetYeti, parkYetiAtStart, tickYeti } from "./yeti.js?v=vis16";
@@ -1366,7 +1366,7 @@ function tick(now) {
       if (!skier.userData.fall) {
         orientSkier(THREE, skier, skier.position, heading, vel, hf, skier.userData.steer || 0, {
           air: skier.userData.air,
-          tuck: intent.tuck && !skier.userData.pole,
+          tuck: (intent.tuck || vel.length() > 11) && !skier.userData.pole,
           pole: !!skier.userData.pole,
           brake: intent.brake,
           speed: vel.length(),
@@ -1375,7 +1375,7 @@ function tick(now) {
       }
       applyRunCam();
       applyCamShake(camera, shake, frameDt);
-      punchFov(camera, intent.tuck, frameDt, vel.length());
+      punchFov(camera, intent.tuck || vel.length() > 11, frameDt, vel.length());
       if (run.phase === "finished" && !finishedShown) {
         finishedShown = true;
         acc = 0;

@@ -1,6 +1,6 @@
 /** Arcade ski on DEM. Gravity is fall-line only (none on flats). Custom, not Rapier. */
 
-import { analogAxes } from "./input.js?v=mob1";
+import { analogAxes } from "./input.js?v=s1";
 
 const G_FALL = 32;
 const TURN = 0.98;
@@ -39,6 +39,8 @@ const LAUNCH_SEP = 0.85;
 const LAUNCH_SPD = 6.5;
 const LAUNCH_CONVEX = 0.06;
 const AIR_COOL = 0.35;
+const JUMP_COOL = 0.55;
+const JUMP_VY = 2.35;
 const AIR_TURN = 0.42;
 const AIR_DRAG = 0.05;
 const LAND_HARD = 6;
@@ -511,6 +513,19 @@ function wantBrake(keys) {
   return keys.has("KeyS") || keys.has("ArrowDown") || analogAxes().brake > 0.35;
 }
 
+function wantJump(keys) {
+  return keys.has("Space");
+}
+
+function popAir(air, pos, vy) {
+  air.on = true;
+  air.t = 0;
+  air.ox = pos.x;
+  air.oz = pos.z;
+  air.vy = vy;
+  air.height = 0.28;
+}
+
 /** Split velocity into along-ski and sideways, then bleed only the sideways part. */
 function carve(THREE, vel, fwd, edged, powder, dt) {
   const along = vel.dot(fwd);
@@ -613,7 +628,8 @@ export function stepSki(THREE, { pos, vel, heading, keys, hf, dt, trees, air, on
   const powder = !onPiste;
   const skid = carve(THREE, vel, fwd, Math.abs(turn) > 0.12 && speed > 0.8, powder, dt);
 
-  const wantFwd = wantTuck(keys);
+  const autoTuck = speed > 11 && grade > 0.05;
+  const wantFwd = wantTuck(keys) || autoTuck;
   const braking = wantBrake(keys);
   const along = vel.dot(fwd);
   let pole = false;
@@ -670,19 +686,21 @@ export function stepSki(THREE, { pos, vel, heading, keys, hf, dt, trees, air, on
   const horiz = Math.hypot(vel.x, vel.z) || 1;
   const slopeNow = vel.y / horiz;
   const convex = slopeNow - slopeAhead;
-  const tucked = wantTuck(keys);
+  const tucked = wantTuck(keys) || autoTuck;
   const tuckPop = !!(air?.tuckHeld && !tucked && vel.length() > 10 && convex > 0.04 && slopeAhead < -0.02);
   if (air) air.tuckHeld = tucked;
+  if (air && air.cool <= 0 && wantJump(keys) && !treeHit.hit && climb <= 0.14) {
+    popAir(air, pos, JUMP_VY + Math.min(0.8, vel.length() * 0.03));
+    air.cool = JUMP_COOL;
+    pos.y = ground + RIDE + 0.22;
+    return { heading, ground, speed: vel.length(), steer: turn, treeHit, air: true, landed: 0, skid };
+  }
   const lip =
     (sep > LAUNCH_MIN && leaving > LAUNCH_SEP) ||
     (convex > LAUNCH_CONVEX && slopeAhead < -0.03) ||
     tuckPop;
   if (air && air.cool <= 0 && climb <= 0 && vel.length() > LAUNCH_SPD && !treeHit.hit && lip) {
-    air.on = true;
-    air.t = 0;
-    air.ox = pos.x;
-    air.oz = pos.z;
-    air.vy = Math.min(4.4, Math.max(1.15, tuckPop ? 2.6 : Math.max(leaving * 0.42, convex * horiz * 0.55)));
+    popAir(air, pos, Math.min(4.4, Math.max(1.15, tuckPop ? 2.6 : Math.max(leaving * 0.42, convex * horiz * 0.55))));
     air.height = Math.max(sep, 0.2);
     return { heading, ground, speed: vel.length(), steer: turn, treeHit, air: true, landed: 0, skid };
   }

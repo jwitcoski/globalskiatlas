@@ -1,6 +1,6 @@
 /** Landscape-first playable. Analog stick + pads; lock requested on Ski. */
 
-import { setAnalogSteer, setAnalogVert, clearAnalog } from "./input.js?v=mob1";
+import { setAnalogSteer, clearAnalog } from "./input.js?v=s1";
 
 const DEAD = 0.12;
 
@@ -40,8 +40,7 @@ export function bindPads(keys) {
   const root = document.getElementById("pads");
   if (!root) return;
   const map = {
-    tuck: ["KeyW", "ArrowUp"],
-    brake: ["KeyS", "ArrowDown"],
+    jump: ["Space"],
   };
   const held = new Map();
   function setCodes(codes, on) {
@@ -77,13 +76,12 @@ export function bindPads(keys) {
       ny /= mag;
     }
     const ax = Math.abs(nx) < DEAD ? 0 : nx;
-    const ay = Math.abs(ny) < DEAD ? 0 : -ny;
+    const ay = Math.abs(ny) < DEAD ? 0 : ny;
     setAnalogSteer(-ax);
-    setAnalogVert(ay);
     const knob = well.querySelector(".stick-knob");
     if (knob) {
       const px = ax * radius * 0.42;
-      const py = -ay * radius * 0.42;
+      const py = ay * radius * 0.42;
       knob.style.transform = `translate(${px}px, ${py}px)`;
     }
   }

@@ -10,11 +10,8 @@ export function setAnalogSteer(x) {
   analog.steer = Math.max(-1, Math.min(1, x || 0));
 }
 
-export function setAnalogVert(y) {
-  const v = Math.max(-1, Math.min(1, y || 0));
-  analog.tuck = Math.max(0, v);
-  analog.brake = Math.max(0, -v);
-}
+/** Stick Y is visual-only on phones (Sprint 1). Keyboard still tucks/brakes. */
+export function setAnalogVert(_y) {}
 
 export function clearAnalog() {
   analog.steer = 0;
@@ -31,11 +28,13 @@ export function intentsFrom(keys) {
   else if (keyLeft && keyRight) steer = 0;
   const tuck = keys.has("KeyW") || keys.has("ArrowUp") || analog.tuck > 0.35;
   const brake = keys.has("KeyS") || keys.has("ArrowDown") || analog.brake > 0.35;
+  const jump = keys.has("Space");
   return {
     left: steer > 0.12,
     right: steer < -0.12,
     tuck,
     brake,
+    jump,
     steer,
   };
 }
