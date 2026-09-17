@@ -18,6 +18,7 @@ export function bindUi() {
     nav: document.getElementById("nav-arrow"),
     navNeedle: document.getElementById("nav-needle"),
     povBtn: document.getElementById("pov-btn"),
+    helpBtn: document.getElementById("help-btn"),
     combo: document.getElementById("combo-read"),
     shout: document.getElementById("air-shout"),
     osmMapNote: document.getElementById("osm-map-note"),
@@ -256,6 +257,15 @@ export function openPanel(ui, kind, data) {
             ],
       )}`;
     bindLobbyDetails(ui);
+    return;
+  }
+  if (kind === "help") {
+    ui.panel.innerHTML = `<p class="kicker">Controls</p>
+      <h2>Thumbs</h2>
+      <p>Left stick steers.</p>
+      <p>Jump hops.</p>
+      <p>Shove bumps another skier.</p>
+      ${actions([["help-close", "Got it", "primary"]])}`;
     return;
   }
   if (kind === "paused") {

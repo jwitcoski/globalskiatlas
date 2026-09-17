@@ -1,6 +1,6 @@
 /** Landscape-first playable. Analog stick + pads; lock requested on Ski. */
 
-import { setAnalogSteer, clearAnalog } from "./input.js?v=s1";
+import { setAnalogSteer, clearAnalog } from "./input.js?v=s2";
 
 const DEAD = 0.12;
 
@@ -41,6 +41,7 @@ export function bindPads(keys) {
   if (!root) return;
   const map = {
     jump: ["Space"],
+    shove: ["KeyE"],
   };
   const held = new Map();
   function setCodes(codes, on) {

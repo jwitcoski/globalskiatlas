@@ -116,6 +116,14 @@
     #speed-box label { display: none; }
     #speed { display: none; }
     #speed-read { font-variant-numeric: tabular-nums; font-size: 12px; font-weight: 500; }
+    #help-btn {
+      pointer-events: auto; z-index: 5; position: absolute;
+      top: var(--pad); left: calc(var(--pad-l) + 48px);
+      min-width: 44px; min-height: 44px; border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.35); background: rgba(255,255,255,.18);
+      color: inherit; font: 700 16px/1 system-ui, sans-serif; cursor: pointer;
+    }
+    body.picker #help-btn { display: none !important; }
     #pause-btn {
       pointer-events: auto; top: var(--pad); left: var(--pad-l);
       min-width: 40px; min-height: 40px; border: 0; background: transparent;
@@ -139,7 +147,7 @@
       display: none; position: absolute; z-index: 3; inset: auto var(--pad-r) var(--pad-b) var(--pad-l);
       justify-content: space-between; align-items: flex-end; pointer-events: none;
     }
-    #pads .col { display: flex; gap: 10px; pointer-events: auto; }
+    #pads .col { display: flex; gap: 8px; pointer-events: auto; }
     #pads button {
       min-width: 72px; min-height: 72px; border-radius: 16px; border: 1px solid rgba(255,255,255,.35);
       background: rgba(255,255,255,.18); color: inherit; font-size: 0; touch-action: none;
@@ -564,6 +572,7 @@
   <div id="dist-read"></div>
   <div id="remain"><div id="remain-fill"></div></div>
   <button id="pause-btn" type="button" aria-label="Pause">II</button>
+  <button id="help-btn" type="button" aria-label="Controls">?</button>
   <button id="pov-btn" type="button" aria-label="Toggle camera">CAM</button>
   <div id="piste" class="ok">ON PISTE</div>
   <div id="speed-box">
@@ -581,6 +590,9 @@
       <button type="button" data-pad="jump" aria-label="Jump">
         <svg viewBox="0 0 32 32" aria-hidden="true"><path fill="currentColor" d="M16 4l10 12h-6v12h-8V16H6z"/></svg>
       </button>
+      <button type="button" data-pad="shove" aria-label="Shove">
+        <svg viewBox="0 0 32 32" aria-hidden="true"><path fill="currentColor" d="M6 14h12v-5l10 8-10 8v-5H6z"/></svg>
+      </button>
     </div>
   </div>
   <div id="rotate-lock" hidden>Turn the screen sideways to ski</div>
@@ -597,6 +609,6 @@
     { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
                    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }
   </script>
-  <script type="module" src="./main.js?v=s1"></script>
+  <script type="module" src="./main.js?v=s2"></script>
 </body>
 </html>

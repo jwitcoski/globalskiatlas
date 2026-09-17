@@ -29,12 +29,14 @@ export function intentsFrom(keys) {
   const tuck = keys.has("KeyW") || keys.has("ArrowUp") || analog.tuck > 0.35;
   const brake = keys.has("KeyS") || keys.has("ArrowDown") || analog.brake > 0.35;
   const jump = keys.has("Space");
+  const shove = keys.has("KeyE");
   return {
     left: steer > 0.12,
     right: steer < -0.12,
     tuck,
     brake,
     jump,
+    shove,
     steer,
   };
 }

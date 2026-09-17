@@ -1,6 +1,6 @@
 /** Other skiers on and across the chevron ribbon. Hit like trees. */
 
-import { makeSkier, orientSkier } from "./physics.js?v=feel11";
+import { makeSkier, orientSkier, beginFall } from "./physics.js?v=s2";
 import { alongPolyline, polylineLen, alongTrack } from "./gates.js?v=vis18";
 import { tickFallPose } from "./physics.js?v=feel13";
 
@@ -126,4 +126,27 @@ export function tickNpcSkiers(THREE, pack, dt, player, hf, playerAlong = 0) {
 export function npcAlongHint(pack, player) {
   if (!pack?.list?.length || !player) return 0;
   return alongTrack(pack.list[0].pts, player.x, player.z).along;
+}
+
+/** Knock the nearest NPC in a short forward cone. Miss = no-op. */
+export function tryShoveNpc(THREE, extras, pos, heading, hf) {
+  if (!extras?.length || !pos || !hf) return false;
+  const fx = Math.sin(heading);
+  const fz = Math.cos(heading);
+  let best = null;
+  let bestD = 2.8;
+  for (const e of extras) {
+    if (!e.mesh || e.mesh.userData.fall) continue;
+    const dx = e.x - pos.x;
+    const dz = e.z - pos.z;
+    const d = Math.hypot(dx, dz);
+    if (d < 0.15 || d > bestD) continue;
+    if ((dx * fx + dz * fz) / d < 0.35) continue;
+    best = e.mesh;
+    bestD = d;
+  }
+  if (!best) return false;
+  const side = Math.sin(heading) * (best.position.x - pos.x) - Math.cos(heading) * (best.position.z - pos.z) >= 0 ? 1 : -1;
+  beginFall(THREE, best, hf, side);
+  return true;
 }

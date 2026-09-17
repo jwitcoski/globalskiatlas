@@ -2,7 +2,7 @@
 
 import * as THREE from "three";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
-import { intentsFrom } from "./input.js?v=s1";
+import { intentsFrom } from "./input.js?v=s2";
 
 const SUN_DIR = { x: 0.42, y: 0.88, z: 0.22 };
 const FOG = 0xc5dff0;
