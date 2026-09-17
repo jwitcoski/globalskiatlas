@@ -1,3 +1,5 @@
+import { PALETTE } from "/scripts/clay/config.js";
+
 const AERIAL_TYPES = new Set(["cable_car", "gondola", "chair_lift", "mixed_lift"]);
 const TREE_HEIGHT = 9;
 const AERIAL_HEIGHT = 10.5;
@@ -5,7 +7,13 @@ const GONDOLA_HEIGHT = 12.5;
 
 export function liftType(feature) {
   const tags = feature?.properties?.tags || {};
-  return String(tags.aerialway || feature?.properties?.aerialway || tags.lift_type || "chair_lift").toLowerCase();
+  let t = String(tags.aerialway || feature?.properties?.aerialway || tags.lift_type || "chair_lift")
+    .toLowerCase()
+    .replace(/-/g, "_");
+  if (t === "chairlift") t = "chair_lift";
+  if (t === "cablecar") t = "cable_car";
+  if (t === "mixedlift") t = "mixed_lift";
+  return t;
 }
 
 export function isAerialLift(type) {
@@ -14,39 +22,56 @@ export function isAerialLift(type) {
 
 export function liftCableHeight(type) {
   if (type === "magic_carpet") return 0.55;
-  if (type === "gondola") return GONDOLA_HEIGHT;
+  if (type === "gondola" || type === "cable_car") return GONDOLA_HEIGHT;
   return isAerialLift(type) ? AERIAL_HEIGHT : TREE_HEIGHT;
 }
 
 export function makeLiftTerminal(THREE, type, steel) {
   const root = new THREE.Group();
-  const dark = steel.clone();
-  dark.color.setHex(0x2c3034);
-  dark.metalness = 0.78;
-  dark.roughness = 0.38;
-  const base = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.32, 1.1), dark);
-  base.position.y = 0.16;
-  root.add(base);
-  if (isAerialLift(type)) {
-    const terminalHeight = liftCableHeight(type);
-    const tower = new THREE.Mesh(new THREE.BoxGeometry(0.15, terminalHeight, 0.15), steel);
-    const left = tower.clone();
-    const right = tower.clone();
-    left.position.set(-0.59, terminalHeight / 2, 0);
-    right.position.set(0.59, terminalHeight / 2, 0);
-    const beam = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.26, 0.15), dark);
-    beam.position.y = terminalHeight;
-    const wheel = new THREE.Mesh(new THREE.TorusGeometry(type === "cable_car" ? 0.53 : 0.41, 0.065, 10, 24), dark);
-    wheel.rotation.y = Math.PI / 2;
-    wheel.position.y = terminalHeight - 0.5;
-    root.add(left, right, beam, wheel);
-  } else {
-    const housing = new THREE.Mesh(new THREE.BoxGeometry(1.15, 1.15, 0.63), steel);
-    housing.position.set(0, 0.74, 0);
-    root.add(housing);
+  const dark = new THREE.MeshLambertMaterial({ color: 0x374151, flatShading: true });
+  const roof = new THREE.MeshLambertMaterial({ color: 0x0f766e, flatShading: true });
+  const platform = new THREE.MeshLambertMaterial({ color: 0x94a3b8, flatShading: true });
+  const pole = steel || new THREE.MeshLambertMaterial({ color: PALETTE.lift, flatShading: true });
+  const h = liftCableHeight(type);
+  if (h < 2) {
+    const housing = new THREE.Mesh(new THREE.BoxGeometry(3.2, 1.4, 2.2), pole);
+    housing.position.set(0, 0.7, -1.2);
+    const lid = new THREE.Mesh(new THREE.BoxGeometry(3.5, 0.16, 2.5), roof);
+    lid.position.set(0, 1.48, -1.2);
+    const deck = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.16, 3.4), platform);
+    deck.position.set(0, 0.08, 0.2);
+    root.add(deck, housing, lid);
+    return root;
   }
-  root.userData.height = isAerialLift(type) ? 10.9 : 1.4;
-  root.scale.set(0.5, 1, 0.5);
+  const gondola = type === "gondola" || type === "cable_car";
+  const lane = gondola ? 3.4 : 2.6;
+  const col = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.38, h, 6), pole);
+  const left = col.clone();
+  const right = col.clone();
+  left.position.set(-lane, h / 2, 0);
+  right.position.set(lane, h / 2, 0);
+  const beam = new THREE.Mesh(new THREE.BoxGeometry(lane * 2.4, 0.28, 0.28), dark);
+  beam.position.y = h * 0.94;
+  const wheelR = gondola ? 1.35 : 1.05;
+  const wheel = new THREE.Mesh(new THREE.CylinderGeometry(wheelR, wheelR, 0.32, 16), dark);
+  wheel.rotation.z = Math.PI / 2;
+  wheel.position.set(0, h, 0.55);
+  const hub = new THREE.Mesh(new THREE.CylinderGeometry(wheelR * 0.22, wheelR * 0.22, 0.4, 8), pole);
+  hub.rotation.z = Math.PI / 2;
+  hub.position.copy(wheel.position);
+  const deckH = gondola ? 1.15 : 0.95;
+  const deck = new THREE.Mesh(new THREE.BoxGeometry(lane * 3.2, 0.18, gondola ? 6.2 : 4.6), platform);
+  deck.position.set(0, deckH, -1.4);
+  const houseW = gondola ? 7.2 : 4.4;
+  const houseH = gondola ? 3.6 : 2.4;
+  const houseD = gondola ? 5.4 : 3.2;
+  const house = new THREE.Mesh(new THREE.BoxGeometry(houseW, houseH, houseD), pole);
+  house.position.set(0, houseH * 0.5, -2.6);
+  const cap = new THREE.Mesh(new THREE.BoxGeometry(houseW * 1.08, 0.22, houseD * 1.08), roof);
+  cap.position.set(0, houseH + 0.12, -2.6);
+  const bay = new THREE.Mesh(new THREE.BoxGeometry(houseW * 0.7, houseH * 0.5, 0.12), dark);
+  bay.position.set(0, houseH * 0.45, -2.6 + houseD * 0.5);
+  root.add(left, right, beam, wheel, hub, deck, house, cap, bay);
   return root;
 }
 

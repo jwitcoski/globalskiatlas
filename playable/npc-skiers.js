@@ -139,13 +139,14 @@ export function tryShoveNpc(THREE, extras, pos, heading, hf, side = 1, pack) {
   const rx = fz;
   const rz = -fx;
   const pool = [];
-  for (const e of extras || []) {
-    if (e?.mesh) pool.push(e);
-  }
   if (pack?.list) {
     for (const npc of pack.list) {
       if (!npc.mesh || npc.mesh.userData.fall) continue;
       pool.push({ x: npc.mesh.position.x, z: npc.mesh.position.z, mesh: npc.mesh });
+    }
+  } else {
+    for (const e of extras || []) {
+      if (e?.mesh) pool.push(e);
     }
   }
   let best = null;

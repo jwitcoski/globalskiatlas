@@ -1,17 +1,16 @@
 /** Drape OSM vectors on the DEM. GeoJSON XY = local east, north. Game Z = -north. */
 
 import * as THREE from "three";
-import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { styleForPisteFeature, classifyDifficulty } from "./trail-map.js?v=scheme1";
 import { addOsmTraffic } from "./traffic.js?v=vis16";
 import { alongPolyline, polylineLen } from "./gates.js?v=vis17";
-import { liftType, liftCableHeight, makeLiftTerminal, makeLiftCarrier, makeLiftSkier } from "./lift-graphics.js";
+import { liftType, liftCableHeight, makeLiftTerminal, makeLiftCarrier, makeLiftSkier } from "./lift-graphics.js?v=s2";
 import { createLiftMotion } from "./lift-motion.js";
 import { PALETTE } from "/scripts/clay/config.js";
+import { addClayBuilding } from "/scripts/clay/buildings.js";
 
 const GRID = 12;
 const MAX_FILL_SPAN = 700;
-const MAX_BUILDING_SPAN = 80;
 const TREE_STEP = 10;
 const TREE_STEP_WOOD = 6;
 const MAX_TREES = 8000;
@@ -407,14 +406,10 @@ function drapeLine(coords, elevFn, lift, material) {
 }
 
 const TOWER_H = 12;
-const CABLE_H = 11.15;
 const TOWER_STEP = 44;
 const MAX_TOWERS = 180;
-const POLY_LIFT_URL = new URL("./assets/models/poly-google-chairlift.glb", import.meta.url);
-/** Original Poly kit XZ axis from first to last pillar (source units). */
-const POLY_AXIS = new THREE.Vector3(-832, 0, 834).normalize();
-const TREE_MESH = /^Spruce/i;
-const TREE_H = 9;
+/** ponytail: keep the 80 largest OSM footprints; cluster if a resort needs more. */
+const MAX_CLAY_BUILDINGS = 80;
 
 function sampleAlong(pts, step) {
   if (!pts || pts.length < 2) return [];
@@ -454,28 +449,11 @@ function straightLiftPath(points) {
   return out;
 }
 
-function bakeMeshToBase(mesh) {
-  const geo = mesh.geometry.clone();
-  mesh.updateWorldMatrix(true, false);
-  geo.applyMatrix4(mesh.matrixWorld);
-  geo.computeBoundingBox();
-  const bb = geo.boundingBox;
-  const cx = (bb.min.x + bb.max.x) * 0.5;
-  const cz = (bb.min.z + bb.max.z) * 0.5;
-  geo.translate(-cx, -bb.min.y, -cz);
-  geo.computeBoundingBox();
-  geo.computeVertexNormals();
-  const h = geo.boundingBox.max.y - geo.boundingBox.min.y;
-  const mat = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material;
-  return { geometry: geo, material: mat, height: h };
-}
-
-function placeAlongLift(obj, origin, tangent, scale) {
+function placeAlongLift(obj, origin, tangent) {
   const want = new THREE.Vector3(tangent.x, 0, tangent.z);
   if (want.lengthSq() < 1e-8) want.set(0, 0, 1);
   else want.normalize();
   obj.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), want);
-  obj.scale.setScalar(scale);
   obj.position.copy(origin);
 }
 
@@ -486,103 +464,21 @@ function sitOnDem(obj, originY) {
   obj.position.y += originY - box.min.y;
 }
 
-function makeChair(steel) {
+function makeClayPylon(h, steel, dark) {
   const g = new THREE.Group();
-  const hang = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 1.7, 6), steel);
-  hang.position.y = -0.85;
-  const seat = new THREE.Mesh(new THREE.BoxGeometry(1.15, 0.07, 0.42), steel);
-  seat.position.set(0, -1.62, 0.02);
-  const back = new THREE.Mesh(new THREE.BoxGeometry(1.15, 0.42, 0.05), steel);
-  back.position.set(0, -1.38, -0.2);
-  const bar = new THREE.Mesh(new THREE.BoxGeometry(1.15, 0.04, 0.04), steel);
-  bar.position.set(0, -1.48, 0.18);
-  g.add(hang, seat, back, bar);
+  const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.32, h, 6), steel);
+  mast.position.y = h / 2;
+  const arm = new THREE.Mesh(new THREE.BoxGeometry(3.4, 0.18, 0.18), dark);
+  arm.position.y = h * 0.9;
+  g.add(mast, arm);
   return g;
 }
 
-/** Local +Z is along the lift toward the other terminal. Bullwheel stands vertical. */
-function makeBullwheelTerminal(pillar, steel) {
-  const g = new THREE.Group();
-  const dark = steel.clone();
-  dark.color.setHex(0x2c3034);
-  dark.metalness = 0.78;
-  dark.roughness = 0.38;
-  const s = pillar ? TOWER_H / Math.max(0.01, pillar.height) : 1;
-  if (pillar) {
-    const pL = new THREE.Mesh(pillar.geometry, pillar.material);
-    pL.scale.setScalar(s);
-    pL.position.set(-2.35, 0, 0.15);
-    const pR = pL.clone();
-    pR.position.x = 2.35;
-    g.add(pL, pR);
-  } else {
-    const leg = new THREE.Mesh(new THREE.BoxGeometry(0.45, TOWER_H, 0.45), steel);
-    const l = leg.clone();
-    l.position.set(-2.35, TOWER_H / 2, 0.15);
-    const r = leg.clone();
-    r.position.set(2.35, TOWER_H / 2, 0.15);
-    g.add(l, r);
-  }
-  const beam = new THREE.Mesh(new THREE.BoxGeometry(5.5, 0.34, 0.34), dark);
-  beam.position.set(0, CABLE_H + 0.7, 0.1);
-  const axle = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 1.1, 12), dark);
-  axle.rotation.x = Math.PI / 2;
-  axle.position.set(0, CABLE_H, 0);
-  const wheel = new THREE.Mesh(new THREE.TorusGeometry(1.62, 0.18, 12, 40), dark);
-  wheel.rotation.y = Math.PI / 2;
-  wheel.position.set(0, CABLE_H, 0);
-  const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.38, 16), steel);
-  hub.rotation.x = Math.PI / 2;
-  hub.position.set(0, CABLE_H, 0);
-  const spoke = new THREE.Mesh(new THREE.BoxGeometry(0.08, 3.1, 0.08), dark);
-  spoke.position.set(0, CABLE_H, 0);
-  const spoke2 = spoke.clone();
-  spoke2.rotation.x = Math.PI / 2;
-  g.add(beam, axle, wheel, hub, spoke, spoke2);
-  for (let i = 0; i < 4; i++) {
-    const a = -Math.PI / 2 + (i * Math.PI) / 5;
-    const ch = makeChair(dark);
-    ch.position.set(Math.sin(a) * 1.62, CABLE_H + Math.cos(a) * 1.62, 0);
-    if (ch.position.y > CABLE_H + 0.35) continue;
-    g.add(ch);
-  }
-  g.userData.height = TOWER_H;
-  return g;
-}
-
-async function loadPolyKit() {
-  try {
-    const gltf = await new GLTFLoader().loadAsync(POLY_LIFT_URL.href);
-    gltf.scene.updateMatrixWorld(true);
-    let pillar = null;
-    const trees = [];
-    gltf.scene.traverse((o) => {
-      if (!o.isMesh) return;
-      const n = o.name || "";
-      if (/^Pillar$/i.test(n)) pillar = o;
-      if (TREE_MESH.test(n)) trees.push(bakeMeshToBase(o));
-    });
-    return {
-      pillar: pillar ? bakeMeshToBase(pillar) : null,
-      trees,
-    };
-  } catch (err) {
-    console.warn("Poly chairlift GLB failed", err);
-    return null;
-  }
-}
-
-async function addLiftKit(fc, elevFn, scene, counts, poly) {
+function addLiftKit(fc, elevFn, scene, counts) {
   if (!fc) return;
-  const cableMat = new THREE.MeshLambertMaterial({ color: 0x3a4046 });
-  const env = scene.userData.envMap || null;
-  const steel = new THREE.MeshStandardMaterial({
-    color: 0x6a7278,
-    metalness: 0.72,
-    roughness: 0.42,
-    envMap: env,
-    envMapIntensity: env ? 0.85 : 0,
-  });
+  const cableMat = new THREE.MeshBasicMaterial({ color: PALETTE.cable });
+  const steel = new THREE.MeshLambertMaterial({ color: PALETTE.lift, flatShading: true });
+  const dark = new THREE.MeshLambertMaterial({ color: 0x374151, flatShading: true });
   const towerPts = [];
   const terminals = [];
   const liftMotions = [];
@@ -613,8 +509,6 @@ async function addLiftKit(fc, elevFn, scene, counts, poly) {
       const tanB = b.clone().sub(ground[Math.max(0, ground.length - 2)]);
       const lineTan = new THREE.Vector3().subVectors(b, a);
       const skip = 18;
-      towerPts.push({ p: a, tangent: tanA, type });
-      towerPts.push({ p: b, tangent: tanB, type });
       terminals.push({ origin: a, tangent: lineTan.clone(), type }, { origin: b, tangent: lineTan.clone().negate(), type });
       const motion = createLiftMotion(
         THREE,
@@ -638,42 +532,24 @@ async function addLiftKit(fc, elevFn, scene, counts, poly) {
     return arr.filter((_, i) => i % step === 0).slice(0, max);
   }
   const towers = stride(towerPts, MAX_TOWERS);
-  const dummy = new THREE.Object3D();
-  if (towers.length) {
-    const src = poly?.pillar;
-    const geo = src?.geometry || new THREE.BoxGeometry(0.38, TOWER_H, 0.38);
-    const mat = src?.material || steel;
-    const h = src?.height || TOWER_H;
-    const s = TOWER_H / Math.max(0.01, h);
-    const towerMesh = new THREE.InstancedMesh(geo, mat, towers.length);
-    for (let i = 0; i < towers.length; i++) {
-      const { p, tangent, type } = towers[i];
-      dummy.position.copy(p);
-      const heightScale = liftCableHeight(type) / TOWER_H;
-      dummy.scale.set(s, s * heightScale, s);
-      const want = new THREE.Vector3(tangent.x, 0, tangent.z);
-      if (want.lengthSq() < 1e-8) dummy.quaternion.identity();
-      else dummy.quaternion.setFromUnitVectors(POLY_AXIS, want.normalize());
-      dummy.updateMatrix();
-      towerMesh.setMatrixAt(i, dummy.matrix);
-    }
-    towerMesh.instanceMatrix.needsUpdate = true;
-    scene.add(towerMesh);
+  for (const t of towers) {
+    const h = liftCableHeight(t.type) || TOWER_H;
+    const pylon = makeClayPylon(h, steel, dark);
+    placeAlongLift(pylon, t.p, t.tangent);
+    scene.add(pylon);
   }
   let stations = 0;
-  if (terminals.length) {
-    for (const t of terminals) {
-      const clone = makeLiftTerminal(THREE, t.type, steel);
-      placeAlongLift(clone, t.origin, t.tangent, 1);
-      sitOnDem(clone, t.origin.y);
-      scene.add(clone);
-      stations += 1;
-    }
+  for (const t of terminals) {
+    const clone = makeLiftTerminal(THREE, t.type, steel);
+    placeAlongLift(clone, t.origin, t.tangent);
+    sitOnDem(clone, t.origin.y);
+    scene.add(clone);
+    stations += 1;
   }
   counts.lifts = cables;
   counts.lift_towers = towers.length;
   counts.lift_stations = stations;
-  counts.lift_source = poly ? "poly-google" : "procedural";
+  counts.lift_source = "clay";
   scene.userData.liftMotions = liftMotions;
 }
 
@@ -729,45 +605,6 @@ function drapeFill(outer, holes, elevFn, lift, material, maxSpan = MAX_FILL_SPAN
   return mesh;
 }
 
-function extrudeBuilding(outer, holes, elevFn, height, material) {
-  const bb = ringBBox(outer);
-  if (!Number.isFinite(bb.span) || bb.span > MAX_BUILDING_SPAN) return null;
-  const cx = (bb.minX + bb.maxX) * 0.5;
-  const cz = (bb.minY + bb.maxY) * 0.5;
-  const footprintScale = 0.5;
-  const o = [];
-  for (const c of outer) {
-    if (c?.length >= 2) o.push(new THREE.Vector2(cx + (c[0] - cx) * footprintScale, cz + (c[1] - cz) * footprintScale));
-  }
-  if (o.length < 3) return null;
-  const shape = new THREE.Shape(o);
-  for (const h of holes || []) {
-    const hp = [];
-    for (const c of h) {
-      if (c?.length >= 2) hp.push(new THREE.Vector2(cx + (c[0] - cx) * footprintScale, cz + (c[1] - cz) * footprintScale));
-    }
-    if (hp.length >= 3) shape.holes.push(new THREE.Path(hp));
-  }
-  const geo = new THREE.ExtrudeGeometry(shape, { depth: height, bevelEnabled: false, steps: 1 });
-  const pos = geo.attributes.position;
-  let base = Infinity;
-  for (let i = 0; i < pos.count; i++) {
-    const east = pos.getX(i);
-    const north = pos.getY(i);
-    base = Math.min(base, elevFn(east, -north));
-  }
-  if (!Number.isFinite(base)) base = 0;
-  for (let i = 0; i < pos.count; i++) {
-    const east = pos.getX(i);
-    const north = pos.getY(i);
-    const h = pos.getZ(i);
-    pos.setXYZ(i, east, base + h, -north);
-  }
-  pos.needsUpdate = true;
-  geo.computeVertexNormals();
-  return new THREE.Mesh(geo, material);
-}
-
 async function loadFC(url) {
   try {
     const r = await fetch(url);
@@ -794,56 +631,12 @@ function buildTreeHash(xzr, cell = 12) {
   return { cell, buckets, xzr };
 }
 
-function addPolyForest(treePts, variants, elevFn, scene, counts) {
-  const dummy = new THREE.Object3D();
-  const groups = variants.map(() => []);
-  treePts.forEach((c, i) => groups[i % variants.length].push({ c, i }));
-  const xzr = [];
-  let n = 0;
-  for (let v = 0; v < variants.length; v++) {
-    const pts = groups[v];
-    if (!pts.length) continue;
-    const src = variants[v];
-    const mesh = new THREE.InstancedMesh(src.geometry, src.material, pts.length);
-    mesh.castShadow = true;
-    mesh.receiveShadow = true;
-    const s0 = TREE_H / Math.max(0.01, src.height);
-    for (let k = 0; k < pts.length; k++) {
-      const c = pts[k].c;
-      const i = pts[k].i;
-      const x = c[0];
-      const z = -c[1];
-      const y = elevFn(x, z);
-      const s = s0 * (0.78 + ((i * 17) % 11) * 0.04);
-      dummy.position.set(x, y, z);
-      dummy.rotation.set(0, (i * 0.73) % 6.28, 0);
-      dummy.scale.setScalar(s);
-      dummy.updateMatrix();
-      mesh.setMatrixAt(k, dummy.matrix);
-      xzr.push(x, z, 0.48 + 0.42 * (s / s0));
-    }
-    mesh.instanceMatrix.needsUpdate = true;
-    scene.add(mesh);
-    n += pts.length;
-  }
-  counts.trees = n;
-  counts.tree_source = "poly-google";
-  counts.tree_colliders = xzr.length / 3;
-  scene.userData.treeHash = buildTreeHash(xzr);
-}
-
 export async function addOsmWorld(THREE, scene, sceneRoot, manifest, elevFn) {
-  const polyKit = await loadPolyKit();
   const v = manifest.vectors || {};
   const mats = {
-    pisteFill: fillMat(0xf3eee4, 0.42),
-    forest: fillMat(0xc8cdd2, 0.18),
     grass: fillMat(0xe6e9ec, 0.22),
     water: fillMat(0xb8c4cc, 0.4),
     parking: fillMat(0x8a8e94, 0.5),
-    building: new THREE.MeshLambertMaterial({ color: 0xd8d4ce, side: THREE.DoubleSide }),
-    pisteLine: new THREE.LineBasicMaterial({ color: 0x9aa3ab }),
-    liftLine: new THREE.LineBasicMaterial({ color: 0x7a858e }),
     roadLine: new THREE.LineBasicMaterial({ color: 0x6a7076 }),
     cliffLine: new THREE.LineBasicMaterial({ color: 0x8a8884 }),
     skiEdge: new THREE.LineDashedMaterial({
@@ -1051,7 +844,7 @@ export async function addOsmWorld(THREE, scene, sceneRoot, manifest, elevFn) {
   scene.add(pisteRoot);
   scene.userData.pisteDecor = pisteRoot;
 
-  await addLiftKit(await loadLayer("lifts"), elevFn, scene, counts, polyKit);
+  addLiftKit(await loadLayer("lifts"), elevFn, scene, counts);
   const roadsFc = await loadLayer("roads");
   if (roadsFc) {
     let n = 0;
@@ -1079,16 +872,57 @@ export async function addOsmWorld(THREE, scene, sceneRoot, manifest, elevFn) {
 
   const buildings = await loadLayer("buildings");
   if (buildings) {
-    let n = 0;
+    const group = new THREE.Group();
+    group.name = "clay-buildings";
+    const candidates = [];
     for (const f of buildings.features || []) {
       for (const poly of polygonParts(f.geometry)) {
-        const mesh = extrudeBuilding(poly[0], poly.slice(1), elevFn, 4.5, mats.building);
-        if (mesh) {
-          scene.add(mesh);
-          n += 1;
+        const ring = poly[0];
+        if (!ring || ring.length < 3) continue;
+        let minX = Infinity;
+        let maxX = -Infinity;
+        let minZ = Infinity;
+        let maxZ = -Infinity;
+        for (const c of ring) {
+          if (!c || c.length < 2) continue;
+          const x = c[0];
+          const z = -c[1];
+          minX = Math.min(minX, x);
+          maxX = Math.max(maxX, x);
+          minZ = Math.min(minZ, z);
+          maxZ = Math.max(maxZ, z);
         }
+        const footW = Math.max(4, maxX - minX);
+        const footD = Math.max(4, maxZ - minZ);
+        if (footW > 80 || footD > 80) continue;
+        candidates.push({
+          cx: (minX + maxX) * 0.5,
+          cz: (minZ + maxZ) * 0.5,
+          footW,
+          footD,
+          area: footW * footD,
+          yaw: footW >= footD ? 0 : Math.PI / 2,
+        });
       }
     }
+    candidates.sort((a, b) => b.area - a.area);
+    let n = 0;
+    for (const c of candidates) {
+      if (n >= MAX_CLAY_BUILDINGS) break;
+      const sc = Math.min(1, 24 / c.footW, 24 / c.footD);
+      addClayBuilding(
+        group,
+        c.cx,
+        c.cz,
+        elevFn(c.cx, c.cz),
+        c.footW * sc,
+        c.footD * sc,
+        Math.max(3.5, Math.min(11, Math.sqrt(c.area) * 0.32)),
+        c.yaw,
+      );
+      n += 1;
+    }
+    scene.add(group);
     counts.buildings = n;
   }
 
