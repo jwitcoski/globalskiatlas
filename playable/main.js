@@ -27,7 +27,7 @@ import {
 import { featuredCourses, attachPisteDifficulty, courseFinish, createRun, tickRun, formatTime } from "./run.js?v=map4";
 import { coordsToXz, attachPiste, resetScore, tickScore, commitBestScore, formatScore, applyWipeout } from "./score.js?v=snow1";
 import { orientPiste, alongTrack, alongPolyline, placeGates, addGateMeshes, clearGateMeshes, resetGates, tickGates } from "./gates.js?v=vis18";
-import { addOsmWorld, applyPisteDecorDifficultyScheme, applySnowLevel } from "./osm-world.js?v=snow7";
+import { addOsmWorld, applyPisteDecorDifficultyScheme, applySnowLevel } from "./osm-world.js?v=snow17";
 import {
   snowTerrainMaterial,
   addSkyAndLights,
@@ -43,7 +43,7 @@ import {
   setInspectAtmosphere,
 } from "./look.js?v=lod4";
 import { addResortIsland, updateIslandDust, updateIslandLod, setIslandOpacity, resetIslandLod } from "./island.js?v=lod3b";
-import { bindUi, setHud, openPanel, closePanel, updateLoading, setOsmMapNote, setResortTitle, compactUi, setFlybyChrome, setHelpTips, paintSnowBtn } from "./ui.js?v=snow1";
+import { bindUi, setHud, openPanel, closePanel, updateLoading, setOsmMapNote, setResortTitle, compactUi, setFlybyChrome, setHelpTips, paintSnowBtn } from "./ui.js?v=snow17";
 import { atlasStatsHtml, prefetchWikiIndex } from "./atlas-stats.js?v=stats1";
 import { bindFinishChartScope, finishChartsHtml, prefetchFinishCharts } from "./finish-charts.js?v=1";
 import { bindOsmFix, osmFixHtml, osmFixContext } from "./osm-fix.js?v=1";
@@ -76,7 +76,7 @@ import {
 } from "./trail-map.js?v=mapall2";
 import { makeMinimap } from "./minimap.js?v=mapall1";
 import { createNpcSkiers, clearNpcSkiers, tickNpcSkiers, tryShoveNpc } from "./npc-skiers.js?v=s9";
-import { addCoverLines, cycleSnowLevel, getSnowLevel, loadSnowLevel, onPisteAt } from "./snow.js";
+import { addCoverLines, cycleSnowLevel, getSnowLevel, loadSnowLevel, onPisteAt, setSnowLevel } from "./snow.js?v=snow17";
 import { updateTraffic } from "./traffic.js?v=vis16";
 import {
   TRAILER,
@@ -731,6 +731,17 @@ function onUiAct(act, courseId) {
   }
   if (act === "flyby") {
     enterFlyby();
+    return;
+  }
+  if (act === "snow-level" && courseId) {
+    setSnowLevel(courseId);
+    applySnowLevel(scene);
+    paintSnowBtn(ui, getSnowLevel());
+    ui.panel?.querySelectorAll('[data-act="snow-level"]').forEach((b) => {
+      const on = b.dataset.scheme === getSnowLevel();
+      b.classList.toggle("on", on);
+      b.setAttribute("aria-pressed", on ? "true" : "false");
+    });
     return;
   }
   if (act === "diff-scheme" && courseId) {

@@ -12,10 +12,11 @@ import {
   SNOW,
   applyInset,
   buildTrailCover,
+  ensureMidPatches,
   forestRingsFromFC,
   getSnowLevel,
   loadSnowLevel,
-} from "./snow.js";
+} from "./snow.js?v=snow17";
 
 const GRID = 12;
 const MAX_FILL_SPAN = 700;
@@ -333,6 +334,12 @@ function paintTrailCover(root, cover, elevFn) {
     const mesh = drapePisteSnow(ring, it.holes, elevFn);
     if (mesh) snowG.add(mesh);
   }
+  if (getSnowLevel() === "midWinter") {
+    for (const ring of cover.patches || []) {
+      const mesh = drapePisteSnow(ring, [], elevFn);
+      if (mesh) snowG.add(mesh);
+    }
+  }
 }
 
 export function applySnowLevel(scene) {
@@ -341,6 +348,7 @@ export function applySnowLevel(scene) {
   const root = scene?.userData?.pisteDecor;
   const p = SNOW[getSnowLevel()] || SNOW.spring;
   if (cover && elevFn && root) {
+    ensureMidPatches(cover);
     applyInset(cover, p.inset);
     paintTrailCover(root, cover, elevFn);
   }

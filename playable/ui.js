@@ -1,6 +1,6 @@
 /** HUD and overlay helpers. UI reads game state; it does not own piste/DNF rules. */
 
-import { SNOW_LABEL } from "./snow.js";
+import { SNOW_KEYS, SNOW_LABEL, getSnowLevel } from "./snow.js?v=snow17";
 
 export function bindUi() {
   return {
@@ -146,6 +146,18 @@ export function compactUi() {
 
 let lobbyDetailsUser = null;
 
+function snowLevelHtml() {
+  const cur = getSnowLevel();
+  const btns = SNOW_KEYS.map((id) => {
+    const on = id === cur;
+    return `<button type="button" class="scheme-btn${on ? " on" : ""}" data-act="snow-level" data-scheme="${id}" aria-pressed="${on ? "true" : "false"}">${SNOW_LABEL[id]}</button>`;
+  }).join("");
+  return `<div class="diff-scheme" role="group" aria-label="Snow conditions">
+      <span class="diff-scheme-label">Snow</span>
+      <div class="diff-scheme-btns">${btns}</div>
+    </div>`;
+}
+
 function trailMeta(data) {
   const t = (data.trails || []).find((r) => r.id === data.selectedId) || {};
   const drop = Math.round(t.vertical_drop_m || t.drop || 0);
@@ -247,6 +259,7 @@ export function openPanel(ui, kind, data) {
     ui.panel.innerHTML = `<p class="kicker">Pick a trail</p>
       <h2>${data.course}</h2>
       ${trailMeta(data)}
+      ${snowLevelHtml()}
       ${lobbyDetailsHtml(data)}
       ${osmFixDetailsHtml(data)}
       ${actions(

@@ -3,9 +3,9 @@
 export const MAX_CORRIDOR_M = 30.48; // 100 ft
 export const SNOW_DEFAULT = "spring";
 export const SNOW = {
-  spring: { inset: 0.45, offPiste: false, terrain: 0xb39b78 },
-  midWinter: { inset: 0.8, offPiste: false, terrain: 0xe4ddd0 },
-  wonderland: { inset: 1, offPiste: true, terrain: 0xfbfaf6 },
+  spring: { inset: 0.45, offPiste: false, patches: false, terrain: 0xb39b78 },
+  midWinter: { inset: 0.8, offPiste: false, patches: true, terrain: 0xc4a882 },
+  wonderland: { inset: 1, offPiste: true, patches: false, terrain: 0xfbfaf6 },
 };
 export const SNOW_LABEL = {
   spring: "Spring skiing",
@@ -265,10 +265,92 @@ function inSkiArea(x, z, cover) {
   return x >= b.minX && x <= b.maxX && z >= b.minZ && z <= b.maxZ;
 }
 
+function hash01(i, salt) {
+  let n = (i * 374761393 + salt * 668265263) | 0;
+  n = (n ^ (n >> 13)) * 1274126177;
+  return ((n ^ (n >> 16)) >>> 0) / 4294967296;
+}
+
+function blobRing(x, z, rx, rz, seed, rot = 0) {
+  const n = 14;
+  const out = [];
+  const cs = Math.cos(rot);
+  const sn = Math.sin(rot);
+  for (let i = 0; i <= n; i++) {
+    const a = (i / n) * Math.PI * 2;
+    const wobble = 0.72 + hash01(i, seed) * 0.5;
+    const px = Math.cos(a) * rx * wobble;
+    const pz = Math.sin(a) * rz * wobble;
+    out.push({ x: x + px * cs - pz * sn, z: z + px * sn + pz * cs });
+  }
+  return out;
+}
+
+function onMaintained(x, z, cover) {
+  for (const c of cover.items || []) {
+    if (c.coordsEN?.length >= 2) {
+      if (distToPts(x, z, enToXz(c.coordsEN)) < (c.half || 15)) return true;
+    } else if (pointInXz(x, z, c.bare || c.snow)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/** Pick random grid cells (A1, B3, …). Collision → next cell. Jitter the blob inside the cell. */
+export function ensureMidPatches(cover) {
+  if (!cover || cover.patches) return cover;
+  const b = cover.bounds;
+  const rings = [];
+  if (b && Number.isFinite(b.minX)) {
+    const w = Math.max(1, b.maxX - b.minX);
+    const h = Math.max(1, b.maxZ - b.minZ);
+    const cols = Math.max(10, Math.round(12 * Math.sqrt(w / h)));
+    const rows = Math.max(10, Math.round(12 * Math.sqrt(h / w)));
+    const nCells = cols * rows;
+    const cellW = w / cols;
+    const cellH = h / rows;
+    const diag = Math.hypot(cellW, cellH);
+    const taken = new Uint8Array(nCells);
+    const want = Math.min(99, nCells);
+    for (let p = 0; p < want; p++) {
+      let idx = Math.floor(hash01(p, 7) * nCells) % nCells;
+      let tries = 0;
+      while (tries < nCells) {
+        if (!taken[idx]) {
+          const col = idx % cols;
+          const row = Math.floor(idx / cols);
+          const x = b.minX + ((col + 0.08 + hash01(p, 21) * 0.84) / cols) * w;
+          const z = b.minZ + ((row + 0.08 + hash01(p, 29) * 0.84) / rows) * h;
+          if (inSkiArea(x, z, cover) && !onMaintained(x, z, cover)) {
+            taken[idx] = 1;
+            /* Halfway between the small isolated circles and the last oversized drifts. */
+            const t = hash01(p, 19);
+            const r = (16 + t * 38) * 0.5 + diag * (0.58 + t * 0.4) * 0.5;
+            let sx = 0.35 + hash01(p, 31) * 1.5;
+            let sz = 0.35 + hash01(p, 37) * 1.5;
+            if (Math.abs(sx - sz) < 0.4) sz = sx + (hash01(p, 43) < 0.5 ? 0.65 : -0.65);
+            const rot = hash01(p, 47) * Math.PI;
+            rings.push(blobRing(x, z, r * sx, r * sz, p + 41, rot));
+            break;
+          }
+        }
+        idx = (idx + 1) % nCells;
+        tries += 1;
+      }
+    }
+  }
+  cover.patches = rings;
+  return cover;
+}
+
 export function onPisteAt(x, z, cover, level = snowLevel, pistePts) {
   const p = SNOW[level] || SNOW.spring;
   const half = snowHalfM(level);
   if (p.offPiste && inSkiArea(x, z, cover)) return true;
+  if (p.patches && inSkiArea(x, z, cover) && (cover.patches || []).some((r) => pointInXz(x, z, r))) {
+    return true;
+  }
   if (pistePts?.length >= 2 && distToPts(x, z, pistePts) <= half) return true;
   if (!cover?.items?.length) return pistePts?.length >= 2 ? false : null;
   for (const c of cover.items) {
@@ -351,6 +433,9 @@ function selfCheck() {
   equal(onPisteAt(40, 0, { items: [], skiRings: cover.skiRings }, "spring", pts), true);
   equal(onPisteAt(40, 20, { items: [], skiRings: cover.skiRings }, "spring", pts), false);
   equal(onPisteAt(40, 12, cover, "wonderland", pts), true);
+  const mixed = { items: [], skiRings: cover.skiRings, patches: [blobRing(40, 12, 8, 8, 1)] };
+  equal(onPisteAt(40, 12, mixed, "midWinter", pts), true);
+  equal(onPisteAt(40, 12, mixed, "spring", pts), false);
   console.log("snow.js ok");
 }
 
