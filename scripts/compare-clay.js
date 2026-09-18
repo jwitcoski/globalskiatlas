@@ -1,4 +1,4 @@
-import { initHeroMontageMap } from "./hero-montage-map.js?v=116";
+import { initHeroMontageMap } from "./hero-montage-map.js?v=120";
 
 const viewers = new Map();
 let catalogPromise = null;
@@ -54,13 +54,16 @@ function fillMissingCell(cell) {
   cell.appendChild(empty);
 }
 
-function makeCell(name) {
+function makeCell(name, bare) {
   const cell = document.createElement("div");
   cell.className = "clay-compare-cell";
-  const title = document.createElement("div");
-  title.className = "clay-compare-name";
-  title.textContent = name || "Resort";
-  cell.appendChild(title);
+  let title = null;
+  if (!bare) {
+    title = document.createElement("div");
+    title.className = "clay-compare-name";
+    title.textContent = name || "Resort";
+    cell.appendChild(title);
+  }
   return { cell, title };
 }
 
@@ -86,6 +89,12 @@ async function disposeAllViewers() {
   }
 }
 
+function attachCell(target, cell) {
+  const name = target.querySelector(".card-name");
+  if (name) target.insertBefore(cell, name);
+  else target.appendChild(cell);
+}
+
 function applySharedScale() {
   const live = [...viewers.values()].map((slot) => slot.handle).filter(Boolean);
   if (live.length === 0) return;
@@ -102,8 +111,12 @@ export async function disposeCompareClay() {
 
 export async function syncCompareClay({ host, items, cols }) {
   const token = ++mountToken;
-  if (!host) return;
-  host.style.gridTemplateColumns = `repeat(${Math.max(1, cols || 1)}, minmax(0, 1fr))`;
+  const list = items || [];
+  const hasParents = list.some((item) => item.parent);
+  if (!host && !hasParents) return;
+  if (host && !hasParents) {
+    host.style.gridTemplateColumns = `repeat(${Math.max(1, cols || 1)}, minmax(0, 1fr))`;
+  }
   const clayByWs = await loadClayByWs();
   if (token !== mountToken) return;
   await markMissing3dChips(clayByWs);
@@ -111,14 +124,23 @@ export async function syncCompareClay({ host, items, cols }) {
 
   const desired = [];
   const keepIds = new Set();
-  for (const item of items || []) {
+  // ponytail: browsers cap WebGL contexts (~8–16); same 12-live ceiling as compare. Upgrade: one shared renderer.
+  const MAX_LIVE = 12;
+  let live = 0;
+  for (const item of list) {
     const hit = clayByWs.get(String(item.ws || ""));
     const id = hit?.id ? String(hit.id) : "";
-    const ready = id ? await claySceneReady(id) : false;
-    if (ready) keepIds.add(id);
+    let ready = id ? await claySceneReady(id) : false;
+    if (ready && live >= MAX_LIVE) ready = false;
+    if (ready) {
+      keepIds.add(id);
+      live += 1;
+    }
     desired.push({
       name: item.name || "Resort",
       ws: String(item.ws || ""),
+      parent: item.parent || host,
+      bare: Boolean(item.bare),
       id,
       ready,
     });
@@ -131,36 +153,38 @@ export async function syncCompareClay({ host, items, cols }) {
     slot.cell.remove();
     viewers.delete(id);
   }
-  host.querySelectorAll(".clay-compare-cell.is-missing").forEach((el) => el.remove());
+  host?.querySelectorAll(".clay-compare-cell.is-missing").forEach((el) => el.remove());
 
   const toMount = [];
   for (const job of desired) {
+    const target = job.parent;
+    if (!target) continue;
     if (!job.ready) {
-      const { cell } = makeCell(job.name);
+      const { cell } = makeCell(job.name, job.bare);
       fillMissingCell(cell);
-      host.appendChild(cell);
+      attachCell(target, cell);
       continue;
     }
     let slot = viewers.get(job.id);
     if (slot?.handle) {
-      slot.title.textContent = job.name;
-      host.appendChild(slot.cell);
+      if (slot.title) slot.title.textContent = job.name;
+      attachCell(target, slot.cell);
       continue;
     }
     if (slot) {
-      slot.title.textContent = job.name;
-      host.appendChild(slot.cell);
+      if (slot.title) slot.title.textContent = job.name;
+      attachCell(target, slot.cell);
       if (!slot.loading) toMount.push({ id: job.id, slot });
       continue;
     }
-    const made = makeCell(job.name);
+    const made = makeCell(job.name, job.bare);
     const embed = document.createElement("div");
     embed.className = "hero-montage-embed clay-compare-embed";
     const stage = document.createElement("div");
     stage.className = "hero-montage-stage";
     embed.appendChild(stage);
     made.cell.appendChild(embed);
-    host.appendChild(made.cell);
+    attachCell(target, made.cell);
     slot = { cell: made.cell, title: made.title, handle: null, stage, loading: true };
     viewers.set(job.id, slot);
     toMount.push({ id: job.id, slot });
@@ -204,6 +228,34 @@ export async function syncCompareClay({ host, items, cols }) {
   }
   applySharedScale();
 }
+
+function snapshotClayForPrint() {
+  document.querySelectorAll(".clay-compare-embed canvas").forEach((canvas) => {
+    const host = canvas.parentElement;
+    if (!host) return;
+    let img = host.querySelector(".clay-print-shot");
+    if (!img) {
+      img = document.createElement("img");
+      img.className = "clay-print-shot";
+      img.alt = "";
+      host.appendChild(img);
+    }
+    try {
+      img.src = canvas.toDataURL("image/png");
+    } catch (_) { /* ignore */ }
+  });
+}
+function clearClayPrintShots() {
+  document.querySelectorAll(".clay-print-shot").forEach((el) => el.remove());
+}
+window.addEventListener("beforeprint", snapshotClayForPrint);
+window.addEventListener("afterprint", clearClayPrintShots);
+try {
+  window.matchMedia("print").addEventListener("change", (e) => {
+    if (e.matches) snapshotClayForPrint();
+    else clearClayPrintShots();
+  });
+} catch (_) { /* ignore */ }
 
 window.addEventListener("gsa-compare-view", (event) => {
   const detail = event.detail || {};

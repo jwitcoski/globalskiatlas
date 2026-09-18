@@ -79,8 +79,8 @@
     }
     body.compare-3d #map-container { display: none; }
     body.compare-3d #clay-compare { display: grid; }
-    body.compare-3d #print-chart-btn { display: none !important; }
     body.compare-3d #layout-overlay { display: none; }
+    .clay-print-shot { display: none; }
     .clay-compare-cell { min-width: 0; display: flex; flex-direction: column; gap: 6px; }
     .clay-compare-name { font-size: 13px; font-weight: 600; color: #374151; text-align: center; }
     .clay-compare-cell.is-missing .clay-compare-name { color: #6b7280; }
@@ -436,6 +436,9 @@
       .content-wrapper { flex-wrap: nowrap; }
       .map-chart-wrapper { flex: 1; min-width: 0; }
       .map-container { box-shadow: none; border: none; }
+      body.compare-3d .clay-compare-embed canvas { display: none !important; }
+      body.compare-3d .clay-print-shot { display: block; width: 100%; height: 180px; object-fit: cover; }
+      body.compare-3d .clay-compare-embed, body.compare-3d .clay-compare-empty { height: 180px; }
     }
   </style>
 </head>
@@ -1212,7 +1215,10 @@
       var printBtn = document.getElementById('print-chart-btn');
       if (printBtn) {
         printBtn.classList.add('visible');
-        printBtn.onclick = function () { window.print(); };
+        printBtn.onclick = function () {
+          window.dispatchEvent(new Event('beforeprint'));
+          window.print();
+        };
       }
 
       setupControlButtons();
@@ -1751,7 +1757,7 @@
         console.error(err);
       });
   </script>
-<script type="module" src="scripts/compare-clay.js?v=7"></script>
+<script type="module" src="scripts/compare-clay.js?v=10"></script>
 <script src="scripts/site-nav.js?v=4" defer></script>
 </body>
 </html>

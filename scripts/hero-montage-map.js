@@ -734,6 +734,7 @@ export async function initHeroMontageMap(container, options = {}) {
       antialias: true,
       alpha: false,
       powerPreference: quality.powerPreference,
+      preserveDrawingBuffer: preview,
     });
   } catch (err) {
     console.warn("[hero-montage-map] WebGL unavailable", err);
