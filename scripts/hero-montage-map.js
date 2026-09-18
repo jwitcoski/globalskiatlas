@@ -654,7 +654,7 @@ export async function initHeroMontageMap(container, options = {}) {
 
   const embed = container.closest(".hero-montage-embed") || container;
   const homepageHero = embed.id === "hero-3d";
-  const HERO_LOCK_KEY = "gsaHeroMountainId";
+  const HERO_LOCK_KEY = "gsaHeroPickedMountainId";
 
   function lockedHeroId() {
     try {
@@ -673,10 +673,39 @@ export async function initHeroMontageMap(container, options = {}) {
     }
   }
 
-  function mapHrefForClay(resort) {
-    const name = resort?.display_name || resort?.short_name || "";
-    return name ? `mainmap.html?q=${encodeURIComponent(name)}` : "mainmap.html";
+  let wikiIndexPages = null;
+  let wikiIndexPromise = null;
+  function loadWikiIndex() {
+    if (!wikiIndexPromise) {
+      wikiIndexPromise = fetch("/api/wiki/index", { cache: "no-store" })
+        .then((r) => {
+          if (!r.ok) throw new Error(`wiki index ${r.status}`);
+          return r.json();
+        })
+        .then((data) => {
+          wikiIndexPages = Array.isArray(data) ? data : data?.pages || [];
+          return wikiIndexPages;
+        })
+        .catch((err) => {
+          console.warn("[hero-montage-map] wiki index skipped", err);
+          wikiIndexPages = wikiIndexPages || [];
+          return wikiIndexPages;
+        });
+    }
+    return wikiIndexPromise;
   }
+
+  function wikiHrefForClay(resort) {
+    const ws = String(resort?.winter_sports_id || "");
+    if (ws && Array.isArray(wikiIndexPages)) {
+      const hit = wikiIndexPages.find(
+        (p) => String(p.winterSportsId || p.winter_sports_id || "") === ws,
+      );
+      if (hit?.pageId) return `/wiki/resort.html?page=${encodeURIComponent(hit.pageId)}`;
+    }
+    return "/wiki/browse.html";
+  }
+  if (homepageHero) loadWikiIndex();
 
   function markHeroFallback(reason) {
     if (!homepageHero) return;
@@ -865,7 +894,7 @@ export async function initHeroMontageMap(container, options = {}) {
       link.href = compareHref;
     }
     if (openLink && homepageHero) {
-      openLink.href = mapHrefForClay(resort);
+      openLink.href = wikiHrefForClay(resort);
       openLink.setAttribute("data-mountain", resort.display_name || label);
     }
     if (posterEl) {
@@ -1223,30 +1252,29 @@ export async function initHeroMontageMap(container, options = {}) {
         resorts = all;
         const locked = homepageHero ? lockedHeroId() : "";
         let idx = locked ? resorts.findIndex((r) => r.id === locked) : -1;
-        if (idx < 0) idx = 0;
-        resortIndex = idx;
-        persistHeroId(resorts[resortIndex]?.id);
-      }
-      await mountResort(currentResort());
-      if (homepageHero && !preferredId && !skipNearest && resorts.length > 1) {
-        try {
-          const origin = await lookupIpLocation();
-          visitorPlace = [origin.city, origin.region].filter(Boolean).join(", ");
-          const nearIdx = await indexOfNearestClayResort(resorts, origin);
-          if (nearIdx >= 0) {
-            nearestId = resorts[nearIdx].id;
-            if (nearIdx !== resortIndex && closerBtn && closerWrap) {
-              const n = resorts[nearIdx];
-              const label = n.short_name || n.display_name || n.id;
-              closerBtn.textContent = visitorPlace
-                ? `Closer mountain found: ${label} · ${visitorPlace}`
-                : `Closer mountain found: ${label}`;
-              closerWrap.hidden = false;
-            }
+        let nearIdx = -1;
+        if (homepageHero && !skipNearest && resorts.length) {
+          try {
+            const origin = await lookupIpLocation();
+            visitorPlace = [origin.city, origin.region].filter(Boolean).join(", ");
+            nearIdx = await indexOfNearestClayResort(resorts, origin);
+            if (nearIdx >= 0) nearestId = resorts[nearIdx].id;
+          } catch (err) {
+            console.warn("[hero-montage-map] nearest-by-ip skipped", err);
           }
-        } catch (err) {
-          console.warn("[hero-montage-map] nearest-by-ip skipped", err);
         }
+        if (idx < 0) idx = nearIdx >= 0 ? nearIdx : 0;
+        resortIndex = idx;
+      }
+      if (homepageHero) await loadWikiIndex();
+      await mountResort(currentResort());
+      if (homepageHero && nearestId && currentResort()?.id !== nearestId && closerBtn && closerWrap) {
+        const n = resorts.find((r) => r.id === nearestId);
+        const label = n?.short_name || n?.display_name || nearestId;
+        closerBtn.textContent = visitorPlace
+          ? `Closer mountain found: ${label} · ${visitorPlace}`
+          : `Closer mountain found: ${label}`;
+        closerWrap.hidden = false;
       }
     } catch (err) {
       console.warn("[hero-montage-map] catalog load failed", err);

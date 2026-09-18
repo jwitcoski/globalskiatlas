@@ -65,7 +65,7 @@
             referrerpolicy="no-referrer"
         />
         <link rel="preconnect" href="https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com" crossorigin />
-        <link rel="stylesheet" href="css/index-hero-montage.css?v=58" />
+        <link rel="stylesheet" href="css/index-hero-montage.css?v=59" />
         <script type="importmap">
         {
             "imports": {
@@ -148,7 +148,7 @@
 
         <section
             class="tw-relative tw-flex tw-min-h-[100vh] tw-w-full tw-max-w-[100vw] tw-flex-col 
-                    tw-overflow-hidden max-lg:tw-p-4 max-md:tw-mt-[50px]"
+                    max-lg:tw-p-4 max-md:tw-mt-[50px]"
         >
             <div
                 class="tw-flex tw-h-full tw-min-h-[100vh] tw-w-full tw-place-content-center 
@@ -165,12 +165,15 @@
                         class="reveal-hero-text tw-mt-2 tw-max-w-[450px] tw-p-2 
                                 tw-text-left max-lg:tw-max-w-full"
                     >
-                        A named mountain from the global atlas — open it on the map, or search if you have another in mind.
+                            A named mountain from the global atlas — open its wiki page, or search if you have another in mind.
                         <div class="hero-activate tw-mt-4">
-                            <a href="mainmap.html?q=Montage%20Mountain" data-hero-open-mountain class="hero-primary-cta">Open this mountain</a>
-                            <form id="home-search" class="hero-search" action="mainmap.html" method="get" role="search">
+                            <a href="/wiki/browse.html" data-hero-open-mountain class="hero-primary-cta">Open this mountain</a>
+                            <form id="home-search" class="hero-search" action="/wiki/browse.html" method="get" role="search">
                                 <label for="home-search-q" class="tw-sr-only">Search ski resorts</label>
-                                <input id="home-search-q" type="search" name="q" placeholder="Search a resort" autocomplete="off" />
+                                <div class="hero-search-field">
+                                    <input id="home-search-q" type="search" name="q" placeholder="Search a resort" autocomplete="off" />
+                                    <div class="search-dropdown" id="home-search-dropdown" role="listbox" aria-label="Matching resorts"></div>
+                                </div>
                                 <button type="submit">Search</button>
                             </form>
                             <p class="hero-closer" hidden>
@@ -801,18 +804,38 @@
         #about .pagination-container .swiper-pagination-bullet-active {
             background: #fff !important;
         }
-        /* 3x2 features grid */
+        /* 3-up features; stack on phones so cards stay readable */
         #ai-assistant .features-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 2.5rem;
             max-width: 64rem;
+            width: 100%;
+            min-width: 0;
         }
         #ai-assistant .job-card {
             padding: 1.25rem 1rem;
             border: 1px solid #d4d4d4;
             border-radius: 12px;
             background: #fff;
+            min-width: 0;
+        }
+        @media (max-width: 768px) {
+            #ai-assistant .features-grid {
+                grid-template-columns: 1fr;
+                gap: 0.85rem;
+            }
+            #ai-assistant .job-card {
+                padding: 1rem 1.15rem;
+                text-align: left;
+                align-items: flex-start;
+            }
+            #ai-assistant .job-card h3 {
+                margin-top: 0;
+            }
+            #ai-assistant .job-card p {
+                margin-top: 0.35rem;
+            }
         }
         #ai-assistant .job-card:hover {
             border-color: #1a4d8c;
@@ -857,7 +880,8 @@
     </style>
 
     <script src="scripts/gsa-events.js"></script>
-    <script type="module" src="scripts/hero-montage-map.js?v=117"></script>
+    <script type="module" src="scripts/hero-montage-map.js?v=119"></script>
+    <script type="module" src="scripts/home-search.js?v=1"></script>
     <script type="module">
         import { fetchSkiAreaCatalog, loadPmtilesLayerFeatures } from './scripts/pmtiles-core.js';
         (async function () {

@@ -82,8 +82,8 @@ try {
   await page.locator("[data-hero-open-mountain]").waitFor({ state: "visible" });
   await page.locator("#home-search-q").waitFor({ state: "visible" });
   const openHref = await page.locator("[data-hero-open-mountain]").getAttribute("href");
-  if (!openHref || !openHref.includes("mainmap.html")) {
-    throw new Error(`Primary CTA does not open the map: ${openHref}`);
+  if (!openHref || !openHref.includes("wiki/")) {
+    throw new Error(`Primary CTA does not open the wiki: ${openHref}`);
   }
   const ctaBox = await page.locator("[data-hero-open-mountain]").boundingBox();
   if (!ctaBox || ctaBox.height < 44) throw new Error("Primary CTA is below 48px tap height");
