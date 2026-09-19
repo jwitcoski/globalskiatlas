@@ -41,7 +41,9 @@ import {
   makeFallingSnow,
   updateFallingSnow,
   setInspectAtmosphere,
-} from "./look.js?v=lod4";
+  makeComposer,
+  fitComposer,
+} from "./look.js?v=pp1";
 import { addResortIsland, updateIslandDust, updateIslandLod, setIslandOpacity, resetIslandLod } from "./island.js?v=lod3b";
 import { bindUi, setHud, openPanel, closePanel, updateLoading, setOsmMapNote, setResortTitle, compactUi, setFlybyChrome, setHelpTips, paintSnowBtn } from "./ui.js?v=snow17";
 import { atlasStatsHtml, prefetchWikiIndex } from "./atlas-stats.js?v=stats1";
@@ -168,6 +170,7 @@ renderer.setSize(innerWidth, innerHeight, false);
 renderer.domElement.style.cssText = "position:fixed;inset:0;z-index:0;display:block;width:100%;height:100%;";
 document.body.appendChild(renderer.domElement);
 const look = addSkyAndLights(THREE, scene, renderer);
+const composer = makeComposer(renderer, scene, camera);
 const orbit = new OrbitControls(camera, renderer.domElement);
 orbit.enabled = false;
 orbit.enableDamping = true;
@@ -785,6 +788,7 @@ function fitRenderer() {
   renderer.setSize(w, h, false);
   renderer.domElement.style.width = "100%";
   renderer.domElement.style.height = "100%";
+  fitComposer(composer, renderer, w, h);
 }
 
 const skier = makeSkier(THREE, scene);
@@ -1570,7 +1574,7 @@ function tick(now) {
       ? scene.userData.island.center
       : skier.position;
   followSun(look.sun, sunFocus);
-  renderer.render(scene, camera);
+  composer.render();
   if (trailerNeedsPaint()) paintTrailerFrame(renderer.domElement);
   dbg.tick(frameDt);
 }

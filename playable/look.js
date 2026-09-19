@@ -2,6 +2,10 @@
 
 import * as THREE from "three";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
+import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
+import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { intentsFrom } from "./input.js?v=s2";
 
 const SUN_DIR = { x: 0.42, y: 0.88, z: 0.22 };
@@ -137,6 +141,22 @@ export function addSkyAndLights(THREE, scene, renderer) {
   fill.position.set(-500, 180, 320);
   scene.add(fill);
   return { sky, sun };
+}
+
+/** Subtle bloom; ACES + exposure stay on the renderer, OutputPass applies them. */
+export function makeComposer(renderer, scene, camera) {
+  const composer = new EffectComposer(renderer);
+  composer.addPass(new RenderPass(scene, camera));
+  composer.addPass(new UnrealBloomPass(new THREE.Vector2(1, 1), 0.35, 0.45, 0.82));
+  composer.addPass(new OutputPass());
+  fitComposer(composer, renderer, innerWidth, innerHeight);
+  return composer;
+}
+
+export function fitComposer(composer, renderer, w, h) {
+  if (!composer) return;
+  composer.setPixelRatio(renderer.getPixelRatio());
+  composer.setSize(w, h);
 }
 
 const SHADOW_SPAN = 26;
