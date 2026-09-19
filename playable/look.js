@@ -10,6 +10,7 @@ import { intentsFrom } from "./input.js?v=s2";
 
 const SUN_DIR = { x: 0.42, y: 0.88, z: 0.22 };
 const FOG = 0xc5dff0;
+const SKI_FOG_DENSITY = 0.00048;
 
 function flakeTexture(THREE) {
   const c = document.createElement("canvas");
@@ -91,7 +92,7 @@ export function addSkyAndLights(THREE, scene, renderer) {
   }
 
   scene.background = new THREE.Color(FOG);
-  scene.fog = new THREE.Fog(FOG, 220, 4200);
+  scene.fog = new THREE.FogExp2(FOG, SKI_FOG_DENSITY);
   scene.userData.skiFog = scene.fog;
   scene.userData.skiBg = FOG;
 
@@ -120,7 +121,7 @@ export function addSkyAndLights(THREE, scene, renderer) {
   sky.renderOrder = -10;
   scene.add(sky);
 
-  scene.add(new THREE.HemisphereLight(0xf4f8fc, 0xf4f0e8, 1.38));
+  scene.add(new THREE.HemisphereLight(0xd8e8f6, 0xe6eef4, 1.38));
   const sun = new THREE.DirectionalLight(0xfff4dc, 1.78);
   sun.position.set(SUN_DIR.x * 900, SUN_DIR.y * 900, SUN_DIR.z * 900);
   sun.castShadow = true;
@@ -137,7 +138,7 @@ export function addSkyAndLights(THREE, scene, renderer) {
   sc.updateProjectionMatrix();
   scene.add(sun);
   scene.add(sun.target);
-  const fill = new THREE.DirectionalLight(0xb9d4ea, 0.38);
+  const fill = new THREE.DirectionalLight(0x9ec0dc, 0.38);
   fill.position.set(-500, 180, 320);
   scene.add(fill);
   return { sky, sun };
@@ -194,14 +195,12 @@ export function setInspectAtmosphere(scene, look, inspect, span = 4000) {
   const u = sky?.material?.uniforms;
   const sun = look?.sun;
   if (inspect) {
-    // Wider near/far = gentler haze (doubled from prior lobby defaults = half the fog).
     const fogFar = Math.max(9000, span * 4.4);
-    const fogNear = Math.max(1000, span * 0.64);
+    const density = Math.min(SKI_FOG_DENSITY * 0.55, 2.4 / fogFar);
     if (!scene.userData.lobbyFog) {
-      scene.userData.lobbyFog = new THREE.Fog(INSPECT_BG, fogNear, fogFar);
+      scene.userData.lobbyFog = new THREE.FogExp2(INSPECT_BG, density);
     } else {
-      scene.userData.lobbyFog.near = fogNear;
-      scene.userData.lobbyFog.far = fogFar;
+      scene.userData.lobbyFog.density = density;
     }
     scene.fog = scene.userData.lobbyFog;
     scene.background = new THREE.Color(INSPECT_BG);
@@ -209,10 +208,9 @@ export function setInspectAtmosphere(scene, look, inspect, span = 4000) {
     if (u?.uHorizon) u.uHorizon.value.setHex(INSPECT_HORIZON);
     if (sun) sun.castShadow = false;
   } else {
-    if (!scene.userData.skiFog) scene.userData.skiFog = new THREE.Fog(FOG, 220, 5600);
+    if (!scene.userData.skiFog) scene.userData.skiFog = new THREE.FogExp2(FOG, SKI_FOG_DENSITY);
     scene.fog = scene.userData.skiFog;
-    scene.fog.near = 220;
-    scene.fog.far = 5600;
+    scene.fog.density = SKI_FOG_DENSITY;
     scene.background = new THREE.Color(scene.userData.skiBg ?? FOG);
     if (u?.uTop) u.uTop.value.setHex(SKI_TOP);
     if (u?.uHorizon) u.uHorizon.value.setHex(SKI_HORIZON);

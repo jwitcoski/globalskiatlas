@@ -27,7 +27,7 @@ import {
 import { featuredCourses, attachPisteDifficulty, courseFinish, createRun, tickRun, formatTime } from "./run.js?v=map4";
 import { coordsToXz, attachPiste, resetScore, tickScore, commitBestScore, formatScore, applyWipeout } from "./score.js?v=snow1";
 import { orientPiste, alongTrack, alongPolyline, placeGates, addGateMeshes, clearGateMeshes, resetGates, tickGates } from "./gates.js?v=vis18";
-import { addOsmWorld, applyPisteDecorDifficultyScheme, applySnowLevel } from "./osm-world.js?v=snow17";
+import { addOsmWorld, applyPisteDecorDifficultyScheme, applySnowLevel } from "./osm-world.js?v=tree2";
 import {
   snowTerrainMaterial,
   addSkyAndLights,
@@ -43,7 +43,7 @@ import {
   setInspectAtmosphere,
   makeComposer,
   fitComposer,
-} from "./look.js?v=pp1";
+} from "./look.js?v=pp2";
 import { addResortIsland, updateIslandDust, updateIslandLod, setIslandOpacity, resetIslandLod } from "./island.js?v=lod3b";
 import { bindUi, setHud, openPanel, closePanel, updateLoading, setOsmMapNote, setResortTitle, compactUi, setFlybyChrome, setHelpTips, paintSnowBtn } from "./ui.js?v=snow17";
 import { atlasStatsHtml, prefetchWikiIndex } from "./atlas-stats.js?v=stats1";

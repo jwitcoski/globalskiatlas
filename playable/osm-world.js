@@ -27,22 +27,23 @@ const MAX_TREES = 8000;
 function clayTreeMats() {
   return {
     bark: new THREE.MeshLambertMaterial({ color: PALETTE.trunk }),
-    needle: new THREE.MeshLambertMaterial({ color: PALETTE.tree, flatShading: true }),
-    deep: new THREE.MeshLambertMaterial({ color: PALETTE.treeDeep, flatShading: true }),
+    needle: new THREE.MeshLambertMaterial({ color: PALETTE.tree }),
+    deep: new THREE.MeshLambertMaterial({ color: PALETTE.treeDeep }),
   };
 }
 
 function stampClayTree(dummy, trunks, crowns, deeps, i, x, y, z, s) {
   dummy.rotation.set(0, (i * 0.7) % 6.28, 0);
   dummy.scale.set(s, s, s);
-  dummy.position.set(x, y + 1.7 * s, z);
+  dummy.position.set(x, y + 2.4 * s, z);
   dummy.updateMatrix();
   trunks.setMatrixAt(i, dummy.matrix);
-  dummy.position.set(x, y + 5.8 * s, z);
+  dummy.position.set(x, y + 5.1 * s, z);
+  dummy.scale.set(s * 1.35, s * 1.05, s * 1.35);
   dummy.updateMatrix();
   crowns.setMatrixAt(i, dummy.matrix);
-  dummy.position.set(x, y + 8.0 * s, z);
-  dummy.scale.set(s * 0.72, s * 0.72, s * 0.72);
+  dummy.position.set(x + s * 0.35, y + 6.4 * s, z + s * 0.2);
+  dummy.scale.set(s * 0.95, s * 0.75, s * 0.95);
   dummy.updateMatrix();
   deeps.setMatrixAt(i, dummy.matrix);
 }
@@ -966,8 +967,8 @@ export async function addOsmWorld(THREE, scene, sceneRoot, manifest, elevFn) {
     if (treePts.length) {
       const n = treePts.length;
       const matsT = clayTreeMats();
-      const trunkG = new THREE.CylinderGeometry(0.11, 0.16, 3.4, 6);
-      const crownG = new THREE.ConeGeometry(1.05, 8.2, 6);
+      const trunkG = new THREE.CylinderGeometry(0.16, 0.22, 4.8, 6);
+      const crownG = new THREE.SphereGeometry(1.55, 7, 5);
       const shrubG = new THREE.IcosahedronGeometry(0.85, 0);
       const trunks = new THREE.InstancedMesh(trunkG, matsT.bark, n);
       const crowns = new THREE.InstancedMesh(crownG, matsT.needle, n);
@@ -1171,8 +1172,8 @@ export function addPisteEdgeScenery(THREE, scene, pistePolys, elevFn) {
   }
   const dummy = new THREE.Object3D();
   const matsT = clayTreeMats();
-  const trunkG = new THREE.CylinderGeometry(0.12, 0.18, 3.2, 5);
-  const crownG = new THREE.ConeGeometry(1.05, 7.4, 6);
+  const trunkG = new THREE.CylinderGeometry(0.16, 0.22, 4.8, 6);
+  const crownG = new THREE.SphereGeometry(1.55, 7, 5);
   const rockG = new THREE.DodecahedronGeometry(0.7, 0);
   const snow = new THREE.MeshLambertMaterial({ color: PALETTE.snowShade, flatShading: true });
   const pts = [];
