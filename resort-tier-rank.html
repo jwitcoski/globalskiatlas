@@ -56,7 +56,7 @@
       }
     }
   </script>
-  <link rel="stylesheet" href="css/index-hero-montage.css?v=59" />
+  <link rel="stylesheet" href="css/index-hero-montage.css?v=60" />
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { height: 100%; font-family: system-ui, -apple-system, sans-serif; background: #fff; color: #111; }
@@ -221,45 +221,10 @@
     .error { padding: 12px; background: #fee; color: #c00; border-radius: 6px; margin-top: 8px; }
 
     .tier-chart-wrapper { position: relative; flex: 1; min-width: 0; }
-    .clay-compare-cell { min-width: 0; display: flex; flex-direction: column; gap: 0; }
-    .clay-compare-embed {
-      position: relative;
-      width: 100%;
-      max-width: none;
-      height: 140px;
-      border-radius: 8px 8px 0 0;
-      box-shadow: none;
-    }
-    .clay-compare-empty {
-      height: 140px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      color: #6b7280;
-      font-size: 12px;
-      background: repeating-linear-gradient(-45deg, #f9fafb, #f9fafb 8px, #f3f4f6 8px, #f3f4f6 16px);
-      border: 1px dashed #9ca3af;
-      border-radius: 8px 8px 0 0;
-      text-align: center;
-      padding: 8px;
-    }
-    .clay-missing-badge {
-      display: inline-block;
-      padding: 3px 8px;
-      border-radius: 999px;
-      background: #111;
-      color: #fff;
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-    }
-    .clay-missing-hint { font-size: 11px; color: #6b7280; }
+    body.tier-3d .clay-compare-embed,
+    body.tier-3d .clay-compare-empty { height: 140px; border-radius: 8px 8px 0 0; box-shadow: none; }
     body.tier-3d .resort-card { width: 168px; }
     body.tier-3d .resort-card svg { display: none; }
-    .clay-print-shot { display: none; }
     body.tier-3d .resort-card .card-name {
       display: block;
       min-height: 36px;
@@ -492,7 +457,7 @@
       .resort-card { width: 76px; }
       .resort-card svg { height: 58px; }
       body.tier-3d .resort-card { width: min(100%, 168px); }
-      .clay-compare-embed, .clay-compare-empty { height: 120px; }
+      body.tier-3d .clay-compare-embed, body.tier-3d .clay-compare-empty { height: 120px; }
     }
     @media print {
       body { background: #fff; }
@@ -505,8 +470,6 @@
       .resort-card .card-name { color: #111; font-size: 8px; }
       .watermark { color: rgba(0,0,0,0.5); }
       body.tier-3d .resort-card { width: 140px; }
-      body.tier-3d .clay-compare-embed canvas { display: none !important; }
-      body.tier-3d .clay-print-shot { display: block; width: 100%; height: 110px; object-fit: cover; }
       body.tier-3d .clay-compare-embed, body.tier-3d .clay-compare-empty { height: 110px; }
     }
   </style>
@@ -1060,8 +1023,7 @@
         items.push({
           name: resortData[idx]?.name || '',
           ws: winterSportsId(idx),
-          parent: card,
-          bare: true
+          parent: card
         });
       });
       window.dispatchEvent(new CustomEvent('gsa-compare-view', { detail: { mode: '3d', items } }));
@@ -1107,7 +1069,7 @@
       const showNames = document.getElementById('show-names') && document.getElementById('show-names').checked;
       const tx = CARD_W / 2 - cx;
       const ty = CARD_H / 2 - cy;
-      return `<div class="resort-card" data-index="${index}" data-ws="${winterSportsId(index)}" data-resort-key="${r.key}">
+      return `<div class="resort-card" data-index="${index}" data-resort-key="${r.key}">
           <svg viewBox="0 0 ${CARD_W} ${CARD_H}" preserveAspectRatio="xMidYMid meet">
             <g transform="translate(${tx}, ${ty})">
               ${trailPaths}
@@ -1366,20 +1328,17 @@
       loadPistesForIndices(sorted).then(() => { renderTiers(); renderResortList(); });
     }
 
-    document.getElementById('view-2d')?.addEventListener('click', () => {
-      viewMode = '2d';
-      renderTiers();
-    });
-    document.getElementById('view-3d')?.addEventListener('click', () => {
-      viewMode = '3d';
-      renderTiers();
+    document.querySelectorAll('#view-2d, #view-3d').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        viewMode = btn.id === 'view-3d' ? '3d' : '2d';
+        renderTiers();
+      });
     });
     document.getElementById('auto-tier-btn')?.addEventListener('click', applyAutoTier);
     document.getElementById('show-names')?.addEventListener('change', renderTiers);
     document.getElementById('relative-sizes')?.addEventListener('change', renderTiers);
     document.getElementById('tier-descriptions')?.addEventListener('change', renderTiers);
     document.getElementById('downhill-only')?.addEventListener('change', renderResortList);
-    document.getElementById('add-to-tier')?.addEventListener('change', () => {});
     document.getElementById('random-10-btn')?.addEventListener('click', () => {
       const placed = new Set(getPlacedIndices());
       const downhillOnly = document.getElementById('downhill-only') && document.getElementById('downhill-only').checked;
@@ -1419,13 +1378,7 @@
         renderTiers();
         renderResortList();
         const printBtn = document.getElementById('print-chart-btn');
-        if (printBtn) {
-          printBtn.classList.add('visible');
-          printBtn.onclick = () => {
-            window.dispatchEvent(new Event('beforeprint'));
-            window.print();
-          };
-        }
+        if (printBtn) { printBtn.classList.add('visible'); printBtn.onclick = () => window.print(); }
       })
       .catch((err) => {
         const c = document.getElementById('tier-container');
@@ -1433,7 +1386,7 @@
         console.error(err);
       });
   </script>
-<script type="module" src="scripts/compare-clay.js?v=10"></script>
+<script type="module" src="scripts/compare-clay.js?v=11"></script>
 <script src="scripts/site-nav.js?v=4" defer></script>
 </body>
 </html>

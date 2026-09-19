@@ -68,8 +68,9 @@ function makeCell(name, bare) {
 }
 
 async function markMissing3dChips(clayByWs) {
-  const in3d = document.body.classList.contains("compare-3d");
   const chips = [...document.querySelectorAll("#selected-chips .sel-chip")];
+  if (!chips.length) return;
+  const in3d = document.body.classList.contains("compare-3d");
   for (const chip of chips) {
     const ws = String(chip.getAttribute("data-ws") || "");
     const hit = clayByWs?.get(ws);
@@ -112,11 +113,9 @@ export async function disposeCompareClay() {
 export async function syncCompareClay({ host, items, cols }) {
   const token = ++mountToken;
   const list = items || [];
-  const hasParents = list.some((item) => item.parent);
-  if (!host && !hasParents) return;
-  if (host && !hasParents) {
-    host.style.gridTemplateColumns = `repeat(${Math.max(1, cols || 1)}, minmax(0, 1fr))`;
-  }
+  const nested = list.some((item) => item.parent);
+  if (!host && !nested) return;
+  if (host && !nested) host.style.gridTemplateColumns = `repeat(${Math.max(1, cols || 1)}, minmax(0, 1fr))`;
   const clayByWs = await loadClayByWs();
   if (token !== mountToken) return;
   await markMissing3dChips(clayByWs);
@@ -126,21 +125,16 @@ export async function syncCompareClay({ host, items, cols }) {
   const keepIds = new Set();
   // ponytail: browsers cap WebGL contexts (~8–16); same 12-live ceiling as compare. Upgrade: one shared renderer.
   const MAX_LIVE = 12;
-  let live = 0;
   for (const item of list) {
     const hit = clayByWs.get(String(item.ws || ""));
     const id = hit?.id ? String(hit.id) : "";
     let ready = id ? await claySceneReady(id) : false;
-    if (ready && live >= MAX_LIVE) ready = false;
-    if (ready) {
-      keepIds.add(id);
-      live += 1;
-    }
+    if (ready && keepIds.size >= MAX_LIVE) ready = false;
+    if (ready) keepIds.add(id);
     desired.push({
       name: item.name || "Resort",
-      ws: String(item.ws || ""),
       parent: item.parent || host,
-      bare: Boolean(item.bare),
+      bare: Boolean(item.parent),
       id,
       ready,
     });
@@ -166,15 +160,10 @@ export async function syncCompareClay({ host, items, cols }) {
       continue;
     }
     let slot = viewers.get(job.id);
-    if (slot?.handle) {
-      if (slot.title) slot.title.textContent = job.name;
-      attachCell(target, slot.cell);
-      continue;
-    }
     if (slot) {
       if (slot.title) slot.title.textContent = job.name;
       attachCell(target, slot.cell);
-      if (!slot.loading) toMount.push({ id: job.id, slot });
+      if (!slot.handle && !slot.loading) toMount.push({ id: job.id, slot });
       continue;
     }
     const made = makeCell(job.name, job.bare);
@@ -240,22 +229,16 @@ function snapshotClayForPrint() {
       img.alt = "";
       host.appendChild(img);
     }
-    try {
-      img.src = canvas.toDataURL("image/png");
-    } catch (_) { /* ignore */ }
+    try { img.src = canvas.toDataURL("image/png"); } catch (_) { /* ignore */ }
   });
 }
-function clearClayPrintShots() {
-  document.querySelectorAll(".clay-print-shot").forEach((el) => el.remove());
-}
+document.addEventListener("click", (e) => {
+  if (e.target.closest("#print-chart-btn")) snapshotClayForPrint();
+}, true);
 window.addEventListener("beforeprint", snapshotClayForPrint);
-window.addEventListener("afterprint", clearClayPrintShots);
-try {
-  window.matchMedia("print").addEventListener("change", (e) => {
-    if (e.matches) snapshotClayForPrint();
-    else clearClayPrintShots();
-  });
-} catch (_) { /* ignore */ }
+window.addEventListener("afterprint", () => {
+  document.querySelectorAll(".clay-print-shot").forEach((el) => el.remove());
+});
 
 window.addEventListener("gsa-compare-view", (event) => {
   const detail = event.detail || {};
