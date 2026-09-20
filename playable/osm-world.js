@@ -110,6 +110,179 @@ function plantPines(scene, pack, spots) {
   return { n: spots.length, xzr, insts };
 }
 
+const RESORT_GLB = new URL("./assets/models/ski-resort4.glb", import.meta.url).href;
+let resortKit = null;
+let resortKitPromise = null;
+
+function litMat(src) {
+  const map = src?.map || null;
+  if (map) {
+    map.colorSpace = THREE.SRGBColorSpace;
+    map.needsUpdate = true;
+  }
+  const color = src?.color?.clone?.() || new THREE.Color(0xffffff);
+  return new THREE.MeshLambertMaterial({
+    map,
+    color,
+    alphaTest: src?.transparent ? 0.35 : 0,
+    side: THREE.DoubleSide,
+    fog: true,
+  });
+}
+
+async function attachSpecGlossMaps(gltf) {
+  const parser = gltf.parser;
+  const defs = parser.json.materials || [];
+  const byName = new Map(defs.map((d) => [d.name, d]));
+  const seen = new Set();
+  const jobs = [];
+  gltf.scene.traverse((o) => {
+    if (!o.isMesh) return;
+    const mat = o.material;
+    if (!mat || seen.has(mat)) return;
+    seen.add(mat);
+    const ext = byName.get(mat.name)?.extensions?.KHR_materials_pbrSpecularGlossiness;
+    mat.metalness = 0;
+    if (!ext) {
+      mat.roughness = 0.8;
+      return;
+    }
+    const df = ext.diffuseFactor;
+    if (df) mat.color.setRGB(df[0], df[1], df[2]);
+    mat.roughness = 1 - (ext.glossinessFactor ?? 0.25);
+    const di = ext.diffuseTexture?.index;
+    if (di == null) return;
+    jobs.push(
+      parser.loadTexture(di).then((tex) => {
+        tex.colorSpace = THREE.SRGBColorSpace;
+        mat.map = tex;
+        mat.needsUpdate = true;
+      }),
+    );
+  });
+  await Promise.all(jobs);
+}
+
+function meshLineage(o) {
+  const parts = [];
+  for (let x = o; x; x = x.parent) if (x.name) parts.push(x.name);
+  return parts.join(" ").toLowerCase();
+}
+
+function bakeMeshToOrigin(mesh, origin) {
+  const geo = mesh.geometry.clone();
+  geo.applyMatrix4(mesh.matrixWorld);
+  geo.translate(-origin.x, -origin.y, -origin.z);
+  geo.computeBoundingBox();
+  geo.computeBoundingSphere();
+  const size = new THREE.Vector3();
+  geo.boundingBox.getSize(size);
+  return { geo, mat: litMat(mesh.material), size };
+}
+
+function originFromMeshes(meshes) {
+  const box = new THREE.Box3();
+  for (const m of meshes) box.expandByObject(m);
+  return { x: (box.min.x + box.max.x) * 0.5, y: box.min.y, z: (box.min.z + box.max.z) * 0.5, box };
+}
+
+/** House / tower / fence post / one skier. Skip Landscape + El/Elka trees. */
+async function loadResortKit() {
+  if (resortKit) return resortKit;
+  if (resortKitPromise) return resortKitPromise;
+  resortKitPromise = (async () => {
+    const gltf = await new GLTFLoader().loadAsync(RESORT_GLB);
+    gltf.scene.updateMatrixWorld(true);
+    await attachSpecGlossMaps(gltf);
+    const houses = [];
+    const towers = [];
+    const posts = [];
+    const skiers = [];
+    gltf.scene.traverse((o) => {
+      if (!o.isMesh) return;
+      const n = meshLineage(o);
+      if (n.includes("landscape")) return;
+      if (n.includes("house")) houses.push(o);
+      else if (n.includes("skiroll")) towers.push(o);
+      else if (n.includes("cylinder")) posts.push(o);
+      else if (/\bbody[. _]*002\b/.test(n) || n.includes("body.002")) skiers.push(o);
+    });
+    function proto(list, targetH) {
+      if (!list.length) return null;
+      const origin = originFromMeshes(list);
+      const pieces = list.map((m) => bakeMeshToOrigin(m, origin));
+      const size = new THREE.Vector3();
+      origin.box.min.set(origin.box.min.x - origin.x, 0, origin.box.min.z - origin.z);
+      origin.box.max.set(origin.box.max.x - origin.x, origin.box.max.y - origin.y, origin.box.max.z - origin.z);
+      origin.box.getSize(size);
+      const tall = Math.max(size.x, size.y, size.z, 0.01);
+      return { pieces, size, unit: targetH / tall };
+    }
+    resortKit = {
+      house: proto(houses, 8),
+      tower: proto(towers.slice(0, 1), 12),
+      fence: proto(posts.slice(0, 1), 2.3),
+      skier: proto(skiers.slice(0, 1), 1.8),
+    };
+    console.info("resort kit", {
+      house: houses.length,
+      tower: towers.length,
+      fence: posts.length,
+      skier: skiers.length,
+    });
+    return resortKit;
+  })();
+  return resortKitPromise;
+}
+
+function plantProtoPieces(scene, proto, spots, shadow) {
+  if (!proto?.pieces?.length || !spots.length) return 0;
+  const dummy = new THREE.Object3D();
+  for (const piece of proto.pieces) {
+    const mesh = new THREE.InstancedMesh(piece.geo, piece.mat, spots.length);
+    mesh.frustumCulled = false;
+    mesh.castShadow = !!shadow;
+    for (let i = 0; i < spots.length; i++) {
+      const p = spots[i];
+      dummy.position.set(p.x, p.y, p.z);
+      dummy.rotation.set(p.rx || 0, p.ry || 0, p.rz || 0);
+      dummy.scale.set(p.sx ?? p.s ?? 1, p.sy ?? p.s ?? 1, p.sz ?? p.s ?? 1);
+      dummy.updateMatrix();
+      mesh.setMatrixAt(i, dummy.matrix);
+    }
+    mesh.instanceMatrix.needsUpdate = true;
+    scene.add(mesh);
+  }
+  return spots.length;
+}
+
+function spotsAlongCoords(coords, elevFn, step, spots, max) {
+  const pts = [];
+  for (const c of coords || []) {
+    if (!c || c.length < 2) continue;
+    pts.push(new THREE.Vector3(c[0], elevFn(c[0], -c[1]), -c[1]));
+  }
+  if (pts.length < 2) return;
+  const samples = sampleAlong(pts, step);
+  for (let i = 0; i < samples.length && spots.length < max; i++) {
+    const p = samples[i];
+    const nxt = samples[Math.min(i + 1, samples.length - 1)];
+    const prev = samples[Math.max(0, i - 1)];
+    const tan = i === samples.length - 1 ? p.clone().sub(prev) : nxt.clone().sub(p);
+    spots.push({ x: p.x, y: p.y, z: p.z, ry: Math.atan2(tan.x, tan.z), s: 1 });
+  }
+}
+
+function spotsAlongFc(fc, elevFn, step, max) {
+  const spots = [];
+  if (!fc) return spots;
+  for (const f of fc.features || []) {
+    for (const coords of lineParts(f.geometry)) spotsAlongCoords(coords, elevFn, step, spots, max);
+    for (const poly of polygonParts(f.geometry)) spotsAlongCoords(poly[0], elevFn, step, spots, max);
+  }
+  return spots;
+}
+
 /** Every vertex of any GeoJSON geometry, including nested multi/collection parts. */
 function eachCoord(geom, fn) {
   if (!geom) return;
@@ -619,7 +792,7 @@ function makeClayPylon(h, steel, dark) {
   return g;
 }
 
-function addLiftKit(fc, elevFn, scene, counts) {
+function addLiftKit(fc, elevFn, scene, counts, kit) {
   if (!fc) return;
   const cableMat = new THREE.MeshBasicMaterial({ color: PALETTE.cable });
   const steel = new THREE.MeshLambertMaterial({ color: PALETTE.lift, flatShading: true });
@@ -662,7 +835,15 @@ function addLiftKit(fc, elevFn, scene, counts) {
         liftPath,
         elevFn,
         () => makeLiftCarrier(THREE, type, steel),
-        (color) => makeLiftSkier(THREE, color),
+        (color) => {
+          if (kit?.skier?.pieces?.[0]) {
+            const proto = kit.skier.pieces[0];
+            const m = new THREE.Mesh(proto.geo, proto.mat);
+            m.scale.setScalar(kit.skier.unit);
+            return m;
+          }
+          return makeLiftSkier(THREE, color);
+        },
       );
       if (motion) liftMotions.push(motion);
       for (const p of sampleAlong(ground, TOWER_STEP)) {
@@ -677,11 +858,27 @@ function addLiftKit(fc, elevFn, scene, counts) {
     return arr.filter((_, i) => i % step === 0).slice(0, max);
   }
   const towers = stride(towerPts, MAX_TOWERS);
-  for (const t of towers) {
-    const h = liftCableHeight(t.type) || TOWER_H;
-    const pylon = makeClayPylon(h, steel, dark);
-    placeAlongLift(pylon, t.p, t.tangent);
-    scene.add(pylon);
+  if (kit?.tower && towers.length) {
+    const spots = towers.map((t) => {
+      const want = new THREE.Vector3(t.tangent.x, 0, t.tangent.z);
+      if (want.lengthSq() < 1e-8) want.set(0, 0, 1);
+      else want.normalize();
+      return {
+        x: t.p.x,
+        y: t.p.y,
+        z: t.p.z,
+        ry: Math.atan2(want.x, want.z),
+        s: kit.tower.unit,
+      };
+    });
+    plantProtoPieces(scene, kit.tower, spots, true);
+  } else {
+    for (const t of towers) {
+      const h = liftCableHeight(t.type) || TOWER_H;
+      const pylon = makeClayPylon(h, steel, dark);
+      placeAlongLift(pylon, t.p, t.tangent);
+      scene.add(pylon);
+    }
   }
   let stations = 0;
   for (const t of terminals) {
@@ -694,7 +891,7 @@ function addLiftKit(fc, elevFn, scene, counts) {
   counts.lifts = cables;
   counts.lift_towers = towers.length;
   counts.lift_stations = stations;
-  counts.lift_source = "clay";
+  counts.lift_source = kit?.tower ? "resort4" : "clay";
   scene.userData.liftMotions = liftMotions;
 }
 
@@ -930,6 +1127,14 @@ export async function addOsmWorld(THREE, scene, sceneRoot, manifest, elevFn) {
 
 
   const counts = {};
+  let kit = null;
+  try {
+    kit = await loadResortKit();
+  } catch (err) {
+    console.warn("resort kit", err);
+    resortKitPromise = null;
+  }
+  scene.userData.resortKit = kit;
   const defaults = {
     pistes: "vectors/pistes.geojson",
     lifts: "vectors/lifts.geojson",
@@ -1104,7 +1309,7 @@ export async function addOsmWorld(THREE, scene, sceneRoot, manifest, elevFn) {
   scene.add(pisteRoot);
   scene.userData.pisteDecor = pisteRoot;
 
-  addLiftKit(await loadLayer("lifts"), elevFn, scene, counts);
+  addLiftKit(await loadLayer("lifts"), elevFn, scene, counts, kit);
   const roadsFc = await loadLayer("roads");
   if (roadsFc) {
     let n = 0;
@@ -1128,7 +1333,17 @@ export async function addOsmWorld(THREE, scene, sceneRoot, manifest, elevFn) {
   counts.driving_cars = traffic.driving;
   counts.road_strips = traffic.roads;
   addLines(await loadLayer("cliffs"), mats.cliffLine, 1.0, "cliffs");
-  addLines(await loadLayer("barriers"), mats.barrier, 1.1, "barriers");
+  const barrierFc = await loadLayer("barriers");
+  addLines(barrierFc, mats.barrier, 1.1, "barriers");
+  if (kit?.fence) {
+    const fenceSpots = spotsAlongFc(barrierFc, elevFn, 5.5, 1400);
+    if (fenceSpots.length < 40) {
+      const extra = spotsAlongFc(ski, elevFn, 8, 1400 - fenceSpots.length);
+      fenceSpots.push(...extra);
+    }
+    for (const p of fenceSpots) p.s = kit.fence.unit;
+    counts.fences = plantProtoPieces(scene, kit.fence, fenceSpots, false);
+  }
 
   const buildings = await loadLayer("buildings");
   if (buildings) {
@@ -1166,30 +1381,47 @@ export async function addOsmWorld(THREE, scene, sceneRoot, manifest, elevFn) {
       }
     }
     candidates.sort((a, b) => b.area - a.area);
-    let n = 0;
-    for (const c of candidates) {
-      if (n >= MAX_CLAY_BUILDINGS) break;
-      const sc = Math.min(1, 24 / c.footW, 24 / c.footD);
-      addClayBuilding(
-        group,
-        c.cx,
-        c.cz,
-        elevFn(c.cx, c.cz),
-        c.footW * sc,
-        c.footD * sc,
-        Math.max(3.5, Math.min(11, Math.sqrt(c.area) * 0.32)),
-        c.yaw,
-      );
-      n += 1;
+    const houseOk = !!kit?.house;
+    if (houseOk) {
+      const spots = [];
+      for (const c of candidates) {
+        if (spots.length >= MAX_CLAY_BUILDINGS) break;
+        const s = kit.house.unit * Math.min(c.footW / 8, c.footD / 8, 1.8);
+        spots.push({ x: c.cx, y: elevFn(c.cx, c.cz), z: c.cz, ry: c.yaw, s: Math.max(kit.house.unit * 0.6, s) });
+      }
+      counts.buildings = plantProtoPieces(scene, kit.house, spots, true);
+      counts.building_source = "resort4";
+    } else {
+      let n = 0;
+      for (const c of candidates) {
+        if (n >= MAX_CLAY_BUILDINGS) break;
+        const sc = Math.min(1, 24 / c.footW, 24 / c.footD);
+        addClayBuilding(
+          group,
+          c.cx,
+          c.cz,
+          elevFn(c.cx, c.cz),
+          c.footW * sc,
+          c.footD * sc,
+          Math.max(3.5, Math.min(11, Math.sqrt(c.area) * 0.32)),
+          c.yaw,
+        );
+        n += 1;
+      }
+      scene.add(group);
+      counts.buildings = n;
     }
-    scene.add(group);
-    counts.buildings = n;
   }
 
   scene.userData.osmHull = convexHullDropClipFrame(hullSrc);
   counts.osm_vertices = hullSrc.length / 2;
   counts.hull_points = scene.userData.osmHull.length;
-
+  counts.kit = {
+    house: !!kit?.house,
+    tower: !!kit?.tower,
+    fence: !!kit?.fence,
+    skier: !!kit?.skier,
+  };
   return counts;
 }
 

@@ -278,12 +278,21 @@ function loadJsonArray(filePath) {
   return Array.isArray(raw) ? raw : raw.aliases || raw.overrides || [];
 }
 
-function matchOne(storm, idx, aliases, overrides) {
-  const ovr = overrides.find(
+function findOverride(storm, overrides) {
+  return overrides.find(
     (o) =>
       fold(o.storm_name) === fold(storm.name) &&
       (!o.country || normalizeCountry(o.country) === storm.country)
   );
+}
+
+function effectivePasses(storm, ovr) {
+  if (ovr && !ovr.skip && Array.isArray(ovr.passes)) return ovr.passes;
+  return storm.passes || [];
+}
+
+function matchOne(storm, idx, aliases, overrides) {
+  const ovr = findOverride(storm, overrides);
   if (ovr?.skip) {
     return { status: 'skipped', confidence: 'none', hits: [], guesses: [] };
   }
@@ -431,7 +440,8 @@ for (const r of high) {
   if (!affiliations[ws].storm_names.includes(r.storm.name)) {
     affiliations[ws].storm_names.push(r.storm.name);
   }
-  for (const p of r.storm.passes) {
+  const ovr = findOverride(r.storm, overrides);
+  for (const p of effectivePasses(r.storm, ovr)) {
     if (!affiliations[ws].passes.includes(p)) affiliations[ws].passes.push(p);
   }
   if (r.match.status === 'override') affiliations[ws].review_confirmed = true;
@@ -486,6 +496,20 @@ fs.writeFileSync(
   )
 );
 fs.writeFileSync(
+  path.join(REPORT_DIR, 'osm-missing.tsv'),
+  toTsv(
+    overrides
+      .filter((o) => o.osm_missing)
+      .map((o) => ({
+        storm_name: o.storm_name,
+        region: o.region,
+        country: o.country,
+        passes: (o.passes || []).join(',')
+      })),
+    ['storm_name', 'region', 'country', 'passes']
+  )
+);
+fs.writeFileSync(
   path.join(REPORT_DIR, 'ambiguous.tsv'),
   toTsv(
     review.map((r) => ({
@@ -526,8 +550,10 @@ const queue = results.map((r) => {
     region: r.storm.region,
     country: r.storm.country,
     state: r.storm.state,
-    passes: r.storm.passes,
+    passes: effectivePasses(r.storm, findOverride(r.storm, overrides)),
+    storm_passes: r.storm.passes,
     pass_raw: r.storm.pass_raw,
+    osm_missing: Boolean(findOverride(r.storm, overrides)?.osm_missing),
     status: r.match.status,
     confidence: r.match.confidence,
     suggested: hit

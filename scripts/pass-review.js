@@ -23,15 +23,30 @@ const streakEl = document.getElementById('streak');
 const barEl = document.getElementById('bar');
 const progressEl = document.getElementById('progress');
 const unmatchedToggle = document.getElementById('only-unmatched');
+const osmMissingToggle = document.getElementById('only-osm-missing');
 
 let queue = [];
 let wikiPages = [];
 let confirmedKeys = new Set();
 let skippedKeys = new Set();
+let osmMissingKeys = new Set();
 let index = 0;
 let selected = null;
+let selectedPasses = null;
+let passEditKey = '';
 let score = 0;
 let streak = 0;
+
+const PASS_KEYS = Object.keys(PASS_LABEL);
+
+function currentPasses(item) {
+  const k = keyOf(item);
+  if (passEditKey !== k || !selectedPasses) {
+    passEditKey = k;
+    selectedPasses = [...(item.passes || [])];
+  }
+  return selectedPasses;
+}
 
 function keyOf(item) {
   return item.storm_name + '|' + (item.region || '');
@@ -54,9 +69,12 @@ function resolvePageId(item, pick) {
 
 function remaining() {
   const preferUnmatched = unmatchedToggle.checked;
+  const onlyOsm = osmMissingToggle.checked;
   return queue.filter((item) => {
     const k = keyOf(item);
-    if (confirmedKeys.has(k) || skippedKeys.has(k)) return false;
+    if (confirmedKeys.has(k)) return false;
+    if (onlyOsm) return osmMissingKeys.has(k);
+    if (skippedKeys.has(k) || osmMissingKeys.has(k)) return false;
     if (preferUnmatched && item.suggested && item.confidence === 'high') return false;
     return true;
   });
@@ -73,7 +91,7 @@ function render() {
   const total = queue.length;
   const done = confirmedKeys.size;
   const item = currentItem();
-  progressEl.textContent = done + ' / ' + total + ' confirmed';
+  progressEl.textContent = done + ' / ' + total + ' confirmed · ' + osmMissingKeys.size + ' OSM';
   barEl.style.width = (total ? Math.round((done / total) * 100) : 0) + '%';
   scoreEl.textContent = score + ' pts';
   streakEl.textContent = streak ? streak + ' streak' : '';
@@ -85,10 +103,19 @@ function render() {
     return;
   }
 
-  const pills = (item.passes || [])
+  const stormPasses = item.storm_passes || item.passes || [];
+  const membership = currentPasses(item);
+  const stormPills = stormPasses
     .map((p) => '<span class="pill ' + p + '">' + (PASS_LABEL[p] || p) + '</span>')
     .join('') || '<span class="pill">No national pass</span>';
+  const switched = [...membership].sort().join(',') !== [...stormPasses].sort().join(',');
+  const editButtons = PASS_KEYS.map((p) => {
+    const on = membership.includes(p);
+    return `<button type="button" class="${p}${on ? ' on' : ''}" data-pass="${p}">${PASS_LABEL[p]}</button>`;
+  }).join('');
 
+  const osmQuery = encodeURIComponent([item.storm_name, item.region].filter(Boolean).join(' '));
+  const osmSearch = 'https://www.openstreetmap.org/search?query=' + osmQuery;
   const pageId = resolvePageId(item, selected);
   const atlasLabel = selected?.atlas_name || selected?.title || item.suggested?.atlas_name || 'No match — browse the atlas';
   const conf = item.suggested ? item.status + ' · ' + item.confidence : 'unmatched';
@@ -97,8 +124,10 @@ function render() {
     <div class="card">
       <p class="muted">Storm roster</p>
       <h1 class="storm-name">${esc(item.storm_name)}</h1>
-      <div class="pass-pills">${pills}</div>
-      <p class="muted" style="margin-top:10px">${esc(item.region || '')}</p>
+      <div class="pass-pills">${stormPills}</div>
+      <p class="muted" style="margin-top:10px">${esc(item.region || '')} · <a href="${osmSearch}" target="_blank" rel="noopener">Search OSM</a></p>
+      <p class="muted" style="margin-top:12px">Atlas membership${switched ? ' · changed from Storm roster' : ' · toggle if this resort switched'}</p>
+      <div class="pass-edit" id="pass-edit">${editButtons}</div>
     </div>
     <div class="card">
       <p class="muted">Atlas / wiki pick · ${esc(conf)}</p>
@@ -109,19 +138,33 @@ function render() {
     <div class="actions">
       <button class="confirm" id="confirm" ${pageId ? '' : 'disabled'}>Confirm match</button>
       <button class="wrong" id="wrong" type="button">Not this one</button>
+      <button class="osm-missing" id="osm-missing" type="button">Not in wiki — OSM later</button>
       <button class="skip" id="skip" type="button">Skip</button>
     </div>
     <p class="muted">${remaining().length} left this filter</p>
   `;
 
-  iframe.src = wikiHref(pageId);
-  setPassSite(item.passes || []);
+  const wikiUrl = wikiHref(pageId);
+  if (iframe.getAttribute('src') !== wikiUrl) iframe.src = wikiUrl;
+  setPassSite(membership);
+
+  leftEl.querySelectorAll('#pass-edit button').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const key = btn.getAttribute('data-pass');
+      const next = new Set(currentPasses(item));
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      selectedPasses = PASS_KEYS.filter((p) => next.has(p));
+      render();
+    });
+  });
 
   const search = leftEl.querySelector('#wiki-search');
   const hitsEl = leftEl.querySelector('#hits');
   search.addEventListener('input', () => showHits(search.value, hitsEl, item));
   leftEl.querySelector('#confirm').addEventListener('click', () => confirmItem(item, pageId));
   leftEl.querySelector('#skip').addEventListener('click', () => skipItem(item));
+  leftEl.querySelector('#osm-missing').addEventListener('click', () => markOsmMissing(item));
   leftEl.querySelector('#wrong').addEventListener('click', () => {
     selected = { pageId: '', atlas_name: '', winter_sports_id: '' };
     iframe.src = '/wiki/browse.html';
@@ -233,8 +276,8 @@ async function confirmItem(item, pageId) {
   await postReview('/api/pass-review/confirm', {
     storm_name: item.storm_name,
     atlas_name,
-    pass: (item.passes || []).join(','),
-    passes: item.passes || [],
+    pass: currentPasses(item).join(','),
+    passes: currentPasses(item),
     region: item.region,
     winter_sports_id: selected?.winter_sports_id || item.suggested?.winter_sports_id || '',
     page_id: pageId,
@@ -244,6 +287,24 @@ async function confirmItem(item, pageId) {
   score += item.suggested && !selected?.pageId ? 10 : 15;
   streak += 1;
   selected = null;
+  selectedPasses = null;
+  passEditKey = '';
+  render();
+}
+
+async function markOsmMissing(item) {
+  await postReview('/api/pass-review/osm-missing', {
+    storm_name: item.storm_name,
+    region: item.region,
+    pass: currentPasses(item).join(','),
+    passes: currentPasses(item),
+    action: 'osm_missing'
+  });
+  osmMissingKeys.add(keyOf(item));
+  streak = 0;
+  selected = null;
+  selectedPasses = null;
+  passEditKey = '';
   render();
 }
 
@@ -257,12 +318,23 @@ async function skipItem(item) {
   skippedKeys.add(keyOf(item));
   streak = 0;
   selected = null;
+  selectedPasses = null;
+  passEditKey = '';
   render();
 }
 
 unmatchedToggle.addEventListener('change', () => {
   index = 0;
   selected = null;
+  selectedPasses = null;
+  passEditKey = '';
+  render();
+});
+osmMissingToggle.addEventListener('change', () => {
+  index = 0;
+  selected = null;
+  selectedPasses = null;
+  passEditKey = '';
   render();
 });
 
@@ -272,6 +344,7 @@ function applyLocalReview() {
     prev.forEach((r) => {
       const k = (r.storm_name || '') + '|' + (r.region || '');
       if (r.action === 'skip') skippedKeys.add(k);
+      else if (r.action === 'osm_missing') osmMissingKeys.add(k);
       else confirmedKeys.add(k);
     });
   } catch {
@@ -294,6 +367,10 @@ queue = data.items || [];
   if (r.action === 'confirm') confirmedKeys.add(r.storm_name + '|' + (r.region || ''));
 });
 (data.skipped || []).forEach((k) => skippedKeys.add(k));
+(data.osm_missing || []).forEach((r) => {
+  const k = typeof r === 'string' ? r : r.storm_name + '|' + (r.region || '');
+  osmMissingKeys.add(k);
+});
 try {
   const confText = await fetch('./data/passes/confirmed.jsonl');
   if (confText.ok) {
@@ -301,6 +378,7 @@ try {
       const r = JSON.parse(line);
       const k = r.storm_name + '|' + (r.region || '');
       if (r.action === 'skip') skippedKeys.add(k);
+      else if (r.action === 'osm_missing') osmMissingKeys.add(k);
       else if (r.action === 'confirm') confirmedKeys.add(k);
     });
   }

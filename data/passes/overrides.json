@@ -9,7 +9,8 @@
       "indy"
     ],
     "notes": "review confirm",
-    "skip": false
+    "skip": false,
+    "osm_missing": false
   },
   {
     "storm_name": "Baldy Mountain Resort",
@@ -21,7 +22,8 @@
       "indy"
     ],
     "notes": "review skip",
-    "skip": true
+    "skip": true,
+    "osm_missing": false
   },
   {
     "storm_name": "Banff Sunshine",
@@ -34,7 +36,21 @@
       "mountain_collective"
     ],
     "notes": "review confirm",
-    "skip": false
+    "skip": false,
+    "osm_missing": false
+  },
+  {
+    "storm_name": "Big White",
+    "country": "canada",
+    "region": "Canada - British Columbia",
+    "atlas_name": "Big White Ski Resort",
+    "winter_sports_id": "476836855",
+    "passes": [
+      "indy"
+    ],
+    "notes": "review confirm",
+    "skip": false,
+    "osm_missing": false
   },
   {
     "storm_name": "Castle Mountain",
@@ -46,7 +62,8 @@
       "indy"
     ],
     "notes": "review confirm",
-    "skip": false
+    "skip": false,
+    "osm_missing": false
   },
   {
     "storm_name": "Falls Creek",
@@ -58,7 +75,8 @@
       "epic"
     ],
     "notes": "review confirm",
-    "skip": false
+    "skip": false,
+    "osm_missing": false
   },
   {
     "storm_name": "Hotham",
@@ -70,7 +88,8 @@
       "epic"
     ],
     "notes": "review confirm",
-    "skip": false
+    "skip": false,
+    "osm_missing": false
   },
   {
     "storm_name": "Lake Louise",
@@ -83,7 +102,8 @@
       "mountain_collective"
     ],
     "notes": "review confirm",
-    "skip": false
+    "skip": false,
+    "osm_missing": false
   },
   {
     "storm_name": "Marmot Basin",
@@ -95,7 +115,8 @@
       "mountain_collective"
     ],
     "notes": "review confirm",
-    "skip": false
+    "skip": false,
+    "osm_missing": false
   },
   {
     "storm_name": "Mt. Buller",
@@ -108,7 +129,8 @@
       "mountain_collective"
     ],
     "notes": "review confirm",
-    "skip": false
+    "skip": false,
+    "osm_missing": false
   },
   {
     "storm_name": "Mt. Norquay",
@@ -120,7 +142,8 @@
       "ikon"
     ],
     "notes": "review skip",
-    "skip": true
+    "skip": true,
+    "osm_missing": false
   },
   {
     "storm_name": "Nakiska",
@@ -132,7 +155,8 @@
       "epic"
     ],
     "notes": "review skip",
-    "skip": true
+    "skip": true,
+    "osm_missing": false
   },
   {
     "storm_name": "Pass Powderkeg",
@@ -144,7 +168,8 @@
       "indy"
     ],
     "notes": "review skip",
-    "skip": true
+    "skip": true,
+    "osm_missing": false
   },
   {
     "storm_name": "Perisher",
@@ -156,7 +181,8 @@
       "epic"
     ],
     "notes": "review confirm",
-    "skip": false
+    "skip": false,
+    "osm_missing": false
   },
   {
     "storm_name": "Thredbo",
@@ -168,6 +194,7 @@
       "ikon"
     ],
     "notes": "review confirm",
-    "skip": false
+    "skip": false,
+    "osm_missing": false
   }
 ]

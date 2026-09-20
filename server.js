@@ -362,12 +362,14 @@ app.get('/api/pass-review/queue', (req, res) => {
   const skipped = new Set(
     readConfirmedRows().filter((r) => r.action === 'skip').map((r) => r.storm_name + '|' + (r.region || ''))
   );
+  const osmMissing = readConfirmedRows().filter((r) => r.action === 'osm_missing');
   res.json({
     season: queue.season,
     confirmed_count: confirmed.length,
     items: queue.items || [],
     confirmed,
     skipped: [...skipped],
+    osm_missing: osmMissing,
   });
 });
 
@@ -421,6 +423,32 @@ app.post('/api/pass-review/skip', (req, res) => {
     atlas_name: '',
     pass: String((req.body || {}).pass || ''),
     region: String((req.body || {}).region || ''),
+    confirmed_at: new Date().toISOString(),
+  };
+  fs.appendFileSync(PASS_CONFIRMED_JSONL, JSON.stringify(record) + '\n');
+  try {
+    require('child_process').execFileSync(process.execPath, [path.join(__dirname, 'scripts/sync-pass-overrides.mjs')], {
+      cwd: __dirname,
+      stdio: 'ignore'
+    });
+  } catch (err) {
+    console.warn('sync-pass-overrides', err.message);
+  }
+  res.json({ ok: true, record });
+});
+
+app.post('/api/pass-review/osm-missing', (req, res) => {
+  const body = req.body || {};
+  const storm_name = String(body.storm_name || '').trim();
+  if (!storm_name) return res.status(400).json({ error: 'storm_name required' });
+  fs.mkdirSync(path.dirname(PASS_CONFIRMED_JSONL), { recursive: true });
+  const record = {
+    action: 'osm_missing',
+    storm_name,
+    atlas_name: '',
+    pass: String(body.pass || (Array.isArray(body.passes) ? body.passes.join(',') : '')),
+    passes: Array.isArray(body.passes) ? body.passes : String(body.pass || '').split(',').filter(Boolean),
+    region: String(body.region || ''),
     confirmed_at: new Date().toISOString(),
   };
   fs.appendFileSync(PASS_CONFIRMED_JSONL, JSON.stringify(record) + '\n');
