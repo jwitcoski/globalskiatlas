@@ -1,102 +1,53 @@
-A good ski trip is mostly decided before you clip into your bindings. Tickets, lodging, drive time, skill fit, and weather windows either line up, or they fight you all week. Global Ski Atlas will not book your hotel, but it can remove the worst planning blind spots: mountains that look great in photos yet fail on mapped terrain, drive estimates that ignore real road time, and shortlists built from incompatible brochure stats. This checklist walks through a practical pre-trip workflow using the atlas tools and related guides.
+<div class="guide-step">
+<div class="guide-copy">
+<p>Pick a hill on the map first. Then check drive time. Then check whether the parquet row even looks like the hill you think you booked. This checklist is that order. The map on the right is Montage Mountain, OSM way 45096232, already tagged Indy in <code>pass-affiliations.json</code>. If you can read the lifts and the greens from this view, you have enough to pack. If you cannot, the OSM object is incomplete and the atlas will not invent the rest.</p>
+</div>
+<div class="guide-visual">
+<div class="guide-map-host is-home" data-kind="detail" data-center="-75.6587,41.3532" data-zoom="13.2" data-detail="1"></div>
+<p class="guide-caption">Montage, Pennsylvania. Same wiki winter stack as the tagging guide.</p>
+</div>
+</div>
 
-## 1. Clarify the trip type before you open a map
+<div class="guide-step guide-step--flip">
+<div class="guide-copy">
+<h2>Step 1. Drive, then snow</h2>
+<p>Open <a href="../DriveTimeMap.html">Drive Time</a> from a start you actually use. A three-hour Saturday is a different object than a flight to Denver. New York, Vermont, New Hampshire, Pennsylvania, and Massachusetts fill the Northeast cluster. You do not need a destination pass to ski here. You need a car and a hill that is open. The points are downhill rows, not hotel clusters.</p>
+</div>
+<div class="guide-visual">
+<div class="guide-map-host is-home" data-kind="ne" data-center="-73.8,43.6" data-zoom="6.1"></div>
+<p class="guide-caption">Northeast downhill points. Independents sit next to the famous names.</p>
+</div>
+</div>
 
-Write down the trip you are actually taking. A Saturday with kids is not a powder pilgrimage. A fly-in destination week is not a two-resort road loop. Mixing those goals is how families end up on the wrong mountain.
+<div class="guide-step">
+<div class="guide-copy">
+<h2>Step 2. Read the mix, not the slogan</h2>
+<p>Bristol Mountain, way 320434895, is the worked example in the <a href="how-global-ski-atlas-data-pipeline-works.html">pipeline post</a>. The bars are <code>trails_novice</code> through <code>trails_expert</code> on that row. If you are bringing first-timers, look at easy and novice. If those bars are empty and the map is all black, pick another hill. Do not recap brochure vertical here. The file already has a trail mix. Use it.</p>
+</div>
+<div class="guide-visual">
+<div class="guide-chart" data-chart="mix" data-id="320434895"></div>
+<p class="guide-caption">Bristol difficulty counts from the current parquet.</p>
+</div>
+</div>
 
-Useful categories:
+<div class="guide-step guide-step--flip">
+<div class="guide-copy">
+<h2>Step 3. Pass tags are a overlay, not the inventory</h2>
+<p>This file tags <span data-live="indy">0</span> Indy, <span data-live="epic">0</span> Epic, and <span data-live="ikon">0</span> Ikon matches from the 2026–27 Storm Skiing workbook. The rest of the <span data-live="dh">3,035</span> downhill rows have no pass in that JSON. A trip plan that only lists pass partners leaves most of the map blank. Check the pass after the hill, not before.</p>
+</div>
+<div class="guide-visual">
+<div class="guide-chart" data-chart="passes"></div>
+<p class="guide-caption"><code>data/pass-affiliations.json</code> matched onto atlas ids.</p>
+</div>
+</div>
 
-- Local day or overnight within a two-hour drive
-- Multi-resort road trip with car and flexible lodging
-- Single destination week with flights
-- Beginner-focused learning trip vs expert terrain hunt
-- Pass-optimized season vs day-ticket experiment
-
-If beginners are involved, read [best ski resorts for beginners](best-ski-resorts-for-beginners.html) first. Local hills often beat famous destinations for early days. If you are choosing among Epic, Ikon, Indy, or Europe strategies, skim [Epic vs Ikon vs Indy vs Europe](epic-ikon-indy-europe-which-to-choose.html) before you fall in love with a single logo.
-
-## 2. Build a first candidate list from geography, not branding
-
-Open the [drive time map](../DriveTimeMap.html) from home or from the airport you will actually use. Note which resorts fall inside one-, two-, and three-hour rings. For road trips, switch to the [trip planner](../TripPlannerMap.html) and sketch a plausible sequence of stops instead of a fantasy itinerary that crosses half a continent every night.
-
-Then browse the [interactive map](../mainmap.html) in those regions. Ignore marketing density. Look for:
-
-- Continuous downhill geometry that matches the kind of skiing you want
-- Lift access to the terrain you care about
-- Base-area complexity (simple lodge vs sprawling village)
-
-Keep a shortlist of five to eight names max. Longer lists rarely survive contact with lodging prices.
-
-## 3. Translate brochure claims into atlas stats
-
-Move the shortlist into [resort comparison](../resort-comparison.html). Before you trust any column, read [what ski resort stats actually mean](ski-resort-stats-explained.html). Mapped acres, vertical, trail counts, and lift totals on Global Ski Atlas come from OpenStreetMap-derived geometry with shared definitions, useful for comparison, not as a substitute for current conditions.
-
-Check especially:
-
-- Vertical and skiable geometry vs what you need for a satisfying day
-- Trail mix if you have beginners or mixed groups
-- Lift types and counts if weekends worry you (see [ski lift types explained](ski-lift-types-explained.html))
-- Whether the map shows the learning zone near the base or stranded mid-mountain
-
-If two resorts tie on stats, prefer the closer or cheaper option so you gain an extra ski day instead of an extra travel day, echoing the framework in [how to choose a ski resort](how-to-choose-a-ski-resort.html).
-
-## 4. Read the trail map dialect before you buy
-
-Zoom the atlas until piste colors and lift lines are visible. Remember that U.S., European, and Japanese difficulty systems are not identical. [How to read a ski trail map](how-to-read-ski-trail-map.html) covers those dialects and the common ways OSM can disagree with the paper map at the lodge.
-
-Ask:
-
-- Are the “easy” routes actually long cat tracks around expert terrain?
-- Do beginner returns require a steep egress?
-- Are iconic runs even mapped yet, or is the OSM layer thin?
-
-Thin mapping is a planning signal. It may mean incomplete data rather than empty mountain, verify with resort materials, then consider helping via [how to tag a ski resort in OpenStreetMap](how-to-tag-a-ski-resort-in-openstreetmap.html).
-
-## 5. Fit tickets and passes to the shortlist (not the reverse)
-
-Only after geography and terrain fit should you optimize tickets.
-
-- If you already own a pass, confirm which shortlisted hills are actually useful partners this season using [Epic Pass vs Ikon Pass coverage](epic-pass-vs-ikon-pass-resort-coverage.html), and verify entitlements on official pass sites.
-- If you do not own a pass, price day tickets and regional options honestly, including rental and lesson costs for beginners.
-- For independents and small hills, Indy-style networks or local season passes often beat destination mega-passes.
-
-Do not let a pass logo veto a better local hill for a toddler’s third day on snow.
-
-## 6. Pressure-test logistics and weather
-
-With one to three finalists:
-
-1. Re-check drive or transfer time on a weekday vs weekend assumption.
-2. Look at lodging distance to the base, not just to the town center.
-3. Scan the [weather map](../weather-map.html) in the days before departure for storm timing, not for January optimism in October.
-4. Build one weather-flexible day: museum, spa, lower mountain laps, or a backup hill inside your drive ring.
-
-Road-trippers should pace stops using [multi-resort ski road trip planner](multi-resort-ski-road-trip-planner.html): enough days per mountain to justify unloading the car, not a new resort every morning.
-
-## 7. Pack a field checklist for the week of the trip
-
-The atlas cannot load your car, but a final list prevents avoidable pain:
-
-- Confirm resort opening status and lift maintenance notices on official channels
-- Recheck trail map PDFs against what you previewed in the atlas
-- Pack layers for wind at exposed summits even on “bluebird” forecasts
-- For mixed-ability groups, identify meeting points that do not require experts to ride beginner carpets all afternoon
-- Save offline screenshots of your shortlist stats in case parking-lot cell service dies
-
-If you want a spatial feel for layout, the experimental [ski game](/playable/) can preview exported scenes where available. It is entertainment and orientation, not navigation or safety guidance.
-
-## 8. After the trip: feed the commons
-
-If a mapped trail was missing, a lift was wrong, or a boundary looked bloated, fix it upstream. Global Ski Atlas improves when OSM improves. The tagging guide and [how the data pipeline works](how-global-ski-atlas-data-pipeline-works.html) explain how edits become atlas updates. Corrections also help the next traveler who shortlists that hill. The one-page summary below is the same loop, compressed.
-
-## One-page summary
-
-1. Name the trip type.
-2. Build candidates from drive time and the interactive map.
-3. Compare with shared atlas stats.
-4. Read trail-map dialect and OSM completeness.
-5. Fit passes and tickets last.
-6. Re-check logistics and weather.
-7. Confirm official openings before you go.
-8. Improve OSM when you find gaps.
-
-Follow that order and Global Ski Atlas becomes a decision system instead of a novelty map, exactly what you need when lodging deposits are due and the group chat is already arguing about which mountain is “best.” If you want a deeper understanding of why two websites disagree on acres or trail counts, keep [ski resort stats explained](ski-resort-stats-explained.html) and [how the data pipeline works](how-global-ski-atlas-data-pipeline-works.html) bookmarked beside this checklist. Better definitions make better shortlists.
+<div class="guide-step">
+<div class="guide-copy">
+<h2>Step 4. Confirm the object, then buy the ticket</h2>
+<p>Before you pay: the OSM name, the trail count, and the live map should match the hill on the ticket site. Chapman Hill in Durango is four greens and two lifts. If a listing promised forty runs, you have the wrong row. Open <a href="../TripPlannerMap.html">Trip Planner</a> for a multi-stop day. Then check hours, parking, and whether the carpet is running. The atlas does not know the rope is iced up this morning.</p>
+</div>
+<div class="guide-visual">
+<div class="guide-map-host is-home" data-kind="chapman" data-center="-107.8681,37.2823" data-zoom="14.2" data-detail="1"></div>
+<p class="guide-caption">Chapman Hill. Four tagged downhill trails. Still a Saturday.</p>
+</div>
+</div>

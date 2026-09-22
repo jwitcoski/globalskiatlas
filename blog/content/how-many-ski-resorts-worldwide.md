@@ -1,101 +1,127 @@
-Ask how many ski resorts exist worldwide and you will hear wildly different answers. Magazines round to a memorable number. Pass marketers count only partner mountains. National tourism boards count what sells rooms. Global Ski Atlas answers with one repeatable method: we count mapped downhill ski areas from OpenStreetMap that meet consistent geometric criteria, analyze them with the same pipeline everywhere, and publish the results on the [interactive map](../mainmap.html) and in [Ski Resort Facts](../SkiResortFacts.html).
+<div class="guide-step">
+<div class="guide-copy">
+<p>Ask how many ski resorts exist and you get different answers because the lists are not counting the same object. Magazines round. Pass marketers count partners. Tourism boards count what sells rooms. This file, <code>ski_areas_analyzed.parquet</code>, currently has <span data-live="total">4,326</span> winter-sports rows. <span data-live="dh">3,035</span> of them are tagged <code>resort_type=downhill ski resort</code>, in <span data-live="countries">63</span> countries. That is the atlas count: mapped downhill areas after one pipeline, not a UN census. The dots on the right are those analyzed points on the same overview tiles as the <a href="../mainmap.html">main map</a>.</p>
+</div>
+<div class="guide-visual">
+<div class="guide-map-host is-home" data-kind="world" data-center="15,30" data-zoom="1.5" data-minzoom="1"></div>
+<p class="guide-caption">Worldwide analyzed ski-area points from atlas PMTiles. Scroll zoom is off.</p>
+</div>
+</div>
 
-The honest global count is therefore both a geographic fact and a snapshot of community mapping progress. This guide explains our inclusion rules, why commercial totals diverge, what continental patterns look like in open data, where coverage is thin, and how you can verify or improve the number yourself.
+<div class="guide-step guide-step--flip">
+<div class="guide-copy">
+<h2>Step 1. Two kinds of rows in the same file</h2>
+<p>The remaining <span data-live="notDh">1,291</span> rows are <code>not a downhill ski resort</code>. Nordic centres, sliding tracks, seasonal ice parks, empty placeholders, and ticket-brand polygons with no associated downhill ways land there. Big Air Shougang and Nordic Zentrum Oberstdorf are in that bucket. They stay in the parquet so you can see what the pipeline touched. They do not add to the downhill total on <a href="../SkiResortFacts.html">Ski Resort Facts</a>. The bar chart is that split, read from S3 when this page loads.</p>
+</div>
+<div class="guide-visual">
+<div class="guide-chart" data-chart="type"></div>
+<p class="guide-caption">Current <code>ski_areas_analyzed.parquet</code>. Downhill vs everything else the extract kept.</p>
+</div>
+</div>
 
-## Why every “global count” disagrees
+<div class="guide-step">
+<div class="guide-copy">
+<h2>Step 2. What has to be on the map to count</h2>
+<p>The jobs on <a href="../DownloadData.html">Download Data</a> start from Geofabrik extracts, pull <code>landuse=winter_sports</code>, then nearby pistes and lifts, then analyze. A downhill row is a coherent winter-sports package: a boundary plus downhill ways or aerialways that belong to it. There is no minimum acreage or vertical. Chapman Hill Recreation Area in Durango, Colorado, is in the file with 4 downhill trails and 2 lifts. AfriSki in Lesotho is in it with 1 trail and 2 lifts. Both count. A marketing domain with no pistes and no lifts does not, even if the OSM name is famous.</p>
+<p>The map is Chapman Hill on the wiki winter stack. Four greens and a couple of lifts are enough. That is why the global total sits in the thousands instead of a round “2,000 significant destinations.”</p>
+</div>
+<div class="guide-visual">
+<div class="guide-map-host is-home" data-kind="small" data-center="-107.8681,37.2823" data-zoom="14.2" data-detail="1"></div>
+<p class="guide-caption">Chapman Hill, Colorado. OSM way 530501892. Four downhill trails, two lifts, still a row.</p>
+</div>
+</div>
 
-Different lists are not measuring the same object. One source may require a minimum vertical drop. Another may merge an entire French mega-domain into a single ticket brand. A third may exclude municipal hills that never advertise internationally. Indoor snow domes, heli-ski bases, and nordic centers muddy the definition further.
+<div class="guide-step guide-step--flip">
+<div class="guide-copy">
+<h2>Step 3. Country totals from the same table</h2>
+<p>Japan currently leads this file with <span data-live="japan">413</span> downhill areas. The United States is <span data-live="us">405</span>. Then Switzerland 328, Austria 264, China 229, France 217. Those are mapped objects, not famous-name lists. Japan’s outdoor mapping culture puts a lot of small hills into OSM. France’s count is lower than alpine folklore because many villages sit inside larger polygons, and some named domains are stored as <code>not a downhill ski resort</code> when they have no pistes of their own.</p>
+<p>The bar chart is the top ten countries in this parquet. Check <a href="../SkiResortFacts.html">Ski Resort Facts</a> if you need the live table after the next combine_regions run.</p>
+</div>
+<div class="guide-visual">
+<div class="guide-chart" data-chart="countries"></div>
+<p class="guide-caption">Downhill rows by <code>country</code>. Japan and the US are close; the Alps split across several states.</p>
+</div>
+</div>
 
-Global Ski Atlas deliberately chooses a mapper-facing definition:
+<div class="guide-step">
+<div class="guide-copy">
+<h2>Step 4. Europe still holds most of the dots</h2>
+<p>Group those countries the way wiki ingest does and Europe has <span data-live="europe">1,726</span> downhill areas, Asia/Africa/Oceania <span data-live="asia">753</span>, the Americas <span data-live="americas">556</span>. The Alps cluster is obvious on the map: France, Switzerland, Austria, Italy packed into a few degrees of longitude. North America is a long tail of independents plus destination mountains. Japan is a dense island of its own. Southern Hemisphere counts are small in absolute terms; AfriSki still moves Lesotho’s total from zero to one.</p>
+</div>
+<div class="guide-visual">
+<div class="guide-map-host is-home" data-kind="alps" data-center="8.2,46.6" data-zoom="6.2"></div>
+<p class="guide-caption">Alps overview. Each point is an analyzed ski area, not a pass logo.</p>
+</div>
+</div>
 
-- Start from `landuse=winter_sports` geometry
-- Associate nearby downhill pistes and aerial lifts
-- Include the area when the winter-sports package is coherent enough to treat as a downhill ski area
-- Avoid revenue, branding, or “destination only” thresholds
+<div class="guide-step guide-step--flip">
+<div class="guide-copy">
+<h2>Step 5. Japan’s mapped density</h2>
+<p>Zoom to Honshu and the dots fill in. That is coverage, not a claim that Japan has the most skiing. Many of those rows are small municipal hills. The same pattern shows up in the plate sizes: <span data-live="small">1,459</span> downhill areas have fewer than 10 tagged trails, <span data-live="medium">821</span> have 10–29, <span data-live="large">535</span> have 30–99, and <span data-live="mega">220</span> have 100 or more. Most of the world’s count is the small end. Mega domains are rare in the table even when they dominate magazines.</p>
+</div>
+<div class="guide-visual">
+<div class="guide-map-host is-home" data-kind="japan" data-center="138.4,36.4" data-zoom="5.4"></div>
+<p class="guide-caption">Japan analyzed points. This is why Japan’s country bar is tall.</p>
+</div>
+</div>
 
-That means a Midwest community hill can sit in the same dataset as a Tyrolean valley, as long as both are tagged coherently. It also means the live total moves whenever OSM editors add hills, split duplicates, or clean bad polygons. Treat any single headline number as approximate order of magnitude, not an official census.
+<div class="guide-step">
+<div class="guide-copy">
+<h2>Step 6. Trail-count plates, not brochure acres</h2>
+<p>Those four buckets are the same cut the print atlas uses on trail counts. A Midwest rope-tow with six tagged runs sits in small. Bristol Mountain’s 39 trails sit in large on that rule, even though the wiki-copy script in the data repo still calls 39 trails a <code>small_hill</code> for paragraph length. The chart here follows the site’s 10 / 30 / 100 trail breaks. It is a count of objects, not a ranking of snow quality.</p>
+</div>
+<div class="guide-visual">
+<div class="guide-chart" data-chart="size"></div>
+<p class="guide-caption">Downhill rows by <code>downhill_trails</code>. Most mapped hills are small.</p>
+</div>
+</div>
 
-## How we define a resort in the atlas
+<div class="guide-step guide-step--flip">
+<div class="guide-copy">
+<h2>Step 7. A hill that barely maps still counts</h2>
+<p>AfriSki is one downhill trail and two lifts in Butha-Buthe, Lesotho, 6 skiable acres in this file. Include rules do not ask whether a magazine would send a photographer. They ask whether OSM has a winter-sports package the analyze job can attach. Under-mapping is the usual way a real hill stays out: no polygon, or lifts with no downhill ways. Over-mapping goes the other way: hiking paths tagged as downhill, duplicate polygons, abandoned chairs still live. The tagging guide is how you move the global total by one row.</p>
+</div>
+<div class="guide-visual">
+<div class="guide-map-host is-home" data-kind="afriski" data-center="28.7232,-28.8200" data-zoom="14.4" data-detail="1"></div>
+<p class="guide-caption">AfriSki, Lesotho. Way 608654682. One downhill trail, two lifts.</p>
+</div>
+</div>
 
-The pipeline documented on [Download Data](../DownloadData.html) begins with regional OpenStreetMap extracts from Geofabrik, then works through a multi-step process that extracts winter sports areas, lifts, and pistes and analyzes them into comparable resort records.
+<div class="guide-step">
+<div class="guide-copy">
+<h2>Step 8. Ticket names are not extra resorts</h2>
+<p>Les Arcs / Peisey-Vallandry is in the downhill table with 809 trails and 74 lifts. Paradiski, the ticket that sells those villages with La Plagne, is in the same parquet as <code>not a downhill ski resort</code>, 0 trails, 0 lifts. The brand is not a second hill. Nordic Zentrum Oberstdorf is the same kind of exclusion for cross-country. Pass lists (Epic, Ikon, Indy) are also subsets. They answer who sells a card, not how many winter-sports polygons exist. See <a href="epic-ikon-indy-europe-which-to-choose.html">Epic vs Ikon vs Indy vs Europe</a> for that question.</p>
+</div>
+<div class="guide-visual">
+<div class="guide-map-host is-home" data-kind="arcs" data-center="6.81,45.57" data-zoom="11.2" data-detail="1"></div>
+<p class="guide-caption">Les Arcs / Peisey-Vallandry (way 589005175). 809 downhill trails in this file. Paradiski is a separate OSM object with no downhill ways.</p>
+</div>
+</div>
 
-In plain language, a typical included resort has:
+<div class="guide-step guide-step--flip">
+<div class="guide-copy">
+<h2>Step 9. Count it yourself</h2>
+<p>Load <code>ski_areas_analyzed.parquet</code> from <a href="../DownloadData.html">Download Data</a> and filter <code>resort_type</code> the way this page did. Or read country totals on <a href="../SkiResortFacts.html">Ski Resort Facts</a> and pan the <a href="../mainmap.html">map</a>. If your hill is missing, add the winter-sports boundary, lifts, and downhill pistes in OSM, then wait for the next regional run. The atlas will not invent a private row. The total moves when the map does.</p>
+</div>
+<div class="guide-visual">
+<div class="guide-chart" data-chart="books"></div>
+<p class="guide-caption">Europe / Asia-Africa-Oceania / Americas, same country lists as wiki ingest.</p>
+</div>
+</div>
 
-- An identifiable winter-sports boundary
-- At least one mapped downhill piste or lift in the surrounding analysis window
-- Enough geometry that the features read as one ski area rather than scattered noise
-
-We do not require a minimum acreage or vertical. Small hills count. We generally exclude nordic-only areas without downhill terrain, most indoor domes, heli-only operations without mapped in-bounds runs, and placeholders that lack both lifts and pistes. Marketing domains that sell one ticket across many villages may appear as one polygon or several, depending on how local mappers drew relations and boundaries. We report resort objects from mapped geometry, not from lift-ticket branding.
-
-Researchers can download the GeoParquet outputs and reproduce aggregates instead of taking a blog claim on faith. That reproducibility is the point of an open atlas, and it is also why a live total on the order of a few thousand areas is a snapshot, not a plaque.
-
-## What “on the order of thousands” means in practice
-
-As of recent combined builds, the atlas indexes on the order of a few thousand distinct downhill areas worldwide. Exact live totals shift as editors add remote hills, delete duplicates, or retag boundaries. Europe often contributes a large share of well-mapped polygons. North America contributes fewer areas on average but many larger footprints, plus a long tail of independent US hills. Asia’s mapped count has grown as Japan and other regions gained mapper attention. Oceania, Africa, and South America add smaller but meaningful footprints where each new coherent tag can move regional rankings.
-
-Commercial directories that report only “significant” destinations often land nearer two thousand resorts because they apply size, revenue, or amenity filters we deliberately avoid. Neither approach is uniquely “correct.” They answer different questions. Ours answers: how many downhill ski areas are coherently mapped in OpenStreetMap and processed by one global method?
-
-Always check current aggregates on [Ski Resort Facts](../SkiResortFacts.html) rather than quoting an outdated round number from memory. Continental totals then show how that moving number is distributed, not which continent “wins skiing.”
-
-## Continental patterns without turning them into a scoreboard
-
-Continental totals reflect real ski geography and mapping culture at the same time.
-
-**Europe.** The Alps dominate density. France, Austria, Switzerland, Italy, and neighboring ranges produce hundreds of mapped areas, including interconnected domains that challenge any simple “one resort” definition. Mapping quality is often high because local communities and outdoor mappers have spent years tracing pistes.
-
-**North America.** Destination mountains in the Rockies and Sierra are well known, but the independent Midwestern and Northeastern hills add a large share of count. That pattern is why [which U.S. states have the most ski resorts](us-states-most-ski-resorts.html) looks different from a list of famous powder destinations.
-
-**Asia.** Japan’s mapped coverage has improved markedly in places with strong outdoor communities. Elsewhere in Asia, coverage is patchier: some resorts are richly drawn, others appear as thin lift lines without complete trail networks.
-
-**Southern Hemisphere and elsewhere.** Chile, Argentina, New Zealand, Australia, and a handful of African hills matter seasonally and geographically even when their absolute counts are smaller. Under-mapping is more common here, so the atlas count is a lower bound on reality until local tagging catches up.
-
-Use the [main map](../mainmap.html) to see density with your own eyes. Dot clusters tell you as much as a table of country totals, and they also show where under-mapping and duplicates still move the count.
-
-## Gaps, duplicates, and other ways the count moves
-
-OpenStreetMap coverage is uneven, so our count is only as good as the map beneath it.
-
-Under-mapping excludes real hills until someone follows [how to tag a ski resort in OpenStreetMap](how-to-tag-a-ski-resort-in-openstreetmap.html). Typical gaps:
-
-- Boundary present but no lifts or pistes inside
-- Lifts present but no winter-sports polygon to group them
-- New chairs built after the last local mapping surge
-- Small family hills never traced because nobody edited after a ski day
-
-Over-mapping inflates totals and stats until boundaries are corrected:
-
-- Hiking paths tagged as downhill pistes
-- Oversized polygons that swallow neighboring valleys
-- Duplicate resort polygons for the same hill
-- Abandoned infrastructure still tagged as active
-
-Interconnected domains create a third ambiguity. Les Trois Vallées may appear as one object or several depending on relations. The same is true for other Alpine networks. We prefer transparent geometry over forcing a single marketing brand into the database. That choice can make “resort count” diverge from “ticket domains,” which is useful to know when you compare size rankings in [largest ski resorts in the world](largest-ski-resorts-in-the-world.html).
-
-## What we intentionally leave out
-
-Being clear about exclusions prevents false precision:
-
-- Nordic-only centers without downhill terrain
-- Most indoor snow domes
-- Heli-ski meeting points without mapped in-bounds alpine runs
-- Empty placeholders with neither lifts nor pistes
-- Pure backcountry zones that are not managed ski areas
-
-Pass coverage lists are also not global resort censuses. Epic, Ikon, Indy, and European multi-resort products cover subsets of the world’s hills. Understanding those subsets is a separate question covered in [Epic vs Ikon vs Indy vs Europe](epic-ikon-indy-europe-which-to-choose.html) and [Epic Pass vs Ikon Pass coverage](epic-pass-vs-ikon-pass-resort-coverage.html).
-
-## How to verify the number yourself
-
-You do not have to trust a paragraph on a blog. Browse live country and global aggregates on [Ski Resort Facts](../SkiResortFacts.html), explore density visually on the [interactive map](../mainmap.html), compare a shortlist in [resort comparison](../resort-comparison.html) to see how individual objects are represented, download GeoParquet from [Download Data](../DownloadData.html) if you want to count rows yourself, and preview a questionable area in the [ski game](/playable/) then open the same place in OSM if geometry looks incomplete. If your local hill is missing, the fix is upstream tagging, not a support ticket asking us to invent a private record. Add or repair the winter-sports boundary, lifts, and downhill pistes, then wait for the next regional pipeline run. That is also the right attitude toward what the worldwide total can and cannot do.
-
-## What the global count is good for, and what it is not
-
-The worldwide total is useful for:
-
-- Understanding how widespread downhill skiing actually is beyond brochure destinations
-- Comparing mapping completeness across regions
-- Grounding debates that start from a single round magazine number
-- Prioritizing where volunteer tagging would help skiers the most
-
-It is not useful as a claim of official government statistics, a ranking of “best” mountains, or a frozen figure you can cite for years without checking the live atlas. Counts move with OSM. That is a feature of open data, not a failure of it.
-
-Global Ski Atlas does not sell passes or endorse destinations. We publish comparable open data so skiers can explore on the [map](../mainmap.html), compare in [resort comparison](../resort-comparison.html), and improve the census where they ski. Check live aggregates on [Ski Resort Facts](../SkiResortFacts.html). When your hill is missing or mis-drawn, tag it, the global total changes one coherent resort at a time.
+<div class="guide-step">
+<div class="guide-copy">
+<h2>Takeaway</h2>
+<p>The useful worldwide number is downhill rows in one GeoParquet, rebuilt the same way everywhere. Right now that is <span data-live="dh">3,035</span>. It is good for seeing how widespread mapped skiing is, where OSM is dense, and where a volunteer day would add a hill. It is not a government statistic and it will not stay put. Start on the <a href="../mainmap.html">map</a>, confirm in the parquet, and tag when the geometry is the thing that is wrong.</p>
+</div>
+<div class="guide-visual">
+<div class="guide-links">
+<p>Same objects this page counted.</p>
+<p><a href="../SkiResortFacts.html">Ski Resort Facts</a></p>
+<p><a href="../mainmap.html">Interactive map</a></p>
+<p><a href="https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/ski_areas_analyzed.parquet">ski_areas_analyzed.parquet</a></p>
+<p><a href="how-to-tag-a-ski-resort-in-openstreetmap.html">How to tag a ski resort</a></p>
+<p class="guide-caption">OSM is ODbL. Counts are the analyzed copy plus <code>resort_type</code>.</p>
+</div>
+</div>
+</div>

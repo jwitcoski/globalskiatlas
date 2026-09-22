@@ -214,7 +214,7 @@ function generatePostHtml(post, bodyHtml, bySlug) {
 
   const wide = !!post.wide;
   const mapGuide = !!post.mapGuide;
-  const guideScript = post.guideScript || 'how-to-tag-guide.js';
+  const guideScript = post.guideScript || 'guide-maps.js';
   const mapHead = mapGuide
     ? `\n  <link rel="stylesheet" href="https://cdn.maptiler.com/maptiler-sdk-js/v3.10.2/maptiler-sdk.css" />
   <link rel="stylesheet" href="../css/index-hero-montage.css?v=59" />
