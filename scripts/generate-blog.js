@@ -212,16 +212,28 @@ function generatePostHtml(post, bodyHtml, bySlug) {
     image: 'https://globalskiatlas.com/assets/og-banner.png',
   };
 
+  const wide = !!post.wide;
+  const mapGuide = !!post.mapGuide;
+  const guideScript = post.guideScript || 'how-to-tag-guide.js';
+  const mapHead = mapGuide
+    ? `\n  <link rel="stylesheet" href="https://cdn.maptiler.com/maptiler-sdk-js/v3.10.2/maptiler-sdk.css" />
+  <link rel="stylesheet" href="../css/index-hero-montage.css?v=59" />
+  <script type="importmap">{ "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }</script>`
+    : '';
+  const mapScripts = mapGuide
+    ? `\n  <script defer src="https://cdn.maptiler.com/maptiler-sdk-js/v3.10.2/maptiler-sdk.umd.min.js"></script>\n  <script type="module" src="${guideScript}"></script>`
+    : '';
+
   return `<!doctype html>
 <html lang="en">
 <head>
-  ${headBlock({ title: post.title, description: post.description, canonical })}
+  ${headBlock({ title: post.title, description: post.description, canonical })}${mapHead}
   <script type="application/ld+json">${JSON.stringify(jsonLd)}</script>
 </head>
 <body class="tw-flex tw-min-h-[100vh] tw-flex-col tw-bg-[#fff] tw-overflow-x-hidden">
   ${siteHeader(true)}
   <main class="tw-flex-1 tw-px-[5%] tw-pb-12 max-lg:tw-px-4">
-    <article class="tw-mx-auto tw-max-w-3xl">
+    <article class="tw-mx-auto ${wide ? 'tw-max-w-5xl' : 'tw-max-w-3xl'}">
       <p class="blog-pillar">${escapeHtml(post.pillar)}</p>
       <h1 class="tw-mt-2 tw-text-3xl tw-font-bold tw-text-black max-md:tw-text-2xl">${escapeHtml(post.title)}</h1>
       <p class="blog-meta tw-mt-3">${formatDate(post.date)} · ${post.readTime} min read</p>
@@ -232,7 +244,7 @@ function generatePostHtml(post, bodyHtml, bySlug) {
     </article>
   </main>
   ${siteFooter()}
-  <script src="../index.js"></script>
+  <script src="../index.js"></script>${mapScripts}
 </body>
 </html>
 `;

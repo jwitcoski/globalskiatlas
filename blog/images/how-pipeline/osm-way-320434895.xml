@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<osm version="0.6" generator="openstreetmap-cgimap 2.1.0 (2942790 spike-08.openstreetmap.org)" copyright="OpenStreetMap and contributors" attribution="http://www.openstreetmap.org/copyright" license="http://opendatacommons.org/licenses/odbl/1-0/">
+ <node id="1564998122" visible="true" version="1" changeset="10224153" timestamp="2011-12-28T10:36:33Z" user="AgnNag" uid="575728" lat="42.7443729" lon="-77.4009349"/>
+ <node id="1564998259" visible="true" version="1" changeset="10224153" timestamp="2011-12-28T10:36:35Z" user="AgnNag" uid="575728" lat="42.7451963" lon="-77.4013587"/>
+ <node id="1564998723" visible="true" version="1" changeset="10224153" timestamp="2011-12-28T10:36:46Z" user="AgnNag" uid="575728" lat="42.7430807" lon="-77.4014016"/>
+ <node id="1564999723" visible="true" version="1" changeset="10224153" timestamp="2011-12-28T10:37:10Z" user="AgnNag" uid="575728" lat="42.7431950" lon="-77.4004200"/>
+ <node id="1564999965" visible="true" version="1" changeset="10224153" timestamp="2011-12-28T10:37:15Z" user="AgnNag" uid="575728" lat="42.7444832" lon="-77.4009886"/>
+ <node id="3269510217" visible="true" version="1" changeset="27919195" timestamp="2015-01-04T20:11:37Z" user="jremillard" uid="620387" lat="42.7338008" lon="-77.4184665"/>
+ <node id="3269510218" visible="true" version="1" changeset="27919195" timestamp="2015-01-04T20:11:37Z" user="jremillard" uid="620387" lat="42.7338717" lon="-77.4145103"/>
+ <node id="3269510219" visible="true" version="1" changeset="27919195" timestamp="2015-01-04T20:11:37Z" user="jremillard" uid="620387" lat="42.7349585" lon="-77.4112082"/>
+ <node id="3269510220" visible="true" version="1" changeset="27919195" timestamp="2015-01-04T20:11:37Z" user="jremillard" uid="620387" lat="42.7351238" lon="-77.4222020"/>
+ <node id="3269510221" visible="true" version="1" changeset="27919195" timestamp="2015-01-04T20:11:37Z" user="jremillard" uid="620387" lat="42.7372027" lon="-77.4070375"/>
+ <node id="3269510222" visible="true" version="1" changeset="27919195" timestamp="2015-01-04T20:11:37Z" user="jremillard" uid="620387" lat="42.7373445" lon="-77.4267693"/>
+ <node id="3269510223" visible="true" version="1" changeset="27919195" timestamp="2015-01-04T20:11:37Z" user="jremillard" uid="620387" lat="42.7405493" lon="-77.4057295"/>
+ <node id="3269510224" visible="true" version="1" changeset="27919195" timestamp="2015-01-04T20:11:37Z" user="jremillard" uid="620387" lat="42.7430139" lon="-77.4055902"/>
+ <node id="3269510225" visible="true" version="1" changeset="27919195" timestamp="2015-01-04T20:11:37Z" user="jremillard" uid="620387" lat="42.7464650" lon="-77.4019625"/>
+ <node id="3269510226" visible="true" version="1" changeset="27919195" timestamp="2015-01-04T20:11:37Z" user="jremillard" uid="620387" lat="42.7467515" lon="-77.4021797"/>
+ <node id="3269510227" visible="true" version="1" changeset="27919195" timestamp="2015-01-04T20:11:38Z" user="jremillard" uid="620387" lat="42.7492182" lon="-77.4242820"/>
+ <node id="3269510228" visible="true" version="1" changeset="27919195" timestamp="2015-01-04T20:11:38Z" user="jremillard" uid="620387" lat="42.7502087" lon="-77.4026573"/>
+ <node id="3269510229" visible="true" version="1" changeset="27919195" timestamp="2015-01-04T20:11:38Z" user="jremillard" uid="620387" lat="42.7513944" lon="-77.4249308"/>
+ <way id="320434895" visible="true" version="3" changeset="182439796" timestamp="2026-05-09T19:34:05Z" user="hwierzbicki" uid="10198270">
+  <nd ref="3269510229"/>
+  <nd ref="3269510228"/>
+  <nd ref="3269510226"/>
+  <nd ref="3269510225"/>
+  <nd ref="1564998259"/>
+  <nd ref="1564999965"/>
+  <nd ref="1564998122"/>
+  <nd ref="1564999723"/>
+  <nd ref="1564998723"/>
+  <nd ref="3269510224"/>
+  <nd ref="3269510223"/>
+  <nd ref="3269510221"/>
+  <nd ref="3269510219"/>
+  <nd ref="3269510218"/>
+  <nd ref="3269510217"/>
+  <nd ref="3269510220"/>
+  <nd ref="3269510222"/>
+  <nd ref="3269510227"/>
+  <nd ref="3269510229"/>
+  <tag k="landuse" v="winter_sports"/>
+  <tag k="leisure" v="sports_centre"/>
+  <tag k="name" v="Bristol Mountain Ski Resort"/>
+  <tag k="website" v="https://www.bristolmountain.com/"/>
+  <tag k="wikidata" v="Q4968955"/>
+  <tag k="wikipedia" v="en:Bristol Mountain Ski Resort"/>
+ </way>
+</osm>

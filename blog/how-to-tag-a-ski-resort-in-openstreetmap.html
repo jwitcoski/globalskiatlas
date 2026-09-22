@@ -13,16 +13,16 @@
   </script>
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4372859798489282" crossorigin="anonymous"></script>
   <title>How to Tag a Ski Resort in OpenStreetMap (So It Shows Up in the Atlas) – Global Ski Atlas Blog</title>
-  <meta name="description" content="Step-by-step OSM tagging for downhill ski areas: boundaries, pistes, lifts, and common mistakes that keep resorts out of Global Ski Atlas." />
+  <meta name="description" content="Ten steps from an OSM account to a mapped ski hill, using Montage Mountain as the example." />
   <meta property="og:title" content="How to Tag a Ski Resort in OpenStreetMap (So It Shows Up in the Atlas) – Global Ski Atlas" />
-  <meta property="og:description" content="Step-by-step OSM tagging for downhill ski areas: boundaries, pistes, lifts, and common mistakes that keep resorts out of Global Ski Atlas." />
+  <meta property="og:description" content="Ten steps from an OSM account to a mapped ski hill, using Montage Mountain as the example." />
   <meta property="og:type" content="article" />
   <meta property="og:url" content="https://globalskiatlas.com/blog/how-to-tag-a-ski-resort-in-openstreetmap.html" />
   <meta property="og:image" content="https://globalskiatlas.com/assets/og-banner.png" />
   <meta property="og:site_name" content="Global Ski Atlas" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="How to Tag a Ski Resort in OpenStreetMap (So It Shows Up in the Atlas)" />
-  <meta name="twitter:description" content="Step-by-step OSM tagging for downhill ski areas: boundaries, pistes, lifts, and common mistakes that keep resorts out of Global Ski Atlas." />
+  <meta name="twitter:description" content="Ten steps from an OSM account to a mapped ski hill, using Montage Mountain as the example." />
   <meta name="twitter:image" content="https://globalskiatlas.com/assets/og-banner.png" />
   <link rel="canonical" href="https://globalskiatlas.com/blog/how-to-tag-a-ski-resort-in-openstreetmap.html" />
   <link rel="shortcut icon" href="../assets/logo.png?v=2" type="image/x-icon" />
@@ -30,7 +30,10 @@
   <link rel="stylesheet" href="../css/index.css" />
   <link rel="stylesheet" href="../css/blog.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" integrity="sha512-dPXYcDub/aeb08c63jRq/k6GaKccl256JQy/AnOq7CAnEZ9FzSL9wSbcZkMp4R26vBsMLFYH4kQ67/bbV8XaCQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"How to Tag a Ski Resort in OpenStreetMap (So It Shows Up in the Atlas)","description":"Step-by-step OSM tagging for downhill ski areas: boundaries, pistes, lifts, and common mistakes that keep resorts out of Global Ski Atlas.","datePublished":"2026-08-10","dateModified":"2026-08-10","author":{"@type":"Organization","name":"Global Ski Atlas"},"publisher":{"@type":"Organization","name":"Global Ski Atlas","logo":{"@type":"ImageObject","url":"https://globalskiatlas.com/assets/logo.png"}},"mainEntityOfPage":{"@type":"WebPage","@id":"https://globalskiatlas.com/blog/how-to-tag-a-ski-resort-in-openstreetmap.html"},"image":"https://globalskiatlas.com/assets/og-banner.png"}</script>
+  <link rel="stylesheet" href="https://cdn.maptiler.com/maptiler-sdk-js/v3.10.2/maptiler-sdk.css" />
+  <link rel="stylesheet" href="../css/index-hero-montage.css?v=59" />
+  <script type="importmap">{ "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"How to Tag a Ski Resort in OpenStreetMap (So It Shows Up in the Atlas)","description":"Ten steps from an OSM account to a mapped ski hill, using Montage Mountain as the example.","datePublished":"2026-08-10","dateModified":"2026-08-10","author":{"@type":"Organization","name":"Global Ski Atlas"},"publisher":{"@type":"Organization","name":"Global Ski Atlas","logo":{"@type":"ImageObject","url":"https://globalskiatlas.com/assets/logo.png"}},"mainEntityOfPage":{"@type":"WebPage","@id":"https://globalskiatlas.com/blog/how-to-tag-a-ski-resort-in-openstreetmap.html"},"image":"https://globalskiatlas.com/assets/og-banner.png"}</script>
 </head>
 <body class="tw-flex tw-min-h-[100vh] tw-flex-col tw-bg-[#fff] tw-overflow-x-hidden">
   <header
@@ -93,68 +96,195 @@
     ></button>
   </header>
   <main class="tw-flex-1 tw-px-[5%] tw-pb-12 max-lg:tw-px-4">
-    <article class="tw-mx-auto tw-max-w-3xl">
+    <article class="tw-mx-auto tw-max-w-5xl">
       <p class="blog-pillar">Improve the data</p>
       <h1 class="tw-mt-2 tw-text-3xl tw-font-bold tw-text-black max-md:tw-text-2xl">How to Tag a Ski Resort in OpenStreetMap (So It Shows Up in the Atlas)</h1>
-      <p class="blog-meta tw-mt-3">August 10, 2026 · 14 min read</p>
-      <p class="tw-mt-4 tw-text-lg tw-leading-relaxed tw-text-gray-600">Step-by-step OSM tagging for downhill ski areas: boundaries, pistes, lifts, and common mistakes that keep resorts out of Global Ski Atlas.</p>
-      <div class="blog-prose tw-mt-8"><p>Global Ski Atlas only works when OpenStreetMap has coherent ski data. The fastest way to improve the atlas is to tag your local hill correctly in OSM so it appears on the <a href="../mainmap.html" rel="noopener noreferrer" target="_blank">interactive map</a>, feeds honest numbers into <a href="../SkiResortFacts.html" rel="noopener noreferrer" target="_blank">Ski Resort Facts</a>, and shows up in <a href="../resort-comparison.html" rel="noopener noreferrer" target="_blank">resort comparison</a>. You do not need to be a professional cartographer to do that. If you can ski the hill and read a trail map, you can usually improve the geometry that powers every tool on this site, from the <a href="../wiki/browse.html" rel="noopener noreferrer" target="_blank">wiki</a> to the experimental <a href="/playable/" rel="noopener noreferrer" target="_blank">ski game</a> to the files on <a href="../DownloadData.html" rel="noopener noreferrer" target="_blank">Download Data</a>. This guide covers what we need for a downhill resort to be included, how to draw boundaries, how to map lifts and pistes, common mistakes, and how edits reach the site after the next pipeline run.</p>
-<h3 id="what-global-ski-atlas-looks-for">What Global Ski Atlas looks for</h3>
-<p>We treat a downhill ski area as a coherent package of OpenStreetMap features, not a marketing brand name. In practice that means a <code>landuse=winter_sports</code> polygon that outlines the managed ski domain, nearby downhill pistes tagged <code>piste:type=downhill</code>, aerial lifts tagged with <code>aerialway=*</code> values that match real infrastructure, and a clear <code>name</code> on the area (<code>name:en</code> when the local name is not English). We do not require a minimum vertical drop or ticket price. A community rope-tow hill counts if the geometry is coherent, and a mega-domain counts if its boundary and trails are mapped well. That same inclusion logic sits behind the global totals in <a href="how-many-ski-resorts-worldwide.html" rel="noopener noreferrer" target="_blank">how many ski resorts worldwide</a>.</p>
-<p>If the boundary is missing, our pipeline struggles to group lifts and runs into one resort. If the boundary is huge and vague, every acreage and trail-length statistic becomes noisy. Good tagging is therefore both an inclusion rule and a fairness rule for the columns explained in <a href="ski-resort-stats-explained.html" rel="noopener noreferrer" target="_blank">ski resort stats explained</a>. Draw the polygon first, then hang lifts and pistes on it.</p>
-<h3 id="draw-the-winter-sports-boundary-first">Draw the winter sports boundary first</h3>
-<p>Start with the polygon, not the lifts. Trace the managed ski domain: in-bounds terrain the resort operates, plus the base areas that clearly belong to that operation. Do not outline the entire mountain range, stop at the parking lot alone, or swallow the next valley’s ski area because the ridgeline looks contiguous on satellite. Keep the polygon tight to signed or groomed in-bounds terrain, follow lift-served bowls and connectors when they are part of the same ticketed domain, stop before open backcountry that is not managed as resort terrain, and add <code>name=*</code> that matches what skiers actually call the place.</p>
-<p>Oversized polygons inflate mapped skiable area and distort side-by-side comparison. Undersized polygons orphan lifts and runs outside the resort window. Either error makes <a href="../SkiResortFacts.html" rel="noopener noreferrer" target="_blank">Ski Resort Facts</a> less trustworthy, so a tight, accurate boundary is the first requirement for inclusion and for honest stats. Interconnected European domains can be trickier still: Les Trois Vallées or Portes du Soleil may appear as one large polygon, several linked areas, or a mix of relations depending on local mapping culture. Prefer the tagging already used by active local mappers unless you are correcting a clear error. Consistency within a region matters more than inventing a new scheme, and it is the habit that makes lift tagging in the next section land in the right resort.</p>
-<h3 id="map-lifts-as-aerialway-ways">Map lifts as aerialway ways</h3>
-<p>Lifts should be ways that follow the cable path from lower terminal to upper terminal. Tag them with the right <code>aerialway=*</code> value:</p>
-<ul>
-<li><code>chair_lift</code> for fixed-grip and most detachable chairs</li>
-<li><code>gondola</code> or <code>cable_car</code> for enclosed cabin lifts</li>
-<li><code>t-bar</code>, <code>platter</code>, or <code>rope_tow</code> for surface lifts</li>
-<li><code>magic_carpet</code> for beginner conveyor lifts</li>
-<li><code>mixed_lift</code> when a chondola-style combination is clearly mapped that way</li>
-</ul>
-<p>Draw the way uphill from base to summit when you can, and add <code>name=*</code> when the lift has a published name. One lift should usually be one clean way. Do not tag every pylon as its own lift, and do not trace the piste under the cable and call that the lift. Those mistakes break lift counts on <a href="../SkiLiftFacts.html" rel="noopener noreferrer" target="_blank">Ski Lift Facts</a> and confuse the lift-type patterns described in <a href="ski-lift-types-explained.html" rel="noopener noreferrer" target="_blank">ski lift types explained</a>. Magic carpets and rope tows are easy to forget because they look minor on a trail map, yet they matter for beginner scoring and for family-oriented hills highlighted in <a href="best-ski-resorts-for-beginners.html" rel="noopener noreferrer" target="_blank">best ski resorts for beginners</a>. If the learning area has three carpets and none are mapped, the atlas will understate how beginner-friendly the place is, which is the same kind of silent error you get when downhill pistes are missing or mis-tagged.</p>
-<h3 id="map-downhill-pistes-with-difficulty">Map downhill pistes with difficulty</h3>
-<p>Downhill runs need ways along trail centerlines, not along the lift cable and not along every summer hiking path that crosses the mountain. The core tags are <code>piste:type=downhill</code>, <code>piste:difficulty</code> with values such as <code>novice</code>, <code>easy</code>, <code>intermediate</code>, <code>advanced</code>, or <code>expert</code> as appropriate, and <code>name=*</code> when the run is named on the official map. Direction should match downhill flow. Split upper and lower segments only when the geometry itself changes or when local tagging already does so; unnecessary splits inflate trail counts. Gladed or tree runs that are signed as downhill trails deserve mapping too, but unsigned backcountry lines usually should not be forced into the resort’s downhill inventory.</p>
-<p>Difficulty tags are not a universal language. US green/blue/black conventions and European color systems do not map one-to-one, and OSM’s <code>piste:difficulty</code> vocabulary sits between them. Relative accuracy inside one resort matters more than perfect cross-border equivalence. Untagged difficulty lands in an unknown bucket and weakens trail-mix tools used when skiers <a href="how-to-choose-a-ski-resort.html" rel="noopener noreferrer" target="_blank">choose a resort</a>, which is why the next section’s mistake list is mostly about missing, duplicated, or mis-scoped geometry rather than exotic tags.</p>
-<h3 id="common-mistakes-that-keep-resorts-out-or-skew-stats">Common mistakes that keep resorts out or skew stats</h3>
-<p>Most atlas problems come from a short list of tagging errors:</p>
-<ul>
-<li>Missing <code>landuse=winter_sports</code> so lifts and pistes never become a resort object</li>
-<li>Boundary that covers half the range or only the lodge parking</li>
-<li>Hiking paths tagged as downhill pistes</li>
-<li>Summer roads left as ski trails</li>
-<li>Duplicate lift ways stacked on the same cable</li>
-<li>Pylons tagged as lifts</li>
-<li>Nordic-only loops tagged as if they were alpine domains</li>
-<li>Abandoned lifts left as active aerialways with no note that they are gone</li>
-</ul>
-<p>Under-mapping excludes real hills until someone adds the missing pieces. Over-mapping inflates counts and trail kilometers until someone cleans the geometry. Both patterns show up when people ask <a href="how-many-ski-resorts-worldwide.html" rel="noopener noreferrer" target="_blank">how many ski resorts exist worldwide</a> and when ranking <a href="largest-ski-resorts-in-the-world.html" rel="noopener noreferrer" target="_blank">largest ski resorts</a> by mapped terrain. Before you upload a large changeset, zoom out and ask whether a skier would recognize one ski area, then zoom in and ask whether difficulties look relative to one another. That two-scale check catches most disasters, and it is the same sanity check you should run after the save, before you wait on an atlas build.</p>
-<h3 id="validate-locally-before-you-wait-for-the-atlas-build">Validate locally before you wait for the atlas build</h3>
-<p>After saving your OSM edit, sanity-check in a few places:</p>
-<ol>
-<li>Inspect the features on openstreetmap.org or in your editor’s validation tools</li>
-<li>Confirm the boundary still reads as one resort at mid zoom</li>
-<li>Spot-check a beginner area, a main chair, and one expert pitch</li>
-<li>Preview geometry in the experimental <a href="/playable/" rel="noopener noreferrer" target="_blank">ski game</a>, which loads the same OSM-derived shapes we ingest</li>
-<li>Use <strong>Open in OSM</strong> from the game when you notice a missing carpet or misdrawn run</li>
-</ol>
-<p>Edits are not instant on Global Ski Atlas. We ingest regional Geofabrik extracts through the multi-step pipeline documented on <a href="../DownloadData.html" rel="noopener noreferrer" target="_blank">Download Data</a>, and a correction appears after the next regional build that includes your area. That lag is real, but the payoff is permanent and open: every downstream page (map, facts tables, comparison, downloads) benefits from the same geometry. Remote hills in Eastern Europe, the Andes, Central Asia, and parts of inland North America remain high-value mapping targets. Popular Alpine and Colorado resorts are often already dense; small community hills and newly built chairs are where a single afternoon of tagging still moves the atlas, which is why a short after-ski session is enough if you work in a sensible order.</p>
-<h3 id="a-practical-checklist-for-one-resort-session">A practical checklist for one resort session</h3>
-<p>If you have one evening after skiing, work in this order:</p>
-<ul>
-<li>Confirm or draw <code>landuse=winter_sports</code> with a sensible name</li>
-<li>Add or fix the main access lifts first</li>
-<li>Trace the signed downhill runs you actually skied</li>
-<li>Add learning-area carpets and rope tows</li>
-<li>Delete or retag obvious duplicates and summer-path false positives</li>
-<li>Recheck difficulty tags relative to the printed trail map</li>
-<li>Upload with a clear changeset comment naming the resort</li>
-</ul>
-<p>You do not need to finish the entire mountain in one pass. A coherent boundary plus the primary lifts and a representative trail set is already a large improvement over an empty or broken entry, and that partial package is what every downstream atlas surface actually consumes.</p>
-<h3 id="why-tagging-here-helps-every-skier-downstream">Why tagging here helps every skier downstream</h3>
-<p>Global Ski Atlas does not invent private resort databases. We analyze open geometry so skiers can compare mountains fairly instead of trusting brochure copy alone. When you fix a chairlift name, tighten a polygon, or add a missing green run, you improve discovery on the <a href="../mainmap.html" rel="noopener noreferrer" target="_blank">main map</a>, aggregates and filters in <a href="../SkiResortFacts.html" rel="noopener noreferrer" target="_blank">Ski Resort Facts</a>, side-by-side columns in <a href="../resort-comparison.html" rel="noopener noreferrer" target="_blank">resort comparison</a>, research downloads on <a href="../DownloadData.html" rel="noopener noreferrer" target="_blank">Download Data</a>, and playable previews in the <a href="/playable/" rel="noopener noreferrer" target="_blank">ski game</a>. Tagging a ski resort in OpenStreetMap is practical work, not arcane cartography. Draw the winter sports boundary, map lifts and downhill pistes with specific tags, validate at two zoom levels, and submit the changeset. The atlas improves when mappers improve OSM, and every corrected lift or green run helps the next skier choose where to go with comparable data instead of marketing adjectives alone.</p></div>
+      <p class="blog-meta tw-mt-3">August 10, 2026 · 8 min read</p>
+      <p class="tw-mt-4 tw-text-lg tw-leading-relaxed tw-text-gray-600">Ten steps from an OSM account to a mapped ski hill, using Montage Mountain as the example.</p>
+      <div class="blog-prose tw-mt-8"><div class="guide-step">
+<div class="guide-copy">
+<p>The worked example is Montage Mountain in Scranton, Pennsylvania. Ten steps take you from an OpenStreetMap account to a hill other maps can actually read. Copy the tags when a step has a snippet. You are editing OpenStreetMap itself. Global Ski Atlas, ski-tracking apps, Wikipedia, and a pile of other maps query those same objects later. The 3D scene on the right is that same OSM geometry on a heightfield. A trail that does not snap, a wood drawn over a run, or a chair tagged twice shows up as soon as you look at it.</p>
+</div>
+<div class="guide-visual">
+<div class="hero-montage-embed guide-clay-embed" id="guide-clay-embed">
+<div id="guide-clay-stage" class="hero-montage-stage" aria-label="Montage Mountain 3D map"></div>
+</div>
+<p class="guide-caption">Montage in 3D. <a href="/playable/?resort=montage_mountain_pa">Open the playable scene</a> if you want to ski it.</p>
+</div>
+</div>
+<div class="guide-step guide-step--flip">
+<div class="guide-copy">
+<p>The 2D map is the same live wiki map: winter basemap, OSM ski-area outline, pistes by difficulty, and lifts. Pan it. That is how tagged objects show up in the atlas after the next ingest. Keep both views around while you work in iD. When the account is live, the next job is the resort boundary.</p>
+</div>
+<div class="guide-visual">
+<div class="guide-map-host is-home" data-kind="intro2d" data-center="-75.6587,41.3532" data-zoom="13"></div>
+<p class="guide-caption">Montage on the wiki 2D map: winter basemap, OSM pistes and lifts. Same layers as <a href="../wiki/browse.html">the atlas wiki</a>.</p>
+</div>
+</div>
+<div class="guide-step">
+<div class="guide-copy">
+<h2>Step 1. Log into OpenStreetMap</h2>
+<p>OpenStreetMap is a shared geographic database that anyone can edit. A ski lift, a woodlot, a lodge phone number, and a parking aisle all live there as tagged objects. When an edit is uploaded and passes ordinary review, every product that reads OSM can pick it up on its next refresh. Global Ski Atlas is one of those products. So are OsmAnd, Wikipedia maps, a lot of ski-tracking apps, and municipal tools that have nothing to do with skiing. You are adding records to the same public dataset those apps already query.</p>
+<p>Log into OSM itself. There is no tagging form on globalskiatlas.com. An account on openstreetmap.org is free. It is what proves you made the change, and it is what lets other mappers leave a note if they disagree with a boundary or a lift type. Create the account, confirm the email, and log in. Until you do that, the iD editor in the browser will let you look around but it will not let you save. The links in the right column go to signup, login, and a ready-made iD view centered on Montage Mountain so you are not hunting for Scranton by hand.</p>
+<p>iD is the default editor at openstreetmap.org and it is enough for this whole walkthrough. JOSM is faster once you already live in it, and you can keep using it if that is your habit, but nothing in these ten steps requires a separate install. Pick a hill you have actually skied. Imagery and the printed trail map only line up if you already know which clearing is a green and which is a service road. Montage is the worked example because the atlas already has a complete package there, so you can compare what you see in iD with a finished hill. When the account is live and iD is sitting on that mountain, start with the resort boundary.</p>
+</div>
+<div class="guide-visual">
+<div class="guide-links">
+<p>Signup, login, and the editor all live on openstreetmap.org. Open iD on Montage once you are logged in and leave it there for the rest of the steps.</p>
+<p><a href="https://www.openstreetmap.org/user/new" rel="noopener noreferrer" target="_blank">Create an OSM account</a></p>
+<p><a href="https://www.openstreetmap.org/login" rel="noopener noreferrer" target="_blank">Log in</a></p>
+<p><a href="https://www.openstreetmap.org/edit#map=15/41.353/-75.659" rel="noopener noreferrer" target="_blank">Open iD on Montage Mountain</a></p>
+<p class="guide-caption">iD shows aerial imagery and existing OSM ways in one window. Saving requires the account from the first link.</p>
+</div>
+</div>
+</div>
+<div class="guide-step guide-step--flip">
+<div class="guide-copy">
+<h2>Step 2. Tag the resort boundary</h2>
+<p>The first object you draw is a closed way around the hill, and the tag on that way is <code>landuse=winter_sports</code>. That polygon is the ski area in OSM. Everything later in this guide (woods, buildings, roads, lifts, trails) should sit inside it or clearly belong to the same operation. On Montage the way is 45096232, named Montage Mountain Ski Area. In iD, click around the signed in-bounds terrain and the base that the resort actually runs, then close the way so the first node and the last node are the same point. A line that does not close is not an area, and the atlas cannot treat it as a resort.</p>
+<p>Follow ropes, trail-map edges, and the lower carpets that still belong to the hill. Do not swallow the next ridge because the satellite snow looks continuous, and do not stop at the parking-lot curb if the learning slope is still part of the ticket. An oversized polygon inflates mapped acres in every stats table that reads OSM. An undersized one leaves chairs and runs floating outside the area, which is how lifts get orphaned in extracts. The teal outline on the map here is that OSM way, drawn on MapTiler aerial. It is not the 1000-foot analysis buffer the atlas adds later for joining nearby geometry.</p>
+<p>While the way is selected, add every contact field you can verify from the resort website or a sign on the building: <code>name</code>, <code>website</code>, <code>phone</code>, <code>email</code>, <code>operator</code>, and <code>sport=skiing</code> when that is what they sell. Copy the URL and the phone number as they are published. Do not invent a website because a search result looked close. Those tags ride with the area into search boxes and info panels in any app that reads the object, including this atlas after the next ingest. Trees are next, and you can see them on the same aerial without a trail map.</p>
+</div>
+<div class="guide-visual">
+<div class="guide-map-host is-home" data-kind="area" data-center="-75.6587,41.3532" data-zoom="14"></div>
+<p class="guide-caption">MapTiler aerial, OSM way 45096232. The popup lists every tag currently on that polygon. Click the fill for the tags.</p>
+</div>
+</div>
+<div class="guide-step">
+<div class="guide-copy">
+<h2>Step 3. Start with trees</h2>
+<h3>Tag a lone tree as a point</h3>
+<p>A node is the right geometry when there is one tree you can point at: a specimen in a parking island, a landmark next to the lodge, a leftover pine in the middle of a beginner pad. In iD, drop a point on the trunk you see in aerial (or on the crown if winter imagery hides the stem) and set <code>natural=tree</code>. Add <code>leaf_type</code> when you can tell needle from broadleaf. Routers, 3D scenes, and anyone counting hazards treat that node as a single thing at a coordinate. Do not sprinkle hundreds of tree nodes through a wood that you are about to draw as a polygon. That duplicates the stand and makes the next mapper think the forest has no area.</p>
+</div>
+<div class="guide-visual">
+<div class="guide-map-host is-home" data-kind="point" data-center="-75.66352,41.35220" data-zoom="18"></div>
+<p class="guide-caption">OSM node 4197751666 at Montage, tagged <code>natural=tree</code>. The point sits on the crown.</p>
+</div>
+</div>
+<div class="guide-step guide-step--flip">
+<div class="guide-copy">
+<h3>Tag a row of trees as a line</h3>
+<p>Use a way when the trees form a linear feature: a windbreak, a hedge, a line of evergreens along a driveway or lot. Draw the way along the row, not as a skinny rectangle, and tag it <code>natural=tree_row</code>. On Montage, way 418589994 is an avenue of needleleaved evergreens; the extra tags <code>leaf_type=needleleaved</code>, <code>leaf_cycle=evergreen</code>, and <code>denotation=avenue</code> tell you what kind of row it is. Length and alignment are the facts that matter, as they are for a fence or a road. A string of individual <code>natural=tree</code> nodes along that same path is worse: you lose the row as one object, and every app has to guess that the points belong together. Save nodes for trees that actually stand alone.</p>
+</div>
+<div class="guide-visual">
+<div class="guide-map-host is-home" data-kind="line" data-center="-75.66345,41.35115" data-zoom="18"></div>
+<p class="guide-caption">OSM way 418589994, a <code>natural=tree_row</code>. Follow the line along the evergreens, not around them as an area.</p>
+</div>
+</div>
+<div class="guide-step">
+<div class="guide-copy">
+<h3>Tag a stand of woods as a polygon</h3>
+<p>When trees cover a patch of ground, draw a closed way around the canopy and tag it <code>natural=wood</code> (or <code>landuse=forest</code> where that is how the local community maps timber). Way 1219906134 at Montage is a small wood island between trails. Close the way so the first and last nodes are the same. 3D and land-cover tools need a filled shape. Keep the polygon on the trees. Do not drag it across a signed downhill trail or a lift line. Those corridors stay empty so the piste and aerialway steps have somewhere to go, and so a skier reading OSM does not see forest drawn on top of a groomer.</p>
+</div>
+<div class="guide-visual">
+<div class="guide-map-host is-home" data-kind="polygon" data-center="-75.65570,41.35290" data-zoom="17.5"></div>
+<p class="guide-caption">OSM way 1219906134, <code>natural=wood</code>. The fill is the stand. Trails beside it stay out of the polygon.</p>
+</div>
+</div>
+<div class="guide-step guide-step--flip">
+<div class="guide-copy">
+<h2>Step 4. Buildings</h2>
+<p>Trace the roof you can see on aerial as a closed way and tag it <code>building=yes</code>. That is enough. Use a more specific value when you know the use (<code>retail</code>, <code>commercial</code>, <code>industrial</code>, <code>garage</code>). Name the building if a sign does. The example here is way 45096266, Montage Mountain Ski Lodge, with city and state address tags already on it. Doors can wait. Do not throw one giant rectangle over the whole plaza. The lodge occupies ground, so it is a polygon. A node labeled "lodge" does not give anyone a footprint to walk around or to extrude in 3D.</p>
+</div>
+<div class="guide-visual">
+<div class="guide-map-host is-home" data-kind="building" data-center="-75.66195,41.35075" data-zoom="18"></div>
+<p class="guide-caption">OSM way 45096266, <code>building=yes</code>, name Montage Mountain Ski Lodge. The outline follows the roof.</p>
+</div>
+</div>
+<div class="guide-step">
+<div class="guide-copy">
+<h2>Step 5. Roads</h2>
+<p>Map the public drive in as an open way connected to the rest of the highway network. Montage's approach is <code>highway=tertiary</code> named Montage Mountain Road (way 10900232 in this view). Lanes through a lot are <code>highway=service</code>, with <code>service=parking_aisle</code> or <code>driveway</code> when that is what they are. Routers need a path they can follow. If the ski area has no incoming highway, navigation apps cannot send anyone to the lodge. Name the way if the street sign does, and keep it snapped to the next road at both ends.</p>
+</div>
+<div class="guide-visual">
+<div class="guide-map-host is-home" data-kind="road" data-center="-75.66344,41.35118" data-zoom="17.2"></div>
+<p class="guide-caption">OSM way 10900232, Montage Mountain Road. A highway is a line joined to the network, not an area.</p>
+</div>
+</div>
+<div class="guide-step guide-step--flip">
+<div class="guide-copy">
+<h2>Step 6. Parking</h2>
+<p>Draw the lot as a closed way and tag it <code>amenity=parking</code>. Way 262152878 at Montage is a customer surface lot run by Montage Mountain Ski Area, <code>fee=no</code>, gravel. Split overflow lots if they are separate shapes on the ground. Add <code>access</code> and <code>fee</code> when you know them. The lot is the filled stall field; the aisles inside it stay lines from the previous step. Keep a lot outside <code>landuse=winter_sports</code> if it is not part of the ski operation. A parking node at the entrance is a last resort when you cannot see the stall field.</p>
+</div>
+<div class="guide-visual">
+<div class="guide-map-host is-home" data-kind="parking" data-center="-75.6655,41.3509" data-zoom="16"></div>
+<p class="guide-caption">OSM way 262152878, <code>amenity=parking</code>. Fill is the lot. Aisles stay service ways.</p>
+</div>
+</div>
+<div class="guide-step">
+<div class="guide-copy">
+<h2>Step 7. Lifts</h2>
+<p>Each lift is one way along the cable from the lower terminal to the upper. Tag that way, not the pylons. Montage's Phoebe Snow is way 44670021: <code>aerialway=chair_lift</code>, <code>aerialway:occupancy=4</code>, <code>name=Phoebe Snow</code>. Learning carpets are <code>aerialway=magic_carpet</code>. Lift-count tools in <a href="../SkiLiftFacts.html">Ski Lift Facts</a> count those ways. Two parallel ways for one chair double the count. Draw uphill when you can, and stop at the terminals you can see on aerial, not halfway up the cable.</p>
+</div>
+<div class="guide-visual">
+<div class="guide-map-host is-home" data-kind="lift" data-center="-75.66424,41.35483" data-zoom="15.2"></div>
+<p class="guide-caption">OSM way 44670021, Phoebe Snow. One chair, one way, terminals at the ends.</p>
+</div>
+</div>
+<div class="guide-step guide-step--flip">
+<div class="guide-copy">
+<h2>Step 8. Draw downhill as a line</h2>
+<h3>Tag a centerline</h3>
+<p>Open the printed trail map next to the aerial and draw one open way down the middle of the snow. That way is the downhill piste. Tag it <code>piste:type=downhill</code>, plus <code>name</code> and <code>piste:difficulty</code> from the map you are holding. Smoke at Montage is way 44670024: expert, lit, <code>route=ski</code>. US greens are usually <code>novice</code> or <code>easy</code>, blues <code>intermediate</code>, blacks <code>advanced</code> or <code>expert</code>. Rate this hill against itself. Draw along the snow people ski, not along the chair cable. A centerline is what GPS tracks and connected-run tools walk. If you skip the line because you plan to draw a polygon later, those tools have nothing to follow. Untagged runs disappear from mix charts.</p>
+</div>
+<div class="guide-visual">
+<div class="guide-map-host is-home" data-kind="trail" data-center="-75.66343,41.35485" data-zoom="15.4"></div>
+<p class="guide-caption">OSM way 44670024, Smoke. One downhill piste as a centerline. Click the line for every tag.</p>
+</div>
+</div>
+<div class="guide-step">
+<div class="guide-copy">
+<h3>Snap the nodes where trails meet</h3>
+<p>Where two downhill ways meet, they must share a node. Smoke (44670024) and Cannonball (44670028) both start at the same point on Montage. A two-meter gap looks fine on a screenshot and breaks every GPS track that tries to continue from one run onto the other. In iD, drag the end until the node highlights and joins. In JOSM, merge the end nodes. Split a trail only when the geometry itself changes, such as a named fork. Extra splits inflate trail counts. Unsigned backcountry lines stay out of the downhill inventory. This is still step 8: you are finishing the line network before you start drawing trail polygons.</p>
+</div>
+<div class="guide-visual">
+<div class="guide-map-host is-home" data-kind="snap" data-center="-75.66315,41.35240" data-zoom="17.4"></div>
+<p class="guide-caption">Smoke and Cannonball share the white node. Click a line for its tags, or the node for the join.</p>
+</div>
+</div>
+<div class="guide-step guide-step--flip">
+<div class="guide-copy">
+<h2>Step 9. Tag trail polygons</h2>
+<h3>Close a piste as an area</h3>
+<p>A wide face is a closed way with the same downhill tags plus <code>area=yes</code>. Boomer at Montage is way 419774830: <code>piste:type=downhill</code>, <code>piste:difficulty=expert</code>, <code>piste:grooming=mogul</code>, <code>natural=grassland</code>, <code>lit=yes</code>. White Lightning next to it is 419774825 with the same pattern. Trace the snow you can see between the trees, close the ring, and keep the centerline from step 8 if one already exists. The polygon is the skiable patch. The line is still the route. Do not delete the centerline because you drew an area. Apps that count trails and apps that shade acres are reading different objects.</p>
+</div>
+<div class="guide-visual">
+<div class="guide-map-host is-home" data-kind="pistepoly" data-center="-75.6648,41.3549" data-zoom="15.8"></div>
+<p class="guide-caption">Boomer and White Lightning as area pistes, plus the wood they share nodes with. Click a fill for tags.</p>
+</div>
+</div>
+<div class="guide-step">
+<div class="guide-copy">
+<h3>Snap polygons to each other and to the trees</h3>
+<p>Adjacent trail polygons should share nodes along the common edge, as Smoke and Cannonball share an end. Boomer and White Lightning already do that on the expert face. Where the snow meets the trees, reuse the wood's nodes instead of drawing a second wiggly line a meter into the stand. Way 1219914249 is a <code>natural=wood</code> polygon that shares a long run of nodes with Boomer. Overlapping snow and forest at the same coordinates is a mess in every extract. A gap between them is a fake glade. In iD, merge along the edge until the vertices highlight. Do not cover the wood with <code>piste:type=downhill</code>.</p>
+</div>
+<div class="guide-visual">
+<div class="guide-map-host is-home" data-kind="pistepoly-snap" data-center="-75.6649,41.3552" data-zoom="17.2"></div>
+<p class="guide-caption">Boomer, White Lightning, and wood 1219914249. The green fill is trees, not a trail.</p>
+</div>
+</div>
+<div class="guide-step guide-step--flip">
+<div class="guide-copy">
+<h2>Step 10. Other piste types, then upload</h2>
+<h3>Cross country, terrain parks, and snowtubing</h3>
+<p>Not every snow path is a downhill trail. Cross-country is <code>piste:type=nordic</code>. Montage has a short way named Nordic (44670035) tagged <code>piste:grooming=classic</code>, <code>piste:difficulty=intermediate</code>, and <code>route=ski</code>. Draw those as open ways along the track. A terrain park is <code>piste:type=snow_park</code>, usually an area. Snowtubing and sledding are <code>piste:type=sled</code>. Leave <code>piste:type=downhill</code> for alpine skiing and snowboarding on a marked run. If you tag a park or a tubing hill as downhill, mix charts, difficulty pies, and the playable slope all treat it as another black or green. Montage does not currently have a snow_park or sled object in OSM, so do not invent one here. Use those tags when the hill actually has the feature.</p>
+</div>
+<div class="guide-visual">
+<div class="guide-map-host is-home" data-kind="nordic" data-center="-75.6518,41.3504" data-zoom="17.2"></div>
+<p class="guide-caption">OSM way 44670035, named Nordic. <code>piste:type=nordic</code>, not downhill. Click the line for the tags.</p>
+</div>
+</div>
+<div class="guide-step">
+<div class="guide-copy">
+<h3>Check, upload, wait</h3>
+<p>Zoom out until the hill still reads as one <code>landuse=winter_sports</code> area, which on Montage is way 45096232. Zoom in on a carpet, a chair, a downhill line, an area piste against a wood, and the nordic track if the hill has one. Woods should sit beside trails, not under them. Line ends and polygon edges should share nodes. Buildings and parking should be closed ways. Then upload from iD with a changeset comment that names the resort, for example "Montage Mountain: lodge, parking, Phoebe Snow, Smoke, Boomer area." Later you and other mappers will search that comment.</p>
+<p>The atlas is not live. We ingest Geofabrik extracts through the pipeline on <a href="../DownloadData.html">Download Data</a>. After the next build, the same objects show up on the <a href="../mainmap.html">map</a>, the facts tables, comparison, and the <a href="/playable/">ski game</a>. A rope-tow hill needs this same checklist, just fewer objects.</p>
+</div>
+<div class="guide-visual">
+<div class="guide-map-host is-home" data-kind="review" data-center="-75.6587,41.3532" data-zoom="14"></div>
+<p class="guide-caption">Same winter-sports polygon as step 2. If this still looks like one hill, you are ready to upload.</p>
+</div>
+</div></div>
       <section class="blog-related" aria-label="Related articles">
           <h2 class="tw-text-xl tw-font-semibold tw-text-black">Related articles</h2>
           <ul class="tw-mt-4"><li><a href="how-global-ski-atlas-data-pipeline-works.html">How Global Ski Atlas Data Works: From OpenStreetMap to the Map</a></li>
@@ -206,5 +336,7 @@
     </div>
   </footer>
   <script src="../index.js"></script>
+  <script defer src="https://cdn.maptiler.com/maptiler-sdk-js/v3.10.2/maptiler-sdk.umd.min.js"></script>
+  <script type="module" src="how-to-tag-guide.js"></script>
 </body>
 </html>

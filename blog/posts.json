@@ -2,20 +2,25 @@
   {
     "slug": "how-to-tag-a-ski-resort-in-openstreetmap",
     "title": "How to Tag a Ski Resort in OpenStreetMap (So It Shows Up in the Atlas)",
-    "description": "Step-by-step OSM tagging for downhill ski areas: boundaries, pistes, lifts, and common mistakes that keep resorts out of Global Ski Atlas.",
+    "description": "Ten steps from an OSM account to a mapped ski hill, using Montage Mountain as the example.",
     "pillar": "Improve the data",
     "date": "2026-08-10",
-    "readTime": 14,
+    "readTime": 8,
+    "wide": true,
+    "mapGuide": true,
     "featured": true,
     "related": ["how-global-ski-atlas-data-pipeline-works", "ski-resort-stats-explained", "ski-lift-types-explained"]
   },
   {
     "slug": "how-global-ski-atlas-data-pipeline-works",
     "title": "How Global Ski Atlas Data Works: From OpenStreetMap to the Map",
-    "description": "A plain-language tour of the atlas pipeline: OSM geometry, cloud processing, GeoParquet, and the maps and tools that consume it.",
+    "description": "Follow Bristol Mountain from OSM way 320434895 through GeoParquet into the maps, charts, and downloads.",
     "pillar": "Improve the data",
     "date": "2026-09-10",
     "readTime": 12,
+    "wide": true,
+    "mapGuide": true,
+    "guideScript": "pipeline-guide.js",
     "related": ["how-to-tag-a-ski-resort-in-openstreetmap", "ski-resort-stats-explained", "how-many-ski-resorts-worldwide"]
   },
   {

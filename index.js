@@ -62,9 +62,9 @@ document.addEventListener("keydown", function (e) {
 })
 
 /**
- * Animations
+ * Animations — homepage loads GSAP; blog and other pages only use this file for the header.
  */
-
+if (typeof gsap !== "undefined") {
 gsap.registerPlugin(ScrollTrigger)
 
 const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
@@ -102,9 +102,6 @@ window.addEventListener("load", () => {
     }
 })
 
-
-// ------------- reveal section animations ---------------
-
 const sections = gsap.utils.toArray("section")
 
 if (!reduceMotion) {
@@ -128,6 +125,7 @@ sections.forEach((sec) => {
         stagger: 0.2,
     })
 })
+}
 }
 
 
