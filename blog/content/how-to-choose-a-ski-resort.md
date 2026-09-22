@@ -1,4 +1,4 @@
-Choosing a ski resort by reading ten resort websites is like comparing cars by reading only dealer stickers. Every page uses different maps, different stats, and different adjectives. Global Ski Atlas exists so skiers can evaluate mountains on comparable mapped data from OpenStreetMap, then layer personal constraints—skill, budget, distance, snow, crowds—on top of that shared baseline.
+Choosing a ski resort by reading ten resort websites is like comparing cars by reading only dealer stickers. Every page uses different maps, different stats, and different adjectives. Global Ski Atlas exists so skiers can evaluate mountains on comparable mapped data from OpenStreetMap, then layer personal constraints (skill, budget, distance, snow, crowds) on top of that shared baseline.
 
 This guide is a decision framework, not a ranking of “best” resorts. Match skill and trip style first, be honest about money and miles, refine with terrain shape and conditions, then compare a shortlist side by side with tools on this site. Fair comparison requires one methodology, not ten custom brochures.
 
@@ -16,15 +16,7 @@ Those trips do not share a checklist. A community rope-tow hill can beat a magaz
 
 ## Skill fit before everything else
 
-Terrain that overwhelms a beginner or bores an expert ruins the trip regardless of snow quality or lodging photos.
-
-**Beginners** need ample easy terrain, short returns to learning zones, and layouts that do not force novices onto expert egress routes. Magic carpets and gentle chairs matter more than summit restaurants.
-
-**Intermediates** need a large cruiser network with a few harder runs to grow into. A mountain that is 80% expert with two token blues is a poor “progression” choice even if the brochure says “something for everyone.”
-
-**Experts** need steeps, bowls, or glades they can reach without endless traverses, plus enough variety that day three still feels worthwhile.
-
-Use trail mix and lift types in [Ski Resort Facts](../SkiResortFacts.html), then preview pitch on the [interactive map](../mainmap.html). A single long green from summit to base can inflate easy percentages without creating a true beginner pod. Difficulty tags also differ between US and European conventions—[how to read a ski trail map](how-to-read-ski-trail-map.html) helps when you cross regions. Matching the mountain to ability is the foundation every other criterion builds on.
+Terrain that overwhelms a beginner or bores an expert ruins the trip regardless of snow quality or lodging photos. **Beginners** need ample easy terrain, short returns to learning zones, and layouts that do not force novices onto expert egress routes; magic carpets and gentle chairs matter more than summit restaurants. **Intermediates** need a large cruiser network with a few harder runs to grow into, so a mountain that is 80% expert with two token blues is a poor “progression” choice even if the brochure says “something for everyone.” **Experts** need steeps, bowls, or glades they can reach without endless traverses, plus enough variety that day three still feels worthwhile. Use trail mix and lift types in [Ski Resort Facts](../SkiResortFacts.html), then preview pitch on the [interactive map](../mainmap.html). A single long green from summit to base can inflate easy percentages without creating a true beginner pod, and difficulty tags also differ between US and European conventions, so [how to read a ski trail map](how-to-read-ski-trail-map.html) helps when you cross regions. Matching the mountain to ability is the foundation every later budget and distance check builds on.
 
 ## Budget: ticket price is rarely the whole bill
 
@@ -61,7 +53,7 @@ Once skill, money, and mileage are honest, refine with terrain geometry:
 
 Sort candidates in [resort comparison](../resort-comparison.html) and cross-check geometry on the map. Read [ski resort stats explained](ski-resort-stats-explained.html) so you know what each column actually measures. Mapped OpenStreetMap stats will not tell you about the best taco stand, but they will stop you from equating brochure acres with skier experience.
 
-If two mountains look similar on paper, fly the layout in the experimental [ski game](/playable/). Sprawling European networks and compact eastern hills feel different even at similar vertical.
+If two mountains look similar on paper, fly the layout in the experimental [ski game](/playable/). Sprawling European networks and compact eastern hills feel different even at similar vertical, and that layout read also tells you whether Saturday traffic will funnel onto one chair.
 
 ## Crowds, calendar, and “busy day” proxies
 
@@ -78,7 +70,7 @@ Atlas tools will not invent a live lift-line wait. They can help you avoid choos
 
 Snow is weather. Elevation, latitude, storm tracks, and the week-before forecast matter more than January optimism in a planning spreadsheet.
 
-Use the [weather map](../weather-map.html) as a late check, not as the first filter that discards an otherwise perfect local hill. Destination trips should leave room for a plan B day—village time, a neighboring area, or a lower-elevation backup—when the summit is blown in. No atlas statistic replaces a current forecast, and no forecast replaces a skill-matched mountain if the group cannot ski the terrain safely when it does snow.
+Use the [weather map](../weather-map.html) as a late check, not as the first filter that discards an otherwise perfect local hill. Destination trips should leave room for a plan B day: village time, a neighboring area, or a lower-elevation backup, when the summit is blown in. No atlas statistic replaces a current forecast, and no forecast replaces a skill-matched mountain if the group cannot ski the terrain safely when it does snow.
 
 ## Build a shortlist, then compare side by side
 
@@ -106,6 +98,4 @@ Resist expanding the shortlist forever. Comparison fatigue pushes people back to
 
 ## What Global Ski Atlas will not decide for you
 
-We do not publish a single ordered ranking of the world’s best resorts. “Best” depends on your weighted criteria. We surface comparable mapped data, drive-time tools, weather context, and comparison tables so you can apply those weights yourself.
-
-The right resort is the one that wins on your constraints, not the loudest advertisement. Put finalists in [resort comparison](../resort-comparison.html), confirm the layout on the [map](../mainmap.html), and choose the option that leaves you more days on snow. When two places tie, prefer the one that is closer, cheaper, or kinder to the least confident skier in your group—that is usually the trip people remember fondly.
+We do not publish a single ordered ranking of the world’s best resorts. “Best” depends on your weighted criteria, so we surface comparable mapped data, drive-time tools, weather context, and comparison tables so you can apply those weights yourself. The right resort is the one that wins on your constraints, not the loudest advertisement. Put finalists in [resort comparison](../resort-comparison.html), confirm the layout on the [map](../mainmap.html), and choose the option that leaves you more days on snow. When two places tie, prefer the one that is closer, cheaper, or kinder to the least confident skier in your group. That is usually the trip people remember fondly.

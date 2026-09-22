@@ -1,8 +1,8 @@
-Magazine lists of the world’s largest ski resorts rarely agree. Each repeats marketing that measures “size” differently—acres, piste kilometers, interconnected ticket domains, or village counts. One list crowns a French mega-domain. Another favors a Swiss-Italian continuum. A third quietly mixes managed in-bounds terrain with hike-to bowls a brochure likes to mention.
+Magazine lists of the world’s largest ski resorts rarely agree. Each repeats marketing that measures “size” differently (acres, piste kilometers, interconnected ticket domains, or village counts). One list crowns a French mega-domain. Another favors a Swiss-Italian continuum. A third quietly mixes managed in-bounds terrain with hike-to bowls a brochure likes to mention.
 
 Global Ski Atlas ranks downhill areas by mapped terrain derived from OpenStreetMap: primarily the sum of tagged downhill `piste` ways inside each resort boundary, analyzed the same way on every continent. This guide explains that yardstick, which domains consistently dominate it, why brochure size and mapped size diverge, how boundary tagging changes ranks, and how to verify live orderings on the [interactive map](../mainmap.html) and in [resort comparison](../resort-comparison.html).
 
-Exact order shifts with every substantial OSM edit. Treat the names below as durable landmarks in the top tier, not as a frozen medal table you can quote forever without checking current data.
+Exact order shifts with every substantial OSM edit. Treat the names below as durable landmarks in the top tier, not as a frozen medal table you can quote forever without checking current data. Size still needs a definition before it needs a ranking.
 
 ## What “largest” means in an open atlas
 
@@ -28,7 +28,7 @@ In broad strokes the pipeline:
 
 Interconnected European mega-domains and large North American consolidations rise when mappers have traced pistes thoroughly. Areas with incomplete trail drawing fall until someone finishes the geometry. Marketing acreage often includes hike-to terrain or loosely affiliated villages; mapped kilometers do not automatically inherit those claims.
 
-Because counts and lengths move with OSM, live sorted views in [Ski Resort Facts](../SkiResortFacts.html) and [resort comparison](../resort-comparison.html) beat any static top-ten paragraph—including this one.
+Because counts and lengths move with OSM, live sorted views in [Ski Resort Facts](../SkiResortFacts.html) and [resort comparison](../resort-comparison.html) beat any static top-ten paragraph, including this one. The names that follow are landmarks that keep showing up when you sort that live data, not a medal ceremony.
 
 ## Domains that reliably sit near the top
 
@@ -48,19 +48,19 @@ Several names repeatedly appear when live data is sorted by mapped trail length,
 
 Outside Europe, large footprints show up differently. Consolidated Utah and Tahoe complexes, Whistler Blackcomb, and growing Japanese coverage around places like Niseko United illustrate how mergers, multi-base tickets, and mapping enthusiasm inflate mapped size independently of skier folklore. Jungfrau-region skiing and other Swiss networks often sit just outside or inside the absolute top group depending on the current extract.
 
-These are guided landmarks for exploration, not an official championship. Always sort the current dataset before quoting a rank in an argument.
+These are guided landmarks for exploration, not an official championship. Always sort the current dataset before quoting a rank in an argument, and expect brochure size to disagree with mapped size for ordinary reasons.
 
 ## Why brochure size and mapped size disagree
 
 Disagreement is expected. Resorts maximize headline figures. Volunteers trace what exists on the ground and what imagery supports. Typical gaps:
 
 - Brochure acres include hike-to or sidecountry the atlas does not treat as fully mapped downhill inventory
-- Ticket domains span multiple OSM polygons, so one brand becomes several atlas objects—or the reverse
+- Ticket domains span multiple OSM polygons, so one brand becomes several atlas objects, or the reverse
 - New runs are sold in marketing before anyone draws them in OSM
 - Sparse tagging in remote regions understates real size
 - Oversized polygons temporarily overstate area until corrected
 
-When a brochure claims ten new kilometers, ask whether those lines exist in OpenStreetMap yet. Someone still has to draw them before mapped rankings move. That loop—from ground truth to OSM to atlas—is the same improvement path described in [how to tag a ski resort in OpenStreetMap](how-to-tag-a-ski-resort-in-openstreetmap.html).
+When a brochure claims ten new kilometers, ask whether those lines exist in OpenStreetMap yet. Someone still has to draw them before mapped rankings move. That loop, from ground truth to OSM to atlas, is the same improvement path described in [how to tag a ski resort in OpenStreetMap](how-to-tag-a-ski-resort-in-openstreetmap.html).
 
 ## Boundary tagging can change who looks biggest
 
@@ -99,14 +99,8 @@ Use size to understand scale and planning horizon. A multi-day European mega-dom
 
 ## Regional completeness still shapes the leaderboard
 
-Europe’s top-tier dominance in mapped size is partly geography and partly mapping culture. Dense Alpine networks really are vast. They are also heavily traced. Regions with newer or thinner OSM ski coverage can hide large real-world areas until local mappers catch up. That is why size rankings should be read alongside the coverage caveats in [how many ski resorts worldwide](how-many-ski-resorts-worldwide.html).
-
-Improving a near-miss domain is often higher leverage than arguing about the current number-one slot. Adding missing connectors, splitting duplicate ways, and tightening boundaries refine both size ranks and everyday comparison tools.
+Europe’s top-tier dominance in mapped size is partly geography and partly mapping culture. Dense Alpine networks really are vast. They are also heavily traced. Regions with newer or thinner OSM ski coverage can hide large real-world areas until local mappers catch up. That is why size rankings should be read alongside the coverage caveats in [how many ski resorts worldwide](how-many-ski-resorts-worldwide.html). Improving a near-miss domain is often higher leverage than arguing about the current number-one slot. Adding missing connectors, splitting duplicate ways, and tightening boundaries refine both size ranks and everyday comparison tools.
 
 ## Practical takeaway for skiers and mappers
 
-The world’s largest ski resorts are mostly names you already know. Open data changes how you measure them. Trust mapped trail kilometers from the live atlas for rankings, use marketing for photos and vibe, and remember that completeness varies by region.
-
-For skiers: sort current data, preview the network on the [map](../mainmap.html), and choose size only when your trip length and ability actually need it.
-
-For mappers: every correctly drawn piste in a mega-domain or overlooked giant moves the leaderboard toward ground truth. Mapped size is honest, reproducible, and improvable—exactly the standard a worldwide downhill atlas should apply.
+The world’s largest ski resorts are mostly names you already know. Open data changes how you measure them. Trust mapped trail kilometers from the live atlas for rankings, use marketing for photos and vibe, and remember that completeness varies by region. For skiers: sort current data, preview the network on the [map](../mainmap.html), and choose size only when your trip length and ability actually need it. For mappers: every correctly drawn piste in a mega-domain or overlooked giant moves the leaderboard toward ground truth. Mapped size is honest, reproducible, and improvable, exactly the standard a worldwide downhill atlas should apply.

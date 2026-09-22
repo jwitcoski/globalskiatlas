@@ -1,3 +1,14 @@
+/* Overlay header is for the homepage hero. Blog pages need the bar in flow. */
+body > header[class] {
+  position: sticky;
+  top: 0;
+  background: #fff;
+}
+body > main[class] {
+  margin-top: 0;
+  padding-top: 2.5rem;
+}
+
 .blog-prose {
   color: #374151;
   font-size: 1.125rem;
@@ -103,14 +114,14 @@
 
 .blog-prose code {
   background: #f3f4f6;
-  border-radius: 0.25rem;
+  border-radius: 0;
   font-size: 0.9em;
   padding: 0.1rem 0.35rem;
 }
 
 .blog-prose pre {
   background: #1e293b;
-  border-radius: 0.5rem;
+  border-radius: 0;
   color: #f8fafc;
   font-size: 0.875rem;
   margin-top: 1.25rem;
@@ -127,7 +138,7 @@
 .blog-cta-box {
   background: #f0fdfa;
   border: 1px solid #99f6e4;
-  border-radius: 0.75rem;
+  border-radius: 0;
   margin-top: 2rem;
   padding: 1.25rem 1.5rem;
 }
@@ -152,7 +163,7 @@
 
 .blog-card {
   border: 1px solid #e5e7eb;
-  border-radius: 0.75rem;
+  border-radius: 0;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;

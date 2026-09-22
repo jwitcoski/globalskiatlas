@@ -27,7 +27,7 @@ In plain language, a typical included resort has:
 
 We do not require a minimum acreage or vertical. Small hills count. We generally exclude nordic-only areas without downhill terrain, most indoor domes, heli-only operations without mapped in-bounds runs, and placeholders that lack both lifts and pistes. Marketing domains that sell one ticket across many villages may appear as one polygon or several, depending on how local mappers drew relations and boundaries. We report resort objects from mapped geometry, not from lift-ticket branding.
 
-Researchers can download the GeoParquet outputs and reproduce aggregates instead of taking a blog claim on faith. That reproducibility is the point of an open atlas.
+Researchers can download the GeoParquet outputs and reproduce aggregates instead of taking a blog claim on faith. That reproducibility is the point of an open atlas, and it is also why a live total on the order of a few thousand areas is a snapshot, not a plaque.
 
 ## What “on the order of thousands” means in practice
 
@@ -35,7 +35,7 @@ As of recent combined builds, the atlas indexes on the order of a few thousand d
 
 Commercial directories that report only “significant” destinations often land nearer two thousand resorts because they apply size, revenue, or amenity filters we deliberately avoid. Neither approach is uniquely “correct.” They answer different questions. Ours answers: how many downhill ski areas are coherently mapped in OpenStreetMap and processed by one global method?
 
-Always check current aggregates on [Ski Resort Facts](../SkiResortFacts.html) rather than quoting an outdated round number from memory.
+Always check current aggregates on [Ski Resort Facts](../SkiResortFacts.html) rather than quoting an outdated round number from memory. Continental totals then show how that moving number is distributed, not which continent “wins skiing.”
 
 ## Continental patterns without turning them into a scoreboard
 
@@ -49,7 +49,7 @@ Continental totals reflect real ski geography and mapping culture at the same ti
 
 **Southern Hemisphere and elsewhere.** Chile, Argentina, New Zealand, Australia, and a handful of African hills matter seasonally and geographically even when their absolute counts are smaller. Under-mapping is more common here, so the atlas count is a lower bound on reality until local tagging catches up.
 
-Use the [main map](../mainmap.html) to see density with your own eyes. Dot clusters tell you as much as a table of country totals.
+Use the [main map](../mainmap.html) to see density with your own eyes. Dot clusters tell you as much as a table of country totals, and they also show where under-mapping and duplicates still move the count.
 
 ## Gaps, duplicates, and other ways the count moves
 
@@ -85,17 +85,9 @@ Pass coverage lists are also not global resort censuses. Epic, Ikon, Indy, and E
 
 ## How to verify the number yourself
 
-You do not have to trust a paragraph on a blog.
+You do not have to trust a paragraph on a blog. Browse live country and global aggregates on [Ski Resort Facts](../SkiResortFacts.html), explore density visually on the [interactive map](../mainmap.html), compare a shortlist in [resort comparison](../resort-comparison.html) to see how individual objects are represented, download GeoParquet from [Download Data](../DownloadData.html) if you want to count rows yourself, and preview a questionable area in the [ski game](/playable/) then open the same place in OSM if geometry looks incomplete. If your local hill is missing, the fix is upstream tagging, not a support ticket asking us to invent a private record. Add or repair the winter-sports boundary, lifts, and downhill pistes, then wait for the next regional pipeline run. That is also the right attitude toward what the worldwide total can and cannot do.
 
-1. Browse live country and global aggregates on [Ski Resort Facts](../SkiResortFacts.html)
-2. Explore density visually on the [interactive map](../mainmap.html)
-3. Compare a shortlist in [resort comparison](../resort-comparison.html) to see how individual objects are represented
-4. Download GeoParquet from [Download Data](../DownloadData.html) if you want to count rows yourself
-5. Preview a questionable area in the [ski game](/playable/) and open the same place in OSM if geometry looks incomplete
-
-If your local hill is missing, the fix is upstream tagging, not a support ticket asking us to invent a private record. Add or repair the winter-sports boundary, lifts, and downhill pistes, then wait for the next regional pipeline run.
-
-## What the global count is good for—and what it is not
+## What the global count is good for, and what it is not
 
 The worldwide total is useful for:
 
@@ -106,4 +98,4 @@ The worldwide total is useful for:
 
 It is not useful as a claim of official government statistics, a ranking of “best” mountains, or a frozen figure you can cite for years without checking the live atlas. Counts move with OSM. That is a feature of open data, not a failure of it.
 
-Global Ski Atlas does not sell passes or endorse destinations. We publish comparable open data so skiers can explore on the [map](../mainmap.html), compare in [resort comparison](../resort-comparison.html), and improve the census where they ski. Check live aggregates on [Ski Resort Facts](../SkiResortFacts.html). When your hill is missing or mis-drawn, tag it—the global total changes one coherent resort at a time.
+Global Ski Atlas does not sell passes or endorse destinations. We publish comparable open data so skiers can explore on the [map](../mainmap.html), compare in [resort comparison](../resort-comparison.html), and improve the census where they ski. Check live aggregates on [Ski Resort Facts](../SkiResortFacts.html). When your hill is missing or mis-drawn, tag it, the global total changes one coherent resort at a time.

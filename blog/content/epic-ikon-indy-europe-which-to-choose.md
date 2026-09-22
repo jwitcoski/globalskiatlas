@@ -1,6 +1,4 @@
-You already bought a pass—or you are staring at three checkout pages wondering why skiing requires a spreadsheet. Epic, Ikon, and Indy are not three flavors of the same product. They are three North American strategies for getting on snow. Skiing in Europe is a fourth strategy entirely.
-
-Global Ski Atlas does not sell passes. We built the atlas for skiers who spend the season asking which mountain is next—including independents and overseas trips pass sites barely mention. This guide helps you match a strategy to how you actually ski.
+You already bought a pass, or you are staring at three checkout pages wondering why skiing requires a spreadsheet. Epic, Ikon, and Indy are not three flavors of the same product. They are three North American strategies for getting on snow. Skiing in Europe is a fourth strategy entirely. Global Ski Atlas does not sell passes. We built the atlas for skiers who spend the season asking which mountain is next, including independents and overseas trips pass sites barely mention. This guide helps you match a strategy to how you actually ski.
 
 **Disclaimer:** Before you purchase, verify partner lists, blackouts, reservations, and day limits on the official Epic Pass, Ikon Pass, and Indy Pass websites for the season you care about. Anything below is planning guidance and atlas-aligned geography, not an official roster or entitlement.
 
@@ -21,11 +19,11 @@ Answer these in writing. Marketing noise gets quieter when the answers are hones
 
 1. **How many days will you actually ski?** Ten total days may waste pass money. Forty days reward the right partners. Count last season’s real days, not aspirational ones.
 2. **Where do you live or fly cheaply?** [Drive time map](../DriveTimeMap.html) rings expose whether pass value collapses without nearby clusters.
-3. **Do you want icons or discovery?** Epic and Ikon sell poster mountains. Indy and the atlas long tail sell hills between them—especially in states ranked in [which U.S. states have the most ski resorts](us-states-most-ski-resorts.html).
+3. **Do you want icons or discovery?** Epic and Ikon sell poster mountains. Indy and the atlas long tail sell hills between them, especially in states ranked in [which U.S. states have the most ski resorts](us-states-most-ski-resorts.html).
 4. **Will you travel internationally?** If Europe is the real trip, model lift tickets and lodging separately. Overseas partner days are side dishes.
 5. **Does your group agree?** [Resort comparison](../resort-comparison.html) and [best ski resorts for beginners](best-ski-resorts-for-beginners.html) prevent one person’s pass from dictating everyone’s ability level.
 
-If two household members answer differently, you may need a hybrid season—or separate products—rather than a compromise pass that makes nobody happy.
+If two household members answer differently, you may need a hybrid season, or separate products, rather than a compromise pass that makes nobody happy.
 
 ## Persona: Front-Range and Wasatch locals
 
@@ -49,7 +47,7 @@ Because atlas density is high in several New England states, “coverage” that
 
 ## Persona: Budget lap machines
 
-If your joy is volume—weekday nights, rope tows, club hills, and cheap day tickets—Indy-style access or no mega-pass at all often wins:
+If your joy is volume (weekday nights, rope tows, club hills, and cheap day tickets), Indy-style access or no mega-pass at all often wins:
 
 - Prioritize drive time over destination prestige.
 - Confirm that seven-plus ski days make any multi-mountain product cheaper than singles.
@@ -61,7 +59,7 @@ Five ski days and two travel days are a different math problem:
 
 - Bundled lodging and day tickets often beat a season pass you will not reuse.
 - Choose the mountain with [how to choose a ski resort](how-to-choose-a-ski-resort.html), not with pass FOMO.
-- If you already own a pass from local skiing, aim the vacation week at partners that maximize remaining value—after checking official day limits.
+- If you already own a pass from local skiing, aim the vacation week at partners that maximize remaining value, after checking official day limits.
 
 ## Persona: Euro-first skiers
 
@@ -90,7 +88,7 @@ Passes fail groups for social reasons more often than financial ones:
 
 - Experts drag beginners to terrain that looks great on the pass list and terrible for learning.
 - Beginners drag experts to ultra-gentle hills until the experts stop skiing.
-- Split the day: morning on shared terrain, afternoon on ability-matched pods—or book two nearby mountains and meet for dinner.
+- Split the day: morning on shared terrain, afternoon on ability-matched pods, or book two nearby mountains and meet for dinner.
 
 [Best ski resorts for beginners](best-ski-resorts-for-beginners.html) and side-by-side stats in [resort comparison](../resort-comparison.html) make those negotiations concrete.
 
@@ -113,10 +111,10 @@ Global Ski Atlas will not tell you which checkout button to press. It will show 
 - [Trip planner](../TripPlannerMap.html) — Draft the season as routes, not vibes.
 - [Tier ranking](../resort-tier-rank.html) — Keep size categories honest.
 - [Weather map](../weather-map.html) — Separate climate hope from forecast.
-- Experimental [ski game](/playable/) — Preview layout when a scene exists.
+- Experimental [ski game](/playable/): Preview layout when a scene exists.
 - [Skiing AI](../skiing-ai.html) — Ask questions, then verify answers in mapped stats.
 
-For global scale context, read [how many ski resorts worldwide](how-many-ski-resorts-worldwide.html). Pass rosters are prominent slices of that larger map—not the map itself.
+For global scale context, read [how many ski resorts worldwide](how-many-ski-resorts-worldwide.html). Pass rosters are prominent slices of that larger map, not the map itself.
 
 ## Pick a lane for this winter
 

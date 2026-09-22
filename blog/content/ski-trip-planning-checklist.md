@@ -1,4 +1,4 @@
-A good ski trip is mostly decided before you clip into your bindings. Tickets, lodging, drive time, skill fit, and weather windows either line up—or they fight you all week. Global Ski Atlas will not book your hotel, but it can remove the worst planning blind spots: mountains that look great in photos yet fail on mapped terrain, drive estimates that ignore real road time, and shortlists built from incompatible brochure stats. This checklist walks through a practical pre-trip workflow using the atlas tools and related guides.
+A good ski trip is mostly decided before you clip into your bindings. Tickets, lodging, drive time, skill fit, and weather windows either line up, or they fight you all week. Global Ski Atlas will not book your hotel, but it can remove the worst planning blind spots: mountains that look great in photos yet fail on mapped terrain, drive estimates that ignore real road time, and shortlists built from incompatible brochure stats. This checklist walks through a practical pre-trip workflow using the atlas tools and related guides.
 
 ## 1. Clarify the trip type before you open a map
 
@@ -28,7 +28,7 @@ Keep a shortlist of five to eight names max. Longer lists rarely survive contact
 
 ## 3. Translate brochure claims into atlas stats
 
-Move the shortlist into [resort comparison](../resort-comparison.html). Before you trust any column, read [what ski resort stats actually mean](ski-resort-stats-explained.html). Mapped acres, vertical, trail counts, and lift totals on Global Ski Atlas come from OpenStreetMap-derived geometry with shared definitions—useful for comparison, not as a substitute for current conditions.
+Move the shortlist into [resort comparison](../resort-comparison.html). Before you trust any column, read [what ski resort stats actually mean](ski-resort-stats-explained.html). Mapped acres, vertical, trail counts, and lift totals on Global Ski Atlas come from OpenStreetMap-derived geometry with shared definitions, useful for comparison, not as a substitute for current conditions.
 
 Check especially:
 
@@ -37,7 +37,7 @@ Check especially:
 - Lift types and counts if weekends worry you (see [ski lift types explained](ski-lift-types-explained.html))
 - Whether the map shows the learning zone near the base or stranded mid-mountain
 
-If two resorts tie on stats, prefer the closer or cheaper option so you gain an extra ski day instead of an extra travel day—echoing the framework in [how to choose a ski resort](how-to-choose-a-ski-resort.html).
+If two resorts tie on stats, prefer the closer or cheaper option so you gain an extra ski day instead of an extra travel day, echoing the framework in [how to choose a ski resort](how-to-choose-a-ski-resort.html).
 
 ## 4. Read the trail map dialect before you buy
 
@@ -49,13 +49,13 @@ Ask:
 - Do beginner returns require a steep egress?
 - Are iconic runs even mapped yet, or is the OSM layer thin?
 
-Thin mapping is a planning signal. It may mean incomplete data rather than empty mountain—verify with resort materials, then consider helping via [how to tag a ski resort in OpenStreetMap](how-to-tag-a-ski-resort-in-openstreetmap.html).
+Thin mapping is a planning signal. It may mean incomplete data rather than empty mountain, verify with resort materials, then consider helping via [how to tag a ski resort in OpenStreetMap](how-to-tag-a-ski-resort-in-openstreetmap.html).
 
 ## 5. Fit tickets and passes to the shortlist (not the reverse)
 
 Only after geography and terrain fit should you optimize tickets.
 
-- If you already own a pass, confirm which shortlisted hills are actually useful partners this season using [Epic Pass vs Ikon Pass coverage](epic-pass-vs-ikon-pass-resort-coverage.html)—and verify entitlements on official pass sites.
+- If you already own a pass, confirm which shortlisted hills are actually useful partners this season using [Epic Pass vs Ikon Pass coverage](epic-pass-vs-ikon-pass-resort-coverage.html), and verify entitlements on official pass sites.
 - If you do not own a pass, price day tickets and regional options honestly, including rental and lesson costs for beginners.
 - For independents and small hills, Indy-style networks or local season passes often beat destination mega-passes.
 
@@ -66,7 +66,7 @@ Do not let a pass logo veto a better local hill for a toddler’s third day on s
 With one to three finalists:
 
 1. Re-check drive or transfer time on a weekday vs weekend assumption.
-2. Look at lodging distance to the base—not just to the town center.
+2. Look at lodging distance to the base, not just to the town center.
 3. Scan the [weather map](../weather-map.html) in the days before departure for storm timing, not for January optimism in October.
 4. Build one weather-flexible day: museum, spa, lower mountain laps, or a backup hill inside your drive ring.
 
@@ -82,11 +82,11 @@ The atlas cannot load your car, but a final list prevents avoidable pain:
 - For mixed-ability groups, identify meeting points that do not require experts to ride beginner carpets all afternoon
 - Save offline screenshots of your shortlist stats in case parking-lot cell service dies
 
-If you want a spatial feel for layout, the experimental [ski game](/playable/) can preview exported scenes where available. It is entertainment and orientation—not navigation or safety guidance.
+If you want a spatial feel for layout, the experimental [ski game](/playable/) can preview exported scenes where available. It is entertainment and orientation, not navigation or safety guidance.
 
 ## 8. After the trip: feed the commons
 
-If a mapped trail was missing, a lift was wrong, or a boundary looked bloated, fix it upstream. Global Ski Atlas improves when OSM improves. The tagging guide and [how the data pipeline works](how-global-ski-atlas-data-pipeline-works.html) explain how edits become atlas updates. Corrections also help the next traveler who shortlists that hill.
+If a mapped trail was missing, a lift was wrong, or a boundary looked bloated, fix it upstream. Global Ski Atlas improves when OSM improves. The tagging guide and [how the data pipeline works](how-global-ski-atlas-data-pipeline-works.html) explain how edits become atlas updates. Corrections also help the next traveler who shortlists that hill. The one-page summary below is the same loop, compressed.
 
 ## One-page summary
 
@@ -99,6 +99,4 @@ If a mapped trail was missing, a lift was wrong, or a boundary looked bloated, f
 7. Confirm official openings before you go.
 8. Improve OSM when you find gaps.
 
-Follow that order and Global Ski Atlas becomes a decision system instead of a novelty map—exactly what you need when lodging deposits are due and the group chat is already arguing about which mountain is “best.”
-
-If you want a deeper understanding of why two websites disagree on acres or trail counts, keep [ski resort stats explained](ski-resort-stats-explained.html) and [how the data pipeline works](how-global-ski-atlas-data-pipeline-works.html) bookmarked beside this checklist. Better definitions make better shortlists.
+Follow that order and Global Ski Atlas becomes a decision system instead of a novelty map, exactly what you need when lodging deposits are due and the group chat is already arguing about which mountain is “best.” If you want a deeper understanding of why two websites disagree on acres or trail counts, keep [ski resort stats explained](ski-resort-stats-explained.html) and [how the data pipeline works](how-global-ski-atlas-data-pipeline-works.html) bookmarked beside this checklist. Better definitions make better shortlists.

@@ -34,7 +34,7 @@
 </head>
 <body class="tw-flex tw-min-h-[100vh] tw-flex-col tw-bg-[#fff] tw-overflow-x-hidden">
   <header
-    class="tw-absolute tw-top-0 tw-z-[100] tw-flex tw-h-[60px] tw-w-full tw-bg-opacity-0
+    class="tw-sticky tw-top-0 tw-z-[100] tw-flex tw-h-[60px] tw-w-full tw-bg-white
            tw-px-[5%] max-lg:tw-mr-auto max-lg:tw-px-4 lg:tw-justify-around"
   >
     <a class="tw-h-[50px] tw-w-[50px] tw-p-[4px]" href="../index.html" aria-label="Global Ski Atlas home">
@@ -92,14 +92,13 @@
       id="collapse-btn"
     ></button>
   </header>
-  <main class="tw-mt-[80px] tw-flex-1 tw-px-[5%] tw-py-12 max-lg:tw-px-4">
+  <main class="tw-flex-1 tw-px-[5%] tw-pb-12 max-lg:tw-px-4">
     <article class="tw-mx-auto tw-max-w-3xl">
       <p class="blog-pillar">Help skiers decide</p>
       <h1 class="tw-mt-2 tw-text-3xl tw-font-bold tw-text-black max-md:tw-text-2xl">Planning a Multi-Resort Ski Road Trip Using Open Data</h1>
       <p class="blog-meta tw-mt-3">August 28, 2026 · 13 min read</p>
       <p class="tw-mt-4 tw-text-lg tw-leading-relaxed tw-text-gray-600">Sample road-trip itineraries, how many days per stop, and how to build routes in the Global Ski Atlas trip planner.</p>
-      <div class="blog-prose tw-mt-8"><p>One resort is a vacation. Three resorts in ten days is a different kind of trip: more coffee stops, more parking lots, and a real chance to learn how regions actually ski. Global Ski Atlas built a <a href="../TripPlannerMap.html" rel="noopener noreferrer" target="_blank">Trip Planner</a> on open resort locations and driving routes so you can chain stops using the same inventory pass marketing never fully maps—including independents counted in <a href="us-states-most-ski-resorts.html" rel="noopener noreferrer" target="_blank">which U.S. states have the most ski resorts</a> and <a href="how-many-ski-resorts-worldwide.html" rel="noopener noreferrer" target="_blank">how many ski resorts worldwide</a>.</p>
-<p>This guide covers how to allocate days, how to use the planner tools, sample loops in the Rockies, Northeast, and Alps, and how to mix pass days with indie tickets without turning the itinerary into a spreadsheet nightmare.</p>
+      <div class="blog-prose tw-mt-8"><p>One resort is a vacation. Three resorts in ten days is a different kind of trip: more coffee stops, more parking lots, and a real chance to learn how regions actually ski. Global Ski Atlas built a <a href="../TripPlannerMap.html" rel="noopener noreferrer" target="_blank">Trip Planner</a> on open resort locations and driving routes so you can chain stops using the same inventory pass marketing never fully maps, including independents counted in <a href="us-states-most-ski-resorts.html" rel="noopener noreferrer" target="_blank">which U.S. states have the most ski resorts</a> and <a href="how-many-ski-resorts-worldwide.html" rel="noopener noreferrer" target="_blank">how many ski resorts worldwide</a>. This guide covers how to allocate days, how to use the planner tools, sample loops in the Rockies, Northeast, and Alps, and how to mix pass days with indie tickets without turning the itinerary into a spreadsheet nightmare.</p>
 <h3 id="why-multi-resort-trips-need-open-maps">Why multi-resort trips need open maps</h3>
 <p>Pass websites list partners. They do not show the municipal rope-tow hill between your hotel and the flagship, or the independent area that sits forty-five minutes off the interstate. Open data does. When every downhill area sits on one map, road trips stop being “visit the logos” and start being “ski the corridor.”</p>
 <p>That matters for three practical reasons:</p>
@@ -127,8 +126,7 @@
 <li>Choose whether to end at the last hill or return home.</li>
 <li>Read the driving distance and duration before you commit to lodging.</li>
 </ol>
-<p>Treat the route as a draft, not a contract. Winter road conditions, mountain passes, and Friday traffic can inflate OSRM estimates. Build in buffer hours on any day that includes both a morning ski and an afternoon drive over a pass.</p>
-<p>European legs should stay inside one continental block. Oceans require flights, not road routes. The planner is for chaining villages and valleys, not pretending a ferry replaces a plane ticket.</p>
+<p>Treat the route as a draft, not a contract. Winter road conditions, mountain passes, and Friday traffic can inflate OSRM estimates. Build in buffer hours on any day that includes both a morning ski and an afternoon drive over a pass. European legs should stay inside one continental block. Oceans require flights, not road routes. The planner is for chaining villages and valleys, not pretending a ferry replaces a plane ticket.</p>
 <h3 id="sample-loop-colorado-and-utah-corridor">Sample loop: Colorado and Utah corridor</h3>
 <p>A classic multi-state Rockies pattern looks like this:</p>
 <ul>
@@ -171,9 +169,9 @@
 <li>Prefer towns with grocery access and multiple dining options; you will cook more than on a single-resort week.</li>
 <li>Keep ski bags packed for a one-night move; do not fully unpack mid-corridor.</li>
 <li>Check whether overnight parking at the next base requires a permit or shuttle.</li>
-<li>Confirm rental car snow tires or chains for the corridor you chose—especially Alpine and Sierra passes.</li>
+<li>Confirm rental car snow tires or chains for the corridor you chose, especially Alpine and Sierra passes.</li>
 </ul>
-<p>If a stop looks thin on the map—few lifts, sparse trails—either treat it as a one-day detour or improve OpenStreetMap via <a href="how-to-tag-a-ski-resort-in-openstreetmap.html" rel="noopener noreferrer" target="_blank">how to tag a ski resort in OpenStreetMap</a> so the next planner sees what you skied.</p>
+<p>If a stop looks thin on the map (few lifts, sparse trails), either treat it as a one-day detour or improve OpenStreetMap via <a href="how-to-tag-a-ski-resort-in-openstreetmap.html" rel="noopener noreferrer" target="_blank">how to tag a ski resort in OpenStreetMap</a> so the next planner sees what you skied.</p>
 <h3 id="a-simple-planning-checklist-before-you-book">A simple planning checklist before you book</h3>
 <p>Work through this sequence once:</p>
 <ol>
@@ -187,7 +185,7 @@
 </ol>
 <h3 id="what-“good”-looks-like-when-you-get-home">What “good” looks like when you get home</h3>
 <p>A successful multi-resort trip is not the longest mileage total. It is remembering distinct mountains: one place where the blues were honest, one where the trees were the point, one indie hill that felt like a secret, and enough rest that you would do it again next season.</p>
-<p>Open the <a href="../TripPlannerMap.html" rel="noopener noreferrer" target="_blank">trip planner</a>, plug in one sample itinerary from this page, adjust for your pass and driving patience, and build the route from mapped resorts instead of social media reels. The best loops often find snow where you did not expect—because the atlas shows every mapped downhill area on the same map, not just the ones on a poster.</p></div>
+<p>Open the <a href="../TripPlannerMap.html" rel="noopener noreferrer" target="_blank">trip planner</a>, plug in one sample itinerary from this page, adjust for your pass and driving patience, and build the route from mapped resorts instead of social media reels. The best loops often find snow where you did not expect, because the atlas shows every mapped downhill area on the same map, not just the ones on a poster.</p></div>
       <section class="blog-related" aria-label="Related articles">
           <h2 class="tw-text-xl tw-font-semibold tw-text-black">Related articles</h2>
           <ul class="tw-mt-4"><li><a href="ski-trip-planning-checklist.html">Ski Trip Planning Checklist Using Global Ski Atlas</a></li>
@@ -239,6 +237,5 @@
     </div>
   </footer>
   <script src="../index.js"></script>
-<script src="../scripts/site-nav.js?v=4" defer></script>
 </body>
 </html>

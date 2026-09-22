@@ -49,7 +49,7 @@ function formatDate(iso) {
 function siteHeader(activeBlog) {
   const blogClass = activeBlog ? ' tw-font-semibold' : '';
   return `<header
-    class="tw-absolute tw-top-0 tw-z-[100] tw-flex tw-h-[60px] tw-w-full tw-bg-opacity-0
+    class="tw-sticky tw-top-0 tw-z-[100] tw-flex tw-h-[60px] tw-w-full tw-bg-white
            tw-px-[5%] max-lg:tw-mr-auto max-lg:tw-px-4 lg:tw-justify-around"
   >
     <a class="tw-h-[50px] tw-w-[50px] tw-p-[4px]" href="../index.html" aria-label="Global Ski Atlas home">
@@ -220,7 +220,7 @@ function generatePostHtml(post, bodyHtml, bySlug) {
 </head>
 <body class="tw-flex tw-min-h-[100vh] tw-flex-col tw-bg-[#fff] tw-overflow-x-hidden">
   ${siteHeader(true)}
-  <main class="tw-mt-[80px] tw-flex-1 tw-px-[5%] tw-py-12 max-lg:tw-px-4">
+  <main class="tw-flex-1 tw-px-[5%] tw-pb-12 max-lg:tw-px-4">
     <article class="tw-mx-auto tw-max-w-3xl">
       <p class="blog-pillar">${escapeHtml(post.pillar)}</p>
       <h1 class="tw-mt-2 tw-text-3xl tw-font-bold tw-text-black max-md:tw-text-2xl">${escapeHtml(post.title)}</h1>
@@ -279,7 +279,7 @@ function generateIndexHtml(posts) {
 </head>
 <body class="tw-flex tw-min-h-[100vh] tw-flex-col tw-bg-[#fff] tw-overflow-x-hidden">
   ${siteHeader(true)}
-  <main class="tw-mt-[80px] tw-flex-1 tw-px-[5%] tw-py-12 max-lg:tw-px-4">
+  <main class="tw-flex-1 tw-px-[5%] tw-pb-12 max-lg:tw-px-4">
     <div class="tw-mx-auto tw-max-w-5xl">
       <h1 class="tw-text-3xl tw-font-bold tw-text-black max-md:tw-text-2xl">Blog</h1>
       <p class="tw-mt-3 tw-max-w-2xl tw-text-lg tw-text-gray-600">Guides and data-backed articles for skiers who want to compare resorts fairly, plan trips, and improve the open map data behind the atlas. Each article is a full guide with clear sections—not a thin summary.</p>

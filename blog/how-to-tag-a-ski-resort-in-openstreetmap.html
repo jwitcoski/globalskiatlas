@@ -34,7 +34,7 @@
 </head>
 <body class="tw-flex tw-min-h-[100vh] tw-flex-col tw-bg-[#fff] tw-overflow-x-hidden">
   <header
-    class="tw-absolute tw-top-0 tw-z-[100] tw-flex tw-h-[60px] tw-w-full tw-bg-opacity-0
+    class="tw-sticky tw-top-0 tw-z-[100] tw-flex tw-h-[60px] tw-w-full tw-bg-white
            tw-px-[5%] max-lg:tw-mr-auto max-lg:tw-px-4 lg:tw-justify-around"
   >
     <a class="tw-h-[50px] tw-w-[50px] tw-p-[4px]" href="../index.html" aria-label="Global Ski Atlas home">
@@ -92,35 +92,19 @@
       id="collapse-btn"
     ></button>
   </header>
-  <main class="tw-mt-[80px] tw-flex-1 tw-px-[5%] tw-py-12 max-lg:tw-px-4">
+  <main class="tw-flex-1 tw-px-[5%] tw-pb-12 max-lg:tw-px-4">
     <article class="tw-mx-auto tw-max-w-3xl">
       <p class="blog-pillar">Improve the data</p>
       <h1 class="tw-mt-2 tw-text-3xl tw-font-bold tw-text-black max-md:tw-text-2xl">How to Tag a Ski Resort in OpenStreetMap (So It Shows Up in the Atlas)</h1>
       <p class="blog-meta tw-mt-3">August 10, 2026 · 14 min read</p>
       <p class="tw-mt-4 tw-text-lg tw-leading-relaxed tw-text-gray-600">Step-by-step OSM tagging for downhill ski areas: boundaries, pistes, lifts, and common mistakes that keep resorts out of Global Ski Atlas.</p>
-      <div class="blog-prose tw-mt-8"><p>Global Ski Atlas only works when OpenStreetMap has coherent ski data. The fastest way to improve the atlas is to tag your local hill correctly in OSM so it appears on the <a href="../mainmap.html" rel="noopener noreferrer" target="_blank">interactive map</a>, feeds honest numbers into <a href="../SkiResortFacts.html" rel="noopener noreferrer" target="_blank">Ski Resort Facts</a>, and shows up in <a href="../resort-comparison.html" rel="noopener noreferrer" target="_blank">resort comparison</a>. This guide covers what we need for a downhill resort to be included, how to draw boundaries, how to map lifts and pistes, common mistakes, and how edits reach the site after the next pipeline run.</p>
-<p>You do not need to be a professional cartographer. If you can ski the hill and read a trail map, you can usually improve the OSM geometry that powers every tool on this site—from the <a href="../wiki/browse.html" rel="noopener noreferrer" target="_blank">wiki</a> to the experimental <a href="/playable/" rel="noopener noreferrer" target="_blank">ski game</a> to the files on <a href="../DownloadData.html" rel="noopener noreferrer" target="_blank">Download Data</a>.</p>
+      <div class="blog-prose tw-mt-8"><p>Global Ski Atlas only works when OpenStreetMap has coherent ski data. The fastest way to improve the atlas is to tag your local hill correctly in OSM so it appears on the <a href="../mainmap.html" rel="noopener noreferrer" target="_blank">interactive map</a>, feeds honest numbers into <a href="../SkiResortFacts.html" rel="noopener noreferrer" target="_blank">Ski Resort Facts</a>, and shows up in <a href="../resort-comparison.html" rel="noopener noreferrer" target="_blank">resort comparison</a>. You do not need to be a professional cartographer to do that. If you can ski the hill and read a trail map, you can usually improve the geometry that powers every tool on this site, from the <a href="../wiki/browse.html" rel="noopener noreferrer" target="_blank">wiki</a> to the experimental <a href="/playable/" rel="noopener noreferrer" target="_blank">ski game</a> to the files on <a href="../DownloadData.html" rel="noopener noreferrer" target="_blank">Download Data</a>. This guide covers what we need for a downhill resort to be included, how to draw boundaries, how to map lifts and pistes, common mistakes, and how edits reach the site after the next pipeline run.</p>
 <h3 id="what-global-ski-atlas-looks-for">What Global Ski Atlas looks for</h3>
-<p>We treat a downhill ski area as a coherent package of OpenStreetMap features, not a marketing brand name. In practice that means:</p>
-<ul>
-<li>A <code>landuse=winter_sports</code> polygon that outlines the managed ski domain</li>
-<li>Nearby downhill pistes tagged <code>piste:type=downhill</code></li>
-<li>Aerial lifts tagged with <code>aerialway=*</code> values that match real infrastructure</li>
-<li>A clear <code>name</code> on the area (and <code>name:en</code> when the local name is not English)</li>
-</ul>
-<p>We do not require a minimum vertical drop or ticket price. A community rope-tow hill counts if the geometry is coherent. A mega-domain also counts if its boundary and trails are mapped well. That same inclusion logic is what sits behind the global totals in <a href="how-many-ski-resorts-worldwide.html" rel="noopener noreferrer" target="_blank">how many ski resorts worldwide</a>.</p>
-<p>If the boundary is missing, our pipeline struggles to group lifts and runs into one resort. If the boundary is huge and vague, every acreage and trail-length statistic becomes noisy. Good tagging is therefore both an inclusion rule and a fairness rule for stats explained in <a href="ski-resort-stats-explained.html" rel="noopener noreferrer" target="_blank">ski resort stats explained</a>.</p>
+<p>We treat a downhill ski area as a coherent package of OpenStreetMap features, not a marketing brand name. In practice that means a <code>landuse=winter_sports</code> polygon that outlines the managed ski domain, nearby downhill pistes tagged <code>piste:type=downhill</code>, aerial lifts tagged with <code>aerialway=*</code> values that match real infrastructure, and a clear <code>name</code> on the area (<code>name:en</code> when the local name is not English). We do not require a minimum vertical drop or ticket price. A community rope-tow hill counts if the geometry is coherent, and a mega-domain counts if its boundary and trails are mapped well. That same inclusion logic sits behind the global totals in <a href="how-many-ski-resorts-worldwide.html" rel="noopener noreferrer" target="_blank">how many ski resorts worldwide</a>.</p>
+<p>If the boundary is missing, our pipeline struggles to group lifts and runs into one resort. If the boundary is huge and vague, every acreage and trail-length statistic becomes noisy. Good tagging is therefore both an inclusion rule and a fairness rule for the columns explained in <a href="ski-resort-stats-explained.html" rel="noopener noreferrer" target="_blank">ski resort stats explained</a>. Draw the polygon first, then hang lifts and pistes on it.</p>
 <h3 id="draw-the-winter-sports-boundary-first">Draw the winter sports boundary first</h3>
-<p>Start with the polygon, not the lifts. Trace the managed ski domain: in-bounds terrain the resort operates, plus the base areas that clearly belong to that operation. Do not outline the entire mountain range. Do not stop at the parking lot alone. Do not swallow the next valley’s ski area because the ridgeline looks contiguous on satellite imagery.</p>
-<p>Useful habits while drawing:</p>
-<ul>
-<li>Keep the polygon tight to signed or groomed in-bounds terrain</li>
-<li>Follow lift-served bowls and connectors when they are part of the same ticketed domain</li>
-<li>Stop before open backcountry that is not managed as resort terrain</li>
-<li>Add <code>name=*</code> that matches what skiers actually call the place</li>
-</ul>
-<p>Oversized polygons inflate mapped skiable area and distort side-by-side comparison. Undersized polygons orphan lifts and runs outside the resort window. Either error makes <a href="../SkiResortFacts.html" rel="noopener noreferrer" target="_blank">Ski Resort Facts</a> less trustworthy. A tight, accurate boundary is the first requirement for inclusion and for honest stats.</p>
-<p>Interconnected European domains can be tricky. Les Trois Vallées or Portes du Soleil may appear as one large polygon, several linked areas, or a mix of relations depending on local mapping culture. Prefer the tagging already used by active local mappers unless you are correcting a clear error. Consistency within a region matters more than inventing a new scheme.</p>
+<p>Start with the polygon, not the lifts. Trace the managed ski domain: in-bounds terrain the resort operates, plus the base areas that clearly belong to that operation. Do not outline the entire mountain range, stop at the parking lot alone, or swallow the next valley’s ski area because the ridgeline looks contiguous on satellite. Keep the polygon tight to signed or groomed in-bounds terrain, follow lift-served bowls and connectors when they are part of the same ticketed domain, stop before open backcountry that is not managed as resort terrain, and add <code>name=*</code> that matches what skiers actually call the place.</p>
+<p>Oversized polygons inflate mapped skiable area and distort side-by-side comparison. Undersized polygons orphan lifts and runs outside the resort window. Either error makes <a href="../SkiResortFacts.html" rel="noopener noreferrer" target="_blank">Ski Resort Facts</a> less trustworthy, so a tight, accurate boundary is the first requirement for inclusion and for honest stats. Interconnected European domains can be trickier still: Les Trois Vallées or Portes du Soleil may appear as one large polygon, several linked areas, or a mix of relations depending on local mapping culture. Prefer the tagging already used by active local mappers unless you are correcting a clear error. Consistency within a region matters more than inventing a new scheme, and it is the habit that makes lift tagging in the next section land in the right resort.</p>
 <h3 id="map-lifts-as-aerialway-ways">Map lifts as aerialway ways</h3>
 <p>Lifts should be ways that follow the cable path from lower terminal to upper terminal. Tag them with the right <code>aerialway=*</code> value:</p>
 <ul>
@@ -130,17 +114,10 @@
 <li><code>magic_carpet</code> for beginner conveyor lifts</li>
 <li><code>mixed_lift</code> when a chondola-style combination is clearly mapped that way</li>
 </ul>
-<p>Draw the way uphill from base to summit when you can. Add <code>name=*</code> when the lift has a published name. One lift should usually be one clean way. Do not tag every pylon as its own lift. Do not trace the piste under the cable and call that the lift. Those mistakes break lift counts on <a href="../SkiLiftFacts.html" rel="noopener noreferrer" target="_blank">Ski Lift Facts</a> and confuse the lift-type patterns described in <a href="ski-lift-types-explained.html" rel="noopener noreferrer" target="_blank">ski lift types explained</a>.</p>
-<p>Magic carpets and rope tows are easy to forget because they look minor on a trail map. They matter for beginner scoring and for family-oriented hills highlighted in <a href="best-ski-resorts-for-beginners.html" rel="noopener noreferrer" target="_blank">best ski resorts for beginners</a>. If the learning area has three carpets and none are mapped, the atlas will understate how beginner-friendly the place is.</p>
+<p>Draw the way uphill from base to summit when you can, and add <code>name=*</code> when the lift has a published name. One lift should usually be one clean way. Do not tag every pylon as its own lift, and do not trace the piste under the cable and call that the lift. Those mistakes break lift counts on <a href="../SkiLiftFacts.html" rel="noopener noreferrer" target="_blank">Ski Lift Facts</a> and confuse the lift-type patterns described in <a href="ski-lift-types-explained.html" rel="noopener noreferrer" target="_blank">ski lift types explained</a>. Magic carpets and rope tows are easy to forget because they look minor on a trail map, yet they matter for beginner scoring and for family-oriented hills highlighted in <a href="best-ski-resorts-for-beginners.html" rel="noopener noreferrer" target="_blank">best ski resorts for beginners</a>. If the learning area has three carpets and none are mapped, the atlas will understate how beginner-friendly the place is, which is the same kind of silent error you get when downhill pistes are missing or mis-tagged.</p>
 <h3 id="map-downhill-pistes-with-difficulty">Map downhill pistes with difficulty</h3>
-<p>Downhill runs need ways along trail centerlines, not along the lift cable and not along every summer hiking path that crosses the mountain. The core tags are:</p>
-<ul>
-<li><code>piste:type=downhill</code></li>
-<li><code>piste:difficulty</code> with values such as <code>novice</code>, <code>easy</code>, <code>intermediate</code>, <code>advanced</code>, or <code>expert</code> as appropriate</li>
-<li><code>name=*</code> when the run is named on the official map</li>
-</ul>
-<p>Direction should match downhill flow. Split upper and lower segments only when the geometry truly changes or when local tagging already does so; unnecessary splits inflate trail counts. Gladed or tree runs that are signed as downhill trails deserve mapping too, but unsigned backcountry lines usually should not be forced into the resort’s downhill inventory.</p>
-<p>Difficulty tags are not a universal language. US green/blue/black conventions and European color systems do not map one-to-one, and OSM’s <code>piste:difficulty</code> vocabulary sits between them. Relative accuracy inside one resort matters more than perfect cross-border equivalence. Untagged difficulty lands in an unknown bucket and weakens trail-mix tools used when skiers <a href="how-to-choose-a-ski-resort.html" rel="noopener noreferrer" target="_blank">choose a resort</a>.</p>
+<p>Downhill runs need ways along trail centerlines, not along the lift cable and not along every summer hiking path that crosses the mountain. The core tags are <code>piste:type=downhill</code>, <code>piste:difficulty</code> with values such as <code>novice</code>, <code>easy</code>, <code>intermediate</code>, <code>advanced</code>, or <code>expert</code> as appropriate, and <code>name=*</code> when the run is named on the official map. Direction should match downhill flow. Split upper and lower segments only when the geometry itself changes or when local tagging already does so; unnecessary splits inflate trail counts. Gladed or tree runs that are signed as downhill trails deserve mapping too, but unsigned backcountry lines usually should not be forced into the resort’s downhill inventory.</p>
+<p>Difficulty tags are not a universal language. US green/blue/black conventions and European color systems do not map one-to-one, and OSM’s <code>piste:difficulty</code> vocabulary sits between them. Relative accuracy inside one resort matters more than perfect cross-border equivalence. Untagged difficulty lands in an unknown bucket and weakens trail-mix tools used when skiers <a href="how-to-choose-a-ski-resort.html" rel="noopener noreferrer" target="_blank">choose a resort</a>, which is why the next section’s mistake list is mostly about missing, duplicated, or mis-scoped geometry rather than exotic tags.</p>
 <h3 id="common-mistakes-that-keep-resorts-out-or-skew-stats">Common mistakes that keep resorts out or skew stats</h3>
 <p>Most atlas problems come from a short list of tagging errors:</p>
 <ul>
@@ -153,8 +130,7 @@
 <li>Nordic-only loops tagged as if they were alpine domains</li>
 <li>Abandoned lifts left as active aerialways with no note that they are gone</li>
 </ul>
-<p>Under-mapping excludes real hills until someone adds the missing pieces. Over-mapping inflates counts and trail kilometers until someone cleans the geometry. Both patterns show up when people ask <a href="how-many-ski-resorts-worldwide.html" rel="noopener noreferrer" target="_blank">how many ski resorts exist worldwide</a> and when ranking <a href="largest-ski-resorts-in-the-world.html" rel="noopener noreferrer" target="_blank">largest ski resorts</a> by mapped terrain.</p>
-<p>Before you upload a large changeset, zoom out and ask whether a skier would recognize one ski area. Then zoom in and ask whether difficulties look relative to one another. That two-scale check catches most disasters.</p>
+<p>Under-mapping excludes real hills until someone adds the missing pieces. Over-mapping inflates counts and trail kilometers until someone cleans the geometry. Both patterns show up when people ask <a href="how-many-ski-resorts-worldwide.html" rel="noopener noreferrer" target="_blank">how many ski resorts exist worldwide</a> and when ranking <a href="largest-ski-resorts-in-the-world.html" rel="noopener noreferrer" target="_blank">largest ski resorts</a> by mapped terrain. Before you upload a large changeset, zoom out and ask whether a skier would recognize one ski area, then zoom in and ask whether difficulties look relative to one another. That two-scale check catches most disasters, and it is the same sanity check you should run after the save, before you wait on an atlas build.</p>
 <h3 id="validate-locally-before-you-wait-for-the-atlas-build">Validate locally before you wait for the atlas build</h3>
 <p>After saving your OSM edit, sanity-check in a few places:</p>
 <ol>
@@ -164,8 +140,7 @@
 <li>Preview geometry in the experimental <a href="/playable/" rel="noopener noreferrer" target="_blank">ski game</a>, which loads the same OSM-derived shapes we ingest</li>
 <li>Use <strong>Open in OSM</strong> from the game when you notice a missing carpet or misdrawn run</li>
 </ol>
-<p>Edits are not instant on Global Ski Atlas. We ingest regional Geofabrik extracts through the multi-step pipeline documented on <a href="../DownloadData.html" rel="noopener noreferrer" target="_blank">Download Data</a>. A correction appears after the next regional build that includes your area. That lag is real, but the payoff is permanent and open: every downstream page—map, facts tables, comparison, downloads—benefits from the same geometry.</p>
-<p>Remote hills in Eastern Europe, the Andes, Central Asia, and parts of inland North America remain high-value mapping targets. Popular Alpine and Colorado resorts are often already dense; small community hills and newly built chairs are where a single afternoon of tagging still moves the atlas.</p>
+<p>Edits are not instant on Global Ski Atlas. We ingest regional Geofabrik extracts through the multi-step pipeline documented on <a href="../DownloadData.html" rel="noopener noreferrer" target="_blank">Download Data</a>, and a correction appears after the next regional build that includes your area. That lag is real, but the payoff is permanent and open: every downstream page (map, facts tables, comparison, downloads) benefits from the same geometry. Remote hills in Eastern Europe, the Andes, Central Asia, and parts of inland North America remain high-value mapping targets. Popular Alpine and Colorado resorts are often already dense; small community hills and newly built chairs are where a single afternoon of tagging still moves the atlas, which is why a short after-ski session is enough if you work in a sensible order.</p>
 <h3 id="a-practical-checklist-for-one-resort-session">A practical checklist for one resort session</h3>
 <p>If you have one evening after skiing, work in this order:</p>
 <ul>
@@ -177,17 +152,9 @@
 <li>Recheck difficulty tags relative to the printed trail map</li>
 <li>Upload with a clear changeset comment naming the resort</li>
 </ul>
-<p>You do not need to finish the entire mountain in one pass. A coherent boundary plus the primary lifts and a representative trail set is already a large improvement over an empty or broken entry.</p>
+<p>You do not need to finish the entire mountain in one pass. A coherent boundary plus the primary lifts and a representative trail set is already a large improvement over an empty or broken entry, and that partial package is what every downstream atlas surface actually consumes.</p>
 <h3 id="why-tagging-here-helps-every-skier-downstream">Why tagging here helps every skier downstream</h3>
-<p>Global Ski Atlas does not invent private resort databases. We analyze open geometry so skiers can compare mountains fairly instead of trusting brochure copy alone. When you fix a chairlift name, tighten a polygon, or add a missing green run, you improve:</p>
-<ul>
-<li>Discovery on the <a href="../mainmap.html" rel="noopener noreferrer" target="_blank">main map</a></li>
-<li>Aggregates and filters in <a href="../SkiResortFacts.html" rel="noopener noreferrer" target="_blank">Ski Resort Facts</a></li>
-<li>Side-by-side columns in <a href="../resort-comparison.html" rel="noopener noreferrer" target="_blank">resort comparison</a></li>
-<li>Research downloads on <a href="../DownloadData.html" rel="noopener noreferrer" target="_blank">Download Data</a></li>
-<li>Playable previews in the <a href="/playable/" rel="noopener noreferrer" target="_blank">ski game</a></li>
-</ul>
-<p>Tagging a ski resort in OpenStreetMap is practical work, not arcane cartography. Draw the winter sports boundary, map lifts and downhill pistes with specific tags, validate at two zoom levels, and submit the changeset. The atlas improves when mappers improve OSM, and every corrected lift or green run helps the next skier choose where to go with comparable data instead of marketing adjectives alone.</p></div>
+<p>Global Ski Atlas does not invent private resort databases. We analyze open geometry so skiers can compare mountains fairly instead of trusting brochure copy alone. When you fix a chairlift name, tighten a polygon, or add a missing green run, you improve discovery on the <a href="../mainmap.html" rel="noopener noreferrer" target="_blank">main map</a>, aggregates and filters in <a href="../SkiResortFacts.html" rel="noopener noreferrer" target="_blank">Ski Resort Facts</a>, side-by-side columns in <a href="../resort-comparison.html" rel="noopener noreferrer" target="_blank">resort comparison</a>, research downloads on <a href="../DownloadData.html" rel="noopener noreferrer" target="_blank">Download Data</a>, and playable previews in the <a href="/playable/" rel="noopener noreferrer" target="_blank">ski game</a>. Tagging a ski resort in OpenStreetMap is practical work, not arcane cartography. Draw the winter sports boundary, map lifts and downhill pistes with specific tags, validate at two zoom levels, and submit the changeset. The atlas improves when mappers improve OSM, and every corrected lift or green run helps the next skier choose where to go with comparable data instead of marketing adjectives alone.</p></div>
       <section class="blog-related" aria-label="Related articles">
           <h2 class="tw-text-xl tw-font-semibold tw-text-black">Related articles</h2>
           <ul class="tw-mt-4"><li><a href="how-global-ski-atlas-data-pipeline-works.html">How Global Ski Atlas Data Works: From OpenStreetMap to the Map</a></li>
@@ -239,6 +206,5 @@
     </div>
   </footer>
   <script src="../index.js"></script>
-<script src="../scripts/site-nav.js?v=4" defer></script>
 </body>
 </html>

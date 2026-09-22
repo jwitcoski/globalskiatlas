@@ -1,6 +1,4 @@
-One resort is a vacation. Three resorts in ten days is a different kind of trip: more coffee stops, more parking lots, and a real chance to learn how regions actually ski. Global Ski Atlas built a [Trip Planner](../TripPlannerMap.html) on open resort locations and driving routes so you can chain stops using the same inventory pass marketing never fully maps—including independents counted in [which U.S. states have the most ski resorts](us-states-most-ski-resorts.html) and [how many ski resorts worldwide](how-many-ski-resorts-worldwide.html).
-
-This guide covers how to allocate days, how to use the planner tools, sample loops in the Rockies, Northeast, and Alps, and how to mix pass days with indie tickets without turning the itinerary into a spreadsheet nightmare.
+One resort is a vacation. Three resorts in ten days is a different kind of trip: more coffee stops, more parking lots, and a real chance to learn how regions actually ski. Global Ski Atlas built a [Trip Planner](../TripPlannerMap.html) on open resort locations and driving routes so you can chain stops using the same inventory pass marketing never fully maps, including independents counted in [which U.S. states have the most ski resorts](us-states-most-ski-resorts.html) and [how many ski resorts worldwide](how-many-ski-resorts-worldwide.html). This guide covers how to allocate days, how to use the planner tools, sample loops in the Rockies, Northeast, and Alps, and how to mix pass days with indie tickets without turning the itinerary into a spreadsheet nightmare.
 
 ## Why multi-resort trips need open maps
 
@@ -36,9 +34,7 @@ The [Trip Planner](../TripPlannerMap.html) turns ideas into turn-by-turn estimat
 3. Choose whether to end at the last hill or return home.
 4. Read the driving distance and duration before you commit to lodging.
 
-Treat the route as a draft, not a contract. Winter road conditions, mountain passes, and Friday traffic can inflate OSRM estimates. Build in buffer hours on any day that includes both a morning ski and an afternoon drive over a pass.
-
-European legs should stay inside one continental block. Oceans require flights, not road routes. The planner is for chaining villages and valleys, not pretending a ferry replaces a plane ticket.
+Treat the route as a draft, not a contract. Winter road conditions, mountain passes, and Friday traffic can inflate OSRM estimates. Build in buffer hours on any day that includes both a morning ski and an afternoon drive over a pass. European legs should stay inside one continental block. Oceans require flights, not road routes. The planner is for chaining villages and valleys, not pretending a ferry replaces a plane ticket.
 
 ## Sample loop: Colorado and Utah corridor
 
@@ -91,9 +87,9 @@ Road-trip lodging is different from destination lodging:
 - Prefer towns with grocery access and multiple dining options; you will cook more than on a single-resort week.
 - Keep ski bags packed for a one-night move; do not fully unpack mid-corridor.
 - Check whether overnight parking at the next base requires a permit or shuttle.
-- Confirm rental car snow tires or chains for the corridor you chose—especially Alpine and Sierra passes.
+- Confirm rental car snow tires or chains for the corridor you chose, especially Alpine and Sierra passes.
 
-If a stop looks thin on the map—few lifts, sparse trails—either treat it as a one-day detour or improve OpenStreetMap via [how to tag a ski resort in OpenStreetMap](how-to-tag-a-ski-resort-in-openstreetmap.html) so the next planner sees what you skied.
+If a stop looks thin on the map (few lifts, sparse trails), either treat it as a one-day detour or improve OpenStreetMap via [how to tag a ski resort in OpenStreetMap](how-to-tag-a-ski-resort-in-openstreetmap.html) so the next planner sees what you skied.
 
 ## A simple planning checklist before you book
 
@@ -111,4 +107,4 @@ Work through this sequence once:
 
 A successful multi-resort trip is not the longest mileage total. It is remembering distinct mountains: one place where the blues were honest, one where the trees were the point, one indie hill that felt like a secret, and enough rest that you would do it again next season.
 
-Open the [trip planner](../TripPlannerMap.html), plug in one sample itinerary from this page, adjust for your pass and driving patience, and build the route from mapped resorts instead of social media reels. The best loops often find snow where you did not expect—because the atlas shows every mapped downhill area on the same map, not just the ones on a poster.
+Open the [trip planner](../TripPlannerMap.html), plug in one sample itinerary from this page, adjust for your pass and driving patience, and build the route from mapped resorts instead of social media reels. The best loops often find snow where you did not expect, because the atlas shows every mapped downhill area on the same map, not just the ones on a poster.

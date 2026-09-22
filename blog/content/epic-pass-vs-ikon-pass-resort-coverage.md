@@ -1,4 +1,4 @@
-Epic Pass and Ikon Pass dominate North American ski marketing, yet their partner lists change every spring and represent only a slice of the downhill areas Global Ski Atlas indexes from OpenStreetMap. Pass “coverage” is useful when you measure it against an open global database—not against logo counts on a brochure.
+Epic Pass and Ikon Pass dominate North American ski marketing, yet their partner lists change every spring and represent only a slice of the downhill areas Global Ski Atlas indexes from OpenStreetMap. Pass “coverage” is useful when you measure it against an open global database, not against logo counts on a brochure.
 
 **Disclaimer:** Verify all access rules, blackouts, day limits, and partner rosters on the official Epic Pass and Ikon Pass websites for the season you are buying. Figures and examples in this article describe atlas alignment at publication time. They are not legal entitlements, ticket products, or official pass counts.
 
@@ -11,7 +11,7 @@ Skiers use the word coverage for two questions that sound alike and are not:
 
 Epic and Ikon answer the first question for their customers. The atlas answers the second for anyone comparing terrain. Confusing the two leads to bad purchases: you buy a pass thinking you “covered the Rockies,” then discover most atlas pins in your drive ring are independents.
 
-Our atlas maps on the order of a few thousand downhill areas worldwide—including municipals, rope-tow hills, and independents—with a large North American share described on the [book pitch](../bookpitch.html) page. When we say a pass “aligns” with an atlas resort, we fuzzy-match a named partner to a downhill area by name and location. False positives and negatives happen. A fully mapped independent may still offer better terrain per dollar than a pass icon with heavy blackouts.
+Our atlas maps on the order of a few thousand downhill areas worldwide, including municipals, rope-tow hills, and independents, with a large North American share described on the [book pitch](../bookpitch.html) page. When we say a pass “aligns” with an atlas resort, we fuzzy-match a named partner to a downhill area by name and location. False positives and negatives happen. A fully mapped independent may still offer better terrain per dollar than a pass icon with heavy blackouts.
 
 ## How Epic and Ikon tend to concentrate
 
@@ -20,7 +20,7 @@ Without treating any number as an official roster total, the geographic pattern 
 - **Epic** centers on Vail Resorts-owned mountains plus selected partners with tiered day limits and blackouts. The footprint skews toward Colorado, Utah, Tahoe, parts of the Northeast, and flagship international partners such as Whistler. Midwest and Mid-Atlantic partners are often smaller in mapped trail count but valuable for local laps.
 - **Ikon** centers on Alterra destinations plus a broader coalition that commonly includes Utah icons, Jackson Hole, Aspen Snowmass, Big Sky, Winter Park, and a wider Northeast and Canada footprint. Limited European and Japanese partners usually come with strict day caps.
 
-Overlap concentrates in Colorado, Utah, and the Northeast. Buying both passes rarely clears break-even except for split households or very high day counts. Most skiers optimize one network plus indie days—the decision framework in [Epic vs Ikon vs Indy vs Europe](epic-ikon-indy-europe-which-to-choose.html).
+Overlap concentrates in Colorado, Utah, and the Northeast. Buying both passes rarely clears break-even except for split households or very high day counts. Most skiers optimize one network plus indie days, the decision framework in [Epic vs Ikon vs Indy vs Europe](epic-ikon-indy-europe-which-to-choose.html).
 
 ## What atlas alignment is (and is not)
 
@@ -30,7 +30,7 @@ Atlas alignment is a research convenience:
 - We surface those matches so you can plot partners beside unaffiliated hills.
 - We do **not** claim the match equals unrestricted skiing, reserved capacity, or a guarantee the resort will remain on next year’s roster.
 
-If you are a researcher, join partner lists to atlas IDs using Parquet files from [Download Data](../DownloadData.html). If you are planning a vacation, treat alignment as a map layer that helps you see gaps—then confirm access on the official pass site.
+If you are a researcher, join partner lists to atlas IDs using Parquet files from [Download Data](../DownloadData.html). If you are planning a vacation, treat alignment as a map layer that helps you see gaps, then confirm access on the official pass site. The footprints below are that map layer in geographic English.
 
 ## Where the footprints feel different on the ground
 
@@ -40,13 +40,13 @@ Marketing slides emphasize destination icons. Mapped geography emphasizes cluste
 - **Utah** — Cottonwood access and Wasatch road logistics matter as much as the pass logo. Compare canyon options in [resort comparison](../resort-comparison.html) using columns from [ski resort stats explained](ski-resort-stats-explained.html).
 - **Northeast** — Partners sit among a long tail of independents. Loops in [multi-resort road trip planner](multi-resort-ski-road-trip-planner.html) often mix coalition days with Indy or walk-up tickets.
 - **Lake Tahoe and California** — Epic and Ikon both place flagship products here; drive time across the basin still decides whether one base works.
-- **Canada and overseas** — Flagship partners are real, but day caps and travel cost mean they are supplements for most U.S.-based pass holders—not a full season plan.
+- **Canada and overseas** — Flagship partners are real, but day caps and travel cost mean they are supplements for most U.S.-based pass holders, not a full season plan.
 
 Plot partners on the [interactive map](../mainmap.html) and count unaffiliated dots inside [drive time](../DriveTimeMap.html) rings. That exercise is more honest than any “X resorts” slogan, especially in states leading [which U.S. states have the most ski resorts](us-states-most-ski-resorts.html).
 
 ## The independent majority
 
-Indy Pass and ordinary day tickets serve the long tail Epic and Ikon under-represent: hundreds of North American downhill areas outside both rosters. Many are modest in trail count but excellent for learning terrain—see [best ski resorts for beginners](best-ski-resorts-for-beginners.html)—or for weekday laps when destination resorts are crowded.
+Indy Pass and ordinary day tickets serve the long tail Epic and Ikon under-represent: hundreds of North American downhill areas outside both rosters. Many are modest in trail count but excellent for learning terrain (see [best ski resorts for beginners](best-ski-resorts-for-beginners.html)) or for weekday laps when destination resorts are crowded.
 
 Europe remains a continent of hundreds of mapped Alpine areas where lift tickets, regional cards, and village logistics dominate. Overseas partner days on U.S. passes are side dishes. They are not a continent-wide strategy.
 
@@ -61,7 +61,7 @@ Practical implications:
 Use this sequence instead of arguing about brand loyalty:
 
 1. List the mountains you actually skied last season and the ones you realistically will visit next season.
-2. Mark which ones are Epic-aligned, Ikon-aligned, Indy-aligned, or none of the above in your own notes—after checking official sites.
+2. Mark which ones are Epic-aligned, Ikon-aligned, Indy-aligned, or none of the above in your own notes, after checking official sites.
 3. Draw [drive time](../DriveTimeMap.html) rings from home and from the airports you fly.
 4. Drop candidates into [resort comparison](../resort-comparison.html) so size and trail mix are comparable.
 5. Build a sample season in [trip planner](../TripPlannerMap.html) and price the gaps as day tickets.
