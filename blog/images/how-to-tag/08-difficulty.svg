@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 860 640" width="860" height="640" role="img">
+  <rect width="100%" height="100%" fill="#f8fafc"/>
+  <text x="40" y="40" font-size="18" font-weight="600" font-family="system-ui,Roboto,sans-serif" fill="#111827">Montage mapped downhill ways by piste:difficulty</text>
+  <text x="40" y="64" font-size="13" font-family="system-ui,Roboto,sans-serif" fill="#6b7280">Counts from the OpenStreetMap extract we render on the atlas. Untagged ways are omitted from this chart.</text><rect x="80" y="426" width="70" height="54" fill="#22c55e"/>
+      <text x="115" y="502" text-anchor="middle" font-size="13" font-family="system-ui,Roboto,sans-serif" fill="#374151">novice</text>
+      <text x="115" y="418" text-anchor="middle" font-size="14" font-weight="600" font-family="system-ui,Roboto,sans-serif" fill="#111827">6</text><rect x="220" y="120" width="70" height="360" fill="#22c55e"/>
+      <text x="255" y="502" text-anchor="middle" font-size="13" font-family="system-ui,Roboto,sans-serif" fill="#374151">easy</text>
+      <text x="255" y="112" text-anchor="middle" font-size="14" font-weight="600" font-family="system-ui,Roboto,sans-serif" fill="#111827">40</text><rect x="360" y="174" width="70" height="306" fill="#1a4d8c"/>
+      <text x="395" y="502" text-anchor="middle" font-size="13" font-family="system-ui,Roboto,sans-serif" fill="#374151">intermediate</text>
+      <text x="395" y="166" text-anchor="middle" font-size="14" font-weight="600" font-family="system-ui,Roboto,sans-serif" fill="#111827">34</text><rect x="500" y="336" width="70" height="144" fill="#111827"/>
+      <text x="535" y="502" text-anchor="middle" font-size="13" font-family="system-ui,Roboto,sans-serif" fill="#374151">advanced</text>
+      <text x="535" y="328" text-anchor="middle" font-size="14" font-weight="600" font-family="system-ui,Roboto,sans-serif" fill="#111827">16</text><rect x="640" y="372" width="70" height="108" fill="#111827"/>
+      <text x="675" y="502" text-anchor="middle" font-size="13" font-family="system-ui,Roboto,sans-serif" fill="#374151">expert</text>
+      <text x="675" y="364" text-anchor="middle" font-size="14" font-weight="600" font-family="system-ui,Roboto,sans-serif" fill="#111827">12</text>
+  <text x="12" y="630" font-size="11" font-family="system-ui,Roboto,sans-serif" fill="#6b7280">Montage Mountain, PA. Map data © OpenStreetMap contributors (ODbL).</text>
+</svg>
