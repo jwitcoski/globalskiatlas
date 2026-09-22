@@ -38,7 +38,7 @@
       '<a class="header-tab header-links" href="' + href("mainmap.html") + '" aria-haspopup="true">Explore <i class="bi bi-chevron-down tw-text-xs"></i></a>' +
       '<div class="header-dropdown" role="menu">' +
       '<a class="header-links" href="' + href("mainmap.html") + '" role="menuitem">Interactive map</a>' +
-      '<a class="header-links" href="' + href("wiki/browse.html") + '" role="menuitem">Resort pages</a>' +
+      '<a class="header-links" href="' + href("wiki/main.html") + '" role="menuitem">Resort pages</a>' +
       '<a class="header-links" href="' + href("weather-map.html") + '" role="menuitem">Weather</a>' +
       "</div></div>" +
       '<div class="header-dropdown-group">' +

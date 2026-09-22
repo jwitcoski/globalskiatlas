@@ -1,0 +1,573 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Ski Atlas – Wiki</title>
+  <link rel="icon" href="../assets/logo.png?v=2" type="image/png" />
+  <link rel="stylesheet" href="../css/tailwind-build.css" />
+  <link rel="stylesheet" href="../css/index.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" integrity="sha512-dPXYcDub/aeb08c63jRq/k6GaKccl256JQy/AnOq7CAnEZ9FzSL9wSbcZkMp4R26vBsMLFYH4kQ67/bbV8XaCQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="css/style.css?v=3"/>
+  <link rel="stylesheet" href="../css/index-hero-montage.css?v=59"/>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+  <style>
+    .wiki-portal { padding: 0 0.75rem 2rem; }
+    @media (min-width: 768px) { .wiki-portal { padding: 0 5% 2rem; } }
+    .browse-nav { display: flex; gap: 1.5rem; align-items: center; font-size: 0.85rem; margin-bottom: 1.25rem; border-bottom: 1px solid var(--resort-edit-border); padding-bottom: 0.75rem; }
+    .browse-nav a { color: var(--resort-title-color); text-decoration: none; }
+    .browse-nav a:hover { text-decoration: underline; }
+    .browse-nav-current { font-weight: 600; color: var(--resort-body-color); }
+    .wiki-welcome { text-align: center; margin: 0 0 1.25rem; }
+    .wiki-welcome h1 { font-size: 1.75rem; font-weight: 700; color: var(--resort-title-color); margin: 0 0 0.35rem; letter-spacing: -0.02em; }
+    .wiki-welcome p { margin: 0; color: var(--resort-footer-color); font-size: 0.95rem; }
+    .wiki-welcome strong { color: var(--resort-title-color); font-weight: 600; }
+    .wiki-grid { display: grid; grid-template-columns: 1.15fr 1fr; gap: 0.85rem; align-items: start; }
+    .wiki-box { border: 1px solid #a2b5c8; background: #fff; }
+    .wiki-box h2 { margin: 0; padding: 0.4rem 0.7rem; font-size: 0.95rem; font-weight: 700; color: var(--resort-title-color); background: #dce8f5; border-bottom: 1px solid #a2b5c8; }
+    .wiki-box-body { padding: 0.75rem 0.85rem; font-size: 0.92rem; }
+    .wiki-box-body p { margin: 0 0 0.7rem; }
+    .wiki-box-body p:last-child { margin-bottom: 0; }
+    .wiki-box-body ul { margin: 0; padding-left: 1.15rem; }
+    .wiki-box-body li { margin: 0 0 0.45rem; }
+    .wiki-box a { color: #1a4d8c; }
+    .wiki-muted { color: var(--resort-footer-color); }
+    .wiki-search-line { margin-top: 1rem; font-size: 0.9rem; color: var(--resort-footer-color); }
+    .wiki-featured-embed {
+      position: relative;
+      width: 100%;
+      max-width: none;
+      height: 240px;
+      margin: 0.65rem 0 0.75rem;
+      border: 1px solid #a2b5c8;
+      border-radius: 0;
+      overflow: hidden;
+      background: #eef3f8;
+    }
+    .wiki-featured-embed .hero-montage-stage { position: absolute; inset: 0; }
+    @media (max-width: 768px) {
+      .wiki-grid { grid-template-columns: 1fr; }
+      .wiki-welcome h1 { font-size: 1.4rem; }
+      .browse-nav { flex-wrap: wrap; gap: 0.5rem; }
+    }
+  </style>
+</head>
+<body class="tw-flex tw-min-h-[100vh] tw-flex-col tw-bg-[#fff]">
+
+  <header
+    class="tw-absolute tw-top-0 tw-z-[100] tw-flex tw-h-[60px] tw-w-full tw-bg-opacity-0
+           tw-px-[5%] max-lg:tw-mr-auto max-lg:tw-px-4 lg:tw-justify-around"
+  >
+    <a class="tw-h-[50px] tw-w-[50px] tw-p-[4px]" href="../index.html" aria-label="Global Ski Atlas home">
+      <img src="../assets/logo.png?v=2" alt="Global Ski Atlas" class="tw-object tw-h-full tw-w-full" />
+    </a>
+    <div class="collapsible-header animated-collapse max-lg:tw-shadow-md" id="collapsed-header-items">
+      <div
+        class="header-nav-inner tw-flex tw-h-full tw-w-max tw-flex-wrap tw-gap-5 tw-text-base tw-text-black
+               max-lg:tw-mt-[30px] max-lg:tw-flex-col max-lg:tw-place-items-end
+               max-lg:tw-gap-5 lg:tw-mx-auto lg:tw-place-items-center"
+      >
+        <a class="header-links" href="../index.html">3D maps</a>
+        <a class="header-links" href="../mainmap.html">Explore</a>
+        <a class="header-links" href="browse.html">Write wiki</a>
+        <a class="header-links" href="../blog/index.html">Blog</a>
+        <a class="header-links" href="../about.html">About</a>
+      </div>
+    </div>
+    <button
+      class="bi bi-list tw-absolute tw-right-3 tw-top-3 tw-z-50 tw-text-3xl tw-text-black lg:tw-hidden"
+      onclick="toggleHeader()"
+      aria-label="menu"
+      id="collapse-btn"
+    ></button>
+  </header>
+
+  <div class="wiki-portal" id="main">
+    <nav class="browse-nav">
+      <span class="browse-nav-current">Main page</span>
+      <a href="browse.html">Browse</a>
+      <a href="../index.html">Home</a>
+    </nav>
+
+    <div class="wiki-welcome">
+      <h1>Welcome to the Ski Atlas wiki</h1>
+      <p>the free encyclopedia of lift-served skiing that <strong>anyone can edit</strong>.</p>
+      <p id="wiki-stats" class="wiki-muted"></p>
+    </div>
+
+    <div class="wiki-grid">
+      <section class="wiki-box" aria-labelledby="featured-h">
+        <h2 id="featured-h">From today’s featured mountain</h2>
+        <div class="wiki-box-body" id="featured">
+          <p id="featured-kicker">Loading…</p>
+          <div class="hero-montage-embed wiki-featured-embed" id="featured-clay-embed" hidden>
+            <div id="featured-clay-stage" class="hero-montage-stage" aria-hidden="true"></div>
+          </div>
+          <p id="featured-soon" class="wiki-muted" hidden>3D scene coming soon for this mountain.</p>
+          <p id="featured-lede"></p>
+        </div>
+      </section>
+      <section class="wiki-box" aria-labelledby="news-h">
+        <h2 id="news-h">In the atlas</h2>
+        <div class="wiki-box-body" id="in-atlas">Loading trail and lift records…</div>
+      </section>
+      <section class="wiki-box" aria-labelledby="dyk-h">
+        <h2 id="dyk-h">Did you know …</h2>
+        <div class="wiki-box-body" id="did-you-know">Loading…</div>
+      </section>
+      <section class="wiki-box" aria-labelledby="portals-h">
+        <h2 id="portals-h">On this atlas</h2>
+        <div class="wiki-box-body">
+          <ul>
+            <li><a href="browse.html">Browse every mountain page</a> — search, filter by country, or open unnamed OSM areas that still need a name.</li>
+            <li><a href="../mainmap.html">Interactive map</a> — the same OpenStreetMap ski areas, as a map.</li>
+            <li><a href="../index.html">3D mountain scenes</a> — walk a built scene instead of reading a page.</li>
+            <li>Book volumes: <a href="browse.html">Americas</a>, <a href="browse.html">Europe</a>, <a href="browse.html">Asia / Africa / Oceania</a>.</li>
+            <li><a href="../blog/how-to-tag-a-ski-resort-in-openstreetmap.html">Improve OpenStreetMap</a> so the next export is better.</li>
+          </ul>
+          <p class="wiki-search-line">Looking for one mountain? <a href="browse.html">Search the index</a>.</p>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script src="../scripts/header-toggle.js"></script>
+  <script src="../scripts/site-nav.js"></script>
+  <script src="/wiki/js/auth.js"></script>
+  <script type="module">
+    import { fetchSkiAreaCatalog, loadPmtilesLayerFeatures } from '../scripts/pmtiles-core.js';
+
+    function esc(s) {
+      return String(s == null ? '' : s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+    function displayName(p) {
+      var en = (p.englishName != null && p.englishName !== '') ? String(p.englishName).trim() : '';
+      var t = (p.title || '').trim();
+      if (en && t && en.toLowerCase() !== t.toLowerCase()) return en + ' (' + t + ')';
+      return en || t || p.pageId || 'Untitled';
+    }
+    function hasName(p) {
+      var n = ((p.englishName || p.title || '') + '').trim();
+      if (!n) return false;
+      var low = n.toLowerCase();
+      if (low === 'unnamed' || low === 'untitled') return false;
+      if (/^\d+$/.test(n)) return false;
+      return true;
+    }
+    function isDownhillPage(p) {
+      if (p.pageType && p.pageType !== 'resort') return false;
+      var cat = p.resortSizeCategory || (p.categorization && p.categorization.size) || '';
+      return cat !== 'unknown';
+    }
+    function href(p) { return 'resort.html?page=' + encodeURIComponent(p.pageId || ''); }
+    function link(p) { return '<a href="' + href(p) + '">' + esc(displayName(p)) + '</a>'; }
+    function loc(p) { return [p.state, p.country].filter(Boolean).join(', '); }
+    function num(n) { return (Number(n) || 0).toLocaleString(); }
+    function fold(s) { return String(s || '').trim().toLowerCase(); }
+    function stripMd(s) {
+      return String(s || '')
+        .replace(/!\[[^\]]*\]\([^)]*\)/g, '')
+        .replace(/\[[^\]]*\]\([^)]*\)/g, function (m) {
+          var t = m.match(/^\[([^\]]*)\]/);
+          return t ? t[1] : '';
+        })
+        .replace(/[#>*_`]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+    function getProp(obj, keys) {
+      if (!obj) return undefined;
+      for (var i = 0; i < keys.length; i++) {
+        if (Object.prototype.hasOwnProperty.call(obj, keys[i])) return obj[keys[i]];
+      }
+      return undefined;
+    }
+    function wikiLinkByName(name, pagesByName) {
+      if (!name || name === '—' || name === '(unnamed)') return esc(name || '');
+      var p = pagesByName.get(fold(name));
+      if (!p) p = pagesByName.get(fold(name.replace(/\s*\([^)]*\)\s*$/, '')));
+      return p ? link(p) : esc(name);
+    }
+    function formatKm(km) {
+      return km >= 1 ? km.toFixed(2) + ' km' : Math.round(km * 1000) + ' m';
+    }
+    function haversine(c1, c2) {
+      var R = 6371;
+      var dLat = (c2[1] - c1[1]) * Math.PI / 180;
+      var dLon = (c2[0] - c1[0]) * Math.PI / 180;
+      var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(c1[1] * Math.PI / 180) * Math.cos(c2[1] * Math.PI / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+    function lineLength(coords) {
+      var n = 0;
+      for (var i = 1; i < coords.length; i++) n += haversine(coords[i - 1], coords[i]);
+      return n;
+    }
+    function geomLength(geom) {
+      if (!geom || !geom.coordinates) return 0;
+      if (geom.type === 'LineString') return lineLength(geom.coordinates);
+      if (geom.type === 'MultiLineString') {
+        return geom.coordinates.reduce(function (s, c) { return s + lineLength(c); }, 0);
+      }
+      return 0;
+    }
+    function otherTag(props, tagKey) {
+      if (!props || typeof props.other_tags !== 'string') return null;
+      var m = props.other_tags.match(new RegExp('"' + tagKey + '"=>"([^"]+)"'));
+      return m ? m[1] : null;
+    }
+
+    var NAME_KEYS = ['name', 'resort_name', 'title', 'area_name', 'Name'];
+    var ENGLISH_NAME_KEYS = ['english_name', 'englishName'];
+    var COUNTRY_KEYS = ['country', 'Country', 'country_name', 'addr:country'];
+    var AREA_KEYS = ['total_area_acres', 'Total Area Acres', 'area_acres', 'skiable_terrain_acres', 'skiable_area_acres'];
+    var TRAILS_KEYS = ['downhill_trails', 'number_of_downhill_trails', 'Downhill Trails', 'trails'];
+    var LIFTS_KEYS = ['total_lifts', 'number_of_lifts', 'lifts', 'Total Lifts'];
+    var RESORT_TYPE_KEYS = ['resort_type', 'Resort Type'];
+    var TRAIL_NAME_KEYS = ['name', 'Name', 'trail_name', 'piste_name'];
+    var LIFT_NAME_KEYS = ['name', 'Name', 'lift_name'];
+    var RESORT_KEYS = ['Ski Area', 'ski_area', 'resort_name', 'area_name', 'resort', 'ski_area_name', 'skiarea_name'];
+    var TYPE_LABELS = {
+      gondola: 'gondola', cable_car: 'cable car', chair_lift: 'chairlift',
+      drag_lift: 'drag lift', 't-bar': 'T-bar', magic_carpet: 'magic carpet',
+      rope_tow: 'rope tow', platter: 'platter', funicular: 'funicular'
+    };
+
+    var pagesByName = new Map();
+
+    function catalogName(r) {
+      var en = getProp(r, ENGLISH_NAME_KEYS);
+      var local = getProp(r, NAME_KEYS);
+      var enStr = (en != null && en !== '') ? String(en).trim() : '';
+      var localStr = (local != null && local !== '') ? String(local).trim() : '';
+      if (enStr && localStr && enStr !== localStr) return enStr + ' (' + localStr + ')';
+      return enStr || localStr || 'Unknown';
+    }
+    function isCatalogNamed(r) {
+      var n = catalogName(r);
+      if (!n || n === 'Unknown') return false;
+      var low = n.toLowerCase();
+      if (low === 'unnamed' || low === 'untitled') return false;
+      if (/^\d+$/.test(n)) return false;
+      return true;
+    }
+    function catalogCountry(r) { return getProp(r, COUNTRY_KEYS) || 'Unknown'; }
+    function catalogLat(r) {
+      var g = r.geometry;
+      if (g && g.type === 'Point' && g.coordinates && g.coordinates.length >= 2) return g.coordinates[1];
+      var lat = r.latitude != null ? r.latitude : (r.centroid_lat != null ? r.centroid_lat : r.lat);
+      return lat != null ? Number(lat) : null;
+    }
+    function numVal(row, keys) {
+      var v = getProp(row, keys);
+      if (v == null || v === '') return null;
+      var n = typeof v === 'number' ? v : Number(v);
+      return Number.isNaN(n) ? null : n;
+    }
+    function namedItem(row, keys) {
+      var v = getProp(row, keys);
+      return (v && String(v).trim()) ? String(v).trim() : null;
+    }
+    function featureResort(row) {
+      var local = getProp(row, RESORT_KEYS);
+      var localStr = (local != null && String(local).trim() !== '') ? String(local).trim() : (otherTag(row, 'resort_name') || otherTag(row, 'area_name') || '');
+      var en = getProp(row, ENGLISH_NAME_KEYS.concat(['resort_english_name', 'ski_area_english_name']));
+      var enStr = (en != null && en !== '') ? String(en).trim() : '';
+      if (enStr && localStr && enStr !== localStr) return enStr + ' (' + localStr + ')';
+      return enStr || localStr || '—';
+    }
+    function featureCountry(row) {
+      return getProp(row, COUNTRY_KEYS) || otherTag(row, 'country') || '—';
+    }
+
+    function firstParagraph(md) {
+      var blocks = String(md || '').replace(/\r/g, '').split(/\n\s*\n/);
+      for (var i = 0; i < blocks.length; i++) {
+        var p = stripMd(blocks[i]);
+        if (p.length > 40) return p;
+      }
+      return stripMd(md);
+    }
+    function sceneReady(id) {
+      return fetch('/clay_scenes/' + encodeURIComponent(id) + '/scene-manifest.json', { method: 'GET' })
+        .then(function (r) { return r.ok; })
+        .catch(function () { return false; });
+    }
+    function pickFeatured(named, catalog) {
+      var byWs = {};
+      var list = catalog && catalog.resorts ? catalog.resorts : [];
+      list.forEach(function (r) {
+        if (r && r.id && r.winter_sports_id != null) byWs[String(r.winter_sports_id)] = r.id;
+      });
+      var withScene = [];
+      var rest = [];
+      named.forEach(function (p) {
+        var ws = p.winterSportsId != null && p.winterSportsId !== '' ? String(p.winterSportsId) : '';
+        if (ws && byWs[ws]) {
+          p._clayId = byWs[ws];
+          withScene.push(p);
+        } else rest.push(p);
+      });
+      function shuffle(arr) {
+        for (var i = arr.length - 1; i > 0; i--) {
+          var j = Math.floor(Math.random() * (i + 1));
+          var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+        }
+        return arr;
+      }
+      shuffle(withScene);
+      shuffle(rest);
+      var tries = withScene.slice(0, 10);
+      function next(i) {
+        if (i >= tries.length) return Promise.resolve(rest[0] || withScene[0] || null);
+        return sceneReady(tries[i]._clayId).then(function (ok) {
+          if (ok) return tries[i];
+          return next(i + 1);
+        });
+      }
+      return next(0);
+    }
+    function renderFeaturedShell(featured, lede) {
+      var kicker = document.getElementById('featured-kicker');
+      var ledeEl = document.getElementById('featured-lede');
+      if (!featured) {
+        kicker.innerHTML = 'No featured mountain yet. <a href="browse.html">Start in Browse</a>.';
+        return;
+      }
+      kicker.innerHTML = '<strong>' + link(featured) + '</strong>'
+        + (loc(featured) ? ' <span class="wiki-muted">(' + esc(loc(featured)) + ')</span>' : '');
+      if (lede) {
+        ledeEl.innerHTML = esc(lede) + ' <a href="' + href(featured) + '">(Full article…)</a>';
+      } else {
+        ledeEl.innerHTML = '<a href="' + href(featured) + '">Full article…</a>';
+      }
+    }
+    function mountFeaturedClay(featured) {
+      var embed = document.getElementById('featured-clay-embed');
+      var stage = document.getElementById('featured-clay-stage');
+      var soon = document.getElementById('featured-soon');
+      if (!featured || !featured._clayId || !embed || !stage) {
+        if (soon) soon.hidden = false;
+        return;
+      }
+      import('/scripts/hero-montage-map.js?v=116').then(function (mod) {
+        return mod.initHeroMontageMap(stage, { resortId: featured._clayId, lockResort: true, skipNearest: true });
+      }).then(function (api) {
+        if (!api) {
+          soon.hidden = false;
+          return;
+        }
+        embed.hidden = false;
+        soon.hidden = true;
+        if (typeof api.resize === 'function') setTimeout(function () { api.resize(); }, 80);
+      }).catch(function () {
+        soon.hidden = false;
+      });
+    }
+
+    if (window.ywikiAuth) ywikiAuth.init(function () {});
+
+    var wikiIndex = Promise.all([
+      fetch('/api/wiki/index', { cache: 'no-store' }).then(function (r) {
+        return r.ok ? r.json() : Promise.reject(new Error('index'));
+      }),
+      fetch('/clay_scenes/catalog.json').then(function (r) { return r.ok ? r.json() : { resorts: [] }; }).catch(function () { return { resorts: [] }; })
+    ])
+      .then(function (pair) {
+        var data = pair[0];
+        var catalog = pair[1];
+        var pages = data.pages || [];
+        var downhill = pages.filter(isDownhillPage);
+        var named = downhill.filter(hasName);
+        named.forEach(function (p) {
+          if (p.englishName) pagesByName.set(fold(p.englishName), p);
+          if (p.title) pagesByName.set(fold(p.title), p);
+        });
+        var countries = {};
+        downhill.forEach(function (p) { if (p.country) countries[p.country] = true; });
+        document.getElementById('wiki-stats').textContent =
+          num(downhill.length) + ' downhill areas · ' + num(Object.keys(countries).length) + ' countries · anyone can edit';
+
+        return pickFeatured(named, catalog).then(function (featured) {
+          if (!featured) {
+            renderFeaturedShell(null);
+            return;
+          }
+          renderFeaturedShell(featured, '');
+          mountFeaturedClay(featured);
+          fetch('/api/wiki/' + encodeURIComponent(featured.pageId), { cache: 'no-store' })
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (page) {
+              var lede = firstParagraph(page && page.content);
+              if (/add a description/i.test(lede)) lede = '';
+              renderFeaturedShell(featured, lede);
+            })
+            .catch(function () {});
+        });
+      })
+      .catch(function () {
+        document.getElementById('wiki-stats').textContent = 'Could not load the wiki index.';
+        document.getElementById('featured-kicker').innerHTML = 'The index is unavailable. Try <a href="browse.html">Browse</a>.';
+      });
+
+    fetchSkiAreaCatalog().then(function (catalog) {
+      var downhill = catalog.map(function (f) {
+        return Object.assign({}, f.properties || {}, { geometry: f.geometry });
+      }).filter(function (r) {
+        var v = getProp(r, RESORT_TYPE_KEYS);
+        return !(v != null && String(v).toLowerCase().trim() === 'not a downhill ski resort');
+      });
+      if (!downhill.length) throw new Error('empty catalog');
+
+      var namedDownhill = downhill.filter(isCatalogNamed);
+      var pool = namedDownhill.length ? namedDownhill : downhill;
+      var largest = pool[0], maxArea = numVal(largest, AREA_KEYS) || 0;
+      var northern = pool[0], maxLat = catalogLat(northern);
+      if (maxLat == null) maxLat = -90;
+      var southern = pool[0], minLat = catalogLat(southern);
+      if (minLat == null) minLat = 90;
+      var equator = pool[0], minDist = 90;
+      var mostTrails = pool[0], maxTrails = numVal(mostTrails, TRAILS_KEYS) || 0;
+      var mostLifts = pool[0], maxLifts = numVal(mostLifts, LIFTS_KEYS) || 0;
+      var smallest = null, minTrails = Infinity;
+      var byCountry = {};
+      pool.forEach(function (r) {
+        var a = numVal(r, AREA_KEYS);
+        if (a != null && a > maxArea) { maxArea = a; largest = r; }
+        var t = numVal(r, TRAILS_KEYS);
+        if (t != null && t >= 1 && t < minTrails) { minTrails = t; smallest = r; }
+        if (t != null && t > maxTrails) { maxTrails = t; mostTrails = r; }
+        var lifts = numVal(r, LIFTS_KEYS);
+        if (lifts != null && lifts > maxLifts) { maxLifts = lifts; mostLifts = r; }
+        var lat = catalogLat(r);
+        if (lat != null && lat > maxLat) { maxLat = lat; northern = r; }
+        if (lat != null && lat < minLat) { minLat = lat; southern = r; }
+        if (lat != null && Math.abs(lat) < minDist) { minDist = Math.abs(lat); equator = r; }
+      });
+      downhill.forEach(function (r) {
+        var c = catalogCountry(r);
+        byCountry[c] = (byCountry[c] || 0) + 1;
+      });
+      if (!smallest) smallest = downhill[0];
+      var topCountry = '', topCount = 0;
+      Object.keys(byCountry).forEach(function (c) {
+        if (byCountry[c] > topCount) { topCount = byCountry[c]; topCountry = c; }
+      });
+
+      function rLink(row) { return wikiLinkByName(catalogName(row), pagesByName); }
+      var dyk = [
+        '… that ' + rLink(largest) + ' is the largest mapped downhill area, at ' + num(maxArea) + ' skiable acres in ' + esc(catalogCountry(largest)) + '?',
+        '… that ' + rLink(northern) + ' is the northernmost, at ' + Number(maxLat).toFixed(1) + '° latitude?',
+        '… that ' + rLink(southern) + ' is the southernmost, at ' + Number(minLat).toFixed(1) + '° latitude?',
+        '… that ' + rLink(equator) + ' sits closest to the equator (' + minDist.toFixed(1) + '° away)?',
+        '… that the smallest downhill hill here is ' + rLink(smallest)
+          + (minTrails < Infinity ? ', with ' + minTrails + (minTrails === 1 ? ' trail' : ' trails') : '')
+          + ' in ' + esc(catalogCountry(smallest)) + '?',
+        '… that ' + esc(topCountry) + ' has the most downhill areas (' + num(topCount) + ')?'
+      ];
+      document.getElementById('did-you-know').innerHTML =
+        '<ul>' + dyk.map(function (t) { return '<li>' + t + '</li>'; }).join('') + '</ul>'
+        + '<p class="wiki-search-line"><a href="../SkiResortFacts.html">More resort records</a></p>';
+
+      document.getElementById('in-atlas').innerHTML =
+        '<ul>'
+        + '<li>Most mapped trails: ' + rLink(mostTrails) + ' (' + num(maxTrails) + ')</li>'
+        + '<li>Most lifts: ' + rLink(mostLifts) + ' (' + num(maxLifts) + ')</li>'
+        + '<li class="wiki-muted">Loading longest trail and lift…</li>'
+        + '</ul>';
+    }).catch(function () {
+      document.getElementById('did-you-know').innerHTML =
+        '<p>Resort records are unavailable. See <a href="../SkiResortFacts.html">Ski Resort Facts</a>.</p>';
+    });
+
+    wikiIndex.then(function () {
+      return Promise.all([
+        loadPmtilesLayerFeatures('pistes', 10),
+        loadPmtilesLayerFeatures('lifts', 10)
+      ]);
+    }).then(function (pair) {
+      function asRow(f) { return Object.assign({}, f.properties || {}, { geometry: f.geometry }); }
+      var trailSet = (pair[0] || []).map(asRow).filter(function (r) {
+        var t = String(getProp(r, ['piste:type', 'piste_type']) || otherTag(r, 'piste:type') || '').toLowerCase();
+        if (!(t === '' || t === 'downhill' || t === 'freeride')) return false;
+        return geomLength(r.geometry) > 0.01;
+      }).map(function (r) { return { row: r, length: geomLength(r.geometry) }; });
+
+      var longestT = trailSet[0], shortestT = trailSet[0];
+      trailSet.forEach(function (x) {
+        if (x.length > longestT.length) longestT = x;
+        if (x.length < shortestT.length) shortestT = x;
+      });
+
+      var EXCLUDED = { zip_line: 1, goods: 1 };
+      var liftSet = (pair[1] || []).map(asRow).filter(function (r) {
+        var t = String(getProp(r, ['aerialway', 'Aerialway', 'lift_type', 'type']) || '').toLowerCase();
+        if (EXCLUDED[t]) return false;
+        return geomLength(r.geometry) > 0.005;
+      }).map(function (r) { return { row: r, length: geomLength(r.geometry) }; });
+
+      var longestL = liftSet[0], shortestL = liftSet[0];
+      var typeCounts = {};
+      liftSet.forEach(function (x) {
+        if (x.length > longestL.length) longestL = x;
+        if (x.length < shortestL.length) shortestL = x;
+        var t = String(getProp(x.row, ['aerialway', 'Aerialway', 'lift_type', 'type']) || '').toLowerCase();
+        if (t) typeCounts[t] = (typeCounts[t] || 0) + 1;
+      });
+      var topType = Object.keys(typeCounts).sort(function (a, b) { return typeCounts[b] - typeCounts[a]; })[0];
+
+      function trailLine(item) {
+        var n = namedItem(item.row, TRAIL_NAME_KEYS) || '(unnamed trail)';
+        var resort = featureResort(item.row);
+        var country = featureCountry(item.row);
+        return esc(n) + ' — ' + formatKm(item.length)
+          + (resort !== '—' ? ' at ' + wikiLinkByName(resort, pagesByName) : '')
+          + (country !== '—' ? ' (' + esc(country) + ')' : '');
+      }
+      function liftLine(item) {
+        var n = namedItem(item.row, LIFT_NAME_KEYS) || '(unnamed lift)';
+        var t = String(getProp(item.row, ['aerialway', 'Aerialway', 'lift_type', 'type']) || '').toLowerCase();
+        var resort = featureResort(item.row);
+        return esc(n) + ' — ' + formatKm(item.length)
+          + (t ? ' ' + esc(TYPE_LABELS[t] || t) : '')
+          + (resort !== '—' ? ' at ' + wikiLinkByName(resort, pagesByName) : '');
+      }
+
+      var items = [];
+      if (longestT) items.push('Longest trail: ' + trailLine(longestT));
+      if (shortestT) items.push('Shortest trail: ' + trailLine(shortestT));
+      if (longestL) items.push('Longest lift: ' + liftLine(longestL));
+      if (shortestL) items.push('Shortest lift: ' + liftLine(shortestL));
+      if (topType) items.push('Most common lift type: ' + esc(TYPE_LABELS[topType] || topType) + ' (' + num(typeCounts[topType]) + ')');
+      items.push(num(trailSet.length) + ' mapped downhill trails · ' + num(liftSet.length) + ' lifts');
+      var extra = items.map(function (t) { return '<li>' + t + '</li>'; }).join('');
+      var existing = document.getElementById('in-atlas').querySelector('ul');
+      if (existing) {
+        existing.querySelectorAll('.wiki-muted').forEach(function (el) { el.remove(); });
+        existing.insertAdjacentHTML('beforeend', extra);
+        existing.insertAdjacentHTML('afterend',
+          '<p class="wiki-search-line"><a href="../SkiTrailFacts.html">Trail facts</a> · <a href="../SkiLiftFacts.html">Lift facts</a></p>');
+      } else {
+        document.getElementById('in-atlas').innerHTML = '<ul>' + extra + '</ul>'
+          + '<p class="wiki-search-line"><a href="../SkiTrailFacts.html">Trail facts</a> · <a href="../SkiLiftFacts.html">Lift facts</a></p>';
+      }
+    }).catch(function () {
+      var el = document.getElementById('in-atlas');
+      var muted = el.querySelector('.wiki-muted');
+      if (muted) {
+        muted.innerHTML = 'Open <a href="../SkiTrailFacts.html">Trail facts</a> and <a href="../SkiLiftFacts.html">Lift facts</a> for length records.';
+        muted.classList.remove('wiki-muted');
+      }
+    });
+  </script>
+</body>
+</html>

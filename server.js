@@ -697,8 +697,8 @@ app.get('/wiki/:pageId/comments', handleWikiComments);
 // Serves /wiki/resort.html, /wiki/browse.html, /wiki/js/*, /wiki/css/*
 app.use('/wiki', express.static(path.join(__dirname, 'wiki')));
 
-// Redirect /wiki and /wiki/ to the browse page
-app.get('/wiki', (req, res) => res.redirect(302, '/wiki/browse.html'));
+// Redirect /wiki and /wiki/ to the wiki main page
+app.get('/wiki', (req, res) => res.redirect(302, '/wiki/main.html'));
 // Common typo: browser.html → browse.html
 app.get('/wiki/browser.html', (req, res) => res.redirect(302, '/wiki/browse.html'));
 
@@ -706,7 +706,7 @@ app.get('/wiki/browser.html', (req, res) => res.redirect(302, '/wiki/browse.html
 app.get('/wiki*', optionalCognito, async (req, res) => {
   const wikiPath = req.path.slice(5) || '';
   const key = wikiPath.replace(/^\/+/, '');
-  if (!key) return res.redirect(302, '/wiki/browse.html');
+  if (!key) return res.redirect(302, '/wiki/main.html');
   try {
     const entry = await wikiStore.getPage(key);
     if (entry && entry.hidden && !isAdmin(req.cognitoPrincipal)) {

@@ -105,11 +105,11 @@
         if (error) {
           msg.innerHTML = '<p class="tw-mb-4"><strong>Sign-in error:</strong> ' + (errorDesc || error) + '</p>' +
             '<p class="tw-mb-4">Callback URL must be added to Cognito → App client → Allowed callback URLs:<br><code class="tw-text-sm tw-bg-gray-100 tw-px-2 tw-py-1 tw-rounded">' + window.location.origin + '/wiki/callback.html</code></p>' +
-            '<p><a href="/wiki/browse.html" class="tw-text-blue-600 hover:tw-underline">Back to Atlas</a></p>';
+            '<p><a href="/wiki/main.html" class="tw-text-blue-600 hover:tw-underline">Back to Atlas</a></p>';
         } else {
           msg.innerHTML = '<p class="tw-mb-4">No token received.</p>' +
             '<p class="tw-mb-4">Expected callback URL: <code class="tw-text-sm tw-bg-gray-100 tw-px-2 tw-py-1 tw-rounded">' + window.location.origin + '/wiki/callback.html</code></p>' +
-            '<p><a href="/wiki/browse.html" class="tw-text-blue-600 hover:tw-underline">Back to Atlas</a></p>';
+            '<p><a href="/wiki/main.html" class="tw-text-blue-600 hover:tw-underline">Back to Atlas</a></p>';
         }
       }
     })();
