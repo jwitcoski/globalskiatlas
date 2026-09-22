@@ -48,18 +48,40 @@ function featureCentroid(feature) {
   return null;
 }
 
+let centroidsPromise;
+
 async function loadSkiAreaCentroids() {
-  const res = await fetch(config.SKI_AREAS_MAPTILER_URL);
-  if (!res.ok) throw new Error(`ski areas ${res.status}`);
-  const gj = await res.json();
-  const byWs = new Map();
-  for (const f of gj.features || []) {
-    const id = String(f.properties?.winter_sports_id || "");
-    const c = featureCentroid(f);
-    if (!id || !c || !Number.isFinite(c.lat) || !Number.isFinite(c.lon)) continue;
-    byWs.set(id, c);
+  if (!centroidsPromise) {
+    centroidsPromise = (async () => {
+      const res = await fetch(config.SKI_AREAS_MAPTILER_URL);
+      if (!res.ok) throw new Error(`ski areas ${res.status}`);
+      const gj = await res.json();
+      const byWs = new Map();
+      for (const f of gj.features || []) {
+        const id = String(f.properties?.winter_sports_id || "");
+        const c = featureCentroid(f);
+        if (!id || !c || !Number.isFinite(c.lat) || !Number.isFinite(c.lon)) continue;
+        byWs.set(id, c);
+      }
+      return byWs;
+    })();
   }
-  return byWs;
+  return centroidsPromise;
+}
+
+/** Catalog rows nearest-first. Unknown coords go last. */
+export async function rankedNearestClayResorts(resorts, origin) {
+  if (!resorts?.length) return [];
+  if (!origin) return resorts.slice();
+  const centroids = await loadSkiAreaCentroids();
+  return resorts
+    .map((r) => {
+      const c = centroids.get(String(r?.winter_sports_id || ""));
+      const d = c ? haversineKm(origin.lat, origin.lon, c.lat, c.lon) : Infinity;
+      return { r, d };
+    })
+    .sort((a, b) => a.d - b.d)
+    .map((x) => x.r);
 }
 
 /**
@@ -68,21 +90,10 @@ async function loadSkiAreaCentroids() {
  * @returns {number} index into resorts, or -1
  */
 export async function indexOfNearestClayResort(resorts, origin) {
-  if (!resorts?.length || !origin) return -1;
-  const centroids = await loadSkiAreaCentroids();
-  let bestI = -1;
-  let bestD = Infinity;
-  for (let i = 0; i < resorts.length; i++) {
-    const ws = String(resorts[i]?.winter_sports_id || "");
-    const c = centroids.get(ws);
-    if (!c) continue;
-    const d = haversineKm(origin.lat, origin.lon, c.lat, c.lon);
-    if (d < bestD) {
-      bestD = d;
-      bestI = i;
-    }
-  }
-  return bestI;
+  const ranked = await rankedNearestClayResorts(resorts, origin);
+  if (!ranked.length) return -1;
+  const first = ranked[0];
+  return resorts.indexOf(first);
 }
 
 export async function loadClayResorts() {

@@ -20,12 +20,12 @@ function onHeaderClickOutside(e) {
 
 function toggleHeader() {
     if (isHeaderCollapsed) {
-        // collapseHeaderItems.classList.remove("max-md:tw-opacity-0")
         collapseHeaderItems.classList.add("opacity-100",)
         collapseHeaderItems.style.width = "60vw"
         collapseBtn.classList.remove("bi-list")
         collapseBtn.classList.add("bi-x", "max-lg:tw-fixed")
         isHeaderCollapsed = false
+        if (collapseBtn) collapseBtn.setAttribute("aria-expanded", "true")
 
         setTimeout(() => window.addEventListener("click", onHeaderClickOutside), 1)
 
@@ -35,6 +35,7 @@ function toggleHeader() {
         collapseBtn.classList.remove("bi-x", "max-lg:tw-fixed")
         collapseBtn.classList.add("bi-list")
         isHeaderCollapsed = true
+        if (collapseBtn) collapseBtn.setAttribute("aria-expanded", "false")
         window.removeEventListener("click", onHeaderClickOutside)
 
     }
@@ -51,6 +52,14 @@ function responsive() {
 
 window.addEventListener("resize", responsive)
 
+if (collapseBtn) {
+    collapseBtn.setAttribute("aria-expanded", "false")
+    collapseBtn.setAttribute("aria-controls", "collapsed-header-items")
+}
+
+document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && !isHeaderCollapsed) toggleHeader()
+})
 
 /**
  * Animations
@@ -58,19 +67,23 @@ window.addEventListener("resize", responsive)
 
 gsap.registerPlugin(ScrollTrigger)
 
+const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
 const heroTextEls = document.querySelectorAll(".reveal-hero-text")
 const heroImgEls  = document.querySelectorAll(".reveal-hero-img")
 const heroImgBg   = document.querySelector("#hero-img-bg")
 
-if (heroTextEls.length) gsap.to(heroTextEls, { opacity: 0, y: "100%" })
-if (heroImgEls.length)  gsap.to(heroImgEls,  { opacity: 0, y: "100%" })
-if (heroImgBg)          gsap.to(heroImgBg,   { scale: 0 })
+if (!reduceMotion) {
+    if (heroTextEls.length) gsap.to(heroTextEls, { opacity: 0, y: "100%" })
+    if (heroImgEls.length)  gsap.to(heroImgEls,  { opacity: 0, y: "100%" })
+    if (heroImgBg)          gsap.to(heroImgBg,   { scale: 0 })
 
-if (document.querySelector(".reveal-up")) {
-    gsap.to(".reveal-up", { opacity: 0, y: "100%" })
+    if (document.querySelector(".reveal-up")) {
+        gsap.to(".reveal-up", { opacity: 0, y: "100%" })
+    }
 }
 
 window.addEventListener("load", () => {
+    if (reduceMotion) return
     if (heroTextEls.length) {
         gsap.to(heroTextEls, {
             opacity: 1,
@@ -94,6 +107,7 @@ window.addEventListener("load", () => {
 
 const sections = gsap.utils.toArray("section")
 
+if (!reduceMotion) {
 sections.forEach((sec) => {
     const revealUpEls = sec.querySelectorAll(".reveal-up")
     if (!revealUpEls.length) return
@@ -114,6 +128,7 @@ sections.forEach((sec) => {
         stagger: 0.2,
     })
 })
+}
 
 
 

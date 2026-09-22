@@ -49,7 +49,8 @@ html, body { height: 100%; font-family: system-ui, -apple-system, sans-serif; }
   box-shadow: 0 2px 8px rgba(0,0,0,0.15);
   outline: none;
 }
-.search-box input:focus { border-color: #2563eb; }
+.search-box input:focus { border-color: #0f766e; }
+.search-box .search-empty { cursor: default; color: #64748b; }
 .search-box .search-dropdown {
   position: absolute;
   top: 100%;

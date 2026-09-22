@@ -158,10 +158,10 @@ function showResortClaySoon(show) {
   if (show && embed) embed.hidden = true;
   if (show && title && body) {
     if (RESORT_CLAY_REGION_ID) {
-      title.textContent = '3D clay map coming soon';
+      title.textContent = '3D scene coming soon';
       body.textContent = 'A floating-island overview will appear here when this state or province scene is built.';
     } else {
-      title.textContent = '3D clay map coming soon';
+      title.textContent = '3D scene coming soon';
       body.textContent = 'A floating-island preview will appear here when this resort’s scene is built.';
     }
   }
@@ -556,7 +556,7 @@ function renderFromMarkdown(text) {
     var cta = document.createElement('div');
     cta.id = 'resort-empty-wiki-cta';
     cta.className = 'resort-data-callout';
-    cta.innerHTML = '<strong>Be the first to describe this resort.</strong> Open Edit this page below. Better OSM trails also make the 3D clay map look right. <a href="../blog/how-to-tag-a-ski-resort-in-openstreetmap.html">How to tag in OSM</a>.';
+    cta.innerHTML = '<strong>Be the first to describe this resort.</strong> Open Edit this page below. Better OSM trails also make the 3D scene look right. <a href="../blog/how-to-tag-a-ski-resort-in-openstreetmap.html">How to tag in OSM</a>.';
     target.parentNode.insertBefore(cta, target);
   }
 }

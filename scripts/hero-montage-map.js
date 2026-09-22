@@ -16,8 +16,10 @@ import {
   loadRegionCatalog,
   loadVectors as loadSceneVectors,
   yieldFrame as waitForFrame,
-} from "./clay/scene-loader.js?v=12";
-import { indexOfNearestClayResort, lookupIpLocation } from "./clay/nearest-resort.js";
+} from "./clay/scene-loader.js?v=13";
+import { rankedNearestClayResorts, lookupIpLocation } from "./clay/nearest-resort.js";
+import { getProp, LIFTS_KEYS } from "./utils.js";
+import { getAcres, getTrailCount } from "./resort-categories.js";
 import {
   addSoftShadow as addIslandShadow,
   addIslandUnderside,
@@ -673,6 +675,156 @@ export async function initHeroMontageMap(container, options = {}) {
     }
   }
 
+  const HERO_LIST_N = 5;
+  const CONTINENT_ORDER = [
+    "north_america",
+    "europe",
+    "asia",
+    "south_america",
+    "oceania",
+    "africa",
+    "antarctica",
+  ];
+
+  function liftsOf(props) {
+    const n = Number(getProp(props, LIFTS_KEYS));
+    return Number.isFinite(n) && n > 0 ? n : 0;
+  }
+
+  function displayScore(props) {
+    return getTrailCount(props) * 10 + liftsOf(props) * 5 + getAcres(props);
+  }
+
+  const sceneOk = new Map();
+  async function sceneReady(id) {
+    if (!id) return false;
+    if (sceneOk.has(id)) return sceneOk.get(id);
+    const pending = fetch(new URL("scene-manifest.json", sceneRoot(id)))
+      .then((r) => r.ok)
+      .catch(() => false);
+    sceneOk.set(id, pending);
+    const ok = await pending;
+    sceneOk.set(id, ok);
+    return ok;
+  }
+
+  async function firstReadyResorts(list, n) {
+    const out = [];
+    for (const r of list || []) {
+      if (out.length >= n) break;
+      if (r?.id && await sceneReady(r.id)) out.push(r);
+    }
+    return out;
+  }
+
+  async function continentShowpieces(all) {
+    const ranked = new Map();
+    try {
+      const rows = await fetchSkiAreaCatalog();
+      const score = new Map();
+      for (const f of rows || []) {
+        const p = f.properties || f;
+        const ws = String(p.winter_sports_id || p.winterSportsId || "");
+        if (!ws) continue;
+        const s = displayScore(p);
+        if (s > (score.get(ws) || 0)) score.set(ws, s);
+      }
+      for (const r of all) {
+        const continent = String(r.continent || "other").toLowerCase();
+        if (!ranked.has(continent)) ranked.set(continent, []);
+        ranked.get(continent).push({ r, s: score.get(String(r.winter_sports_id)) || 0 });
+      }
+    } catch {
+      for (const r of all) {
+        const continent = String(r.continent || "other").toLowerCase();
+        if (!ranked.has(continent)) ranked.set(continent, []);
+        ranked.get(continent).push({ r, s: 0 });
+      }
+    }
+    for (const arr of ranked.values()) arr.sort((a, b) => b.s - a.s);
+    const keys = [
+      ...CONTINENT_ORDER.filter((k) => ranked.has(k)),
+      ...[...ranked.keys()].filter((k) => !CONTINENT_ORDER.includes(k)),
+    ];
+    const picks = await Promise.all(keys.map(async (k) => {
+      for (const { r } of (ranked.get(k) || []).slice(0, 12)) {
+        if (await sceneReady(r.id)) return r;
+      }
+      return null;
+    }));
+    return picks.filter(Boolean);
+  }
+
+  const LOCAL_HEAD = "This is the closest ski hill we know.";
+  const DREAM_HEAD = "This is the closest dream ski destination.";
+  const headlineEl = homepageHero ? document.querySelector("[data-hero-headline]") : null;
+  const modeBtn = homepageHero ? document.querySelector("[data-hero-mode]") : null;
+  let heroMode = "local";
+  let localList = [];
+  let dreamList = [];
+
+  function syncModeChrome() {
+    const dream = heroMode === "dream";
+    if (headlineEl) headlineEl.textContent = dream ? DREAM_HEAD : LOCAL_HEAD;
+    if (modeBtn) {
+      modeBtn.setAttribute("aria-pressed", dream ? "true" : "false");
+      modeBtn.textContent = dream ? "Show hills near you" : "Show dream destinations";
+    }
+    if (dream && closerWrap) closerWrap.hidden = true;
+  }
+
+  async function prefetchResort(resort) {
+    if (!resort?.id) return;
+    const base = regionMode ? regionSceneRoot(resort.id || resort.pageId) : sceneRoot(resort.id);
+    try {
+      const manifest = await fetch(new URL("scene-manifest.json", base)).then((r) => {
+        if (!r.ok) throw new Error(String(r.status));
+        return r.json();
+      });
+      const mesh = manifest?.terrain?.mesh;
+      const jobs = [];
+      if (mesh) jobs.push(fetch(new URL(mesh, base)));
+      const paths = [
+        ...Object.values(manifest?.vectors || {}),
+        "vectors/piste-trails.geojson",
+        "vectors/lifts.geojson",
+        "vectors/tree-points.geojson",
+      ];
+      for (const p of paths) {
+        if (!p) continue;
+        jobs.push(fetch(new URL(p, base)).catch(() => null));
+      }
+      await Promise.all(jobs);
+    } catch (err) {
+      console.warn("[hero-montage-map] prefetch failed", resort.id, err);
+    }
+  }
+
+  function preloadHeroLists() {
+    if (!homepageHero) return;
+    const seen = new Set();
+    const queue = [...localList, ...dreamList].filter((r) => {
+      if (!r?.id || seen.has(r.id)) return false;
+      seen.add(r.id);
+      return true;
+    });
+    (async () => {
+      for (const r of queue) await prefetchResort(r);
+    })();
+  }
+
+  function applyHeroMode(next) {
+    if (!homepageHero || loading) return;
+    const list = next === "dream" ? dreamList : localList;
+    if (!list.length) return;
+    heroMode = next;
+    resorts = list;
+    resortIndex = 0;
+    persistHeroId(currentResort()?.id);
+    syncModeChrome();
+    mountResort(currentResort());
+  }
+
   let wikiIndexPages = null;
   let wikiIndexPromise = null;
   function loadWikiIndex() {
@@ -844,6 +996,7 @@ export async function initHeroMontageMap(container, options = {}) {
 
   const playLink = embed.querySelector("[data-hero-play]");
   const openLink = document.querySelector("[data-hero-open-mountain]");
+  const fullMapLink = document.querySelector("[data-hero-full-map]");
   const closerWrap = document.querySelector(".hero-closer");
   const closerBtn = document.querySelector("[data-hero-closer]");
   const posterEl = embed.querySelector(".hero-poster");
@@ -889,7 +1042,7 @@ export async function initHeroMontageMap(container, options = {}) {
           : "Nearest 3D map to you"
         : "";
     }
-    embed.setAttribute("aria-label", `${resort.display_name || label} 3D clay map`);
+    embed.setAttribute("aria-label", `${resort.display_name || label} 3D scene`);
     const compareHref = compareHrefForClay(resort);
     for (const link of document.querySelectorAll("[data-compare-current]")) {
       link.href = compareHref;
@@ -897,6 +1050,10 @@ export async function initHeroMontageMap(container, options = {}) {
     if (openLink && homepageHero) {
       openLink.href = wikiHrefForClay(resort);
       openLink.setAttribute("data-mountain", resort.display_name || label);
+    }
+    if (fullMapLink && homepageHero) {
+      const q = resort.display_name || label;
+      fullMapLink.href = q ? `/mainmap.html?q=${encodeURIComponent(q)}` : "/mainmap.html";
     }
     if (posterEl) {
       posterEl.alt = `${resort.display_name || label} on the Global Ski Atlas`;
@@ -930,12 +1087,20 @@ export async function initHeroMontageMap(container, options = {}) {
     world.scale.setScalar(1);
     compareRadiusLock = null;
     sceneLoaded = false;
+    trailRiders = null;
+    parkRiders = null;
+    liftChairs = null;
+    liftGondolas = null;
+    liftTbars = null;
+    liftCarpets = null;
     syncChrome(resort);
     embed.classList.add("is-loading");
 
     try {
       const base = regionMode ? regionSceneRoot(resort.id || resort.pageId) : sceneRoot(resort.id);
       const { fitted, vectors, manifest, heightExaggerate } = await loadTerrainScene(base);
+      if (token !== loadToken) return;
+      clearGroup(world);
       if (token !== loadToken) return;
       if (regionMode) {
         console.info("[clay-region]", manifest?.pageId || resort.id, "height_exaggerate", heightExaggerate);
@@ -956,13 +1121,6 @@ export async function initHeroMontageMap(container, options = {}) {
       let sample = makeHeightGrid(mesh);
       const unitScale = Math.max(1, span / HERO_SPAN);
 
-      trailRiders = null;
-      parkRiders = null;
-      liftChairs = null;
-      liftGondolas = null;
-      liftTbars = null;
-      liftCarpets = null;
-      clearGroup(world);
       world.add(root);
 
       const osm = await loadSceneVectors(base, vectors, regionMode ? null : resort, {
@@ -1170,6 +1328,9 @@ export async function initHeroMontageMap(container, options = {}) {
     }
     prevBtn?.addEventListener("click", onPrev);
     nextBtn?.addEventListener("click", onNext);
+    modeBtn?.addEventListener("click", () => {
+      applyHeroMode(heroMode === "dream" ? "local" : "dream");
+    });
     closerBtn?.addEventListener("click", () => {
       const idx = resorts.findIndex((r) => r.id === nearestId);
       if (idx < 0) return;
@@ -1250,25 +1411,32 @@ export async function initHeroMontageMap(container, options = {}) {
         resortIndex = 0;
       } else {
         if (!all.length) return;
-        resorts = all;
-        const locked = homepageHero ? lockedHeroId() : "";
-        let idx = locked ? resorts.findIndex((r) => r.id === locked) : -1;
-        let nearIdx = -1;
-        if (homepageHero && !skipNearest && resorts.length) {
+        let origin = null;
+        if (homepageHero && !skipNearest) {
           try {
-            const origin = await lookupIpLocation();
+            origin = await lookupIpLocation();
             visitorPlace = [origin.city, origin.region].filter(Boolean).join(", ");
-            nearIdx = await indexOfNearestClayResort(resorts, origin);
-            if (nearIdx >= 0) nearestId = resorts[nearIdx].id;
           } catch (err) {
             console.warn("[hero-montage-map] nearest-by-ip skipped", err);
           }
         }
-        if (idx < 0) idx = nearIdx >= 0 ? nearIdx : 0;
+        const nearestRanked = origin
+          ? await rankedNearestClayResorts(all, origin)
+          : all.slice();
+        localList = homepageHero
+          ? await firstReadyResorts(nearestRanked, HERO_LIST_N)
+          : all;
+        dreamList = homepageHero ? await continentShowpieces(all) : [];
+        resorts = localList;
+        nearestId = localList[0]?.id || "";
+        const locked = homepageHero ? lockedHeroId() : "";
+        let idx = locked ? resorts.findIndex((r) => r.id === locked) : -1;
+        if (idx < 0) idx = 0;
         resortIndex = idx;
       }
       if (homepageHero) await loadWikiIndex();
       await mountResort(currentResort());
+      preloadHeroLists();
       if (homepageHero && nearestId && currentResort()?.id !== nearestId && closerBtn && closerWrap) {
         const n = resorts.find((r) => r.id === nearestId);
         const label = n?.short_name || n?.display_name || nearestId;

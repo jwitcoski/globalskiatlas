@@ -512,7 +512,7 @@ body {
 }
 .resort-data-callout--refresh {
   background: #dbeafe;
-  border-color: #2563eb;
+  border-color: #1a4d8c;
   color: #1e40af;
 }
 .resort-data-callout--hidden {
@@ -828,8 +828,8 @@ body {
 .resort-edit-btn-secondary:hover { background: #b0bcc8; }
 .resort-btn-hide { background: var(--resort-edit-border); color: var(--resort-body-color); }
 .resort-btn-hide:hover { background: #b0bcc8; }
-.resort-btn-unhide { background: #2563eb; color: #fff; }
-.resort-btn-unhide:hover { background: #1d4ed8; }
+.resort-btn-unhide { background: #1a4d8c; color: #fff; }
+.resort-btn-unhide:hover { background: #163e72; }
 .resort-admin-hide-actions { margin-top: 0.5rem; }
 .resort-admin-hide-actions .resort-edit-btn { margin-right: 0.5rem; }
 .resort-admin-category-wrap { margin-top: 0.75rem; display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
@@ -839,8 +839,8 @@ body {
 .resort-admin-status-actions .resort-edit-btn { margin-right: 0.25rem; }
 .resort-btn-finished { background: #059669; color: #fff; }
 .resort-btn-finished:hover { background: #047857; }
-.resort-btn-lock { background: #7c3aed; color: #fff; }
-.resort-btn-lock:hover { background: #6d28d9; }
+.resort-btn-lock { background: #1a4d8c; color: #fff; }
+.resort-btn-lock:hover { background: #163e72; }
 
 /* Revisions and comments */
 .resort-revisions,

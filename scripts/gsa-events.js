@@ -30,7 +30,7 @@
   window.gsaEventOnce("homepage_view");
 
   function bindHome() {
-    var cta = document.querySelector("[data-hero-open-mountain]");
+    var cta = document.querySelector("[data-hero-full-map], [data-hero-open-mountain]");
     if (cta) {
       cta.addEventListener("click", function () {
         window.gsaEvent("hero_primary_tap", { mountain: cta.getAttribute("data-mountain") || cta.textContent.trim() });

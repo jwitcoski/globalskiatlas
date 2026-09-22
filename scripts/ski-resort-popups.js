@@ -80,7 +80,7 @@ function buildActionButtons(properties, latlng, displayStr, options, wikiPage, e
     extraButtons += `<a class="sr-ski-game-btn" href="${escapeHtmlFn(options.playableHref)}">Ski in 3D <i class="bi bi-controller"></i></a>`;
   }
   if (options.clayHomeHref) {
-    extraButtons += `<a class="sr-ski-game-btn" href="${escapeHtmlFn(options.clayHomeHref)}">3D clay map</a>`;
+    extraButtons += `<a class="sr-ski-game-btn" href="${escapeHtmlFn(options.clayHomeHref)}">3D scene</a>`;
   }
 
   return (

@@ -6,7 +6,7 @@
   bottom: 80px;
   right: 12px;
   z-index: 1000;
-  background: #1e40af;
+  background: #1a4d8c;
   color: #fff;
   border: none;
   border-radius: 10px;
@@ -20,7 +20,7 @@
   gap: 6px;
   transition: background 0.2s;
 }
-#roadTripToggle:hover { background: #1d4ed8; }
+#roadTripToggle:hover { background: #163e72; }
 .basemap-control {
   bottom: 140px;
 }
@@ -48,7 +48,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 14px 16px;
-  background: #1e40af;
+  background: #1a4d8c;
   color: #fff;
   flex-shrink: 0;
 }
@@ -66,10 +66,10 @@
   outline: none;
   width: 100%;
 }
-.rtp-input-row input:focus, .rtp-search-input:focus { border-color: #2563eb; }
+.rtp-input-row input:focus, .rtp-search-input:focus { border-color: #0f766e; }
 .rtp-btn {
   padding: 8px 14px;
-  background: #2563eb;
+  background: #1a4d8c;
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -78,7 +78,7 @@
   cursor: pointer;
   white-space: nowrap;
 }
-.rtp-btn:hover { background: #1d4ed8; }
+.rtp-btn:hover { background: #163e72; }
 .rtp-btn:disabled { background: #9ca3af; cursor: not-allowed; }
 .rtp-btn-full { width: 100%; padding: 10px; font-size: 14px; }
 .rtp-loc-btn {
@@ -113,11 +113,11 @@
   margin-bottom: 4px;
   font-size: 13px;
 }
-.wp-num { font-size: 12px; font-weight: 700; color: #fff; background: #2563eb; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.wp-num { font-size: 12px; font-weight: 700; color: #fff; background: #1a4d8c; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .wp-name { flex: 1; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .wp-move { display: flex; flex-direction: column; gap: 0; flex-shrink: 0; }
 .wp-up, .wp-down { background: none; border: none; color: #6b7280; cursor: pointer; font-size: 14px; padding: 0; line-height: 1; display: flex; align-items: center; justify-content: center; }
-.wp-up:hover, .wp-down:hover { color: #2563eb; }
+.wp-up:hover, .wp-down:hover { color: #0f766e; }
 .wp-up:disabled, .wp-down:disabled { color: #d1d5db; cursor: not-allowed; }
 .wp-remove { background: none; border: none; color: #9ca3af; cursor: pointer; font-size: 18px; padding: 0; line-height: 1; flex-shrink: 0; }
 .wp-remove:hover { color: #ef4444; }
@@ -155,7 +155,7 @@
 .rtp-dir-list { list-style: none; margin: 0; padding: 0; }
 .rtp-dir-step { display: grid; grid-template-columns: 22px 1fr auto; gap: 6px 8px; align-items: start; padding: 7px 0; border-bottom: 1px solid #e0f2fe; font-size: 12px; line-height: 1.35; color: #374151; }
 .rtp-dir-step:last-child { border-bottom: none; }
-.rtp-dir-num { font-weight: 700; color: #2563eb; font-size: 11px; padding-top: 1px; }
+.rtp-dir-num { font-weight: 700; color: #1a4d8c; font-size: 11px; padding-top: 1px; }
 .rtp-dir-dist { font-size: 11px; color: #64748b; white-space: nowrap; }
 .rtp-calc-hint { font-size: 12px; color: #6b7280; margin-top: 8px; line-height: 1.4; min-height: 1.2em; }
 .rtp-calc-hint.rtp-calc-hint-warn { color: #b45309; }

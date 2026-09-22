@@ -15,13 +15,6 @@
   }
 
   var inner = document.querySelector(".header-nav-inner");
-  if (!document.querySelector('link[data-gsa-banner-css]')) {
-    var css = document.createElement("link");
-    css.rel = "stylesheet";
-    css.setAttribute("data-gsa-banner-css", "1");
-    css.href = prefix + "css/gsa-job-banner.css";
-    document.head.appendChild(css);
-  }
   var homePath = path.replace(/\/+$/, "") || "/";
   var onHome = homePath === "/" || /\/index\.html$/i.test(homePath);
 
@@ -63,38 +56,31 @@
     a.remove();
   });
 
-  var kind = document.body && document.body.getAttribute("data-gsa-banner");
-  if (!kind) return;
-  var copy = {
-    drive: {
-      title: "Local hills within a few hours",
-      next: "Open a resort in 3D from the popup, then edit OSM if trails look thin.",
-    },
-    map: {
-      title: "Every resort on one map",
-      next: "Open 3D map or Ski Game from a pin. Wiki pages are for writing the place.",
-    },
-    compare: {
-      title: "Pick between two mountains",
-      next: "Ski the winner in 3D before you book.",
-    },
-    wiki: {
-      title: "3D map + write-up for this place",
-      next: "If the clay trails look wrong, edit OSM. If the page is empty, be the first to write it.",
-    },
-  }[kind];
-  if (!copy) return;
-  var bar = document.createElement("div");
-  bar.className = "gsa-job-banner";
-  bar.innerHTML =
-    "<strong>" +
-    copy.title +
-    "</strong> " +
-    copy.next +
-    ' <a href="' +
-    href("index.html") +
-    '">Home 3D</a> · <a href="' +
-    href("/playable/") +
-    '">Ski Game</a>';
-  document.body.insertBefore(bar, document.body.firstChild);
+    if (!document.getElementById("gsa-skip")) {
+    var skip = document.createElement("a");
+    skip.id = "gsa-skip";
+    skip.className = "skip-link";
+    skip.href = "#main";
+    skip.textContent = "Skip to content";
+    document.body.insertBefore(skip, document.body.firstChild);
+  }
+  if (!document.getElementById("main")) {
+    var mainTarget = document.querySelector(".map-wrapper, main, section");
+    if (mainTarget) mainTarget.id = "main";
+  }
+
+  document.addEventListener("keydown", function (e) {
+    if (e.key !== "Escape") return;
+    document.querySelectorAll(".header-dropdown-group.is-open").forEach(function (g) {
+      g.classList.remove("is-open");
+    });
+  });
+  document.querySelectorAll(".header-dropdown-group").forEach(function (g) {
+    g.addEventListener("focusin", function () {
+      g.classList.add("is-open");
+    });
+    g.addEventListener("focusout", function (ev) {
+      if (!g.contains(ev.relatedTarget)) g.classList.remove("is-open");
+    });
+  });
 })();

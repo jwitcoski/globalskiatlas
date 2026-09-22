@@ -40,13 +40,13 @@
 }
 
 .blog-prose a {
-  color: #2563eb;
+  color: #1a4d8c;
   text-decoration: underline;
   text-underline-offset: 2px;
 }
 
 .blog-prose a:hover {
-  color: #1d4ed8;
+  color: #0f766e;
 }
 
 .blog-prose ul,
@@ -195,7 +195,7 @@
 }
 
 .blog-related a {
-  color: #2563eb;
+  color: #1a4d8c;
   font-weight: 500;
   text-decoration: none;
 }

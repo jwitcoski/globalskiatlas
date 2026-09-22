@@ -782,8 +782,14 @@ export async function initSkiResortMap(options = {}) {
     currentMatches = matches.slice(0, maxSuggestions);
     selectedIndex  = -1;
     if (!currentMatches.length) {
-      searchDropdown.classList.remove('visible');
-      searchDropdown.innerHTML = '';
+      const q = searchInput ? String(searchInput.value || '').trim() : '';
+      if (q) {
+        searchDropdown.innerHTML = '<div class="search-item search-empty">No matching resorts</div>';
+        searchDropdown.classList.add('visible');
+      } else {
+        searchDropdown.classList.remove('visible');
+        searchDropdown.innerHTML = '';
+      }
       return;
     }
     searchDropdown.innerHTML = currentMatches.map((r, i) =>

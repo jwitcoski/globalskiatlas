@@ -270,7 +270,7 @@
   align-items: center;
   gap: 4px;
   border-radius: 8px;
-  background: #2563eb;
+  background: #1a4d8c;
   color: #fff !important;
   padding: 8px 12px;
   font-size: 13px;
@@ -278,7 +278,7 @@
   text-decoration: none;
   cursor: pointer;
 }
-.sr-details-btn:hover { background: #1d4ed8; color: #fff !important; }
+.sr-details-btn:hover { background: #163e72; color: #fff !important; }
 .sr-ski-game-btn {
   display: inline-flex;
   align-items: center;

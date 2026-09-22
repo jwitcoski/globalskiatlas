@@ -32,7 +32,7 @@ function getGltfLoader() {
 }
 
 export async function fetchJson(url) {
-  const res = await fetch(url, { cache: "no-store" });
+  const res = await fetch(url);
   if (!res.ok) throw new Error(`${url} ${res.status}`);
   return res.json();
 }
@@ -41,7 +41,15 @@ export function yieldFrame() {
   return new Promise((resolve) => requestAnimationFrame(() => resolve()));
 }
 
+let meshLoadChain = Promise.resolve();
+
 export async function loadHomepageMesh(base) {
+  const run = meshLoadChain.then(() => loadHomepageMeshNow(base));
+  meshLoadChain = run.catch(() => {});
+  return run;
+}
+
+async function loadHomepageMeshNow(base) {
   const manifest = await fetchJson(new URL("scene-manifest.json", base));
   const meshUrl = new URL(manifest.terrain.mesh, base);
   const vectors = manifest.vectors || {};
