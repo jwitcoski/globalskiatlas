@@ -55,7 +55,7 @@ import { capDpr, attachDebug } from "./debug.js?v=mob1";
 import { intentsFrom, isTurning, analogAxes } from "./input.js?v=s2";
 import { bindMobileChrome, bindPads } from "./mobile.js?v=s4";
 import { bakePisteSculpt, drapeSculptOnMesh } from "./piste-sculpt.js?v=feel3";
-import { addTrailMarks, clearTrailMarks, updateTrailMarks } from "./trail-marks.js?v=marks10";
+import { addTrailMarks, clearTrailMarks, repairFences, updateTrailMarks } from "./trail-marks.js?v=marks12";
 import { makeYeti, resetYeti, parkYetiAtStart, tickYeti } from "./yeti.js?v=vis16";
 import { createSkiWake, clearSkiWake, pushSkiWake, updateSkiWake } from "./ski-wake.js?v=feel1";
 import {
@@ -918,6 +918,7 @@ function resetRun(opts = {}) {
   run.clocked = false;
   resetScore(run);
   resetGates(run);
+  repairFences(marksRoot);
   resetYeti(yeti, run);
   clearSkiWake(wake);
   resetAirState(air);
@@ -932,6 +933,30 @@ function resetRun(opts = {}) {
     return;
   }
   enterLobby(opts.reframe !== false && !opts.keepCam);
+}
+
+/** Exported terrain is wound face-down; a DoubleSide material then flips its normals and lights it from below. */
+function faceTerrainUp(geo) {
+  const ix = geo.index?.array;
+  const p = geo.attributes.position;
+  if (!ix || ix.length < 3 || !p) return;
+  let y = 0;
+  const a = new THREE.Vector3();
+  const b = new THREE.Vector3();
+  const c = new THREE.Vector3();
+  for (let i = 0; i < Math.min(ix.length, 3000); i += 3) {
+    a.fromBufferAttribute(p, ix[i]);
+    b.fromBufferAttribute(p, ix[i + 1]).sub(a);
+    c.fromBufferAttribute(p, ix[i + 2]).sub(a);
+    y += b.cross(c).y;
+  }
+  if (y >= 0) return;
+  for (let i = 0; i < ix.length; i += 3) {
+    const t = ix[i + 1];
+    ix[i + 1] = ix[i + 2];
+    ix[i + 2] = t;
+  }
+  geo.index.needsUpdate = true;
 }
 
 function scenePathFromUrl() {
@@ -1061,6 +1086,7 @@ async function loadMountain() {
       });
       gltf.scene.traverse((o) => {
         if (o.isMesh) {
+          faceTerrainUp(o.geometry);
           o.material = snowMat;
           o.receiveShadow = true;
         }
@@ -1454,7 +1480,7 @@ function tick(now) {
         steps += 1;
       }
       }
-      updateTrailMarks(marksRoot, alongTrack(run.pistePts, skier.position.x, skier.position.z).along, skier.position);
+      updateTrailMarks(marksRoot, alongTrack(run.pistePts, skier.position.x, skier.position.z).along, skier.position, vel, frameDt);
       const intent = intentsFrom(keys);
       if (!skier.userData.fall) {
         orientSkier(THREE, skier, skier.position, heading, vel, hf, skier.userData.steer || 0, {
