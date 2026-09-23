@@ -274,8 +274,9 @@ export function makeSpray(THREE, scene) {
     geo,
     new THREE.PointsMaterial({
       map: flakeTexture(THREE),
-      color: 0xffffff,
-      size: 0.62,
+      /* Faint cool grey: pure white vanishes against lit snow. */
+      color: 0xc2cfdd,
+      size: 0.78,
       transparent: true,
       opacity: 0.4,
       depthWrite: false,
@@ -283,6 +284,7 @@ export function makeSpray(THREE, scene) {
     }),
   );
   pts.frustumCulled = false;
+  pts.renderOrder = 4;
   scene.add(pts);
   return { pts, pos, n, t: 0 };
 }
@@ -318,18 +320,23 @@ export function updateSpray(spray, skier, heading, speed, dt, keys, hf, opts = {
   for (let i = 0; i < n; i++) {
     const k = (i / n + spray.t * (0.55 + boost * 0.2)) % 1;
     const tail = tails[i % 2] || origin;
-    const back = k * (1.2 + boost);
-    const up = k * (0.15 + boost * 0.4);
-    const side = (i % 2 === 0 ? -1 : 1) * k * (0.22 + boost * 0.14);
+    /* Stable per-particle spread so the plume fans out instead of two rigid streaks. */
+    const r1 = ((i * 0.618034) % 1) - 0.5;
+    const r2 = (i * 0.414214) % 1;
+    const back = k * (1.2 + boost) * (0.7 + r2 * 0.6);
+    const up = Math.max(0, k * (0.5 + boost * 0.55) * (0.6 + r2 * 0.8) - k * k * (0.4 + boost * 0.3));
+    const side = ((i % 2 === 0 ? -1 : 1) * (0.22 + boost * 0.14) + r1 * (0.5 + boost * 0.3)) * k;
     const i3 = i * 3;
     const x = tail.x - sx * back + sz * side;
     const z = tail.z - sz * back - sx * side;
-    const y = hf ? hf.sample(x, z) + 0.04 + up : tail.y + up;
+    /* 0.12 clears the piste snow drape (lifted 0.08). */
+    const y = hf ? hf.sample(x, z) + 0.12 + up : tail.y + up;
     pos[i3] = x;
     pos[i3 + 1] = y;
     pos[i3 + 2] = z;
   }
-  const op = show ? Math.min(0.8, ((speed - 2) / 30) * boost + (braking ? 0.22 : 0)) : 0;
+  /* Turns and braking always throw a readable plume; a straight glide stays subtle. */
+  const op = show ? Math.min(0.9, (turning || braking ? 0.5 : 0.12) + (Math.max(0, speed - 2) / 45) * boost) : 0;
   spray.pts.material.opacity = op;
   spray.pts.geometry.attributes.position.needsUpdate = true;
 }

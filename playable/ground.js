@@ -3,12 +3,10 @@
 const TEX = 256;
 const SNOW_MACRO_M = 9;
 const SNOW_MICRO_M = 1.4;
-const SNOW_DISP_M = 40;
 const DIRT_MACRO_M = 24;
 const DIRT_MICRO_M = 1.7;
 const DIRT_BROAD_M = 67;
 const SPARKLE = 0.55;
-const DISP = 0.07;
 
 function hash4(i, j, k, seed) {
   let n = Math.imul(i, 374761393) ^ Math.imul(j, 668265263) ^ Math.imul(k, 1440662683) ^ Math.imul(seed, 1274126177);
@@ -96,8 +94,8 @@ function groundTextures(THREE) {
 const f = (v) => v.toFixed(1);
 
 /**
- * One material for terrain and piste drapes. uDirt = 0: puffy snow (lumpy normals, cavity AO, sun glints,
- * near-camera bumps). uDirt = 1: mottled dirt. World-locked, so every mesh using it lines up seamlessly.
+ * One material for terrain and piste drapes. uDirt = 0: puffy snow (lumpy normals, cavity AO, sun glints).
+ * uDirt = 1: mottled dirt. World-locked, so every mesh using it lines up seamlessly.
  */
 export function snowTerrainMaterial(THREE, opts = {}) {
   const tex = groundTextures(THREE);
@@ -113,26 +111,16 @@ export function snowTerrainMaterial(THREE, opts = {}) {
     uDirtTex: { value: tex.dirt },
     uDirt: { value: 0 },
     uSparkle: { value: SPARKLE },
-    uDisp: { value: DISP },
   };
   mat.userData.ground = u;
   mat.onBeforeCompile = (shader) => {
     Object.assign(shader.uniforms, u);
+    /* No vertex displacement: skis and ski-wake sit on the DEM height, so any raise buries them. */
     shader.vertexShader = shader.vertexShader
-      .replace(
-        "#include <common>",
-        `#include <common>
-        uniform sampler2D uSnowTex;
-        uniform float uDirt, uDisp;
-        varying vec3 vGroundW;`,
-      )
+      .replace("#include <common>", "#include <common>\nvarying vec3 vGroundW;")
       .replace(
         "#include <begin_vertex>",
-        `#include <begin_vertex>
-        vGroundW = (modelMatrix * vec4(transformed, 1.0)).xyz;
-        /* Up-only, so drapes never sink under the terrain they sit on. Coarse lod: the meshes are ~3.5 m grids. */
-        float gFade = (1.0 - uDirt) * (1.0 - smoothstep(18.0, 42.0, distance(vGroundW, cameraPosition)));
-        if (gFade > 0.0) transformed.y += textureLod(uSnowTex, vGroundW.xz / ${f(SNOW_DISP_M)}, 4.0).b * uDisp * gFade;`,
+        "#include <begin_vertex>\n\tvGroundW = (modelMatrix * vec4(transformed, 1.0)).xyz;",
       );
     shader.fragmentShader = shader.fragmentShader
       .replace(

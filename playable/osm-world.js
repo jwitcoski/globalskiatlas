@@ -7,7 +7,7 @@ import { addOsmTraffic } from "./traffic.js?v=vis16";
 import { alongPolyline, polylineLen } from "./gates.js?v=vis17";
 import { liftType, liftCableHeight, makeLiftTerminal, makeLiftCarrier, makeLiftSkier } from "./lift-graphics.js?v=s2";
 import { createLiftMotion } from "./lift-motion.js";
-import { snowTerrainMaterial } from "./ground.js?v=g2";
+import { snowTerrainMaterial } from "./ground.js?v=g3";
 import { PALETTE } from "/scripts/clay/config.js";
 import { addClayBuilding } from "/scripts/clay/buildings.js";
 import {

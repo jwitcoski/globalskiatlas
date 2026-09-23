@@ -3,8 +3,9 @@
 const MAX = 340;
 const SPACING = 0.38;
 const GAP = 0.19;
-const HALF = 0.075;
-const SINK = 0.02;
+const HALF = 0.09;
+/* Just above the piste snow drape (lifted 0.08 in osm-world); below it the grooves z-fight into dots. */
+const LIFT = 0.1;
 const LIFE_S = 22;
 
 export function createSkiWake(THREE, scene) {
@@ -88,7 +89,7 @@ export function updateSkiWake(wake, hf, dt) {
     const hz = Math.cos(s.heading);
     const px = -hz;
     const pz = hx;
-    const y = hf.sample(s.x, s.z) - SINK;
+    const y = hf.sample(s.x, s.z) + LIFT;
     const i4 = i * 4;
     const grooves = [
       [-GAP, -GAP - HALF],
@@ -101,9 +102,9 @@ export function updateSkiWake(wake, hf, dt) {
         pos[vi * 3] = s.x + px * w;
         pos[vi * 3 + 1] = y;
         pos[vi * 3 + 2] = s.z + pz * w;
-        col[vi * 3] = 0.32 + 0.66 * f;
-        col[vi * 3 + 1] = 0.39 + 0.59 * f;
-        col[vi * 3 + 2] = 0.5 + 0.48 * f;
+        col[vi * 3] = 0.22 + 0.76 * f;
+        col[vi * 3 + 1] = 0.3 + 0.68 * f;
+        col[vi * 3 + 2] = 0.42 + 0.56 * f;
       }
     }
   }

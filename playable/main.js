@@ -28,7 +28,7 @@ import { featuredCourses, attachPisteDifficulty, courseFinish, createRun, tickRu
 import { coordsToXz, attachPiste, resetScore, tickScore, commitBestScore, formatScore, applyWipeout } from "./score.js?v=snow1";
 import { orientPiste, alongTrack, alongPolyline, placeGates, addGateMeshes, clearGateMeshes, resetGates, tickGates } from "./gates.js?v=vis18";
 import { addOsmWorld, applyPisteDecorDifficultyScheme, applySnowLevel } from "./osm-world.js?v=kit3";
-import { snowTerrainMaterial, makeGroundScatter, updateGroundScatter } from "./ground.js?v=g2";
+import { snowTerrainMaterial, makeGroundScatter, updateGroundScatter } from "./ground.js?v=g3";
 import {
   addSkyAndLights,
   followSky,
@@ -43,7 +43,7 @@ import {
   setInspectAtmosphere,
   makeComposer,
   fitComposer,
-} from "./look.js?v=pp2";
+} from "./look.js?v=spray2";
 import { addResortIsland, updateIslandDust, updateIslandLod, setIslandOpacity, resetIslandLod } from "./island.js?v=lod3b";
 import { bindUi, setHud, openPanel, closePanel, updateLoading, setOsmMapNote, setResortTitle, compactUi, setFlybyChrome, setHelpTips, paintSnowBtn } from "./ui.js?v=snow17";
 import { atlasStatsHtml, prefetchWikiIndex } from "./atlas-stats.js?v=stats1";
@@ -57,7 +57,7 @@ import { bindMobileChrome, bindPads } from "./mobile.js?v=s4";
 import { bakePisteSculpt, drapeSculptOnMesh } from "./piste-sculpt.js?v=feel3";
 import { addTrailMarks, clearTrailMarks, repairFences, updateTrailMarks } from "./trail-marks.js?v=marks12";
 import { makeYeti, resetYeti, parkYetiAtStart, tickYeti } from "./yeti.js?v=vis16";
-import { createSkiWake, clearSkiWake, pushSkiWake, updateSkiWake } from "./ski-wake.js?v=feel1";
+import { createSkiWake, clearSkiWake, pushSkiWake, updateSkiWake } from "./ski-wake.js?v=feel2";
 import {
   addTrailMap,
   setTrailMapSelection,
