@@ -28,8 +28,8 @@ import { featuredCourses, attachPisteDifficulty, courseFinish, createRun, tickRu
 import { coordsToXz, attachPiste, resetScore, tickScore, commitBestScore, formatScore, applyWipeout } from "./score.js?v=snow1";
 import { orientPiste, alongTrack, alongPolyline, placeGates, addGateMeshes, clearGateMeshes, resetGates, tickGates } from "./gates.js?v=vis18";
 import { addOsmWorld, applyPisteDecorDifficultyScheme, applySnowLevel } from "./osm-world.js?v=kit3";
+import { snowTerrainMaterial, makeGroundScatter, updateGroundScatter } from "./ground.js?v=g2";
 import {
-  snowTerrainMaterial,
   addSkyAndLights,
   followSky,
   followSun,
@@ -78,7 +78,7 @@ import {
 } from "./trail-map.js?v=mapall2";
 import { makeMinimap } from "./minimap.js?v=mapall1";
 import { createNpcSkiers, clearNpcSkiers, tickNpcSkiers, tryShoveNpc } from "./npc-skiers.js?v=s9";
-import { addCoverLines, cycleSnowLevel, getSnowLevel, loadSnowLevel, onPisteAt, setSnowLevel } from "./snow.js?v=snow17";
+import { SNOW, addCoverLines, cycleSnowLevel, getSnowLevel, loadSnowLevel, onPisteAt, setSnowLevel } from "./snow.js?v=snow17";
 import { updateTraffic } from "./traffic.js?v=vis16";
 import {
   TRAILER,
@@ -797,6 +797,8 @@ const blob = addContactBlob(THREE, scene);
 const spray = makeSpray(THREE, scene);
 const wake = createSkiWake(THREE, scene);
 const flakes = makeFallingSnow(THREE, scene);
+const scatter = makeGroundScatter(THREE, scene);
+const bareAt = (x, z) => onPisteAt(x, z, run.trailCover, undefined, run.pistePts) === false;
 const vel = new THREE.Vector3();
 const air = makeAirState();
 const shake = makeCamShake();
@@ -1592,6 +1594,10 @@ function tick(now) {
   }
   } catch (err) {
     console.error(err);
+  }
+  if (run) {
+    const lvl = getSnowLevel();
+    updateGroundScatter(scatter, camera.position, hf, bareAt, run, orbit.enabled || SNOW[lvl]?.offPiste ? null : lvl);
   }
   renderer.info.reset();
   followSky(look.sky, camera);

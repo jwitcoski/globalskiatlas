@@ -27,55 +27,6 @@ function flakeTexture(THREE) {
   return tex;
 }
 
-const SPARKLE = 0.55;
-
-/** Snow is a standard material plus a world-locked glitter grain that pops at grazing angles. */
-export function snowTerrainMaterial(THREE) {
-  const mat = new THREE.MeshStandardMaterial({
-    color: 0xfbfaf6,
-    roughness: 0.87,
-    metalness: 0,
-    side: THREE.DoubleSide,
-  });
-  mat.onBeforeCompile = (shader) => {
-    shader.uniforms.uSparkle = { value: SPARKLE };
-    shader.vertexShader = shader.vertexShader
-      .replace("#include <common>", "#include <common>\nvarying vec3 vSnowW;")
-      .replace(
-        "#include <begin_vertex>",
-        "#include <begin_vertex>\n\tvSnowW = (modelMatrix * vec4(transformed, 1.0)).xyz;",
-      );
-    shader.fragmentShader = shader.fragmentShader
-      .replace(
-        "#include <common>",
-        `#include <common>
-        varying vec3 vSnowW;
-        uniform float uSparkle;
-        float snowHash(vec2 p){
-          vec3 q = fract(vec3(p.xyx) * 0.1031);
-          q += dot(q, q.yzx + 33.33);
-          return fract((q.x + q.y) * q.z);
-        }`,
-      )
-      .replace(
-        "#include <dithering_fragment>",
-        `#include <dithering_fragment>
-        /* Near-field only: a filled cell reads as a block, so light one point inside it. */
-        float sparkFade = 1.0 - smoothstep(8.0, 34.0, length(vViewPosition));
-        if (sparkFade > 0.002) {
-          vec2 grid = vSnowW.xz * 6.0;
-          vec2 cell = mod(floor(grid), 512.0);
-          vec2 seed = fract(grid) - vec2(snowHash(cell + 7.3), snowHash(cell + 19.1));
-          float grain = 1.0 - smoothstep(0.1, 0.3, length(seed));
-          float fres = 1.0 - abs(dot(normalize(normal), normalize(vViewPosition)));
-          float sp = pow(snowHash(cell), 55.0) * grain * (0.4 + fres * 1.5) * sparkFade;
-          gl_FragColor.rgb += vec3(0.85, 0.92, 1.0) * sp * uSparkle;
-        }`,
-      );
-  };
-  return mat;
-}
-
 export function addSkyAndLights(THREE, scene, renderer) {
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.32;

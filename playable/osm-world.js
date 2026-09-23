@@ -7,6 +7,7 @@ import { addOsmTraffic } from "./traffic.js?v=vis16";
 import { alongPolyline, polylineLen } from "./gates.js?v=vis17";
 import { liftType, liftCableHeight, makeLiftTerminal, makeLiftCarrier, makeLiftSkier } from "./lift-graphics.js?v=s2";
 import { createLiftMotion } from "./lift-motion.js";
+import { snowTerrainMaterial } from "./ground.js?v=g2";
 import { PALETTE } from "/scripts/clay/config.js";
 import { addClayBuilding } from "/scripts/clay/buildings.js";
 import {
@@ -526,9 +527,8 @@ function xzRingToEn(ring) {
   return (ring || []).map((p) => [p.x, -p.z]);
 }
 
-const snowCoverFill = new THREE.MeshLambertMaterial({
+const snowCoverFill = snowTerrainMaterial(THREE, {
   color: 0xf7f4ee,
-  side: THREE.DoubleSide,
   polygonOffset: true,
   polygonOffsetFactor: -2,
   polygonOffsetUnits: -2,
@@ -590,6 +590,7 @@ export function applySnowLevel(scene) {
   }
   const mat = scene?.userData?.snowMat;
   if (mat?.color) mat.color.setHex(p.terrain);
+  if (mat?.userData.ground) mat.userData.ground.uDirt.value = p.offPiste ? 0 : 1;
   for (const mesh of scene?.userData?.island?.tops || []) {
     if (mesh.material?.color) mesh.material.color.setHex(p.terrain);
   }
