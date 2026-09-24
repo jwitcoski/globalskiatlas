@@ -97,177 +97,291 @@ function clampToDem(pos, hf) {
   pos.z = Math.min(b.maxZ - edge, Math.max(b.minZ + edge, pos.z));
 }
 
-function std(THREE, color, extra = {}) {
-  return new THREE.MeshStandardMaterial({
-    color,
-    metalness: extra.metalness ?? 0,
-    roughness: extra.roughness ?? 0.72,
-    envMapIntensity: extra.env ?? 0.55,
-    flatShading: extra.flat !== false,
-    ...extra.rest,
-  });
-}
+export const READY_POSE = {
+  torsoPitch: 18,
+  headPitch: -6,
+  kneeBend: 28,
+  shoulderAbduct: 20,
+  shoulderFlex: 24,
+  elbowBend: 90,
+  poleAngle: 45,
+  poleOut: 10,
+};
+export const TUCK_POSE = {
+  torsoPitch: 42,
+  headPitch: 12,
+  kneeBend: 48,
+  shoulderAbduct: 16,
+  shoulderFlex: 40,
+  elbowBend: 100,
+  poleAngle: 52,
+  poleOut: 8,
+};
+/** Live tuning. manual true uses tuckAmount instead of the speed blend. */
+export const poseTune = {
+  manual: false,
+  tuckAmount: 0,
+  torsoPitch: READY_POSE.torsoPitch,
+  shoulderAbduct: READY_POSE.shoulderAbduct,
+  shoulderFlex: READY_POSE.shoulderFlex,
+  elbowBend: READY_POSE.elbowBend,
+};
+const TUCK_CAP = 0.6;
+const TUCK_TAU = 0.2;
+const DEG = Math.PI / 180;
+const ARM_SWAY = 5 * DEG;
 
 /**
- * Stylized low-poly alpine racer: red/white race suit, white helmet on mirrored
- * goggles, long yellow skis. Built as named joints so `orientSkier` can pose it
- * (lean, tuck, brake, air) and so `skiTails` can still find the ski tails.
+ * Low-poly skier read from the chase camera: separate joints, colored jacket,
+ * dark pants. `orientSkier` still poses torso, legs, head, arms, poles, and skis.
+ * Ski tails stay near local z = -0.9 so spray can find them.
  */
 export function makeSkier(THREE, scene, opts = {}) {
   const g = new THREE.Group();
   g.name = opts.name || "skier";
 
-  const suit = std(THREE, opts.suit ?? 0xd8342e, { roughness: 0.6 });
-  const panel = std(THREE, 0xf1f3f6, { roughness: 0.64 });
-  const dark = std(THREE, 0x1b1e23, { roughness: 0.5, env: 0.75 });
-  const shell = std(THREE, 0xf6f8fa, { roughness: 0.3, metalness: 0.06, env: 0.95 });
-  const skiTop = std(THREE, opts.ski ?? 0xf2c02e, { roughness: 0.28, metalness: 0.16, env: 1 });
-  const skiBase = std(THREE, 0x15171c, { roughness: 0.22, metalness: 0.3, env: 1 });
-  const skin = std(THREE, 0xd2a887, { roughness: 0.72 });
-  const metal = std(THREE, 0x8d949c, { roughness: 0.34, metalness: 0.6, env: 1 });
-  const visorMat = new THREE.MeshPhysicalMaterial({
-    color: 0x101820,
-    metalness: 0.85,
-    roughness: 0.08,
-    clearcoat: 1,
-    clearcoatRoughness: 0.05,
-    envMapIntensity: 1.6,
-  });
+  const jacketColor = opts.jacketColor ?? opts.suit ?? 0xd8342e;
+  const COLORS = {
+    jacket: jacketColor,
+    pants: 0x2c3138,
+    pantsDark: 0x1a1e24,
+    boot: 0x14171c,
+    buckle: 0x8d949c,
+    glove: 0x121418,
+    helmet: 0xf4f6f8,
+    goggle: 0x14181c,
+    visor: 0x0c1014,
+    ski: 0x2a2e33,
+    skiStripe: opts.ski ?? jacketColor,
+    skiBase: 0x141618,
+    pole: 0x2e3238,
+    grip: 0x141618,
+    basket: 0x3a3e44,
+    bib: 0x111214,
+    seam: 0x1a1e24,
+  };
+  const mat = (color, rough = 0.82) =>
+    new THREE.MeshStandardMaterial({ color, roughness: rough, metalness: 0, flatShading: true });
+  const jacket = mat(COLORS.jacket, 0.78);
+  const pants = mat(COLORS.pants, 0.88);
+  const pantsDark = mat(COLORS.pantsDark, 0.9);
+  const bootMat = mat(COLORS.boot, 0.86);
+  const gloveMat = mat(COLORS.glove, 0.8);
+  const shell = mat(COLORS.helmet, 0.72);
+  const dark = mat(COLORS.goggle, 0.84);
+  const skiTop = mat(COLORS.ski, 0.7);
+  const skiStripe = mat(COLORS.skiStripe, 0.74);
+  const skiBase = mat(COLORS.skiBase, 0.8);
 
-  /* --- hips: everything above the boots, so tuck/lean rotate here --- */
+  function makePivot(name) {
+    const p = new THREE.Group();
+    p.name = name;
+    return p;
+  }
+  function makeLimb(name, geo, material) {
+    const mesh = new THREE.Mesh(geo, material);
+    mesh.name = name;
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    return mesh;
+  }
+  function flattenSki(ski) {
+    g.updateWorldMatrix(true, true);
+    const parentQ = new THREE.Quaternion();
+    ski.parent.getWorldQuaternion(parentQ);
+    ski.quaternion.copy(parentQ.invert());
+    const e = new THREE.Euler().setFromQuaternion(ski.quaternion, "XYZ");
+    ski.rotation.copy(e);
+    ski.userData.flat = { x: e.x, y: e.y, z: e.z };
+    g.updateWorldMatrix(true, true);
+    const wp = new THREE.Vector3();
+    ski.getWorldPosition(wp);
+    const target = wp.clone();
+    target.y = -0.76;
+    ski.parent.worldToLocal(target);
+    ski.position.copy(target);
+    ski.userData.rest = { x: ski.position.x, y: ski.position.y };
+  }
+  function aimPole(pole, side) {
+    g.updateWorldMatrix(true, true);
+    const wrist = pole.parent;
+    const parentQ = new THREE.Quaternion();
+    wrist.getWorldQuaternion(parentQ);
+    const below = (READY_POSE.poleAngle * Math.PI) / 180;
+    const out = (READY_POSE.poleOut * Math.PI) / 180;
+    const dir = new THREE.Vector3(
+      side * Math.sin(out) * Math.cos(below),
+      -Math.sin(below),
+      -Math.cos(out) * Math.cos(below),
+    ).normalize();
+    dir.applyQuaternion(parentQ.invert());
+    const q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, -1, 0), dir);
+    pole.quaternion.copy(q);
+    const e = new THREE.Euler().setFromQuaternion(pole.quaternion, "XYZ");
+    pole.rotation.copy(e);
+    pole.userData.restX = e.x;
+    pole.userData.restZ = e.z;
+  }
+
+  /* Torso hinge stays upright for orientSkier. The rig inside holds the ski lean. */
   const torso = new THREE.Group();
   torso.name = "torso";
+  const rig = makePivot("rig");
+  rig.rotation.x = 0;
+  rig.position.z = -0.1;
 
-  const pelvis = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.2, 0.26), suit);
-  pelvis.name = "pelvis";
-  pelvis.position.y = 0.02;
+  const coat = makeLimb("torsoMesh", new THREE.CylinderGeometry(0.34, 0.27, 0.52, 10), jacket);
+  coat.position.y = 0.32;
+  const hem = makeLimb("hem", new THREE.CylinderGeometry(0.38, 0.32, 0.12, 10), jacket);
+  hem.position.y = 0.06;
+  const collar = makeLimb("collar", new THREE.TorusGeometry(0.15, 0.07, 6, 14), jacket);
+  collar.rotation.x = Math.PI / 2;
+  collar.position.y = 0.58;
+  const hood = makeLimb("hood", new THREE.SphereGeometry(0.18, 10, 8), jacket);
+  hood.position.set(0, 0.62, -0.14);
+  hood.scale.set(1.15, 0.72, 0.9);
+  const seam = makeLimb("seam", new THREE.BoxGeometry(0.045, 0.44, 0.025), mat(COLORS.seam, 0.9));
+  seam.position.set(0, 0.32, -0.28);
+  const bib = makeLimb("bib", new THREE.CircleGeometry(0.1, 14), mat(COLORS.bib, 0.9));
+  bib.position.set(0, 0.4, -0.29);
+  bib.rotation.y = Math.PI;
 
-  const chest = new THREE.Mesh(new THREE.CylinderGeometry(0.23, 0.27, 0.5, 8), suit);
-  chest.name = "chest";
-  chest.position.y = 0.36;
-  const bib = new THREE.Mesh(new THREE.CylinderGeometry(0.235, 0.24, 0.17, 8, 1, true), panel);
-  bib.position.y = 0.44;
-  const shoulders = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.16, 0.26), suit);
-  shoulders.position.y = 0.6;
-  const pack = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.3, 0.14), dark);
-  pack.position.set(0, 0.4, -0.24);
+  const head = makePivot("head");
+  head.position.y = 0.78;
+  const helmet = makeLimb("helmet", new THREE.SphereGeometry(0.253, 16, 12), shell);
+  helmet.scale.set(1.05, 0.92, 1.08);
+  helmet.position.y = 0.16;
+  const rim = makeLimb("rim", new THREE.TorusGeometry(0.2, 0.028, 6, 16, Math.PI), shell);
+  rim.position.set(0, 0.08, -0.04);
+  rim.rotation.y = Math.PI;
+  rim.rotation.x = 1.2;
+  const earG = new THREE.SphereGeometry(0.07, 8, 6);
+  const earL = makeLimb("earL", earG, shell);
+  const earR = makeLimb("earR", earG, shell);
+  earL.position.set(-0.2, 0.1, 0);
+  earR.position.set(0.2, 0.1, 0);
+  earL.scale.set(0.7, 1.1, 0.85);
+  earR.scale.set(0.7, 1.1, 0.85);
+  const strap = makeLimb("strap", new THREE.TorusGeometry(0.2, 0.02, 6, 18), dark);
+  strap.position.set(0, 0.1, 0.02);
+  strap.rotation.x = Math.PI / 2;
+  strap.scale.set(1.02, 1.02, 0.85);
+  const visor = makeLimb("visor", new THREE.BoxGeometry(0.28, 0.09, 0.03), mat(COLORS.visor, 0.35));
+  visor.position.set(0, 0.1, 0.2);
+  head.add(helmet, rim, earL, earR, strap, visor);
 
-  const head = new THREE.Group();
-  head.name = "head";
-  head.position.y = 0.72;
-  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.09, 0.09, 6), skin);
-  const helmet = new THREE.Mesh(new THREE.SphereGeometry(0.2, 10, 7), shell);
-  helmet.name = "helmet";
-  helmet.position.y = 0.19;
-  helmet.scale.set(1.04, 0.94, 1.1);
-  const brim = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.05, 0.1), shell);
-  brim.position.set(0, 0.2, 0.19);
-  brim.rotation.x = 0.18;
-  const visor = new THREE.Mesh(new THREE.SphereGeometry(0.185, 12, 8, 0, Math.PI, 0.9, 0.7), visorMat);
-  visor.name = "visor";
-  visor.position.set(0, 0.17, 0.02);
-  visor.rotation.y = Math.PI;
-  visor.scale.set(1.06, 0.85, 1.14);
-  head.add(neck, helmet, brim, visor);
-
-  const armG = new THREE.CylinderGeometry(0.062, 0.05, 0.44, 6);
-  const gloveG = new THREE.BoxGeometry(0.11, 0.1, 0.14);
   function arm(side) {
-    const root = new THREE.Group();
-    root.name = side < 0 ? "armL" : "armR";
-    root.position.set(side * 0.26, 0.56, 0.02);
-    const upper = new THREE.Mesh(armG, suit);
-    upper.position.set(side * 0.06, -0.18, 0.14);
-    upper.rotation.set(-0.85, 0, side * -0.24);
-    const glove = new THREE.Mesh(gloveG, dark);
-    glove.position.set(side * 0.11, -0.32, 0.36);
-    root.add(upper, glove);
-    root.userData.upper = upper;
-    root.userData.glove = glove;
-    root.userData.restRot = { x: 0, y: 0, z: 0 };
-    return root;
+    const s = side < 0 ? "L" : "R";
+    const deg = Math.PI / 180;
+    const shoulder = makePivot("shoulder" + s);
+    shoulder.name = side < 0 ? "armL" : "armR";
+    shoulder.position.set(side * 0.28, 0.5, 0.02);
+    shoulder.rotation.x = -READY_POSE.shoulderFlex * deg;
+    shoulder.rotation.z = side * READY_POSE.shoulderAbduct * deg;
+    shoulder.userData.baseX = shoulder.rotation.x;
+    shoulder.userData.baseZ = shoulder.rotation.z;
+    const upper = makeLimb("upperArm" + s, new THREE.CylinderGeometry(0.11, 0.1, 0.32, 8), jacket);
+    upper.position.y = -0.16;
+    const elbow = makePivot("elbow" + s);
+    elbow.position.y = -0.32;
+    elbow.rotation.x = -READY_POSE.elbowBend * deg;
+    elbow.rotation.z = side * 8 * deg;
+    const forearm = makeLimb("forearm" + s, new THREE.CylinderGeometry(0.1, 0.09, 0.28, 8), jacket);
+    forearm.position.y = -0.14;
+    const wrist = makePivot("wrist" + s);
+    wrist.position.y = -0.28;
+    const cuff = makeLimb("cuff" + s, new THREE.CylinderGeometry(0.078, 0.062, 0.12, 8), gloveMat);
+    cuff.position.y = 0.04;
+    const hand = makeLimb("hand" + s, new THREE.BoxGeometry(0.16, 0.12, 0.18), gloveMat);
+    hand.position.set(0, -0.07, 0.02);
+    wrist.add(cuff, hand);
+    const pole = makePivot("pole" + s);
+    pole.position.set(0, -0.06, 0.02);
+    const shaft = makeLimb("shaft" + s, new THREE.CylinderGeometry(0.02, 0.015, 1.15, 6), mat(COLORS.pole, 0.76));
+    shaft.position.y = -0.62;
+    const grip = makeLimb("grip" + s, new THREE.CylinderGeometry(0.028, 0.026, 0.14, 6), mat(COLORS.grip, 0.84));
+    grip.position.y = -0.02;
+    const basket = makeLimb("basket" + s, new THREE.TorusGeometry(0.065, 0.012, 5, 10), mat(COLORS.basket, 0.8));
+    basket.position.y = -1.05;
+    basket.rotation.x = Math.PI / 2;
+    pole.add(grip, shaft, basket);
+    pole.userData.side = side;
+    wrist.add(pole);
+    elbow.add(forearm, wrist);
+    shoulder.add(upper, elbow);
+    shoulder.userData.restRot = { x: 0, y: 0, z: 0 };
+    return { shoulder, elbow, wrist, pole };
   }
-  const armL = arm(-1);
-  const armR = arm(1);
+  const leftArm = arm(-1);
+  const rightArm = arm(1);
+  const armL = leftArm.shoulder;
+  const armR = rightArm.shoulder;
+  const poleL = leftArm.pole;
+  const poleR = rightArm.pole;
+  rig.add(coat, hem, collar, hood, seam, bib, head, armL, armR);
+  torso.add(rig);
 
-  /* Racer tuck: poles ride under the arms, tips swept back and clear of the snow. */
-  const poleG = new THREE.CylinderGeometry(0.014, 0.011, 1.2, 5);
-  const basketG = new THREE.CylinderGeometry(0.06, 0.06, 0.02, 6);
-  function pole(side) {
-    const root = new THREE.Group();
-    root.name = side < 0 ? "poleL" : "poleR";
-    root.position.set(side * 0.31, 0.22, 0.16);
-    root.rotation.set(1.24, 0, side * 0.14);
-    root.userData.restX = 1.24;
-    root.userData.restZ = side * 0.14;
-    const shaft = new THREE.Mesh(poleG, metal);
-    shaft.position.y = -0.5;
-    const basket = new THREE.Mesh(basketG, dark);
-    basket.position.y = -1.0;
-    root.add(shaft, basket);
-    return root;
-  }
-
-  const poleL = pole(-1);
-  const poleR = pole(1);
-  torso.add(pelvis, chest, bib, shoulders, pack, head, armL, armR, poleL, poleR);
-
-  /* --- legs: scaled on Y for the crouch so the boots stay over the skis --- */
+  /* Legs scale on Y in the crouch. Knee bend lives on the knee pivot. */
   const legs = new THREE.Group();
   legs.name = "legs";
-  const thighG = new THREE.CylinderGeometry(0.105, 0.088, 0.36, 6);
-  const calfG = new THREE.CylinderGeometry(0.086, 0.072, 0.3, 6);
-  const bootG = new THREE.BoxGeometry(0.14, 0.16, 0.3);
-  const cuffG = new THREE.BoxGeometry(0.15, 0.08, 0.2);
   function leg(side) {
-    const root = new THREE.Group();
-    root.name = side < 0 ? "legL" : "legR";
-    root.position.set(side * 0.13, -0.08, 0);
-    const thigh = new THREE.Mesh(thighG, suit);
-    thigh.name = "thigh";
-    thigh.position.set(0, -0.19, 0.03);
-    const calf = new THREE.Mesh(calfG, panel);
-    calf.name = "calf";
-    calf.position.set(0, -0.52, 0.01);
-    const boot = new THREE.Mesh(bootG, dark);
-    boot.name = "boot";
-    boot.position.set(0, -0.77, 0.05);
-    const cuff = new THREE.Mesh(cuffG, skiTop);
-    cuff.position.set(0, -0.68, 0.02);
-    root.add(thigh, calf, boot, cuff);
-    return root;
-  }
-  legs.add(leg(-1), leg(1));
-
-  /* --- skis: siblings of the body so they stay welded to the snow line --- */
-  const skiL = new THREE.Group();
-  const skiR = new THREE.Group();
-  skiL.name = "skiL";
-  skiR.name = "skiR";
-  const boardG = new THREE.BoxGeometry(0.115, 0.026, 1.9);
-  const edgeG = new THREE.BoxGeometry(0.125, 0.012, 1.9);
-  const tipG = new THREE.BoxGeometry(0.1, 0.022, 0.2);
-  const bindG = new THREE.BoxGeometry(0.13, 0.05, 0.34);
-  function buildSki(group, x) {
-    const board = new THREE.Mesh(boardG, skiTop);
-    board.position.y = 0.012;
-    const edge = new THREE.Mesh(edgeG, skiBase);
-    edge.position.y = -0.006;
-    const tip = new THREE.Mesh(tipG, skiTop);
-    tip.position.set(0, 0.055, 0.98);
+    const s = side < 0 ? "L" : "R";
+    const hip = makePivot("hip" + s);
+    hip.name = side < 0 ? "legL" : "legR";
+    hip.position.set(side * 0.22, 0.02, -0.02);
+    hip.rotation.x = 0.42;
+    const thigh = makeLimb("thigh" + s, new THREE.CylinderGeometry(0.14, 0.11, 0.38, 8), pants);
+    thigh.position.y = -0.18;
+    const knee = makePivot("knee" + s);
+    knee.position.set(0, -0.36, 0.04);
+    knee.rotation.x = 0.55;
+    knee.userData.restX = 0.55;
+    const bulge = makeLimb("kneeBulge" + s, new THREE.SphereGeometry(0.105, 8, 6), pantsDark);
+    bulge.scale.set(1.05, 0.65, 1.2);
+    const shin = makeLimb("shin" + s, new THREE.CylinderGeometry(0.105, 0.09, 0.32, 8), pants);
+    shin.position.y = -0.16;
+    const ankle = makePivot("ankle" + s);
+    ankle.position.y = -0.32;
+    ankle.rotation.x = -0.8;
+    const drape = makeLimb("pantHem" + s, new THREE.CylinderGeometry(0.12, 0.135, 0.12, 8), pantsDark);
+    drape.position.y = 0.04;
+    const boot = makeLimb("boot" + s, new THREE.BoxGeometry(0.18, 0.26, 0.36), bootMat);
+    boot.position.set(0, -0.12, 0.05);
+    const buckle = makeLimb("buckle" + s, new THREE.BoxGeometry(0.19, 0.035, 0.06), mat(COLORS.buckle, 0.45));
+    buckle.position.set(0, 0.0, 0.18);
+    ankle.add(drape, boot, buckle);
+    const ski = makePivot(side < 0 ? "leftSki" : "rightSki");
+    ski.position.set(0, -0.1, 0.08);
+    ski.userData.rest = { x: 0, y: -0.1 };
+    const board = makeLimb("board", new THREE.BoxGeometry(0.2, 0.08, 1.9), skiTop);
+    const edge = makeLimb("edge", new THREE.BoxGeometry(0.2, 0.016, 1.9), skiBase);
+    edge.position.y = -0.03;
+    const stripe = makeLimb("stripe", new THREE.BoxGeometry(0.06, 0.012, 1.55), skiStripe);
+    stripe.position.y = 0.046;
+    const tip = makeLimb("tip", new THREE.BoxGeometry(0.18, 0.04, 0.26), skiTop);
+    tip.position.set(0, 0.08, 1.02);
     tip.rotation.x = -0.4;
-    const tail = new THREE.Mesh(tipG, skiTop);
-    tail.position.set(0, 0.035, -0.97);
-    tail.rotation.x = 0.24;
-    const binding = new THREE.Mesh(bindG, dark);
-    binding.position.set(0, 0.05, 0.05);
-    group.add(board, edge, tip, tail, binding);
-    group.position.set(x, -0.99, 0.12);
+    const tail = makeLimb("tail", new THREE.BoxGeometry(0.14, 0.03, 0.16), skiTop);
+    tail.position.set(0, 0.01, -0.98);
+    const binding = makeLimb("binding", new THREE.BoxGeometry(0.15, 0.06, 0.32), bootMat);
+    binding.position.set(0, 0.06, 0);
+    ski.add(edge, board, stripe, tip, tail, binding);
+    ankle.add(ski);
+    knee.add(bulge, shin, ankle);
+    hip.add(thigh, knee);
+    return { hip, knee, ankle, ski };
   }
-  buildSki(skiL, -0.19);
-  buildSki(skiR, 0.19);
+  const leftLeg = leg(-1);
+  const rightLeg = leg(1);
+  legs.add(leftLeg.hip, rightLeg.hip);
+  const skiL = leftLeg.ski;
+  const skiR = rightLeg.ski;
 
-  g.add(torso, legs, skiL, skiR);
+  g.add(torso, legs);
+  aimPole(poleL, -1);
+  aimPole(poleR, 1);
+  flattenSki(skiL);
+  flattenSki(skiR);
   g.userData.torso = torso;
   g.userData.legs = legs;
   g.userData.head = head;
@@ -277,6 +391,20 @@ export function makeSkier(THREE, scene, opts = {}) {
   g.userData.poleR = poleR;
   g.userData.armL = armL;
   g.userData.armR = armR;
+  g.userData.joints = {
+    shoulderL: leftArm.shoulder,
+    elbowL: leftArm.elbow,
+    wristL: leftArm.wrist,
+    shoulderR: rightArm.shoulder,
+    elbowR: rightArm.elbow,
+    wristR: rightArm.wrist,
+    hipL: leftLeg.hip,
+    kneeL: leftLeg.knee,
+    ankleL: leftLeg.ankle,
+    hipR: rightLeg.hip,
+    kneeR: rightLeg.knee,
+    ankleR: rightLeg.ankle,
+  };
   g.userData.pose = { crouch: 0, splay: 0, fold: 0 };
   g.traverse((o) => {
     o.renderOrder = 20;
@@ -442,7 +570,9 @@ export function beginFall(THREE, skier, hf, side = 1) {
 }
 
 export function clearFall(skier) {
-  if (skier?.userData) skier.userData.fall = null;
+  if (!skier?.userData) return;
+  skier.userData.fall = null;
+  if (skier.userData.pose) skier.userData.pose.tuck = 0;
 }
 
 /** Tumble, lie, then stand up. Returns true while the sequence is still playing. */
@@ -787,7 +917,6 @@ function posture(skier, steer, lean, opts) {
   const torso = skier.userData.torso;
   if (!pose || !torso) return;
   const dt = opts.dt || 1 / 60;
-  const fast = Math.min(1, (opts.speed || 0) / 26);
   const air = !!opts.air;
   const brake = !!opts.brake;
   const tuck = !!opts.tuck && !opts.pole;
@@ -806,31 +935,50 @@ function posture(skier, steer, lean, opts) {
     skier.userData.poleT = 0;
   }
 
-  const wantCrouch = air ? 0.9 : poling ? 0.28 + stroke.fold * 0.2 : brake ? 0.4 : tuck ? 1 : 0.22 + fast * 0.34;
-  const wantFold = air ? 0.55 : poling ? stroke.fold : brake ? 0.08 : tuck ? 1 : 0.24 + fast * 0.34;
+  const speed = opts.speed || 0;
+  const turning = Math.abs(steer) > 0.28;
+  let wantTuckAmt = 0;
+  if (!brake && !air && !turning && !poling && speed > 16) {
+    wantTuckAmt = Math.min(TUCK_CAP, (speed - 16) / 14);
+  }
+  if (tuck && !brake) wantTuckAmt = Math.max(wantTuckAmt, TUCK_CAP);
+  if (poseTune.manual) wantTuckAmt = Math.min(1, Math.max(0, poseTune.tuckAmount));
+  const damp = 1 - Math.exp(-dt / TUCK_TAU);
+  pose.tuck = (pose.tuck || 0) + (wantTuckAmt - (pose.tuck || 0)) * damp;
+  const tuckAmt = pose.tuck;
+
+  const readyPitch = poseTune.torsoPitch;
+  const readyAbd = poseTune.shoulderAbduct;
+  const readyFlex = poseTune.shoulderFlex;
+  const readyElbow = poseTune.elbowBend;
+  const pitch = lerp(readyPitch, TUCK_POSE.torsoPitch, tuckAmt);
+  const abduct = lerp(readyAbd, TUCK_POSE.shoulderAbduct, tuckAmt);
+  const flex = lerp(readyFlex, TUCK_POSE.shoulderFlex, tuckAmt);
+  const elbowBend = lerp(readyElbow, TUCK_POSE.elbowBend, tuckAmt);
+  const headPitch = lerp(READY_POSE.headPitch, TUCK_POSE.headPitch, tuckAmt);
+
+  const wantCrouch = air ? 0.55 : 0.1 + tuckAmt * 0.35;
   const wantSplay = brake ? 1 : Math.min(1, Math.abs(steer) * 0.5 + (skier.userData.skid || 0) * 0.07);
   const wantAir = air ? 1 : 0;
 
   pose.crouch = ease(pose.crouch, wantCrouch);
-  pose.fold = ease(pose.fold, wantFold);
   pose.splay = ease(pose.splay, wantSplay);
   pose.air = ease(pose.air || 0, wantAir);
 
-  /* Hips sink by `drop`; the legs shorten by the same amount so the boots stay on the skis. */
   const drop = pose.crouch * CROUCH_M;
-  torso.rotation.x = 0.14 + pose.fold * 0.72;
-  torso.rotation.z = -lean * 0.5;
+  const edge = Math.max(-ARM_SWAY, Math.min(ARM_SWAY, lean * 0.35));
+  torso.rotation.x = pitch * DEG;
+  torso.rotation.z = -edge;
   torso.position.y = -drop;
-  torso.position.z = pose.fold * 0.07;
+  torso.position.z = tuckAmt * 0.04;
 
   const legs = skier.userData.legs;
   if (legs) {
     legs.position.y = -drop;
     legs.scale.y = 1 - drop / LEG_LEN;
-    legs.rotation.x = pose.fold * 0.08;
   }
   const head = skier.userData.head;
-  if (head) head.rotation.x = -pose.fold * 0.58;
+  if (head) head.rotation.x = headPitch * DEG;
 
   const splay = pose.splay * 0.13;
   const lift = pose.air;
@@ -839,11 +987,39 @@ function posture(skier, steer, lean, opts) {
     [skier.userData.skiR, 1],
   ]) {
     if (!node) continue;
-    node.rotation.y = side * splay;
-    node.rotation.z = -lean * 0.45;
-    node.rotation.x = -lift * 0.24;
-    node.position.y = -0.99 + lift * 0.09;
-    node.position.x = side * (0.19 + pose.splay * 0.06);
+    const flat = node.userData.flat;
+    if (flat) {
+      node.rotation.x = flat.x - lift * 0.2;
+      node.rotation.y = flat.y + side * splay;
+      node.rotation.z = flat.z - lean * 0.35;
+    } else {
+      node.rotation.y = side * splay;
+      node.rotation.z = -lean * 0.35;
+      node.rotation.x = -lift * 0.2;
+    }
+    if (node.userData.rest) {
+      node.position.x = node.userData.rest.x;
+      node.position.y = node.userData.rest.y + lift * 0.05;
+    } else {
+      node.position.y = -0.99 + lift * 0.09;
+      node.position.x = side * (0.32 + pose.splay * 0.06);
+    }
+  }
+  const joints = skier.userData.joints;
+  if (joints?.hipL && joints?.hipR) {
+    joints.hipL.rotation.z = edge;
+    joints.hipR.rotation.z = edge;
+    const extra = tuckAmt * (TUCK_POSE.kneeBend - READY_POSE.kneeBend) * DEG;
+    joints.kneeL.rotation.x = (joints.kneeL.userData.restX || 0.55) + extra;
+    joints.kneeR.rotation.x = (joints.kneeR.userData.restX || 0.55) + extra;
+  }
+  if (joints?.shoulderL && joints?.elbowL) {
+    joints.shoulderL.rotation.x = -flex * DEG;
+    joints.shoulderR.rotation.x = -flex * DEG;
+    joints.shoulderL.rotation.z = -abduct * DEG;
+    joints.shoulderR.rotation.z = abduct * DEG;
+    joints.elbowL.rotation.x = -elbowBend * DEG;
+    joints.elbowR.rotation.x = -elbowBend * DEG;
   }
 
   const poleL = skier.userData.poleL;
@@ -856,10 +1032,11 @@ function posture(skier, steer, lean, opts) {
     const restZR = poleR.userData.restZ || 0.14;
     const leftHit = shoving && (skier.userData.shoveSide || 1) < 0;
     const rightHit = shoving && !leftHit;
-    const wantXL = leftHit ? stroke.poleX : poling ? stroke.poleX : restXL;
-    const wantXR = rightHit ? stroke.poleX : poling ? stroke.poleX : restXR;
-    const wantZL = leftHit ? -stroke.poleZ : restZL;
-    const wantZR = rightHit ? stroke.poleZ : restZR;
+    const cap = (v) => Math.max(-ARM_SWAY, Math.min(ARM_SWAY, v));
+    const wantXL = restXL + cap(leftHit || poling ? stroke.poleX - restXL : 0);
+    const wantXR = restXR + cap(rightHit || poling ? stroke.poleX - restXR : 0);
+    const wantZL = restZL + cap(leftHit ? -stroke.poleZ : 0);
+    const wantZR = restZR + cap(rightHit ? stroke.poleZ : 0);
     poleL.rotation.x += (wantXL - poleL.rotation.x) * k;
     poleR.rotation.x += (wantXR - poleR.rotation.x) * k;
     poleL.rotation.z += (wantZL - poleL.rotation.z) * k;
@@ -868,14 +1045,10 @@ function posture(skier, steer, lean, opts) {
   const armL = skier.userData.armL;
   const armR = skier.userData.armR;
   if (armL && armR) {
-    const reach = poling ? 1.05 - stroke.poleX : 0;
-    const poleArm = poling ? -0.15 - reach * 0.55 : 0;
-    const leftHit = shoving && (skier.userData.shoveSide || 1) < 0;
-    const rightHit = shoving && !leftHit;
-    const wantArmL = leftHit ? stroke.armX : poleArm;
-    const wantArmR = rightHit ? stroke.armX : poleArm;
-    const wantZL = leftHit ? -stroke.armZ : poling ? 0.12 : 0;
-    const wantZR = rightHit ? stroke.armZ : poling ? -0.12 : 0;
+    const wantArmL = -flex * DEG;
+    const wantArmR = -flex * DEG;
+    const wantZL = -abduct * DEG;
+    const wantZR = abduct * DEG;
     armL.rotation.x += (wantArmL - armL.rotation.x) * k;
     armR.rotation.x += (wantArmR - armR.rotation.x) * k;
     armL.rotation.z += (wantZL - armL.rotation.z) * k;

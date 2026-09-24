@@ -2,9 +2,11 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { GUI } from "three/addons/libs/lil-gui.module.min.js";
 import { makeHeightfield } from "./heightfield.js?v=cam2";
 import {
   makeSkier,
+  poseTune,
   spawnOnSlope,
   stepSki,
   orientSkier,
@@ -23,11 +25,11 @@ import {
   startShove,
   shoveShouldHit,
   markShoveHit,
-} from "./physics.js?v=snow1";
+} from "./physics.js?v=ready3";
 import { featuredCourses, attachPisteDifficulty, courseFinish, createRun, tickRun, formatTime } from "./run.js?v=map4";
 import { coordsToXz, attachPiste, resetScore, tickScore, commitBestScore, formatScore, applyWipeout } from "./score.js?v=snow1";
 import { orientPiste, alongTrack, alongPolyline, placeGates, addGateMeshes, clearGateMeshes, resetGates, tickGates } from "./gates.js?v=vis18";
-import { addOsmWorld, applyPisteDecorDifficultyScheme, applySnowLevel } from "./osm-world.js?v=kit3";
+import { addOsmWorld, applyPisteDecorDifficultyScheme, applySnowLevel } from "./osm-world.js?v=snow1";
 import { snowTerrainMaterial, makeGroundScatter, updateGroundScatter } from "./ground.js?v=g3";
 import {
   addSkyAndLights,
@@ -43,7 +45,7 @@ import {
   setInspectAtmosphere,
   makeComposer,
   fitComposer,
-} from "./look.js?v=spray2";
+} from "./look.js?v=spray3";
 import { addResortIsland, updateIslandDust, updateIslandLod, setIslandOpacity, resetIslandLod } from "./island.js?v=lod3b";
 import { bindUi, setHud, openPanel, closePanel, updateLoading, setOsmMapNote, setResortTitle, compactUi, setFlybyChrome, setHelpTips, paintSnowBtn } from "./ui.js?v=snow17";
 import { atlasStatsHtml, prefetchWikiIndex } from "./atlas-stats.js?v=stats1";
@@ -792,6 +794,17 @@ function fitRenderer() {
 }
 
 const skier = makeSkier(THREE, scene);
+{
+  const gui = new GUI({ title: "Skier pose" });
+  const folder = gui.addFolder("Stance");
+  folder.add(poseTune, "manual").name("manual tuck");
+  folder.add(poseTune, "tuckAmount", 0, 1, 0.01);
+  folder.add(poseTune, "torsoPitch", 0, 60, 1).name("torso pitch");
+  folder.add(poseTune, "shoulderAbduct", 0, 25, 1).name("shoulder abduct");
+  folder.add(poseTune, "shoulderFlex", 0, 60, 1).name("shoulder flex");
+  folder.add(poseTune, "elbowBend", 40, 120, 1).name("elbow bend");
+  folder.open();
+}
 const yeti = makeYeti(THREE, scene);
 const blob = addContactBlob(THREE, scene);
 const spray = makeSpray(THREE, scene);
@@ -1487,7 +1500,7 @@ function tick(now) {
       if (!skier.userData.fall) {
         orientSkier(THREE, skier, skier.position, heading, vel, hf, skier.userData.steer || 0, {
           air: skier.userData.air,
-          tuck: (intent.tuck || vel.length() > 11) && !skier.userData.pole,
+          tuck: !!intent.tuck && !skier.userData.pole,
           pole: !!skier.userData.pole,
           brake: intent.brake,
           speed: vel.length(),

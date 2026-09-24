@@ -1,6 +1,6 @@
 /** Other skiers on and across the chevron ribbon. Hit like trees. */
 
-import { makeSkier, orientSkier, beginFall } from "./physics.js?v=s7";
+import { makeSkier, orientSkier, beginFall } from "./physics.js?v=ready3";
 import { alongPolyline, polylineLen, alongTrack } from "./gates.js?v=vis18";
 import { tickFallPose } from "./physics.js?v=feel13";
 

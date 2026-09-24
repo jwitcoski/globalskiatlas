@@ -323,7 +323,7 @@ export function updateSpray(spray, skier, heading, speed, dt, keys, hf, opts = {
     /* Stable per-particle spread so the plume fans out instead of two rigid streaks. */
     const r1 = ((i * 0.618034) % 1) - 0.5;
     const r2 = (i * 0.414214) % 1;
-    const back = k * (1.2 + boost) * (0.7 + r2 * 0.6);
+    const back = 0.45 + k * (1.2 + boost) * (0.7 + r2 * 0.6);
     const up = Math.max(0, k * (0.5 + boost * 0.55) * (0.6 + r2 * 0.8) - k * k * (0.4 + boost * 0.3));
     const side = ((i % 2 === 0 ? -1 : 1) * (0.22 + boost * 0.14) + r1 * (0.5 + boost * 0.3)) * k;
     const i3 = i * 3;

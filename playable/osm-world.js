@@ -530,8 +530,8 @@ function xzRingToEn(ring) {
 const snowCoverFill = snowTerrainMaterial(THREE, {
   color: 0xf7f4ee,
   polygonOffset: true,
-  polygonOffsetFactor: -2,
-  polygonOffsetUnits: -2,
+  polygonOffsetFactor: 1,
+  polygonOffsetUnits: 1,
 });
 
 function clearGroup(g) {
