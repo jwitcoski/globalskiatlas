@@ -272,20 +272,17 @@ export function makeSkier(THREE, scene, opts = {}) {
 
   function arm(side) {
     const s = side < 0 ? "L" : "R";
-    const deg = Math.PI / 180;
     const shoulder = makePivot("shoulder" + s);
     shoulder.name = side < 0 ? "armL" : "armR";
     shoulder.position.set(side * 0.28, 0.5, 0.02);
-    shoulder.rotation.x = -READY_POSE.shoulderFlex * deg;
-    shoulder.rotation.z = side * READY_POSE.shoulderAbduct * deg;
-    shoulder.userData.baseX = shoulder.rotation.x;
-    shoulder.userData.baseZ = shoulder.rotation.z;
+    shoulder.rotation.x = -READY_POSE.shoulderFlex * DEG;
+    shoulder.rotation.z = side * READY_POSE.shoulderAbduct * DEG;
     const upper = makeLimb("upperArm" + s, new THREE.CylinderGeometry(0.11, 0.1, 0.32, 8), jacket);
     upper.position.y = -0.16;
     const elbow = makePivot("elbow" + s);
     elbow.position.y = -0.32;
-    elbow.rotation.x = -READY_POSE.elbowBend * deg;
-    elbow.rotation.z = side * 8 * deg;
+    elbow.rotation.x = -READY_POSE.elbowBend * DEG;
+    elbow.rotation.z = side * 8 * DEG;
     const forearm = makeLimb("forearm" + s, new THREE.CylinderGeometry(0.1, 0.09, 0.28, 8), jacket);
     forearm.position.y = -0.14;
     const wrist = makePivot("wrist" + s);
@@ -305,11 +302,9 @@ export function makeSkier(THREE, scene, opts = {}) {
     basket.position.y = -1.05;
     basket.rotation.x = Math.PI / 2;
     pole.add(grip, shaft, basket);
-    pole.userData.side = side;
     wrist.add(pole);
     elbow.add(forearm, wrist);
     shoulder.add(upper, elbow);
-    shoulder.userData.restRot = { x: 0, y: 0, z: 0 };
     return { shoulder, elbow, wrist, pole };
   }
   const leftArm = arm(-1);
@@ -1041,18 +1036,6 @@ function posture(skier, steer, lean, opts) {
     poleR.rotation.x += (wantXR - poleR.rotation.x) * k;
     poleL.rotation.z += (wantZL - poleL.rotation.z) * k;
     poleR.rotation.z += (wantZR - poleR.rotation.z) * k;
-  }
-  const armL = skier.userData.armL;
-  const armR = skier.userData.armR;
-  if (armL && armR) {
-    const wantArmL = -flex * DEG;
-    const wantArmR = -flex * DEG;
-    const wantZL = -abduct * DEG;
-    const wantZR = abduct * DEG;
-    armL.rotation.x += (wantArmL - armL.rotation.x) * k;
-    armR.rotation.x += (wantArmR - armR.rotation.x) * k;
-    armL.rotation.z += (wantZL - armL.rotation.z) * k;
-    armR.rotation.z += (wantZR - armR.rotation.z) * k;
   }
 }
 
