@@ -40,6 +40,14 @@
             .chat-body { flex: 1; padding: 20px; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; display: flex; flex-direction: column; }
             .message { max-width: 85%; padding: 12px 16px; margin-bottom: 12px; border-radius: 18px; line-height: 1.5; animation: chatFadeIn 0.3s ease; }
             .message.bot { background: #f0f2f5; color: #333; align-self: flex-start; border-bottom-left-radius: 4px; }
+            .message.bot { max-width: 92%; }
+            .message.bot a { color: #1a4d8c; font-weight: 600; text-decoration: underline; }
+            .message.bot h3 { margin: 0.8em 0 0.35em; font-size: 1.05rem; font-weight: 700; color: #1a4d8c; line-height: 1.3; }
+            .message.bot h4 { margin: 0.7em 0 0.25em; font-size: 0.95rem; font-weight: 700; color: #0f766e; }
+            .message.bot p { margin: 0.45em 0; }
+            .message.bot ol, .message.bot ul { margin: 0.35em 0 0.6em; padding-left: 1.25em; }
+            .message.bot li { margin: 0.2em 0; }
+            .message.bot strong { font-weight: 700; }
             .message.user { background: #0d9488; color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
             .typing-indicator { align-self: flex-start; background: #f0f2f5; padding: 12px 16px; border-radius: 18px; margin-bottom: 12px; display: none; }
             .typing-indicator span { width: 8px; height: 8px; margin: 0 2px; background: #999; display: inline-block; border-radius: 50%; animation: typingPulse 1.2s infinite; }
@@ -55,6 +63,13 @@
             .suggestion-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 1rem; }
             .suggestion-chip { background: #e8f5f3; border: 1px solid #0d9488; border-radius: 18px; padding: 8px 14px; font-size: 0.875rem; color: #0d9488; cursor: pointer; transition: background 0.2s, color 0.2s; touch-action: manipulation; }
             .suggestion-chip:hover { background: #0d9488; color: white; }
+            .ai-path { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+            .ai-path li { position: relative; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 0.65rem 0.85rem; color: #374151; }
+            .ai-path li span { display: block; font-weight: 650; color: #1a4d8c; }
+            .ai-path li:not(:last-child) { margin-bottom: 1.35rem; }
+            .ai-path li:not(:last-child)::before { content: ""; position: absolute; left: 50%; bottom: -1rem; width: 2px; height: 0.65rem; background: #0f766e; transform: translateX(-50%); }
+            .ai-path li:not(:last-child)::after { content: ""; position: absolute; left: 50%; bottom: -1.2rem; border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 8px solid #0f766e; transform: translateX(-50%); }
+            .skiing-ai-how-col code { font-size: 0.85em; background: #eef2ff; padding: 0.05em 0.3em; border-radius: 4px; }
             @keyframes chatFadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
             @keyframes typingPulse { 0%, 100% { transform: scale(0.8); opacity: 0.8; } 50% { transform: scale(1.2); opacity: 1; } }
             .skiing-ai-layout { max-width: 1400px; margin: 0 auto; display: flex; flex-direction: column; gap: 2rem; }
@@ -180,7 +195,7 @@
                                 <button type="button" class="suggestion-chip" data-query="Expert-level challenging terrain">Expert-level challenging terrain</button>
                                 <button type="button" class="suggestion-chip" data-query="Resorts with great nightlife">Resorts with great nightlife</button>
                             </div>
-                            <p class="tw-text-sm tw-text-gray-500">Biggest means the most mapped skiable acres in the index. Ask for most trails or most lifts if you want those rankings, and add a state or country to narrow it.</p>
+                            <p class="tw-text-sm tw-text-gray-500">Biggest means the most mapped skiable acres in the index. Ask for most trails or most lifts if you want those rankings, and add a state or country to narrow it. Other replies come from Nova Pro, then resort names in that text become wiki links.</p>
                         </div>
                     </div>
                 </div>
@@ -188,17 +203,26 @@
                 <section class="skiing-ai-bottom-row">
                     <div class="skiing-ai-how-col">
                         <h3 class="tw-mb-4 tw-text-xl tw-font-semibold">How this page answers</h3>
-                        <p class="tw-mb-4 tw-text-gray-600">A question is checked against the resort index in the browser. The chat model does not read resort pages on this site.</p>
-                        <ol class="tw-mb-4 tw-list-decimal tw-space-y-2 tw-pl-5 tw-text-gray-700">
-                            <li><strong>Your question</strong> stays in the browser</li>
-                            <li>A <strong>resort index</strong> lookup (<code>/api/wiki/index</code>) runs first</li>
-                            <li>Biggest, most trails, most lifts, or a resort name returns a <strong>wiki link</strong> and a <strong>map link</strong></li>
-                            <li>Other questions go to the existing chat API, which answers from a general model only</li>
+                        <p class="tw-mb-4 tw-text-gray-700">Ranking questions are answered from the resort index in the browser. Everything else takes two hops: Amazon Nova Pro on Bedrock writes the paragraph, then the browser looks those resort names up in Global Ski Atlas and attaches the links. The model never opens a resort page, and nothing here is a Bedrock Knowledge Base.</p>
+                        <ol class="tw-mb-4 tw-list-decimal tw-space-y-3 tw-pl-5 tw-text-gray-700">
+                            <li><strong>The browser posts the question.</strong> The chat box sends one JSON body, <code>{ query }</code>, to API Gateway in us-east-1 (<code>POST /prod/chat</code>). API Gateway invokes a Lambda. The browser does not hold AWS credentials.</li>
+                            <li><strong>Lambda puts the question in context and calls Bedrock.</strong> The function builds a request for Amazon Nova Pro: a fixed ski-assistant instruction, then your message as the user turn. That instruction is the context. It tells the model to answer as a skiing assistant. It does not include resort records, trail counts, or wiki text. Lambda calls Bedrock with an IAM role. Nova Pro returns plain text.</li>
+                            <li><strong>The reply comes back as text.</strong> API Gateway returns <code>skiingAnswer</code>. At this point the names are still words. Nova Pro can mention Whistler Blackcomb or a brand like Fischer. It has no page id and no map link.</li>
+                            <li><strong>The page queries Global Ski Atlas.</strong> While you type, the browser has already loaded <code>/api/wiki/index</code>, the same resort index the rest of the site uses. After the answer arrives, the page scans it for resort names. A name that belongs to exactly one resort becomes a link to <code>/wiki/resort.html?page=…</code>. Longer names win, so “Aspen Snowmass” stays one link. Countries, gear brands, and names shared by two resorts stay plain text. That scan is local. It does not call Bedrock again.</li>
                         </ol>
-                        <p class="tw-text-gray-600">Rankings use the numbers already on each resort in the index: skiable acres, downhill trails, and lifts.</p>
+                        <p class="tw-text-gray-700">Nova Pro on-demand in us-east-1 is $0.80 per million input tokens and $3.20 per million output tokens. A short question plus the ski instruction is a few hundred input tokens. A reply like the one in the chat is a few hundred output tokens. That is roughly two-tenths of a cent, a fraction of a penny, before the atlas lookup, which is a read of an index this site already serves.</p>
                     </div>
                     <div class="skiing-ai-diagram-col">
-                        <img src="./assets/images/legacy/AI_AWS_Diagram.png" alt="Skiing AI looks up the resort index, then links the wiki page and the map" class="tw-w-full tw-rounded-lg tw-shadow-md" />
+                        <h3 class="tw-mb-4 tw-text-xl tw-font-semibold">Request path</h3>
+                        <ol class="ai-path">
+                            <li><span>skiing-ai.html</span> question in the chat box</li>
+                            <li><span>API Gateway</span> POST /prod/chat</li>
+                            <li><span>Lambda</span> ski instruction + your question</li>
+                            <li><span>Amazon Bedrock</span> Nova Pro, us-east-1</li>
+                            <li><span>skiingAnswer</span> prose, no links yet</li>
+                            <li><span>/api/wiki/index</span> match names, add wiki links</li>
+                        </ol>
+                        <p class="tw-mt-4 tw-text-sm tw-text-gray-600">A Bedrock Knowledge Base would retrieve chunks on every question and bill for embeddings and storage around the clock. This page skips that. The model writes. The atlas index, already built for the wiki, supplies the links.</p>
                     </div>
                 </section>
             </div>
@@ -253,9 +277,9 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.0/gsap.min.js" integrity="sha512-B1lby8cGcAUU3GR+Fd809/ZxgHbfwJMp0jLTVfHiArTuUt++VqSlJpaJvhNtRf3NERaxDNmmxkdx2o+aHd4bvw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.0/ScrollTrigger.min.js" integrity="sha512-AY2+JxnBETJ0wcXnLPCcZJIJx0eimyhz3OJ55k2Jx4RtYC+XdIi2VtJQ+tP3BaTst4otlGG1TtPJ9fKrAUnRdQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
         <script src="./index.js"></script>
+        <script src="scripts/ai-resort-links.js?v=3"></script>
         <script type="module">
             import { lookupAtlas } from './scripts/skiing-ai-lookup.js';
-
             (function() {
                 const chatBody = document.getElementById('chat-body');
                 const chatInput = document.getElementById('chat-input');
@@ -304,49 +328,47 @@
                     typingIndicator.style.display = 'block';
                     chatBody.scrollTop = chatBody.scrollHeight;
 
-                    loadPages().then(function(pages) {
+                    loadPages().catch(function() { return []; }).then(function(pages) {
                         const hit = lookupAtlas(pages, msg);
-                        if (!hit) return null;
-                        typingIndicator.style.display = 'none';
-                        appendBot(hit.text, hit.links);
-                        return hit;
-                    }).catch(function() { return null; }).then(function(hit) {
-                        if (hit) return;
-                    fetch('https://yw1jgiys7f.execute-api.us-east-1.amazonaws.com/prod/chat', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ query: msg })
-                    })
-                    .then(function(r) {
-                        if (!r.ok) throw new Error('Network error: ' + r.status);
-                        return r.json();
-                    })
-                    .then(function(data) {
-                        typingIndicator.style.display = 'none';
-                        let text = '';
-                        if (data.skiingAnswer) text = data.skiingAnswer;
-                        else if (data.body && typeof data.body === 'string') {
-                            try {
-                                const b = JSON.parse(data.body);
-                                text = b.skiingAnswer || 'No answer in response.';
-                            } catch (e) { text = data.body; }
-                        } else if (typeof data === 'string') text = data;
-                        else text = 'Unexpected response format. Please try again.';
-                        text = text.replace(/\\n/g, '<br>');
-                        const botDiv = document.createElement('div');
-                        botDiv.className = 'message bot';
-                        botDiv.innerHTML = text;
-                        chatBody.appendChild(botDiv);
-                        chatBody.scrollTop = chatBody.scrollHeight;
-                    })
-                    .catch(function(err) {
+                        if (hit) {
+                            typingIndicator.style.display = 'none';
+                            appendBot(hit.text, hit.links);
+                            return;
+                        }
+                        return fetch('https://yw1jgiys7f.execute-api.us-east-1.amazonaws.com/prod/chat', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ query: msg })
+                        })
+                        .then(function(r) {
+                            if (!r.ok) throw new Error('Network error: ' + r.status);
+                            return r.json();
+                        })
+                        .then(function(data) {
+                            typingIndicator.style.display = 'none';
+                            let text = '';
+                            if (data.skiingAnswer) text = data.skiingAnswer;
+                            else if (data.body && typeof data.body === 'string') {
+                                try {
+                                    const b = JSON.parse(data.body);
+                                    text = b.skiingAnswer || 'No answer in response.';
+                                } catch (e) { text = data.body; }
+                            } else if (typeof data === 'string') text = data;
+                            else text = 'Unexpected response format. Please try again.';
+                            const list = Array.isArray(pages) ? pages : (pages && pages.pages) || [];
+                            const botDiv = document.createElement('div');
+                            botDiv.className = 'message bot';
+                            botDiv.innerHTML = window.linkResortMentions(text, list);
+                            chatBody.appendChild(botDiv);
+                            chatBody.scrollTop = chatBody.scrollHeight;
+                        });
+                    }).catch(function(err) {
                         typingIndicator.style.display = 'none';
                         const errDiv = document.createElement('div');
                         errDiv.className = 'message bot';
                         errDiv.textContent = 'Sorry, I encountered an error: ' + err.message + '. Please try again later.';
                         chatBody.appendChild(errDiv);
                         chatBody.scrollTop = chatBody.scrollHeight;
-                    });
                     });
                 }
 
