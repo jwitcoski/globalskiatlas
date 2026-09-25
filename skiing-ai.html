@@ -55,7 +55,6 @@
             .suggestion-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 1rem; }
             .suggestion-chip { background: #e8f5f3; border: 1px solid #0d9488; border-radius: 18px; padding: 8px 14px; font-size: 0.875rem; color: #0d9488; cursor: pointer; transition: background 0.2s, color 0.2s; touch-action: manipulation; }
             .suggestion-chip:hover { background: #0d9488; color: white; }
-            .ai-knowledge-note { margin-top: 1rem; padding: 0.75rem 1rem; font-size: 0.875rem; border-radius: 8px; border: 1px solid #fca5a5; background: #fef2f2; color: #991b1b; }
             @keyframes chatFadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
             @keyframes typingPulse { 0%, 100% { transform: scale(0.8); opacity: 0.8; } 50% { transform: scale(1.2); opacity: 1; } }
             .skiing-ai-layout { max-width: 1400px; margin: 0 auto; display: flex; flex-direction: column; gap: 2rem; }
@@ -154,10 +153,10 @@
                         <div class="chat-container">
                             <div class="chat-header">
                                 <div class="avatar"><i class="bi bi-robot"></i></div>
-                                <h3 class="tw-m-0 tw-text-lg tw-font-semibold">Skiing AI Assistant (Powered by Amazon Nova Pro)</h3>
+                                <h3 class="tw-m-0 tw-text-lg tw-font-semibold">Skiing AI Assistant</h3>
                             </div>
                             <div class="chat-body" id="chat-body">
-                                <div class="message bot">Hello! I'm your skiing AI assistant, powered by Amazon Nova Pro on Amazon Bedrock. Ask me about ski resorts, conditions, gear recommendations, or anything ski-related!</div>
+                                <div class="message bot">Ask for a resort by name, or ask which one is biggest. I’ll look it up in the Global Ski Atlas and give you a link. Other ski questions still go to the general chat model, which does not read this site.</div>
                                 <div class="typing-indicator" id="typing-indicator"><span></span><span></span><span></span></div>
                             </div>
                             <div class="chat-footer">
@@ -169,9 +168,10 @@
                     <div class="skiing-ai-about-col">
                         <div class="ai-sidebar">
                             <h3 class="tw-mt-0 tw-mb-4 tw-text-xl tw-font-semibold">About Skiing AI</h3>
-                            <p class="tw-mb-4 tw-text-gray-600">Our Skiing AI Assistant is powered by Amazon Nova Pro on Amazon Bedrock, providing intelligent, context-aware responses to help you find the perfect ski destination.</p>
+                            <p class="tw-mb-4 tw-text-gray-600">Name and ranking questions are answered from the live resort index on this site. You get the resort page and a map link. Everything else is a general chat reply that does not search the atlas.</p>
                             <h4 class="tw-mb-2 tw-font-semibold">Try asking about:</h4>
                             <div class="suggestion-chips" id="suggestion-chips">
+                                <button type="button" class="suggestion-chip" data-query="What is the biggest resort?">What is the biggest resort?</button>
                                 <button type="button" class="suggestion-chip" data-query="Best resorts for beginners">Best resorts for beginners</button>
                                 <button type="button" class="suggestion-chip" data-query="Where to find the deepest powder">Where to find the deepest powder</button>
                                 <button type="button" class="suggestion-chip" data-query="Family-friendly ski destinations">Family-friendly ski destinations</button>
@@ -180,28 +180,25 @@
                                 <button type="button" class="suggestion-chip" data-query="Expert-level challenging terrain">Expert-level challenging terrain</button>
                                 <button type="button" class="suggestion-chip" data-query="Resorts with great nightlife">Resorts with great nightlife</button>
                             </div>
-                            <p class="tw-text-sm tw-text-gray-500">Amazon Nova Pro draws from a comprehensive database of ski resorts worldwide and can provide detailed recommendations based on your specific preferences.</p>
+                            <p class="tw-text-sm tw-text-gray-500">Biggest means the most mapped skiable acres in the index. Ask for most trails or most lifts if you want those rankings, and add a state or country to narrow it.</p>
                         </div>
                     </div>
                 </div>
 
                 <section class="skiing-ai-bottom-row">
                     <div class="skiing-ai-how-col">
-                        <h3 class="tw-mb-4 tw-text-xl tw-font-semibold">How Our AI Works</h3>
-                        <p class="tw-mb-4 tw-text-gray-600">Our skiing AI assistant is powered by AWS services and Amazon Nova Pro. Here's how it works:</p>
+                        <h3 class="tw-mb-4 tw-text-xl tw-font-semibold">How this page answers</h3>
+                        <p class="tw-mb-4 tw-text-gray-600">The old diagram showed Amazon Nova Pro searching a knowledge library. That library is not connected, and the chat model does not read resort pages on this site.</p>
                         <ol class="tw-mb-4 tw-list-decimal tw-space-y-2 tw-pl-5 tw-text-gray-700">
-                            <li><strong>Your query</strong> is sent through the API Gateway</li>
-                            <li>A <strong>Lambda Function</strong> processes your request</li>
-                            <li>The function connects to <strong>Amazon Bedrock</strong>, which provides access to powerful AI models</li>
-                            <li><strong>Amazon Nova Pro</strong> processes your query intelligently</li>
-                            <li>The AI searches through our <strong>Knowledge Library</strong> of skiing information</li>
-                            <li>A tailored response is generated and returned to you</li>
+                            <li><strong>Your question</strong> stays in the browser</li>
+                            <li>A <strong>resort index</strong> lookup (<code>/api/wiki/index</code>) runs first</li>
+                            <li>Biggest, most trails, most lifts, or a resort name returns a <strong>wiki link</strong> and a <strong>map link</strong></li>
+                            <li>Other questions go to the existing chat API, which answers from a general model only</li>
                         </ol>
-                        <p class="tw-text-gray-600">The entire system is secured by AWS IAM to ensure safe and reliable operation. This architecture allows us to provide detailed, accurate information about ski resorts worldwide.</p>
-                        <p class="ai-knowledge-note"><strong>Note:</strong> We do not currently use the Knowledge Library. We would like to—however it costs approximately $3–5 per day to run—so we may implement it or a similar capability in the future.</p>
+                        <p class="tw-text-gray-600">Rankings use the numbers already on each resort in the index: skiable acres, downhill trails, and lifts.</p>
                     </div>
                     <div class="skiing-ai-diagram-col">
-                        <img src="./assets/images/legacy/AI_AWS_Diagram.png" alt="AI Architecture Diagram" class="tw-w-full tw-rounded-lg tw-shadow-md" />
+                        <p class="tw-text-sm tw-text-gray-500">The architecture image that named Nova Pro and a knowledge library was removed. It did not match how this page works.</p>
                     </div>
                 </section>
             </div>
@@ -256,12 +253,42 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.0/gsap.min.js" integrity="sha512-B1lby8cGcAUU3GR+Fd809/ZxgHbfwJMp0jLTVfHiArTuUt++VqSlJpaJvhNtRf3NERaxDNmmxkdx2o+aHd4bvw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.0/ScrollTrigger.min.js" integrity="sha512-AY2+JxnBETJ0wcXnLPCcZJIJx0eimyhz3OJ55k2Jx4RtYC+XdIi2VtJQ+tP3BaTst4otlGG1TtPJ9fKrAUnRdQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
         <script src="./index.js"></script>
-        <script>
+        <script type="module">
+            import { lookupAtlas } from './scripts/skiing-ai-lookup.js';
+
             (function() {
                 const chatBody = document.getElementById('chat-body');
                 const chatInput = document.getElementById('chat-input');
                 const sendBtn = document.getElementById('send-btn');
                 const typingIndicator = document.getElementById('typing-indicator');
+                let pagesPromise = null;
+
+                function loadPages() {
+                    if (!pagesPromise) {
+                        pagesPromise = fetch('/api/wiki/index', { cache: 'no-store' })
+                            .then(function(r) { if (!r.ok) throw new Error('index ' + r.status); return r.json(); })
+                            .catch(function(err) { pagesPromise = null; throw err; });
+                    }
+                    return pagesPromise;
+                }
+
+                function appendBot(text, links) {
+                    const botDiv = document.createElement('div');
+                    botDiv.className = 'message bot';
+                    botDiv.style.whiteSpace = 'pre-wrap';
+                    botDiv.textContent = text;
+                    (links || []).forEach(function(link) {
+                        botDiv.appendChild(document.createTextNode(' '));
+                        const a = document.createElement('a');
+                        a.href = link.href;
+                        a.textContent = link.label;
+                        a.style.color = '#0f766e';
+                        a.style.fontWeight = '600';
+                        botDiv.appendChild(a);
+                    });
+                    chatBody.appendChild(botDiv);
+                    chatBody.scrollTop = chatBody.scrollHeight;
+                }
 
                 function sendMessage(optionalMsg) {
                     const msg = optionalMsg !== undefined ? String(optionalMsg).trim() : chatInput.value.trim();
@@ -277,6 +304,14 @@
                     typingIndicator.style.display = 'block';
                     chatBody.scrollTop = chatBody.scrollHeight;
 
+                    loadPages().then(function(pages) {
+                        const hit = lookupAtlas(pages, msg);
+                        if (!hit) return null;
+                        typingIndicator.style.display = 'none';
+                        appendBot(hit.text, hit.links);
+                        return hit;
+                    }).catch(function() { return null; }).then(function(hit) {
+                        if (hit) return;
                     fetch('https://yw1jgiys7f.execute-api.us-east-1.amazonaws.com/prod/chat', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -311,6 +346,7 @@
                         errDiv.textContent = 'Sorry, I encountered an error: ' + err.message + '. Please try again later.';
                         chatBody.appendChild(errDiv);
                         chatBody.scrollTop = chatBody.scrollHeight;
+                    });
                     });
                 }
 
