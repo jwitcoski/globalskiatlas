@@ -14,8 +14,8 @@ export const config = {
   PMTILES_OVERVIEW_URL: `${S3_OUTPUT}/pmtiles/ski_overview.pmtiles`,
   PMTILES_RESORT_URL:   `${S3_OUTPUT}/pmtiles/ski_resort_detail.pmtiles`,
 
-  // ── MapTiler Data API (resort catalog / search metadata, not map tiles) ───
-  SKI_AREAS_MAPTILER_URL: `https://api.maptiler.com/data/019c9294-30cd-7aa0-96a0-e552ef79eee8/features.json?key=${MAPTILER_KEY}`,
+  // Main-map dots. Written by the one-resort job from combined ski_areas_analyzed.
+  SKI_AREAS_MAPTILER_URL: `${S3_OUTPUT}/combined/ski_areas_analyzed.geojson`,
 
   // ── Playable 3D ski scenes (S3 catalog; client loads heightfield/GLB from same prefix)
   GAME_SCENES_CATALOG_URL: `${S3_OUTPUT}/game_scenes/catalog.json`,
