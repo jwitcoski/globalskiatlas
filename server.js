@@ -527,6 +527,30 @@ app.get('/api/admin-boundary', async (req, res) => {
   }
 });
 
+const { handleResortJobRequest } = require('./lambda/wiki-api/resort-jobs');
+
+async function handleResortJobs(req, res) {
+  const auth = req.headers.authorization || '';
+  const token = auth.startsWith('Bearer ') ? auth.slice(7).trim() : '';
+  const result = await handleResortJobRequest({
+    method: req.method,
+    pathParts: ['wiki', 'resort-jobs'].concat(req.params.jobId ? [req.params.jobId] : []),
+    token,
+    body: req.body,
+    validateToken: async (raw) => {
+      if (!raw) return null;
+      if (!isCognitoConfigured || !jwtValidator) return { sub: 'local' };
+      return jwtValidator.validate('Bearer ' + raw);
+    },
+    fetchImpl: fetch,
+    env: process.env,
+  });
+  res.status(result.status).json(result.body);
+}
+
+app.post('/api/wiki/resort-jobs', handleResortJobs);
+app.get('/api/wiki/resort-jobs/:jobId', handleResortJobs);
+
 // Mount /api/wiki so GET /api/wiki/index is always matched before :pageId
 const apiWikiRouter = require('express').Router({ mergeParams: true });
 apiWikiRouter.get('/index', handleWikiIndex);

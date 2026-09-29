@@ -975,7 +975,7 @@ export async function queryAllSkiAreaPoints(map) {
 
 let skiAreaCatalogPromise;
 
-/** Fetch resort metadata for lookup (MapTiler Data API — not parquet). */
+/** Fetch resort dots for the main map (combined ski_areas_analyzed GeoJSON). */
 export async function fetchSkiAreaCatalog() {
   if (!skiAreaCatalogPromise) {
     skiAreaCatalogPromise = (async () => {

@@ -132,6 +132,17 @@
             <li>Book volumes: <a href="browse.html">Americas</a>, <a href="browse.html">Europe</a>, <a href="browse.html">Asia / Africa / Oceania</a>.</li>
             <li><a href="../blog/how-to-tag-a-ski-resort-in-openstreetmap.html">Improve OpenStreetMap</a> so the next export is better.</li>
           </ul>
+          <form id="wiki-add-resort" hidden>
+            <p><strong>Add a new resort</strong></p>
+            <p class="wiki-muted">A click queues the resort. It appears after the next daily update.</p>
+            <p><label>Resort name (required)<br><input id="wiki-add-name" name="name" required maxlength="200"></label></p>
+            <p><label>State<br><input id="wiki-add-state" name="state" maxlength="120"></label></p>
+            <p><label>Country<br><input id="wiki-add-country" name="country" maxlength="120"></label></p>
+            <p><label>Latitude<br><input id="wiki-add-lat" name="lat" inputmode="decimal" maxlength="32"></label></p>
+            <p><label>Longitude<br><input id="wiki-add-lon" name="lon" inputmode="decimal" maxlength="32"></label></p>
+            <p><button type="submit">Add a new resort</button></p>
+            <p id="wiki-add-status" class="wiki-muted" role="status"></p>
+          </form>
           <p class="wiki-search-line">Looking for one mountain? <a href="browse.html">Search the index</a>.</p>
         </div>
       </section>
@@ -141,6 +152,7 @@
   <script src="../scripts/header-toggle.js"></script>
   <script src="../scripts/site-nav.js"></script>
   <script src="/wiki/js/auth.js"></script>
+  <script src="/wiki/js/resort-jobs.js?v=2"></script>
   <script type="module">
     import { fetchSkiAreaCatalog, loadPmtilesLayerFeatures } from '../scripts/pmtiles-core.js';
 
@@ -567,6 +579,23 @@
         muted.innerHTML = 'Open <a href="../SkiTrailFacts.html">Trail facts</a> and <a href="../SkiLiftFacts.html">Lift facts</a> for length records.';
         muted.classList.remove('wiki-muted');
       }
+    });
+
+    ywikiAuth.init(function () {
+      var form = document.getElementById('wiki-add-resort');
+      if (!form || !ywikiAuth.getToken()) return;
+      form.hidden = false;
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var name = document.getElementById('wiki-add-name').value.trim();
+        if (!name) return;
+        var body = { action: 'add', name: name };
+        ['state', 'country', 'lat', 'lon'].forEach(function (key) {
+          var value = document.getElementById('wiki-add-' + key).value.trim();
+          if (value) body[key] = value;
+        });
+        ywikiResortJobs.submit(body, document.getElementById('wiki-add-status'));
+      });
     });
   </script>
 </body>

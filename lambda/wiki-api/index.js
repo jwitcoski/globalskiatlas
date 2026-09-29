@@ -1,9 +1,11 @@
 /**
  * Lambda handler for wiki API (API Gateway HTTP API).
  * Paths: /api/wiki/index, /api/wiki/:pageId, /api/wiki/:pageId/revisions, etc.
- * Set env: DYNAMODB_TABLE_PREFIX, AWS_REGION, COGNITO_USER_POOL_ID, COGNITO_REGION, COGNITO_CLIENT_ID.
+ * Set env: DYNAMODB_TABLE_PREFIX, AWS_REGION, COGNITO_USER_POOL_ID, COGNITO_REGION, COGNITO_CLIENT_ID,
+ * RESORT_JOB_API_BASE, RESORT_JOB_SECRET (server only; never sent to the browser).
  */
 const store = require('./store');
+const { handleResortJobRequest } = require('./resort-jobs');
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -107,6 +109,17 @@ exports.handler = async (event) => {
   const method = (event.requestContext?.http?.method || event.httpMethod || 'GET').toUpperCase();
 
   try {
+    const resortJob = await handleResortJobRequest({
+      method,
+      pathParts,
+      token: getAuth(event),
+      body: method === 'POST' ? getBody(event) : null,
+      validateToken,
+      fetchImpl: typeof fetch === 'function' ? fetch : null,
+      env: process.env,
+    });
+    if (resortJob) return json(resortJob.status, resortJob.body);
+
     // POST /wiki/osm-fix-report (playable: OSM scenery fix notification; SNS rebuild later)
     if (pathParts[0] === 'wiki' && pathParts[1] === 'osm-fix-report' && pathParts.length === 2 && method === 'POST') {
       const body = getBody(event);

@@ -904,6 +904,34 @@ function loadRegionList(page) {
     });
 }
 
+function bindResortJobButtons(page) {
+  var deleteBtn = document.getElementById('resort-job-delete');
+  var osmBtn = document.getElementById('resort-job-osm');
+  var statusEl = document.getElementById('resort-job-status');
+  var wsId = page && page.winterSportsId != null && page.winterSportsId !== '' ? String(page.winterSportsId) : '';
+  var region = page && page.region ? String(page.region).trim() : '';
+  var ready = !!(wsId && region && window.ywikiResortJobs);
+  if (deleteBtn) deleteBtn.disabled = !ready;
+  if (osmBtn) osmBtn.disabled = !ready;
+  if (!ready && statusEl && !statusEl.textContent) {
+    statusEl.textContent = 'This page has no winter sports id or data region, so it cannot be queued.';
+  }
+  function queue(action) {
+    ywikiResortJobs.submit({ action: action, winter_sports_id: wsId, region: region }, statusEl);
+  }
+  if (deleteBtn && !deleteBtn._jobBound) {
+    deleteBtn._jobBound = true;
+    deleteBtn.addEventListener('click', function () {
+      if (!window.confirm('Delete this resort? The change is queued and appears after the next daily update.')) return;
+      queue('delete');
+    });
+  }
+  if (osmBtn && !osmBtn._jobBound) {
+    osmBtn._jobBound = true;
+    osmBtn.addEventListener('click', function () { queue('update'); });
+  }
+}
+
 function bindOsmActionButtons() {
   var pageId = YWIKI_PATH;
   var flagBtn = document.getElementById('resort-flag-wrong-btn');
@@ -1266,6 +1294,17 @@ function populatePage(page) {
   var lockBtn = document.getElementById('resort-lock-page-btn');
   var unlockBtn = document.getElementById('resort-unlock-page-btn');
   if (finishedCalloutEl && isResortPage) finishedCalloutEl.style.display = page.finished ? '' : 'none';
+  var jobActionsEl = document.getElementById('resort-job-actions');
+  var jobToken = (window.ywikiAuth && typeof ywikiAuth.getToken === 'function') ? ywikiAuth.getToken() : null;
+  if (jobActionsEl) {
+    if (isResortPage && jobToken) {
+      jobActionsEl.hidden = false;
+      bindResortJobButtons(page);
+    } else {
+      jobActionsEl.hidden = true;
+    }
+  }
+
   if (statusActionsEl && isResortPage && window._ywikiIsAdmin) {
     statusActionsEl.style.display = '';
     if (markFinishedBtn) { markFinishedBtn.style.display = page.finished ? 'none' : ''; }

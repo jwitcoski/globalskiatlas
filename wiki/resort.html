@@ -201,6 +201,11 @@
         <div class="resort-data-callout resort-data-callout--flagged" id="resort-flag-callout" style="display:none">
           <strong>Someone flagged this data as wrong.</strong> Edit on OpenStreetMap to fix it, then use “I fixed this in OSM” below. After that, run “Refresh from data” to update this page.
         </div>
+        <div id="resort-job-actions" hidden>
+          <button type="button" class="resort-edit-btn" id="resort-job-delete">Delete this resort</button>
+          <button type="button" class="resort-edit-btn" id="resort-job-osm">I modified OSM for this resort</button>
+          <p id="resort-job-status" class="resort-workflow-hint" role="status"></p>
+        </div>
         <div class="resort-data-callout resort-data-callout--refresh" id="resort-refresh-callout" style="display:none">
           <strong>This data was marked as fixed in OSM.</strong> Please run <strong>Refresh from data</strong> (button above) to pull the latest data and update this page.
         </div>
@@ -271,6 +276,7 @@
   <script type="module" src="/wiki/js/resort-map-layers.js?v=11"></script>
   <script src="/wiki/js/showdown.min.js"></script>
   <script src="/wiki/js/auth.js"></script>
+  <script src="/wiki/js/resort-jobs.js?v=2"></script>
   <script>
     (function() {
       var RESPONSIVE_WIDTH = 1024;
@@ -311,7 +317,7 @@
       window.addEventListener('resize', responsive);
     })();
   </script>
-  <script src="/wiki/js/script.js?v=54"></script>
+  <script src="/wiki/js/script.js?v=55"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       ywikiAuth.init(function () {
