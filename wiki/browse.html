@@ -12,6 +12,11 @@
     .browse-hero { margin-bottom: 1.5rem; }
     .browse-hero h1 { font-size: 2rem; font-weight: 700; color: var(--resort-title-color); margin: 0 0 0.25rem 0; letter-spacing: -0.02em; }
     .browse-hero p { color: var(--resort-footer-color); margin: 0; font-size: 0.9rem; }
+    #wiki-add-resort { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-top: 0.85rem; }
+    #wiki-add-resort[hidden] { display: none; }
+    #wiki-add-resort input { min-width: 16rem; padding: 0.45rem 0.6rem; border: 1px solid #a2b5c8; }
+    #wiki-add-resort button { padding: 0.45rem 0.75rem; }
+    #wiki-add-status { flex-basis: 100%; margin: 0; font-size: 0.9rem; }
     .browse-controls { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1.25rem; align-items: flex-end; }
     .browse-search-wrap { flex: 1 1 18rem; position: relative; }
     .browse-search-wrap svg { position: absolute; left: 0.6rem; top: 50%; transform: translateY(-50%); color: #999; pointer-events: none; }
@@ -117,12 +122,19 @@
   <nav class="browse-nav">
     <a href="main.html">Main page</a>
     <span class="browse-nav-current">Browse</span>
+    <a href="queue.html">Queue</a>
     <a href="../index.html">Home</a>
   </nav>
 
   <div class="browse-hero">
     <h1>Browse Resorts</h1>
     <p id="browse-subtitle">Loading resort index…</p>
+    <form id="wiki-add-resort" hidden>
+      <label for="wiki-add-name">Resort name</label>
+      <input id="wiki-add-name" name="name" required maxlength="200" placeholder="Resort name">
+      <button type="submit">Add a new resort</button>
+      <p id="wiki-add-status" role="status"></p>
+    </form>
   </div>
 
   <div class="browse-controls">
@@ -142,6 +154,7 @@
   <div class="browse-results" id="browse-results"><div class="browse-loading">Loading…</div></div>
 
   <script src="/wiki/js/auth.js"></script>
+  <script src="/wiki/js/resort-jobs.js?v=3"></script>
   <script>
     (function() {
       var RESPONSIVE_WIDTH = 1024;
@@ -326,7 +339,18 @@
     document.getElementById('browse-type').addEventListener('change', renderResults);
 
     document.addEventListener('DOMContentLoaded', function () {
-      ywikiAuth.init(function () { ywikiAuth.renderWidget('resort-auth-widget'); });
+      ywikiAuth.init(function () {
+        ywikiAuth.renderWidget('resort-auth-widget');
+        var form = document.getElementById('wiki-add-resort');
+        if (!form || !ywikiAuth.getToken()) return;
+        form.hidden = false;
+        form.addEventListener('submit', function (e) {
+          e.preventDefault();
+          var name = document.getElementById('wiki-add-name').value.trim();
+          if (!name) return;
+          ywikiResortJobs.submit({ action: 'add', name: name }, document.getElementById('wiki-add-status'));
+        });
+      });
       document.getElementById('browse-search').focus();
 
       fetch('/api/wiki/index', { cache: 'no-store' })

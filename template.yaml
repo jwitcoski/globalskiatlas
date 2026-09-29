@@ -19,6 +19,14 @@ Parameters:
     Type: String
     Default: ''
     Description: S3 bucket that contains iceberg-stats/latest.json (from query_iceberg.py --json). Leave empty to disable.
+  ResortJobApiBase:
+    Type: String
+    Default: https://6ig2la0qg1.execute-api.us-east-1.amazonaws.com
+    Description: Queue host origin for resort add, update, and delete. No trailing path.
+  ResortJobSecret:
+    Type: String
+    NoEcho: true
+    Description: Bearer token for the queue host. Pass at deploy time. Do not commit it.
 
 Globals:
   Function:
@@ -54,6 +62,8 @@ Resources:
           COGNITO_USER_POOL_ID: !Ref CognitoUserPoolId
           COGNITO_CLIENT_ID: !Ref CognitoClientId
           COGNITO_REGION: !Ref AWS::Region
+          RESORT_JOB_API_BASE: !Ref ResortJobApiBase
+          RESORT_JOB_SECRET: !Ref ResortJobSecret
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Sub '${DynamoDBTablePrefix}-WikiPages'
