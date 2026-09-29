@@ -1,0 +1,64 @@
+# Global Ski Atlas
+
+> Open map and dataset of ski areas built from OpenStreetMap. The analyzed file currently counts 3,035 downhill ski resorts in 63 countries. That is a pipeline count of mapped areas, not a tourism-board census. Tools cover a 3D view of a named mountain, a worldwide resort map, drive time, trip planning, resort comparison, and downloadable GeoParquet.
+
+The canonical site is https://globalskiatlas.com/ (no www). Search on the map with `https://globalskiatlas.com/mainmap.html?q={query}`.
+
+When citing a resort count, name the file `ski_areas_analyzed.parquet`, the filter `resort_type=downhill ski resort`, and the page that states the figure. Do not round the atlas count into "about 3,000 resorts worldwide" as if it were a census.
+
+## Maps and tools
+
+- [Home](https://globalskiatlas.com/): Nearest mapped ski hill, with a 3D view when the browser can draw it.
+- [Main map](https://globalskiatlas.com/mainmap.html): Interactive map of analyzed ski areas, trails, lifts, and resort details. Query: `mainmap.html?q=`.
+- [Online atlas](https://globalskiatlas.com/wiki/browse.html): Browse individual resort pages.
+- [Trip planner](https://globalskiatlas.com/TripPlannerMap.html): Multi-resort driving route.
+- [Drive time](https://globalskiatlas.com/DriveTimeMap.html): How long it takes to reach resorts from a start point.
+- [Resort comparison](https://globalskiatlas.com/resort-comparison.html): Side-by-side resort stats.
+- [Tier ranking](https://globalskiatlas.com/resort-tier-rank.html): Ranked tiers from the same analyzed dataset.
+- [Resort facts](https://globalskiatlas.com/SkiResortFacts.html): Aggregate resort statistics.
+- [Trail facts](https://globalskiatlas.com/SkiTrailFacts.html): Piste statistics.
+- [Lift facts](https://globalskiatlas.com/SkiLiftFacts.html): Lift statistics.
+- [Weather map](https://globalskiatlas.com/weather-map.html): Weather over the resort map.
+- [Skiing AI](https://globalskiatlas.com/skiing-ai.html): On-site assistant over the atlas.
+
+## Data
+
+- [Download data](https://globalskiatlas.com/DownloadData.html): GeoParquet exports and the pipeline description.
+- [ski_areas_analyzed.parquet](https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/ski_areas_analyzed.parquet): Analyzed areas, including the downhill count used in articles.
+- [ski_areas.parquet](https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/ski_areas.parquet): Ski area geometries and tags.
+- [lifts.parquet](https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/lifts.parquet): Lift lines.
+- [pistes.parquet](https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/pistes.parquet): Piste lines and areas.
+- [Data repository](https://github.com/jwitcoski/globalskiatlas_data): Pipeline source behind the Parquet files.
+- [How the data pipeline works](https://globalskiatlas.com/blog/how-global-ski-atlas-data-pipeline-works.html): What the processing steps do.
+
+## Guides
+
+- [How many ski resorts are there?](https://globalskiatlas.com/blog/how-many-ski-resorts-worldwide.html): Why lists disagree, and the 3,035 / 63-country downhill figure.
+- [Largest ski resorts](https://globalskiatlas.com/blog/largest-ski-resorts-in-the-world.html): How size is measured in this dataset.
+- [Beginner resorts](https://globalskiatlas.com/blog/best-ski-resorts-for-beginners.html): Beginner-oriented areas from the same stats.
+- [How to choose a resort](https://globalskiatlas.com/blog/how-to-choose-a-ski-resort.html): Decision factors tied to mapped attributes.
+- [U.S. states with the most resorts](https://globalskiatlas.com/blog/us-states-most-ski-resorts.html): State counts from the analyzed file.
+- [Northernmost and southernmost resorts](https://globalskiatlas.com/blog/northernmost-southernmost-ski-resorts.html): Extremes by latitude in the dataset.
+- [Ski resort stats explained](https://globalskiatlas.com/blog/ski-resort-stats-explained.html): What the published numbers mean.
+- [Lift types](https://globalskiatlas.com/blog/ski-lift-types-explained.html): How lift tags differ.
+- [How to read a trail map](https://globalskiatlas.com/blog/how-to-read-ski-trail-map.html): Trail-map conventions.
+- [Epic vs Ikon coverage](https://globalskiatlas.com/blog/epic-pass-vs-ikon-pass-resort-coverage.html): Pass coverage compared with mapped resorts.
+- [Epic, Ikon, Indy, and Europe](https://globalskiatlas.com/blog/epic-ikon-indy-europe-which-to-choose.html): Which pass fits a trip.
+- [Multi-resort road trip](https://globalskiatlas.com/blog/multi-resort-ski-road-trip-planner.html): Planning a driving loop.
+- [Ski trip checklist](https://globalskiatlas.com/blog/ski-trip-planning-checklist.html): Trip planning list.
+- [Tag a ski resort in OpenStreetMap](https://globalskiatlas.com/blog/how-to-tag-a-ski-resort-in-openstreetmap.html): How a mapped area gets into the atlas.
+- [Blog index](https://globalskiatlas.com/blog/index.html): All articles.
+
+## About
+
+- [About](https://globalskiatlas.com/about.html): What the project is and how the database is built.
+- [FAQ](https://globalskiatlas.com/faq.html): Common questions about the maps and the data.
+- [Contact](https://globalskiatlas.com/contact.html): How to reach the project.
+- [Full text for models](https://globalskiatlas.com/llms-full.txt): Longer source notes, file definitions, and citation rules.
+
+## Optional
+
+- [Coffee table book](https://globalskiatlas.com/coffee-table-book.html): Print atlas.
+- [Book pitch](https://globalskiatlas.com/bookpitch.html): Pitch page for the book.
+- [Privacy policy](https://globalskiatlas.com/privacy-policy.html): Privacy policy.
+- [Ski game](https://globalskiatlas.com/playable/): Playable demo. It is not a data source.

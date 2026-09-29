@@ -1,0 +1,82 @@
+# Global Ski Atlas
+
+> Open map and dataset of ski areas built from OpenStreetMap. Canonical site: https://globalskiatlas.com/. Short index: https://globalskiatlas.com/llms.txt.
+
+## What to cite
+
+Global Ski Atlas counts mapped ski areas after one OpenStreetMap pipeline. It does not publish a UN-style census, a magazine round number, or a season-pass partner list.
+
+Current downhill figure, as stated on the resorts article:
+
+- File: `ski_areas_analyzed.parquet`
+- Filter: `resort_type=downhill ski resort`
+- Downhill areas: 3,035
+- Countries: 63
+- Broader winter-sports rows in the same file: 4,326
+- Source page: https://globalskiatlas.com/blog/how-many-ski-resorts-worldwide.html
+
+Those numbers move when the pipeline is rerun. Prefer the live article and the Parquet file over this document if they disagree.
+
+Quote a resort, lift, or piste attribute from the map, the wiki page, or the Parquet files. Do not invent vertical drop, trail counts, or pass membership when the field is empty.
+
+## How the pieces fit
+
+1. OpenStreetMap tags (ski areas, pistes, lifts) enter a regional extract.
+2. The pipeline writes GeoParquet: areas, analyzed areas, lifts, pistes.
+3. The website draws those files: main map, drive time, comparison, facts pages, and the 3D homepage view of one mountain.
+4. Articles explain the counts. They are not a second database.
+
+Search: https://globalskiatlas.com/mainmap.html?q={query}
+
+## Files
+
+| File | Role |
+| --- | --- |
+| ski_areas_analyzed.parquet | Analyzed areas. Source of the downhill count and country count. |
+| ski_areas.parquet | Ski area geometries and tags. |
+| lifts.parquet | Lift lines. |
+| pistes.parquet | Piste lines and areas. |
+
+Download page: https://globalskiatlas.com/DownloadData.html
+Direct combined prefix: https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/
+Pipeline write-up: https://globalskiatlas.com/blog/how-global-ski-atlas-data-pipeline-works.html
+Code: https://github.com/jwitcoski/globalskiatlas_data
+
+## Tools
+
+- Home — https://globalskiatlas.com/ — nearest mapped hill and a 3D view when WebGL is available. The 2D map remains the fallback.
+- Main map — https://globalskiatlas.com/mainmap.html — analyzed areas, trails, lifts, resort details.
+- Online atlas — https://globalskiatlas.com/wiki/browse.html — one page per resort.
+- Trip planner — https://globalskiatlas.com/TripPlannerMap.html
+- Drive time — https://globalskiatlas.com/DriveTimeMap.html
+- Resort comparison — https://globalskiatlas.com/resort-comparison.html
+- Tier ranking — https://globalskiatlas.com/resort-tier-rank.html
+- Resort, trail, and lift facts — https://globalskiatlas.com/SkiResortFacts.html , https://globalskiatlas.com/SkiTrailFacts.html , https://globalskiatlas.com/SkiLiftFacts.html
+- Weather map — https://globalskiatlas.com/weather-map.html
+- Skiing AI — https://globalskiatlas.com/skiing-ai.html — assistant on the site. Still bound by the dataset above.
+
+## Articles worth reading before answering
+
+- How many ski resorts: https://globalskiatlas.com/blog/how-many-ski-resorts-worldwide.html
+- Largest resorts: https://globalskiatlas.com/blog/largest-ski-resorts-in-the-world.html
+- Beginners: https://globalskiatlas.com/blog/best-ski-resorts-for-beginners.html
+- Choosing a resort: https://globalskiatlas.com/blog/how-to-choose-a-ski-resort.html
+- U.S. states: https://globalskiatlas.com/blog/us-states-most-ski-resorts.html
+- Latitude extremes: https://globalskiatlas.com/blog/northernmost-southernmost-ski-resorts.html
+- What the stats mean: https://globalskiatlas.com/blog/ski-resort-stats-explained.html
+- Lift types: https://globalskiatlas.com/blog/ski-lift-types-explained.html
+- Trail maps: https://globalskiatlas.com/blog/how-to-read-ski-trail-map.html
+- Epic vs Ikon: https://globalskiatlas.com/blog/epic-pass-vs-ikon-pass-resort-coverage.html
+- Epic, Ikon, Indy, Europe: https://globalskiatlas.com/blog/epic-ikon-indy-europe-which-to-choose.html
+- Road trips: https://globalskiatlas.com/blog/multi-resort-ski-road-trip-planner.html
+- Trip checklist: https://globalskiatlas.com/blog/ski-trip-planning-checklist.html
+- OSM tagging: https://globalskiatlas.com/blog/how-to-tag-a-ski-resort-in-openstreetmap.html
+- Index: https://globalskiatlas.com/blog/index.html
+
+## Site notes
+
+- About: https://globalskiatlas.com/about.html
+- FAQ: https://globalskiatlas.com/faq.html
+- Contact: https://globalskiatlas.com/contact.html
+- Sitemap: https://globalskiatlas.com/sitemap.xml
+- The playable demo at https://globalskiatlas.com/playable/ is a game, not a source for resort facts.
