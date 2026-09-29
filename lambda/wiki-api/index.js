@@ -6,6 +6,7 @@
  */
 const store = require('./store');
 const { handleResortJobRequest } = require('./resort-jobs');
+const { handleResortSearchRequest } = require('./resort-search');
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -117,8 +118,23 @@ exports.handler = async (event) => {
       validateToken,
       fetchImpl: typeof fetch === 'function' ? fetch : null,
       env: process.env,
+      findExisting: async (winterSportsId) => {
+        const pages = await store.listPages();
+        const hit = pages.find((page) => String(page.winterSportsId || '') === String(winterSportsId));
+        return hit ? { pageId: hit.pageId, title: hit.title || hit.englishName || '' } : null;
+      },
     });
     if (resortJob) return json(resortJob.status, resortJob.body);
+
+    const resortSearch = await handleResortSearchRequest({
+      method,
+      pathParts,
+      token: getAuth(event),
+      query: event.queryStringParameters && event.queryStringParameters.q,
+      validateToken,
+      fetchImpl: typeof fetch === 'function' ? fetch : null,
+    });
+    if (resortSearch) return json(resortSearch.status, resortSearch.body);
 
     // POST /wiki/osm-fix-report (playable: OSM scenery fix notification; SNS rebuild later)
     if (pathParts[0] === 'wiki' && pathParts[1] === 'osm-fix-report' && pathParts.length === 2 && method === 'POST') {

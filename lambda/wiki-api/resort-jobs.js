@@ -21,13 +21,10 @@ function buildJobBody(input) {
   const action = String(src.action || '').trim();
   if (action === 'add') {
     const name = optionalString(src, 'name');
+    const winterSportsId = optionalString(src, 'winter_sports_id');
     if (!name) throw bad(400, 'name required');
-    const body = { action: 'add', name };
-    ['state', 'country', 'lat', 'lon'].forEach((key) => {
-      const value = optionalString(src, key);
-      if (value) body[key] = value;
-    });
-    return body;
+    if (!/^\d+$/.test(winterSportsId)) throw bad(400, 'winter_sports_id required');
+    return { action: 'add', winter_sports_id: winterSportsId, name };
   }
   if (action === 'delete' || action === 'update') {
     const winterSportsId = optionalString(src, 'winter_sports_id');
@@ -95,7 +92,7 @@ async function listQueuedJobs({ env }) {
   return jobs;
 }
 
-async function handleResortJobRequest({ method, pathParts, token, body, validateToken, fetchImpl, env, listJobs }) {
+async function handleResortJobRequest({ method, pathParts, token, body, validateToken, fetchImpl, env, listJobs, findExisting }) {
   if (!pathParts || pathParts[0] !== 'wiki' || pathParts[1] !== 'resort-jobs') return null;
   const principal = token ? await validateToken(token) : null;
   if (!principal) return { status: 401, body: { error: 'Unauthorized', message: 'Valid Cognito token required' } };
@@ -106,6 +103,20 @@ async function handleResortJobRequest({ method, pathParts, token, body, validate
     }
     if (method === 'POST' && pathParts.length === 2) {
       const job = buildJobBody(body);
+      if (job.action === 'add' && typeof findExisting === 'function') {
+        const existing = await findExisting(job.winter_sports_id);
+        if (existing) {
+          return {
+            status: 409,
+            body: {
+              error: 'Conflict',
+              message: (existing.title || 'This resort') + ' is already in the atlas.',
+              pageId: existing.pageId || '',
+              title: existing.title || '',
+            },
+          };
+        }
+      }
       return await forwardResortJob({ method: 'POST', body: job, fetchImpl, env });
     }
     if (method === 'GET' && pathParts.length === 3) {

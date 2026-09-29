@@ -1,0 +1,103 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Add a missing resort – Ski Atlas</title>
+  <link rel="stylesheet" href="css/style.css?v=3"/>
+  <style>
+    body { margin: 0; font-family: system-ui, Roboto, sans-serif; color: #1a2744; }
+    .wrap { max-width: 52rem; margin: 0 auto; padding: 1.25rem 1rem 3rem; }
+    nav { display: flex; flex-wrap: wrap; gap: 1.25rem; font-size: 0.85rem; margin-bottom: 1.25rem; align-items: center; }
+    nav a { color: #1a4d8c; }
+    h1 { font-size: 1.75rem; margin: 0 0 0.4rem; }
+    .muted { color: #5c6b7a; }
+    #wiki-add-resort { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-top: 1rem; }
+    #wiki-add-resort[hidden], #wiki-add-resort [hidden] { display: none !important; }
+    #wiki-add-resort input { min-width: 12rem; flex: 1 1 16rem; padding: 0.45rem 0.6rem; border: 1px solid #a2b5c8; font: inherit; }
+    #wiki-add-resort button { min-height: 44px; padding: 0.45rem 0.75rem; }
+    #wiki-add-status { flex-basis: 100%; margin: 0; }
+    .wiki-add-map { flex-basis: 100%; width: 100%; height: 420px; min-width: 0; border: 1px solid #a2b5c8; background: #eef3f8; }
+    .wiki-add-map .leaflet-container { height: 100%; width: 100%; font: inherit; }
+    .wiki-add-map .leaflet-interactive { cursor: pointer; }
+    .wiki-add-picks { flex-basis: 100%; display: flex; flex-direction: column; gap: 0.35rem; margin: 0; }
+    .wiki-add-picks button { display: flex; flex-direction: column; align-items: flex-start; text-align: left; background: #fff; border: 1px solid #a2b5c8; min-height: 44px; }
+    .wiki-add-pick-name { font-weight: 650; color: #1a4d8c; }
+    .wiki-add-pick-place { color: #5c6b7a; font-size: 0.85rem; }
+    .wiki-add-picks button[aria-pressed="true"] { outline: 2px solid #1a4d8c; background: #eef6f5; }
+    #wiki-add-note { display: flex; flex-direction: column; align-items: stretch; gap: 0.35rem; margin-top: 2rem; max-width: 36rem; }
+    #wiki-add-note[hidden] { display: none !important; }
+    #wiki-add-note input, #wiki-add-note textarea { padding: 0.45rem 0.6rem; border: 1px solid #a2b5c8; font: inherit; }
+    #wiki-add-note button { min-height: 44px; padding: 0.45rem 0.75rem; align-self: flex-start; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <nav>
+      <a href="main.html">Main page</a>
+      <a href="browse.html">Browse</a>
+      <span>Add a missing resort</span>
+      <a href="queue.html">Queue</a>
+      <span id="resort-auth-widget"></span>
+    </nav>
+    <h1>Add a missing resort</h1>
+    <p class="muted">The atlas already pulls every OpenStreetMap area tagged <code>landuse=winter_sports</code>. Use this only after you create a new one in OpenStreetMap, or edit an existing polygon so it has that tag. Start typing the name, click the outline, and it will be queued for the next daily update.</p>
+    <p id="wiki-add-signed-out" class="muted">Sign in to add a missing resort.</p>
+    <form id="wiki-add-resort" hidden>
+      <label for="wiki-add-name">Resort name</label>
+      <input id="wiki-add-name" name="name" required maxlength="200" placeholder="Start typing a resort name" autocomplete="off">
+      <button type="submit">Search OpenStreetMap</button>
+      <div id="wiki-add-picks" class="wiki-add-picks" hidden></div>
+      <div id="wiki-add-map" class="wiki-add-map" hidden></div>
+      <button type="button" id="wiki-add-confirm" disabled hidden>Add this resort</button>
+      <p id="wiki-add-status" class="muted" role="status"></p>
+    </form>
+    <form id="wiki-add-note" hidden>
+      <p class="muted">Same name as another area, or the resort is split into more than one outline and only one showed up? Send a note. It goes to the same place as the contact form.</p>
+      <label for="wiki-add-note-email">Email</label>
+      <input id="wiki-add-note-email" type="email" name="email" required maxlength="200" placeholder="you@example.com" autocomplete="email">
+      <label for="wiki-add-note-message">Message</label>
+      <textarea id="wiki-add-note-message" name="message" required maxlength="2000" rows="4" placeholder="What the search missed"></textarea>
+      <button type="submit">Send message</button>
+      <p id="wiki-add-note-status" class="muted" role="status"></p>
+    </form>
+  </div>
+  <script src="/wiki/js/auth.js"></script>
+  <script src="/wiki/js/resort-jobs.js?v=4"></script>
+  <script src="/wiki/js/add-resort.js?v=8"></script>
+  <script>
+    ywikiAuth.init(function () {
+      ywikiAuth.renderWidget('resort-auth-widget');
+      if (ywikiAuth.getToken()) {
+        document.getElementById('wiki-add-signed-out').hidden = true;
+        document.getElementById('wiki-add-note').hidden = false;
+      }
+    });
+    document.getElementById('wiki-add-note').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var status = document.getElementById('wiki-add-note-status');
+      var nameInput = document.getElementById('wiki-add-name');
+      var pressed = document.querySelector('#wiki-add-picks button[aria-pressed="true"]');
+      var resort = nameInput && nameInput.value ? nameInput.value.trim() : '';
+      var osmId = pressed ? pressed.getAttribute('data-id') : '';
+      var message = document.getElementById('wiki-add-note-message').value.trim();
+      var body = new FormData();
+      body.set('email', document.getElementById('wiki-add-note-email').value.trim());
+      body.set('topic', 'Missing resort outline');
+      body.set('message', message + '\n\nResort typed: ' + (resort || '(none)') + '\nOpenStreetMap id: ' + (osmId || '(none selected)'));
+      status.textContent = 'Sending…';
+      fetch('https://formspree.io/f/xgolwlnp', {
+        method: 'POST',
+        headers: { Accept: 'application/json' },
+        body: body
+      }).then(function (resp) {
+        if (!resp.ok) throw new Error('send');
+        status.textContent = 'Message sent.';
+        document.getElementById('wiki-add-note-message').value = '';
+      }).catch(function () {
+        status.textContent = 'Could not send the message. Try the contact page.';
+      });
+    });
+  </script>
+</body>
+</html>

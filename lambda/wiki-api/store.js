@@ -217,7 +217,7 @@ async function listPages() {
   do {
     const params = {
       TableName: tables.pages(),
-      ProjectionExpression: 'pageId, title, englishName, country, #st, #rg, resortType, skiableTerrainAcres, totalLifts, downhillTrails, book, resortSizeCategory, pageType, #h',
+      ProjectionExpression: 'pageId, title, englishName, winterSportsId, country, #st, #rg, resortType, skiableTerrainAcres, totalLifts, downhillTrails, book, resortSizeCategory, pageType, #h',
       ExpressionAttributeNames: { '#st': 'state', '#rg': 'region', '#h': 'hidden' },
       FilterExpression: 'attribute_not_exists(#h) OR #h <> :true',
       ExpressionAttributeValues: { ':true': true },
@@ -229,8 +229,8 @@ async function listPages() {
   } while (lastKey);
   return items
     .filter((item) => item.hidden !== true)
-    .map(({ pageId, title, englishName, country, state, region, resortType, skiableTerrainAcres, totalLifts, downhillTrails, book, resortSizeCategory, pageType }) =>
-      ({ pageId, title, englishName, country, state, region, resortType, skiableTerrainAcres, totalLifts, downhillTrails, book, resortSizeCategory, pageType }))
+    .map(({ pageId, title, englishName, winterSportsId, country, state, region, resortType, skiableTerrainAcres, totalLifts, downhillTrails, book, resortSizeCategory, pageType }) =>
+      ({ pageId, title, englishName, winterSportsId, country, state, region, resortType, skiableTerrainAcres, totalLifts, downhillTrails, book, resortSizeCategory, pageType }))
     .sort((a, b) => (a.title || '').localeCompare(b.title || ''));
 }
 

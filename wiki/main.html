@@ -93,6 +93,7 @@
     <nav class="browse-nav">
       <span class="browse-nav-current">Main page</span>
       <a href="browse.html">Browse</a>
+      <a href="add.html">Add a missing resort</a>
       <a href="queue.html">Queue</a>
       <a href="../index.html">Home</a>
     </nav>
@@ -128,17 +129,12 @@
         <div class="wiki-box-body">
           <ul>
             <li><a href="browse.html">Browse every mountain page</a> — search, filter by country, or open unnamed OSM areas that still need a name.</li>
+            <li><a href="add.html">Add a missing resort</a> — pick its OpenStreetMap outline and queue it for the next daily update.</li>
             <li><a href="../mainmap.html">Interactive map</a> — the same OpenStreetMap ski areas, as a map.</li>
             <li><a href="../index.html">3D mountain scenes</a> — walk a built scene instead of reading a page.</li>
             <li>Book volumes: <a href="browse.html">Americas</a>, <a href="browse.html">Europe</a>, <a href="browse.html">Asia / Africa / Oceania</a>.</li>
             <li><a href="../blog/how-to-tag-a-ski-resort-in-openstreetmap.html">Improve OpenStreetMap</a> so the next export is better.</li>
           </ul>
-          <form id="wiki-add-resort" hidden>
-            <label for="wiki-add-name">Resort name</label>
-            <input id="wiki-add-name" name="name" required maxlength="200" placeholder="Resort name">
-            <button type="submit">Add a new resort</button>
-            <p id="wiki-add-status" class="wiki-muted" role="status"></p>
-          </form>
           <p class="wiki-search-line">Looking for one mountain? <a href="browse.html">Search the index</a>.</p>
         </div>
       </section>
@@ -148,7 +144,6 @@
   <script src="../scripts/header-toggle.js"></script>
   <script src="../scripts/site-nav.js"></script>
   <script src="/wiki/js/auth.js"></script>
-  <script src="/wiki/js/resort-jobs.js?v=3"></script>
   <script type="module">
     import { fetchSkiAreaCatalog, loadPmtilesLayerFeatures } from '../scripts/pmtiles-core.js';
 
@@ -577,17 +572,6 @@
       }
     });
 
-    ywikiAuth.init(function () {
-      var form = document.getElementById('wiki-add-resort');
-      if (!form || !ywikiAuth.getToken()) return;
-      form.hidden = false;
-      form.addEventListener('submit', function (e) {
-        e.preventDefault();
-        var name = document.getElementById('wiki-add-name').value.trim();
-        if (!name) return;
-        ywikiResortJobs.submit({ action: 'add', name: name }, document.getElementById('wiki-add-status'));
-      });
-    });
   </script>
 </body>
 </html>

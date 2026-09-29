@@ -528,6 +528,7 @@ app.get('/api/admin-boundary', async (req, res) => {
 });
 
 const { handleResortJobRequest } = require('./lambda/wiki-api/resort-jobs');
+const { handleResortSearchRequest } = require('./lambda/wiki-api/resort-search');
 
 async function handleResortJobs(req, res) {
   const auth = req.headers.authorization || '';
@@ -544,6 +545,11 @@ async function handleResortJobs(req, res) {
     },
     fetchImpl: fetch,
     env: process.env,
+    findExisting: async (winterSportsId) => {
+      const pages = await wikiStore.listPages();
+      const hit = pages.find((page) => String(page.winterSportsId || '') === String(winterSportsId));
+      return hit ? { pageId: hit.pageId, title: hit.title || hit.englishName || '' } : null;
+    },
   });
   res.status(result.status).json(result.body);
 }
@@ -551,6 +557,24 @@ async function handleResortJobs(req, res) {
 app.post('/api/wiki/resort-jobs', handleResortJobs);
 app.get('/api/wiki/resort-jobs', handleResortJobs);
 app.get('/api/wiki/resort-jobs/:jobId', handleResortJobs);
+
+app.get('/api/wiki/resort-search', async (req, res) => {
+  const auth = req.headers.authorization || '';
+  const token = auth.startsWith('Bearer ') ? auth.slice(7).trim() : '';
+  const result = await handleResortSearchRequest({
+    method: 'GET',
+    pathParts: ['wiki', 'resort-search'],
+    token,
+    query: req.query.q,
+    validateToken: async (raw) => {
+      if (!raw) return null;
+      if (!isCognitoConfigured || !jwtValidator) return { sub: 'local' };
+      return jwtValidator.validate('Bearer ' + raw);
+    },
+    fetchImpl: fetch,
+  });
+  res.status(result.status).json(result.body);
+});
 
 // Mount /api/wiki so GET /api/wiki/index is always matched before :pageId
 const apiWikiRouter = require('express').Router({ mergeParams: true });
