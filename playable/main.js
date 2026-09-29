@@ -1029,6 +1029,7 @@ function catalogUrls() {
     urls.push(new URL("catalog.json", root));
   } else if (isLocalDev()) {
     urls.push(new URL("/game_scenes/catalog.json", location.origin));
+    urls.push(new URL("/clay_scenes/catalog.json", location.origin));
   } else if (!localOnly) {
     urls.push(new URL("catalog.json", CF_SCENES));
     urls.push(new URL("catalog.json", S3_SCENES));
@@ -1043,7 +1044,13 @@ async function fetchCatalog() {
       const r = await fetch(u);
       if (!r.ok) continue;
       const data = await r.json();
-      if (data?.resorts?.length) return { data, base: new URL(".", u) };
+      if (data?.resorts?.length) {
+        for (const resort of data.resorts) {
+          if (!resort.path && resort.id) resort.path = String(resort.id);
+          if (!resort.name && resort.display_name) resort.name = resort.display_name;
+        }
+        return { data, base: new URL(".", u) };
+      }
     } catch {
       /* try next */
     }
@@ -1268,7 +1275,10 @@ async function bootScene() {
     }
     return;
   }
-  await loadMountain();
+  openPanel(ui, "error", {
+    message: "No ski scene catalog on this server.",
+    changeMountain: false,
+  });
 }
 
 try {

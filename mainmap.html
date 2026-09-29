@@ -13,11 +13,10 @@
   </script>
   <!-- Ad script loaded after map is interactive (see mainmap module) -->
   <title>Interactive Ski Resort Map – Global Ski Atlas</title>
-  <meta name="description" content="Interactive map of 3,000+ ski resorts worldwide. Explore trails, lifts, resort stats, and comparison charts—zoom in for piste and lift detail." />
-  <meta name="keywords" content="ski resort map, interactive ski map, ski atlas, ski trails map, ski lifts map, worldwide ski resorts" />
+  <meta name="description" content="Map of 3,035 downhill ski areas in 63 countries from ski_areas_analyzed.parquet. Zoom for piste and lift geometry, then open comparison, drive time, or the wiki." />
   <!-- Open Graph -->
   <meta property="og:title" content="Interactive Ski Resort Map – Global Ski Atlas" />
-  <meta property="og:description" content="Explore 3,000+ ski resorts on an interactive map with trails, lifts, and rich resort popups." />
+  <meta property="og:description" content="3,035 downhill ski areas in 63 countries, drawn from the analyzed OpenStreetMap file, with trails and lifts when you zoom in." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://globalskiatlas.com/mainmap.html" />
   <meta property="og:image" content="https://globalskiatlas.com/assets/og-banner.png" />
@@ -25,10 +24,54 @@
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Interactive Ski Resort Map – Global Ski Atlas" />
-  <meta name="twitter:description" content="Explore 3,000+ ski resorts on an interactive map with trails, lifts, and rich resort popups." />
+  <meta name="twitter:description" content="3,035 downhill ski areas in 63 countries, drawn from the analyzed OpenStreetMap file, with trails and lifts when you zoom in." />
   <meta name="twitter:image" content="https://globalskiatlas.com/assets/og-banner.png" />
   <!-- Canonical -->
   <link rel="canonical" href="https://globalskiatlas.com/mainmap.html" />
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebApplication",
+        "name": "Global Ski Atlas map",
+        "url": "https://globalskiatlas.com/mainmap.html",
+        "applicationCategory": "MapApplication",
+        "operatingSystem": "Web",
+        "browserRequirements": "Requires JavaScript",
+        "isAccessibleForFree": true,
+        "description": "Interactive map of analyzed downhill ski areas from ski_areas_analyzed.parquet: 3,035 areas in 63 countries, with piste and lift geometry on zoom.",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "provider": {
+          "@type": "Organization",
+          "name": "Global Ski Atlas",
+          "url": "https://globalskiatlas.com/"
+        }
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "https://globalskiatlas.com/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Interactive map",
+            "item": "https://globalskiatlas.com/mainmap.html"
+          }
+        ]
+      }
+    ]
+  }
+  </script>
   <!-- Preconnect to critical origins for faster tile and PMTiles fetches -->
   <link rel="preconnect" href="https://api.maptiler.com" crossorigin />
   <link rel="preconnect" href="https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com" crossorigin />
@@ -41,7 +84,7 @@
   <link rel="stylesheet" href="css/mainmap.css" />
 </head>
 <body class="tw-flex tw-min-h-[100vh] tw-flex-col tw-bg-[#fff] gsa-banner-map" data-gsa-banner="map">
-  <h1 class="tw-sr-only">Interactive map of 3,000+ ski resorts worldwide with trails, lifts, and resort details</h1>
+  <h1 class="tw-sr-only">Interactive map of 3,035 downhill ski areas</h1>
   <header
     class="tw-absolute tw-top-0 tw-z-[100] tw-flex tw-h-[60px] tw-w-full tw-bg-opacity-0 
            tw-px-[5%] max-lg:tw-mr-auto max-lg:tw-px-4 lg:tw-justify-around"
@@ -115,33 +158,15 @@
     </div>
   </div>
 
-  <section class="tw-border-t tw-border-gray-200 tw-bg-white tw-px-[5%] tw-py-12 max-lg:tw-px-4">
-    <div class="tw-mx-auto tw-max-w-3xl tw-text-gray-700">
-      <h2 class="tw-text-2xl tw-font-semibold tw-text-black">How to use the interactive ski resort map</h2>
-      <p class="tw-mt-4 tw-leading-relaxed">
-        This map is the online front door to Global Ski Atlas. It renders thousands of downhill ski areas built from OpenStreetMap winter-sports boundaries, piste ways, and aerial lifts, processed into a consistent worldwide dataset. Zoom in to see trail and lift geometry; click a resort for terrain stats, elevation context, and links into deeper atlas tools.
-      </p>
-      <p class="tw-mt-4 tw-leading-relaxed">
-        Use the search box to jump to a mountain by name. Compare shortlisted resorts in the
-        <a href="resort-comparison.html" class="tw-text-blue-600 hover:tw-underline">resort comparison</a>
-        tool, check regional rankings on
-        <a href="SkiResortFacts.html" class="tw-text-blue-600 hover:tw-underline">Resort Facts</a>,
-        or plan driving distances with the
-        <a href="TripPlannerMap.html" class="tw-text-blue-600 hover:tw-underline">trip planner</a>
-        and
-        <a href="DriveTimeMap.html" class="tw-text-blue-600 hover:tw-underline">drive-time map</a>.
-        Guides on the
-        <a href="blog/index.html" class="tw-text-blue-600 hover:tw-underline">blog</a>
-        explain what mapped stats mean, how trail colors differ by region, and how to improve missing data in OpenStreetMap.
-      </p>
-      <p class="tw-mt-4 tw-leading-relaxed">
-        The atlas is a planning and research aid, not an official trail map or avalanche forecast. Always confirm opening status, closures, and safety information with the resort and local authorities before you ski.
-        Questions or corrections are welcome on the
-        <a href="contact.html" class="tw-text-blue-600 hover:tw-underline">contact</a>
-        page.
-      </p>
-    </div>
-  </section>
+  <p class="tw-border-t tw-border-gray-200 tw-bg-white tw-px-[5%] tw-py-4 tw-text-sm tw-leading-relaxed tw-text-gray-700 max-lg:tw-px-4">
+    This map plots 3,035 downhill ski areas in 63 countries from ski_areas_analyzed.parquet. Zoom in for OpenStreetMap pistes and lifts.
+    <a href="blog/how-many-ski-resorts-worldwide.html" class="tw-text-blue-600 hover:tw-underline">Resort count</a>.
+    <a href="blog/ski-resort-stats-explained.html" class="tw-text-blue-600 hover:tw-underline">Stat definitions</a>.
+    <a href="resort-comparison.html" class="tw-text-blue-600 hover:tw-underline">Compare</a>.
+    <a href="DriveTimeMap.html" class="tw-text-blue-600 hover:tw-underline">Drive time</a>.
+    <a href="DownloadData.html" class="tw-text-blue-600 hover:tw-underline">Parquet</a>.
+    <a href="wiki/browse.html" class="tw-text-blue-600 hover:tw-underline">Atlas</a>.
+  </p>
 
   <footer
     class="tw-flex tw-w-full tw-place-content-around tw-gap-3 tw-border-t tw-border-gray-200
