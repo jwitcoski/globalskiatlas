@@ -1,0 +1,77 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Resort queue – Ski Atlas</title>
+  <link rel="stylesheet" href="css/style.css?v=3"/>
+  <style>
+    body { margin: 0; font-family: system-ui, Roboto, sans-serif; color: #1a2744; }
+    .wrap { max-width: 52rem; margin: 0 auto; padding: 1.25rem 1rem 3rem; }
+    nav { display: flex; gap: 1.25rem; font-size: 0.85rem; margin-bottom: 1.25rem; }
+    nav a { color: #1a4d8c; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+    th, td { text-align: left; padding: 0.45rem 0.5rem; border-bottom: 1px solid #d5e0ea; }
+    th { font-size: 0.75rem; letter-spacing: 0.03em; text-transform: uppercase; color: #5c6b7a; }
+    .muted { color: #5c6b7a; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <nav>
+      <a href="main.html">Main page</a>
+      <a href="browse.html">Browse</a>
+      <span>Queue</span>
+      <span id="resort-auth-widget"></span>
+    </nav>
+    <h1>Resort queue</h1>
+    <p class="muted">Changes waiting for the next daily update. They are not on the map yet.</p>
+    <p id="queue-status" class="muted">Loading…</p>
+    <table id="queue-table" hidden>
+      <thead>
+        <tr><th>Action</th><th>Resort</th><th>Region</th><th>Job</th></tr>
+      </thead>
+      <tbody id="queue-body"></tbody>
+    </table>
+  </div>
+  <script src="/wiki/js/auth.js"></script>
+  <script>
+    function esc(s) {
+      return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+    function label(job) {
+      if (job.name) return job.name;
+      if (job.winter_sports_id) return job.winter_sports_id;
+      return '—';
+    }
+    ywikiAuth.init(function () {
+      ywikiAuth.renderWidget('resort-auth-widget');
+      var status = document.getElementById('queue-status');
+      var token = ywikiAuth.getToken();
+      if (!token) {
+        status.textContent = 'Sign in to see the queue.';
+        return;
+      }
+      fetch('/api/wiki/resort-jobs', { headers: { Authorization: 'Bearer ' + token } })
+        .then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
+        .then(function (res) {
+          if (!res.ok) {
+            status.textContent = (res.data && (res.data.message || res.data.error)) || 'Could not load the queue.';
+            return;
+          }
+          var jobs = (res.data && res.data.jobs) || [];
+          if (!jobs.length) {
+            status.textContent = 'Nothing is waiting.';
+            return;
+          }
+          status.textContent = jobs.length + (jobs.length === 1 ? ' change is waiting.' : ' changes are waiting.');
+          document.getElementById('queue-body').innerHTML = jobs.map(function (job) {
+            return '<tr><td>' + esc(job.action) + '</td><td>' + esc(label(job)) + '</td><td>' + esc(job.region || '') + '</td><td>' + esc(job.jobId) + '</td></tr>';
+          }).join('');
+          document.getElementById('queue-table').hidden = false;
+        })
+        .catch(function () { status.textContent = 'Could not load the queue.'; });
+    });
+  </script>
+</body>
+</html>

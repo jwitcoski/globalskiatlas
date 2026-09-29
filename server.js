@@ -549,6 +549,7 @@ async function handleResortJobs(req, res) {
 }
 
 app.post('/api/wiki/resort-jobs', handleResortJobs);
+app.get('/api/wiki/resort-jobs', handleResortJobs);
 app.get('/api/wiki/resort-jobs/:jobId', handleResortJobs);
 
 // Mount /api/wiki so GET /api/wiki/index is always matched before :pageId

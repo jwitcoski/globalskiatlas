@@ -1,5 +1,5 @@
 const assert = require('assert');
-const { buildJobBody, forwardResortJob, handleResortJobRequest } = require('./resort-jobs');
+const { buildJobBody, forwardResortJob, handleResortJobRequest, jobSummary } = require('./resort-jobs');
 
 const add = buildJobBody({
   action: 'add',
@@ -94,6 +94,19 @@ async function run() {
     env: {},
   });
   assert.strictEqual(unconfigured.status, 503);
+
+  assert.strictEqual(jobSummary({ action: 'add', name: 'test', jobId: 'abc', extra: 1 }).name, 'test');
+  const listed = await handleResortJobRequest({
+    method: 'GET',
+    pathParts: ['wiki', 'resort-jobs'],
+    token: 'user-jwt',
+    validateToken: async () => ({ sub: 'abc' }),
+    fetchImpl: async () => { throw new Error('must not call queue'); },
+    env: {},
+    listJobs: async () => [{ jobId: 'abc', action: 'add', name: 'test' }],
+  });
+  assert.strictEqual(listed.status, 200);
+  assert.strictEqual(listed.body.jobs[0].name, 'test');
   console.log('resort-jobs.check ok');
 }
 

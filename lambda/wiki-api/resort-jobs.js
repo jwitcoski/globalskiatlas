@@ -66,11 +66,44 @@ async function forwardResortJob({ method, jobId, body, fetchImpl, env }) {
   return { status: res.status, body: parsed };
 }
 
-async function handleResortJobRequest({ method, pathParts, token, body, validateToken, fetchImpl, env }) {
+function jobSummary(job) {
+  const src = job && typeof job === 'object' ? job : {};
+  return {
+    jobId: String(src.jobId || ''),
+    action: String(src.action || ''),
+    name: String(src.name || ''),
+    winter_sports_id: String(src.winter_sports_id || ''),
+    region: String(src.region || ''),
+    state: String(src.state || ''),
+    country: String(src.country || ''),
+  };
+}
+
+async function listQueuedJobs({ env }) {
+  const { S3Client, ListObjectsV2Command, GetObjectCommand } = require('@aws-sdk/client-s3');
+  const bucket = String((env && env.RESORT_JOB_BUCKET) || 'globalskiatlas-backend-k8s-output');
+  const prefix = String((env && env.RESORT_JOB_PREFIX) || 'resort-jobs/inbox/');
+  const client = new S3Client({ region: (env && env.AWS_REGION) || 'us-east-1' });
+  const listed = await client.send(new ListObjectsV2Command({ Bucket: bucket, Prefix: prefix }));
+  const keys = (listed.Contents || []).map((item) => item.Key).filter((key) => key && key.endsWith('.json'));
+  const jobs = [];
+  for (const Key of keys) {
+    const obj = await client.send(new GetObjectCommand({ Bucket: bucket, Key }));
+    const text = await obj.Body.transformToString();
+    jobs.push(jobSummary(JSON.parse(text)));
+  }
+  return jobs;
+}
+
+async function handleResortJobRequest({ method, pathParts, token, body, validateToken, fetchImpl, env, listJobs }) {
   if (!pathParts || pathParts[0] !== 'wiki' || pathParts[1] !== 'resort-jobs') return null;
   const principal = token ? await validateToken(token) : null;
   if (!principal) return { status: 401, body: { error: 'Unauthorized', message: 'Valid Cognito token required' } };
   try {
+    if (method === 'GET' && pathParts.length === 2) {
+      const jobs = await (listJobs || listQueuedJobs)({ env });
+      return { status: 200, body: { jobs } };
+    }
     if (method === 'POST' && pathParts.length === 2) {
       const job = buildJobBody(body);
       return await forwardResortJob({ method: 'POST', body: job, fetchImpl, env });
@@ -87,4 +120,4 @@ async function handleResortJobRequest({ method, pathParts, token, body, validate
   }
 }
 
-module.exports = { buildJobBody, forwardResortJob, handleResortJobRequest };
+module.exports = { buildJobBody, forwardResortJob, handleResortJobRequest, jobSummary, listQueuedJobs };
