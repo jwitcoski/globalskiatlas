@@ -233,32 +233,76 @@
             </div>
         </section>
 
-        <section
-            id="ai-assistant"
-            class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-place-content-center 
-                    tw-place-items-center tw-overflow-hidden tw-p-6 tw-py-8"
-        >
+        <section id="ai-assistant" class="decide-section">
             <div class="decide-block">
-                <h2 class="reveal-up tw-text-3xl tw-font-semibold max-md:tw-text-2xl">Then decide</h2>
-                <ol class="decide-list">
-                    <li class="reveal-up">
-                        <a href="/playable/" data-ski-in-3d>Ski it in 3D</a>
+                <h2>Then decide</h2>
+                <div class="decide-grid">
+                    <a class="decide-card" href="index.html#main">
+                        <span class="decide-icon" aria-hidden="true"><i class="bi bi-pin-map"></i></span>
+                        <strong>Nearest 3D map</strong>
+                        <p>The closest hill we know, on this page.</p>
+                    </a>
+                    <a class="decide-card" href="/playable/" data-ski-in-3d>
+                        <span class="decide-icon" aria-hidden="true"><i class="bi bi-controller"></i></span>
+                        <strong>Ski it in 3D</strong>
                         <p>Play the mountain on screen before you book.</p>
-                    </li>
-                    <li class="reveal-up">
-                        <a href="DriveTimeMap.html">See what you can drive to</a>
+                    </a>
+                    <a class="decide-card" href="DriveTimeMap.html">
+                        <span class="decide-icon" aria-hidden="true"><i class="bi bi-geo-alt"></i></span>
+                        <strong>See what you can drive to</strong>
                         <p>1–4 hour rings from home.</p>
-                    </li>
-                    <li class="reveal-up">
-                        <a href="resort-comparison.html?near=1" data-compare-current>Compare two mountains</a>
+                    </a>
+                    <a class="decide-card" href="resort-comparison.html?near=1" data-compare-current>
+                        <span class="decide-icon" aria-hidden="true"><i class="bi bi-table"></i></span>
+                        <strong>Compare two mountains</strong>
                         <p>One table. Same numbers.</p>
-                    </li>
-                </ol>
-                <p class="reveal-up decide-osm">
-                    Trails look thin?
-                    <a href="blog/how-to-tag-a-ski-resort-in-openstreetmap.html">Fix them in OpenStreetMap</a>
-                    or write the wiki.
-                </p>
+                    </a>
+                    <a class="decide-card" href="pass-review.html">
+                        <span class="decide-icon" aria-hidden="true"><i class="bi bi-ticket-perforated"></i></span>
+                        <strong>Pass match review</strong>
+                        <p>Which pass covers which mountain.</p>
+                    </a>
+                    <a class="decide-card" href="TripPlannerMap.html">
+                        <span class="decide-icon" aria-hidden="true"><i class="bi bi-signpost-split"></i></span>
+                        <strong>Trip planner</strong>
+                        <p>String resorts into one drive.</p>
+                    </a>
+                    <a class="decide-card" href="mainmap.html">
+                        <span class="decide-icon" aria-hidden="true"><i class="bi bi-map"></i></span>
+                        <strong>Interactive map</strong>
+                        <p>The full index of mountains.</p>
+                    </a>
+                    <a class="decide-card" href="wiki/browse.html">
+                        <span class="decide-icon" aria-hidden="true"><i class="bi bi-journal-text"></i></span>
+                        <strong>Resort pages</strong>
+                        <p>A written page for each hill. Write the wiki here.</p>
+                    </a>
+                    <a class="decide-card" href="weather-map.html">
+                        <span class="decide-icon" aria-hidden="true"><i class="bi bi-cloud-sun"></i></span>
+                        <strong>Weather</strong>
+                        <p>Conditions drawn on the map.</p>
+                    </a>
+                    <a class="decide-card" href="blog/how-to-tag-a-ski-resort-in-openstreetmap.html">
+                        <span class="decide-icon" aria-hidden="true"><i class="bi bi-pencil"></i></span>
+                        <strong>Trails look thin?</strong>
+                        <p>Fix them in OpenStreetMap.</p>
+                    </a>
+                    <a class="decide-card" href="blog/index.html">
+                        <span class="decide-icon" aria-hidden="true"><i class="bi bi-newspaper"></i></span>
+                        <strong>Blog</strong>
+                        <p>How the atlas is built, and how to read it.</p>
+                    </a>
+                    <a class="decide-card" href="coffee-table-book.html">
+                        <span class="decide-icon" aria-hidden="true"><i class="bi bi-book"></i></span>
+                        <strong>Book</strong>
+                        <p>The coffee-table edition of the atlas.</p>
+                    </a>
+                    <a class="decide-card" href="about.html">
+                        <span class="decide-icon" aria-hidden="true"><i class="bi bi-info-circle"></i></span>
+                        <strong>About</strong>
+                        <p>Who builds Global Ski Atlas.</p>
+                    </a>
+                </div>
             </div>
         </section>
 
@@ -426,46 +470,78 @@
     <script src="./index.js"></script>
 
     <style>
+        .decide-section {
+            width: 100%;
+            background: #e7eef3;
+            padding: 2.5rem 1.25rem;
+        }
         .decide-block {
             width: 100%;
-            max-width: 36rem;
+            max-width: 52rem;
+            margin: 0 auto;
             text-align: left;
+            color: #111;
+            font-family: system-ui, Roboto, "Segoe UI", sans-serif;
         }
-        .decide-list {
-            list-style: none;
-            margin: 1.25rem 0 0;
-            padding: 0;
-            border-top: 1px solid #111;
+        .decide-block h2 {
+            margin: 0 0 1.1rem;
+            color: #111;
+            font-size: 2rem;
+            font-weight: 750;
+            letter-spacing: -0.02em;
+            line-height: 1.15;
         }
-        .decide-list li {
-            padding: 0.85rem 0;
-            border-bottom: 1px solid #d4d4d4;
+        .decide-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
         }
-        .decide-list a {
+        .decide-card {
+            display: block;
+            min-height: 11rem;
+            padding: 1.35rem 1.35rem 1.2rem;
+            background: #fff;
+            border-radius: 1.15rem;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 10px 24px rgba(15, 23, 42, 0.06);
+            color: inherit;
+            text-decoration: none;
+        }
+        a.decide-card:hover { box-shadow: 0 8px 28px rgba(15, 23, 42, 0.1); }
+        .decide-icon {
             display: inline-flex;
             align-items: center;
-            min-height: 44px;
-            color: #1a4d8c;
+            justify-content: center;
+            width: 2.6rem;
+            height: 2.6rem;
+            margin-bottom: 0.85rem;
+            border: 2px solid #3d6b58;
+            border-radius: 0.7rem;
+            background: #1c3d32;
+            color: #e7f3ec;
             font-size: 1.15rem;
-            font-weight: 650;
-            text-decoration: underline;
-            text-underline-offset: 3px;
         }
-        .decide-list a:hover { color: #0f766e; }
-        .decide-list p {
-            margin: 0.15rem 0 0;
+        .decide-card strong {
+            display: block;
+            margin: 0 0 0.35rem;
+            color: #111;
+            font-size: 1.05rem;
+            font-weight: 750;
+            letter-spacing: -0.01em;
+            line-height: 1.3;
+        }
+        .decide-card p {
+            margin: 0;
             color: #4b5563;
-            font-size: 0.95rem;
+            font-size: 0.98rem;
+            line-height: 1.45;
         }
-        .decide-osm {
-            margin-top: 1.25rem;
-            color: #4b5563;
-            font-size: 0.95rem;
-        }
-        .decide-osm a {
-            color: #1a4d8c;
+        .decide-card p a {
+            color: #1a4fbf;
             text-decoration: underline;
             text-underline-offset: 2px;
+        }
+        @media (max-width: 640px) {
+            .decide-grid { grid-template-columns: 1fr; }
         }
         /* Trail difficulty symbols (ski run ratings) */
         .stat-pistes-legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem 0.75rem; align-items: center; }
