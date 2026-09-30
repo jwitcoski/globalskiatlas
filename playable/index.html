@@ -301,13 +301,6 @@
       position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
       overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
     }
-    #playable-note {
-      position: absolute; z-index: 5; left: 16px; right: 16px; bottom: max(12px, env(safe-area-inset-bottom));
-      margin: 0 auto; max-width: 720px; padding: 8px 12px; border-radius: 4px;
-      background: rgba(255,255,255,.92); color: #374151; font-size: 14px; line-height: 1.45;
-      font-weight: 500; letter-spacing: 0; text-shadow: none; pointer-events: auto;
-    }
-    #playable-note a { color: #1a4d8c; }
     #panel {
       width: min(420px, 92vw); background: rgba(255,255,255,.78); color: #2a3238; padding: 22px 24px; border-radius: 4px;
       border: 1px solid rgba(255,255,255,.9);
@@ -708,10 +701,7 @@
     <button type="button" class="btn" id="flyby-auto" data-flyby="auto" aria-pressed="false">Auto</button>
     <button type="button" class="btn ghost" id="flyby-exit" data-flyby="exit">Back</button>
   </div>
-  <div id="overlay">
-    <p id="playable-note">This is a browser ski game on a mapped resort. Resort counts and trail stats stay on the <a href="../mainmap.html">map</a>, the <a href="../wiki/browse.html">atlas</a>, and the <a href="../blog/ski-resort-stats-explained.html">stat definitions</a>.</p>
-    <div id="panel"><p class="kicker">Loading</p><h2>Fetching the mountain</h2><p>DEM + OSM scene…</p></div>
-  </div>
+  <div id="overlay"><div id="panel"><p class="kicker">Loading</p><h2>Fetching the mountain</h2><p>DEM + OSM scene…</p></div></div>
   <script defer src="https://cdn.maptiler.com/maptiler-sdk-js/v3.10.2/maptiler-sdk.umd.min.js"></script>
   <script type="importmap">
     { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js",

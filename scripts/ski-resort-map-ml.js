@@ -472,7 +472,7 @@ export async function initSkiResortMap(options = {}) {
   const legendEl = options.legendEl || document.getElementById('legend') || document.getElementById('resort-map-legend');
   if (legendEl) {
     legendEl.style.display = 'block';
-    legendEl.innerHTML =
+    const legendHtml =
       '<h3>Resort size</h3>' +
       `<div class="legend-row"><span class="legend-mountain-icon">${hillSvg(MAP_TIER_COLORS.small, 20, 14)}</span> ${MAP_TIER_LEGEND.small}</div>` +
       `<div class="legend-row"><span class="legend-mountain-icon">${mountainSvg(MAP_TIER_COLORS.medium, 22, 15)}</span> ${MAP_TIER_LEGEND.medium}</div>` +
@@ -500,6 +500,15 @@ export async function initSkiResortMap(options = {}) {
           `<div class="legend-row"><span class="legend-line" style="background:${ATLAS_COLORS.pisteExpert}"></span> Red = expert</div>` +
           `<div class="legend-row"><span class="legend-line" style="background:${ATLAS_COLORS.lift}"></span> Orange = lifts</div>`
         ));
+    if (legendEl.closest('details')) {
+      legendEl.innerHTML = legendHtml;
+    } else {
+      const startOpen = !matchMedia('(max-width: 768px)').matches;
+      legendEl.innerHTML =
+        `<details class="legend-fold"${startOpen ? ' open' : ''}>` +
+        '<summary>Legend</summary>' +
+        `<div class="legend-fold-body">${legendHtml}</div></details>`;
+    }
   }
 
   // ── Resort dots + icon symbols (single GeoJSON source, aligned coordinates) ─

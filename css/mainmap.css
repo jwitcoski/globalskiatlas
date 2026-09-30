@@ -24,6 +24,18 @@ html, body { height: 100%; font-family: system-ui, -apple-system, sans-serif; }
   max-height: 280px;
   overflow-y: auto;
 }
+.map-legend .legend-fold { margin: 0; }
+.map-legend .legend-fold summary {
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 13px;
+  list-style: none;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+.map-legend .legend-fold summary::-webkit-details-marker { display: none; }
+.map-legend .legend-fold-body { margin-top: 4px; }
 .map-legend h3 { margin: 0 0 8px 0; font-size: 13px; }
 .map-legend .legend-row { display: flex; align-items: center; gap: 8px; margin: 4px 0; }
 .map-legend .legend-swatch { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
@@ -84,9 +96,14 @@ html, body { height: 100%; font-family: system-ui, -apple-system, sans-serif; }
   .map-legend {
     bottom: 12px;
     left: 12px;
-    padding: 8px 10px;
+    padding: 0 10px;
     font-size: 11px;
-    max-height: 200px;
+    max-height: none;
+    overflow: visible;
+  }
+  .map-legend .legend-fold[open] .legend-fold-body {
+    max-height: 38vh;
+    overflow-y: auto;
   }
   .map-legend h3 { font-size: 11px; margin: 0 0 4px 0; }
   .map-legend .legend-row { margin: 2px 0; gap: 6px; }
