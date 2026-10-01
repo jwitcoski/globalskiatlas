@@ -1,4 +1,4 @@
-@import url('map-popups.css');
+@import url('map-popups.css?v=5');
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html, body { height: 100%; font-family: system-ui, -apple-system, sans-serif; }
@@ -87,6 +87,20 @@ html, body { height: 100%; font-family: system-ui, -apple-system, sans-serif; }
 .search-box .search-item.active { background: #f0f4ff; }
 .search-box .search-item:last-child { border-bottom: none; }
 .legend-mountain-icon { display: inline-flex; align-items: center; vertical-align: middle; margin-right: 6px; }
+@media (max-width: 1024px) {
+  .map-legend {
+    bottom: 12px;
+    left: 12px;
+    padding: 0 10px;
+    max-width: min(260px, 72vw);
+    max-height: none;
+    overflow: visible;
+  }
+  .map-legend .legend-fold[open] .legend-fold-body {
+    max-height: 26vh;
+    overflow-y: auto;
+  }
+}
 @media (max-width: 768px) {
   .map-wrapper {
     margin-top: var(--header-height);

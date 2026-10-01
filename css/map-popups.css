@@ -369,7 +369,7 @@
   background: #e2e8f0;
   color: #0f172a;
 }
-@media (pointer: coarse), (max-width: 720px) {
+@media (pointer: coarse), (max-width: 1024px) {
   .maplibregl-map .clay-entity-panel,
   .mapboxgl-map .clay-entity-panel,
   .resort-map-gl-wrap .clay-entity-panel {
@@ -378,7 +378,11 @@
     top: auto;
     bottom: 8px;
     width: auto;
-    max-height: 58%;
+    max-height: 42%;
+  }
+  .map-wrapper.resort-open .map-legend,
+  .map-wrapper.resort-open .basemap-control {
+    display: none !important;
   }
   .maplibregl-map .clay-entity-close,
   .mapboxgl-map .clay-entity-close,

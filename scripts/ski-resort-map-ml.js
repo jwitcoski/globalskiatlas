@@ -538,7 +538,7 @@ export async function initSkiResortMap(options = {}) {
     if (legendEl.closest('details')) {
       legendEl.innerHTML = legendHtml;
     } else {
-      const startOpen = !matchMedia('(max-width: 768px)').matches;
+      const startOpen = !matchMedia('(max-width: 1024px), (pointer: coarse)').matches;
       legendEl.innerHTML =
         `<details class="legend-fold"${startOpen ? ' open' : ''}>` +
         '<summary>Legend</summary>' +
@@ -659,10 +659,20 @@ export async function initSkiResortMap(options = {}) {
   function hideVtTip() { vtTipEl.style.display = 'none'; }
 
   function hideResortPanel() {
+    document.querySelector('.map-wrapper')?.classList.remove('resort-open');
     resortPanel.hidden = true;
     resortPanel.classList.remove('clay-entity-panel--admin1');
     resortPanel.classList.add('clay-entity-panel--resort');
     resortPanel.innerHTML = '';
+  }
+
+  function collapseLegendOnSmallScreen() {
+    const compact = matchMedia('(max-width: 1024px), (pointer: coarse)').matches;
+    document.querySelector('.map-wrapper')?.classList.toggle('resort-open', compact);
+    if (!compact) return;
+    document.querySelectorAll('.map-legend .legend-fold, #legend .legend-fold').forEach((el) => {
+      el.open = false;
+    });
   }
 
   function showResortPopup(_lngLat, props, extras = {}) {
@@ -683,6 +693,7 @@ export async function initSkiResortMap(options = {}) {
       `<button type="button" class="clay-entity-close" data-clay-entity-close aria-label="Close details">&times;</button>` +
       makeResortPopup(properties, latlng, wikiPage, playablePath);
     resortPanel.hidden = false;
+    collapseLegendOnSmallScreen();
   }
 
   let parquetRows = null;
@@ -697,6 +708,7 @@ export async function initSkiResortMap(options = {}) {
       `<button type="button" class="clay-entity-close" data-clay-entity-close aria-label="Close details">&times;</button>` +
       buildAdmin1StatsHtml(entity, parquetRows, parquetReady);
     resortPanel.hidden = false;
+    collapseLegendOnSmallScreen();
     resortPanel._gsaAdmin1Entity = entity;
   }
 
