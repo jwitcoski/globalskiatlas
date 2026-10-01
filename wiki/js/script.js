@@ -52,6 +52,20 @@ function hideResortPlayLink() {
   if (wrap) wrap.hidden = true;
 }
 
+function stay22EmbedUrl(lat, lon, inDay, outDay, name) {
+  var q = new URLSearchParams({
+    aid: '6abe4ecf20efb8597f4c40dc',
+    lat: String(lat),
+    lng: String(lon),
+    checkin: inDay,
+    checkout: outDay,
+    adults: '2',
+    campaign: 'wiki-resort'
+  });
+  if (name) q.set('address', name);
+  return 'https://www.stay22.com/embed/gm?' + q;
+}
+
 function syncResortStayLink(page) {
   var wrap = document.getElementById('resort-stay-wrap');
   var link = document.getElementById('resort-stay-link');
@@ -67,20 +81,14 @@ function syncResortStayLink(page) {
   checkIn.setDate(checkIn.getDate() + 14);
   var checkOut = new Date(checkIn);
   checkOut.setDate(checkOut.getDate() + 2);
-  var q = new URLSearchParams({
-    marker: '580077',
-    currency: 'usd',
-    language: 'en',
-    lat: String(lat),
-    lon: String(lon),
-    checkIn: checkIn.toLocaleDateString('en-CA'),
-    checkOut: checkOut.toLocaleDateString('en-CA'),
-    adults: '2'
-  });
-  var name = page.englishName || page.title;
-  if (name) q.set('destination', name);
-  // ponytail: +14d / 2 nights, no calendar; Hotellook UI if conversion is weak
-  link.href = 'https://search.hotellook.com/?' + q;
+  // ponytail: +14d / 2 nights; Stay22 calendar if conversion is weak
+  link.href = stay22EmbedUrl(
+    lat,
+    lon,
+    checkIn.toLocaleDateString('en-CA'),
+    checkOut.toLocaleDateString('en-CA'),
+    page.englishName || page.title || ''
+  );
   wrap.hidden = false;
 }
 

@@ -41,6 +41,18 @@ const GA = `<!-- Google Analytics -->
         script.src = 'https://emrldtp.cc/NTgwMDc3.js?t=580077';
         document.head.appendChild(script);
     })();
+  </script>
+  <!-- Stay22 affiliate -->
+  <script>
+    (function (s, t, a, y, twenty, two) {
+      s.Stay22 = s.Stay22 || {};
+      s.Stay22.params = { lmaID: '6abe4ecf20efb8597f4c40dc' };
+      twenty = t.createElement(a);
+      two = t.getElementsByTagName(a)[0];
+      twenty.async = 1;
+      twenty.src = y;
+      two.parentNode.insertBefore(twenty, two);
+    })(window, document, 'script', 'https://scripts.stay22.com/letmeallez.js');
   </script>`;
 
 function escapeHtml(str) {
