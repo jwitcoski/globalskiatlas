@@ -75,8 +75,13 @@ a.tw-text-blue-600 {
 header{
     /* background-color: #fff;
     color: #000; */
-    z-index: 9999;
     pointer-events: auto;
+}
+
+/* Beats .search-box / .pass-filter-float (1000). Stays under map popups (9999). */
+header.tw-absolute,
+header.tw-sticky {
+    z-index: 2000;
 }
 
 /* Map pages: content starts below header; use with tw-flex-1 tw-min-h-0 on the wrapper */
@@ -99,6 +104,13 @@ header > .collapsible-header{
 @media (min-width: 1024px) {
     header > .collapsible-header {
         overflow: visible;
+        width: auto;
+        flex: 1 0 auto;
+        height: auto;
+    }
+    header .header-nav-inner {
+        flex-flow: row nowrap;
+        align-items: center;
     }
 }
 
@@ -223,7 +235,7 @@ header > .collapsible-header{
 }
 
 .opacity-100{
-    opacity: 100 !important;
+    opacity: 1 !important;
 }
 
 .btn{
@@ -455,6 +467,12 @@ header > .collapsible-header{
     display: inline-flex;
     align-items: center;
     justify-content: center;
+}
+
+@media (min-width: 1024px) {
+    #collapse-btn {
+        display: none;
+    }
 }
 
 @media not all and (min-width: 1024px) {

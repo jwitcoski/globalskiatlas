@@ -19,6 +19,7 @@ function onHeaderClickOutside(e) {
 
 
 function toggleHeader() {
+    if (window.innerWidth > RESPONSIVE_WIDTH) return;
     if (isHeaderCollapsed) {
         collapseHeaderItems.classList.add("opacity-100",)
         collapseHeaderItems.style.width = "60vw"
@@ -51,6 +52,7 @@ function responsive() {
 }
 
 window.addEventListener("resize", responsive)
+responsive()
 
 if (collapseBtn) {
     collapseBtn.setAttribute("aria-expanded", "false")

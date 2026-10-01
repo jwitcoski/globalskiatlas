@@ -15,6 +15,7 @@
     if (collapseBtn) collapseBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
   }
   function toggleHeader() {
+    if (window.innerWidth >= RESPONSIVE_WIDTH) return;
     if (!collapseHeaderItems || !collapseBtn) return;
     if (isHeaderCollapsed) {
       collapseHeaderItems.classList.add('opacity-100');
