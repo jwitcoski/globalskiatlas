@@ -1016,7 +1016,6 @@ export async function initHeroMontageMap(container, options = {}) {
 
   const playLink = embed.querySelector("[data-hero-play]");
   const openLink = document.querySelector("[data-hero-open-mountain]");
-  const fullMapLink = document.querySelector("[data-hero-full-map]");
   const closerWrap = document.querySelector(".hero-closer");
   const closerBtn = document.querySelector("[data-hero-closer]");
   const posterEl = embed.querySelector(".hero-poster");
@@ -1070,10 +1069,6 @@ export async function initHeroMontageMap(container, options = {}) {
     if (openLink && homepageHero) {
       openLink.href = wikiHrefForClay(resort);
       openLink.setAttribute("data-mountain", resort.display_name || label);
-    }
-    if (fullMapLink && homepageHero) {
-      const q = resort.display_name || label;
-      fullMapLink.href = q ? `/mainmap.html?q=${encodeURIComponent(q)}` : "/mainmap.html";
     }
     if (posterEl) {
       posterEl.alt = `${resort.display_name || label} on the Global Ski Atlas`;
