@@ -811,7 +811,8 @@ function firstSymbolLayerId(map) {
   });
 
   tokenReady();
-  if (panel) panel.classList.add('open');
+  const phone = window.matchMedia('(max-width: 768px)').matches;
+  if (panel && !phone) panel.classList.add('open');
 
   try {
     const { lookupIpLocation } = await import('./clay/nearest-resort.js');
