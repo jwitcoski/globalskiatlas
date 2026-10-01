@@ -1,4 +1,12 @@
 import { foldDiacritics, escapeHtml } from "./utils.js";
+import {
+  loadPassAffiliations,
+  passesForId,
+  matchesPass,
+  getPassFilter,
+  mountPassFilter,
+  onPassFilterChange,
+} from "./pass-filter.js";
 
 const REGION_TYPES = new Set(["country", "state", "continent"]);
 const MAX_SUGGESTIONS = 8;
@@ -17,7 +25,12 @@ function wikiHref(pageId) {
 }
 
 function mapHref(q) {
-  return `/mainmap.html?q=${encodeURIComponent(q || "")}`;
+  const pass = getPassFilter();
+  const params = new URLSearchParams();
+  if (q) params.set("q", q);
+  if (pass && pass !== "all") params.set("pass", pass);
+  const qs = params.toString();
+  return qs ? `/mainmap.html?${qs}` : "/mainmap.html";
 }
 
 function searchable(row) {
@@ -30,7 +43,7 @@ function matchRows(rows, rawQ) {
   const scored = [];
   for (const row of rows) {
     const hay = searchable(row);
-    if (!hay.includes(q)) continue;
+    if (!hay.includes(q) || !matchesPass(row.passes)) continue;
     let score = 1;
     if (hay.startsWith(q)) score = 3;
     else if (hay.includes(` ${q}`)) score = 2;
@@ -50,10 +63,13 @@ async function loadResortRows() {
     .map((p) => {
       const name = displayName(p);
       const loc = [p.state, p.country].filter(Boolean).join(", ");
+      const ws = p.winterSportsId || p.winter_sports_id || "";
       return {
         name,
         loc,
         pageId: p.pageId,
+        ws,
+        passes: [],
         searchText: [name, p.englishName, p.title, p.state, p.country].filter(Boolean).join(" "),
       };
     });
@@ -172,12 +188,26 @@ function bindHomeSearch(rows, catalogOk) {
   document.addEventListener("click", (e) => {
     if (!form.contains(e.target)) hide();
   });
+  onPassFilterChange(() => {
+    const q = String(input.value || "").trim();
+    if (q) render(matchRows(rows, q), q);
+  });
 }
 
 const form = document.getElementById("home-search");
 if (form) {
-  loadResortRows()
-    .then((rows) => bindHomeSearch(rows, true))
+  const bar = document.createElement("div");
+  bar.id = "pass-filter";
+  form.insertBefore(bar, form.firstChild);
+  mountPassFilter(bar);
+  Promise.all([loadResortRows(), loadPassAffiliations()])
+    .then(([rows]) => {
+      rows.forEach((row) => {
+        row.passes = passesForId(row.ws);
+        if (row.passes.length) row.searchText = `${row.searchText} ${row.passes.join(" ")}`;
+      });
+      bindHomeSearch(rows, true);
+    })
     .catch((err) => {
       console.warn("[home-search] catalog skipped", err);
       bindHomeSearch([], false);

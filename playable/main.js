@@ -51,7 +51,7 @@ import { bindUi, setHud, openPanel, closePanel, updateLoading, setOsmMapNote, se
 import { atlasStatsHtml, prefetchWikiIndex } from "./atlas-stats.js?v=stats1";
 import { bindFinishChartScope, finishChartsHtml, prefetchFinishCharts } from "./finish-charts.js?v=1";
 import { bindOsmFix, osmFixHtml, osmFixContext } from "./osm-fix.js?v=1";
-import { showPickerMap, destroyPickerMap } from "./picker-map.js?v=lod3";
+import { showPickerMap, destroyPickerMap } from "./picker-map.js?v=lod4";
 import { resolveVisitorNearestClay } from "/scripts/clay/nearest-resort.js";
 import { capDpr, attachDebug } from "./debug.js?v=mob1";
 import { intentsFrom, isTurning, analogAxes } from "./input.js?v=s2";

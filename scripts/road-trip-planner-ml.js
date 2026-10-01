@@ -5,6 +5,7 @@
  * initRoadTripPlanner({ map, searchResorts, escapeHtml })
  */
 import { config } from './map-config.js';
+import { matchesPass, onPassFilterChange } from './pass-filter.js';
 
 const RTP_MAX_RESORTS = 25;
 const OSRM_ROUTE_URL = 'https://router.project-osrm.org/route/v1/driving';
@@ -352,7 +353,7 @@ export function initRoadTripPlanner({ map, searchResorts, escapeHtml }) {
   rtpAddInput?.addEventListener('input', () => {
     const q = foldDiacritics(rtpAddInput.value).toLowerCase().trim();
     if (!q) { rtpAddDrop?.classList.remove('visible'); return; }
-    rtpAddMatches = resorts().filter((r) => foldDiacritics(r.name).toLowerCase().includes(q)).slice(0, 7);
+    rtpAddMatches = resorts().filter((r) => foldDiacritics(r.name).toLowerCase().includes(q) && matchesPass(r.passes)).slice(0, 7);
     if (!rtpAddMatches.length) { rtpAddDrop?.classList.remove('visible'); return; }
     if (!rtpAddDrop) return;
     rtpAddDrop.innerHTML = rtpAddMatches.map((r, i) =>
@@ -373,6 +374,9 @@ export function initRoadTripPlanner({ map, searchResorts, escapeHtml }) {
         && !rtpAddInput.contains(e.target) && !rtpAddDrop.contains(e.target)) {
       rtpAddDrop.classList.remove('visible');
     }
+  });
+  onPassFilterChange(() => {
+    if (rtpAddInput && rtpAddInput.value.trim()) rtpAddInput.dispatchEvent(new Event('input'));
   });
 
   // "Road Trip" button inside resort popups

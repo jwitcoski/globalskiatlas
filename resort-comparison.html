@@ -670,6 +670,15 @@
       megaMountainsSvg,
       tierSvg
     } from './scripts/resort-tier-icons.js';
+    import {
+      loadPassAffiliations,
+      passesForId,
+      matchesPass,
+      getPassFilter,
+      mountPassFilter,
+      onPassFilterChange,
+      passBadgeLabel
+    } from './scripts/pass-filter.js';
 
     const NAME_KEYS = ['name', 'resort_name', 'title', 'area_name', 'Name'];
     /** Display english_name (name) when both exist; else english_name or name. */
@@ -767,8 +776,6 @@
     const colorScale = d3.scaleOrdinal(d3.schemeCategory10);
     let resortBounds = [];
     let resortData = []; // { name, outlineFeature, pisteFeatures }
-    let passById = {};
-    let passFilter = 'all';
     const MAX_COMPARE = 12;
     let layoutMode = 'auto';
     let viewMode = '2d';
@@ -833,12 +840,11 @@
 
     /** Load outlines + analyzed only (fast). Pistes load lazily when user selects resorts. */
     async function loadData() {
-      const [dataOutlines, dataAnalyzed, passJson] = await Promise.all([
+      const [dataOutlines, dataAnalyzed] = await Promise.all([
         loadSkiAreasOutlines(),
         loadSkiAreasAnalyzed(),
-        fetch('./data/pass-affiliations.json').then((r) => (r.ok ? r.json() : { by_id: {} })).catch(() => ({ by_id: {} }))
+        loadPassAffiliations()
       ]);
-      passById = passJson.by_id || {};
 
       const analyzedByName = new Map();
       (dataAnalyzed || []).forEach((row) => {
@@ -878,7 +884,7 @@
             country: country || 'Other',
             state: state || '',
             winterSportsId: ws,
-            passes: (passById[ws] && passById[ws].passes) || [],
+            passes: passesForId(ws),
             outlineFeature: f,
             pisteFeatures: [], // loaded lazily when user selects resorts
             analyzedRow: analyzedRow || null
@@ -1115,7 +1121,7 @@
         if (r.passes && r.passes.length) {
           const badges = item.append('span').attr('class', 'pass-badges');
           r.passes.forEach((p) => {
-            const short = p === 'mountain_collective' ? 'MC' : p.slice(0, 2).toUpperCase();
+            const short = passBadgeLabel(p);
             badges.append('span').attr('class', 'pass-badge ' + p).text(short);
           });
         }
@@ -1510,10 +1516,7 @@
     }
 
     function resortMatchesPassFilter(r) {
-      if (passFilter === 'all') return true;
-      const passes = r.passes || [];
-      if (passFilter === 'independent') return passes.length === 0;
-      return passes.includes(passFilter);
+      return matchesPass(r && r.passes);
     }
 
     function applyListFilters() {
@@ -1542,10 +1545,10 @@
           const stateLabel = stateSec.select('.accordion-state-name').attr('data-label') || '';
           stateSec.select('.accordion-state-name').text(stateLabel + ' (' + stateVisible + ')');
           stateSec.style('display', stateVisible > 0 ? 'block' : 'none');
-          if ((q || passFilter !== 'all') && hasVisible) stateSec.classed('open', stateVisible > 0);
+          if ((q || getPassFilter() !== 'all') && hasVisible) stateSec.classed('open', stateVisible > 0);
         });
-        if ((q || passFilter !== 'all') && hasVisible) section.classed('open', true);
-        if (!q && passFilter === 'all') {
+        if ((q || getPassFilter() !== 'all') && hasVisible) section.classed('open', true);
+        if (!q && getPassFilter() === 'all') {
           section.classed('open', false);
           section.selectAll('.resort-state-section').classed('open', false);
         }
@@ -1631,10 +1634,8 @@
       d3.select('#resort-search').on('blur', () => {
         setTimeout(() => d3.select('#search-hits').classed('open', false), 180);
       });
-      d3.selectAll('#pass-filter .pass-chip').on('click', function () {
-        passFilter = this.getAttribute('data-pass') || 'all';
-        d3.selectAll('#pass-filter .pass-chip').classed('on', false);
-        d3.select(this).classed('on', true);
+      mountPassFilter(document.getElementById('pass-filter'));
+      onPassFilterChange(() => {
         applyListFilters();
         renderSearchHits();
       });

@@ -79,6 +79,14 @@ import {
   fetchClayCatalog,
   clayHomeHrefForWsId,
 } from './playable-match.js';
+import {
+  loadPassAffiliations,
+  passesForId,
+  matchesPass,
+  tierPassFilter,
+  placePassFilterNear,
+  onPassFilterChange
+} from './pass-filter.js';
 
 const {
   LIFTS_MIN_ZOOM,
@@ -156,7 +164,7 @@ async function addResortMarkerLayers(map, resortFeatures) {
       id: def.id,
       type: 'circle',
       source: 'ski-resorts',
-      filter: ['==', ['get', '_tier'], def.tier],
+      filter: tierPassFilter(def.tier),
       minzoom: CIRCLE_LAYER_MINZOOM[def.tier],
       maxzoom: RESORT_ICON_MIN_ZOOM,
       paint: circlePaintFor(!!map._skiPlayableMode, def.tier)
@@ -174,7 +182,7 @@ async function addResortMarkerLayers(map, resortFeatures) {
       type: 'symbol',
       source: 'ski-resorts',
       minzoom: RESORT_ICON_MIN_ZOOM,
-      filter: ['==', ['get', '_tier'], tier],
+      filter: tierPassFilter(tier),
       layout: {
         'icon-image': ['get', '_icon'],
         'icon-size': 1,
@@ -190,6 +198,21 @@ async function addResortMarkerLayers(map, resortFeatures) {
   }
 
   ensureBoundaryLayersOnBottom(map);
+}
+
+const RESORT_TIERS = ['small', 'medium', 'large', 'mega'];
+
+function syncResortPassFilters(map) {
+  if (!map || typeof map.getLayer !== 'function' || map.__destroyed) return;
+  try {
+    for (const tier of RESORT_TIERS) {
+      const filter = tierPassFilter(tier);
+      const circleId = `ski-${tier}-circles`;
+      const iconId = `ski-icons-${tier}`;
+      if (map.getLayer(circleId)) map.setFilter(circleId, filter);
+      if (map.getLayer(iconId)) map.setFilter(iconId, filter);
+    }
+  } catch { /* map already removed */ }
 }
 
 // ── Main export ────────────────────────────────────────────────────────────
@@ -237,7 +260,8 @@ export async function initSkiResortMap(options = {}) {
       minZoom: region ? 0.5 : options.minZoom,
       maxZoom: options.maxZoom
     }),
-    catalogP
+    catalogP,
+    loadPassAffiliations()
   ]);
   console.log('[ski-map] style+catalog', loadMs(tMap) + 'ms', rows.length, 'rows');
   globalThis.__gsaMapLoad = Object.assign(globalThis.__gsaMapLoad || {}, { styleAndCatalogMs: loadMs(tMap), rows: rows.length });
@@ -322,6 +346,11 @@ export async function initSkiResortMap(options = {}) {
   const searchResorts = [];
   const resortFeatures = [];
 
+  function passesForProps(properties) {
+    const ws = properties?.winter_sports_id ?? properties?.osm_id ?? "";
+    return passesForId(ws);
+  }
+
   function rebuildResortData() {
     const tRebuild = performance.now();
     searchResorts.length = 0;
@@ -353,7 +382,8 @@ export async function initSkiResortMap(options = {}) {
     const wikiPage   = hasWiki ? findWikiPage(properties) : null;
     const displayStr = wikiPage ? wikiDisplayName(wikiPage) : (resortDisplayName(properties) || (name ? String(name).trim() : ''));
     const en         = wikiPage ? (wikiPage.englishName || '') : (getProp(properties, ENGLISH_NAME_KEYS) || '');
-    const searchText = [displayStr, en, wikiPage ? wikiPage.title : ''].filter(Boolean).join(' ').trim() || displayStr;
+    const passes = passesForProps(properties);
+    const searchText = [displayStr, en, wikiPage ? wikiPage.title : '', passes.join(' ')].filter(Boolean).join(' ').trim() || displayStr;
     const latlng = { lat, lng: lon };
     const playable = hasPlayable ? matchPlayableResort(lon, lat, displayStr || name, properties, gameResorts) : null;
     if (playableDotsOnly && !playable) return;
@@ -371,6 +401,7 @@ export async function initSkiResortMap(options = {}) {
         _terrain: terrainDisp || '',
         _playable: playable ? 1 : 0,
         _playablePath: playable ? String(playable.path) : '',
+        _pass: passes.join(','),
         _propsJson: JSON.stringify(properties)
       }
     });
@@ -383,7 +414,8 @@ export async function initSkiResortMap(options = {}) {
         country: country ? String(country).trim() : '',
         properties,
         wikiPage,
-        playablePath: playable ? String(playable.path) : ''
+        playablePath: playable ? String(playable.path) : '',
+        passes
       });
     }
   });
@@ -427,6 +459,7 @@ export async function initSkiResortMap(options = {}) {
       const tier = getMapSizeTier(properties);
       const color = getMapTierColorForProps(properties);
       const displayStr = String(r.name || r.id || 'Ski area');
+      const passes = passesForProps(properties);
       const country = r.country ? String(r.country).trim() : '';
       const countryDisp = country.match(/^united states/i) ? 'USA' : country;
       const latlng = { lat, lng: lon };
@@ -443,17 +476,19 @@ export async function initSkiResortMap(options = {}) {
           _terrain: '',
           _playable: 1,
           _playablePath: path,
+          _pass: passes.join(','),
           _propsJson: JSON.stringify(properties)
         }
       });
       searchResorts.push({
         name: displayStr,
-        searchText: [displayStr, r.location, country].filter(Boolean).join(' '),
+        searchText: [displayStr, r.location, country, passes.join(' ')].filter(Boolean).join(' '),
         latlng,
         country,
         properties,
         wikiPage: null,
-        playablePath: path
+        playablePath: path,
+        passes
       });
     }
   }
@@ -830,21 +865,22 @@ export async function initSkiResortMap(options = {}) {
   }
 
   const searchable = (r) => foldDiacritics(r.searchText || r.name).toLowerCase();
+  const searchMatches = (q) => searchResorts.filter((r) => searchable(r).includes(q) && matchesPass(r.passes));
   if (searchInput) {
     searchInput.addEventListener('input', () =>
-      renderDropdown(searchResorts.filter(r => searchable(r).includes(foldDiacritics(searchInput.value).toLowerCase().trim())).slice(0, maxSuggestions))
+      renderDropdown(searchMatches(foldDiacritics(searchInput.value).toLowerCase().trim()).slice(0, maxSuggestions))
     );
     searchInput.addEventListener('focus', () => {
       const q = foldDiacritics(searchInput.value).toLowerCase().trim();
-      renderDropdown(q ? searchResorts.filter(r => searchable(r).includes(q)).slice(0, maxSuggestions) : []);
+      renderDropdown(q ? searchMatches(q).slice(0, maxSuggestions) : []);
     });
     const initialQ = new URLSearchParams(location.search).get('q');
     if (initialQ) {
       searchInput.value = initialQ;
       const needle = foldDiacritics(initialQ).toLowerCase().trim();
-      const pick = searchResorts.find((r) => searchable(r).includes(needle));
+      const pick = searchMatches(needle)[0];
       if (pick) selectMatch(pick);
-      else renderDropdown(searchResorts.filter((r) => searchable(r).includes(needle)).slice(0, maxSuggestions));
+      else renderDropdown(searchMatches(needle).slice(0, maxSuggestions));
     }
     searchInput.addEventListener('keydown', (e) => {
       if (!searchDropdown.classList.contains('visible') || !currentMatches.length) return;
@@ -865,6 +901,14 @@ export async function initSkiResortMap(options = {}) {
   }
   document.addEventListener('click', (e) => {
     if (searchBox && !searchBox.contains(e.target)) searchDropdown.classList.remove('visible');
+  });
+
+  placePassFilterNear(document.getElementById(containerId));
+  onPassFilterChange(() => {
+    syncResortPassFilters(map);
+    if (!searchInput || !searchInput.isConnected || !searchDropdown) return;
+    const q = foldDiacritics(searchInput.value || '').toLowerCase().trim();
+    if (searchDropdown.classList.contains('visible')) renderDropdown(q ? searchMatches(q).slice(0, maxSuggestions) : []);
   });
 
   bindResortDetailsLinks();

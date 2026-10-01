@@ -5,8 +5,9 @@
  * Entry for DriveTimeMap.html.
  */
 import { config } from './map-config.js?v=mb5';
-import { initSkiResortMap } from './ski-resort-map-ml.js';
+import { initSkiResortMap } from './ski-resort-map-ml.js?v=32';
 import { escapeHtml } from './utils.js';
+import { matchesPass, onPassFilterChange } from './pass-filter.js';
 
 const MATRIX_LIMIT = 24;
 const HOURS = [2, 3, 4];
@@ -298,6 +299,7 @@ function firstSymbolLayerId(map) {
 
   function nearestResorts(lngLat, n) {
     return searchResorts
+      .filter((r) => matchesPass(r.passes))
       .filter((r) => r.latlng && Number.isFinite(r.latlng.lng) && Number.isFinite(r.latlng.lat))
       .map((r) => ({
         resort: r,
@@ -650,7 +652,10 @@ function firstSymbolLayerId(map) {
     resultsEl.classList.add('visible');
   }
 
+  let runSeq = 0;
   async function runAt(lngLat, placeLabel) {
+    const seq = ++runSeq;
+    const stale = () => seq !== runSeq;
     if (!tokenReady() || !map || !bandListEl) return;
     setOrigin(lngLat[0], lngLat[1], placeLabel);
     const profile = (profileEl && profileEl.value) || 'driving';
@@ -662,6 +667,7 @@ function firstSymbolLayerId(map) {
     try {
       const allNear = nearestResorts(lngLat, searchResorts.length);
       const withEta = await loadMatrix(lngLat, allNear.slice(0, MATRIX_LIMIT), profile);
+      if (stale()) return;
       const speeds = withEta
         .filter((d) => d.durationSec > 60 && d.km > 5)
         .map((d) => d.km / (d.durationSec / 3600))
@@ -685,17 +691,21 @@ function firstSymbolLayerId(map) {
 
       setStatus('Building road-time zones…');
       const sampleFc = await sampleDriveTimes(lngLat, maxKm * 1.05, profile);
+      if (stale()) return;
       let zoneFc = samplesToZonePolygons(lngLat[0], lngLat[1], sampleFc.timed || []);
       let mode = 'circles';
       if (zoneFc && zoneFc.features.length) {
         zoneFc = await smoothZonePolygons(zoneFc);
+        if (stale()) return;
         paintIsochrones(zoneFc);
         mode = 'isobands';
       } else if (sampleFc.features.length >= 12) {
         try {
           zoneFc = await pointsToIsobands(sampleFc, maxKm);
+          if (stale()) return;
           if (zoneFc && zoneFc.features && zoneFc.features.length) {
             zoneFc = await smoothZonePolygons(zoneFc);
+            if (stale()) return;
             paintIsochrones(zoneFc);
             mode = 'isobands';
           }
@@ -703,6 +713,7 @@ function firstSymbolLayerId(map) {
           console.warn('[drive-time-map-ml] isobands failed:', isoErr);
         }
       }
+      if (stale()) return;
       if (mode !== 'isobands') {
         if (sampleFc.features.length >= 8) {
           paintHeatmap(sampleFc);
@@ -712,6 +723,7 @@ function firstSymbolLayerId(map) {
         }
       }
 
+      if (stale()) return;
       renderBands(listed);
       fitToData(lngLat, zoneFc || sampleFc, maxKm);
       const modeNote =
@@ -726,6 +738,7 @@ function firstSymbolLayerId(map) {
       clearDriveLayers();
       setStatus((err && err.message) ? err.message : 'Drive-time request failed.');
     }
+    if (stale()) return;
     drawBtn.disabled = !originLngLat;
   }
 
@@ -790,6 +803,10 @@ function firstSymbolLayerId(map) {
   });
 
   profileEl?.addEventListener('change', () => {
+    if (originLngLat) runAt(originLngLat, 'Origin');
+  });
+
+  onPassFilterChange(() => {
     if (originLngLat) runAt(originLngLat, 'Origin');
   });
 
