@@ -125,7 +125,8 @@ body {
 }
 
 .resort-play-wrap {
-  margin: 0.55rem 0 0;
+  display: inline-block;
+  margin: 0.55rem 0.5rem 0 0;
 }
 
 .resort-play-wrap .sr-ski-game-btn {

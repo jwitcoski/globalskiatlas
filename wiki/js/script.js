@@ -52,6 +52,38 @@ function hideResortPlayLink() {
   if (wrap) wrap.hidden = true;
 }
 
+function syncResortStayLink(page) {
+  var wrap = document.getElementById('resort-stay-wrap');
+  var link = document.getElementById('resort-stay-link');
+  if (!wrap || !link) return;
+  var region = page && (page.pageType === 'state' || page.pageType === 'country' || page.pageType === 'continent');
+  var lat = page && Number(page.centroidLat != null ? page.centroidLat : page.latitude);
+  var lon = page && Number(page.centroidLon != null ? page.centroidLon : page.longitude);
+  if (!page || region || !isFinite(lat) || !isFinite(lon)) {
+    wrap.hidden = true;
+    return;
+  }
+  var checkIn = new Date();
+  checkIn.setDate(checkIn.getDate() + 14);
+  var checkOut = new Date(checkIn);
+  checkOut.setDate(checkOut.getDate() + 2);
+  var q = new URLSearchParams({
+    marker: '580077',
+    currency: 'usd',
+    language: 'en',
+    lat: String(lat),
+    lon: String(lon),
+    checkIn: checkIn.toLocaleDateString('en-CA'),
+    checkOut: checkOut.toLocaleDateString('en-CA'),
+    adults: '2'
+  });
+  var name = page.englishName || page.title;
+  if (name) q.set('destination', name);
+  // ponytail: +14d / 2 nights, no calendar; Hotellook UI if conversion is weak
+  link.href = 'https://search.hotellook.com/?' + q;
+  wrap.hidden = false;
+}
+
 function loadPlayableCatalogPack() {
   if (!RESORT_PLAYABLE_PROMISE) {
     RESORT_PLAYABLE_PROMISE = import('/scripts/playable-match.js').then(function (mod) {
@@ -1111,6 +1143,7 @@ function populatePage(page) {
     RESORT_CLAY_WINTER_ID = null;
     showResortClaySoon(true);
     hideResortPlayLink();
+    syncResortStayLink(null);
     return;
   }
 
@@ -1206,6 +1239,7 @@ function populatePage(page) {
     }
     loadRegionList(page);
     hideResortPlayLink();
+    syncResortStayLink(page);
     return;
   }
 
@@ -1223,6 +1257,7 @@ function populatePage(page) {
   }
   setText('resort-subtitle', subParts.join(' · '));
   syncResortPlayLink(page);
+  syncResortStayLink(page);
 
   renderStatsTrailAndMeta(page);
 
