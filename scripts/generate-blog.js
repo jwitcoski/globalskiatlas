@@ -32,7 +32,7 @@ const GA = `<!-- Google Analytics -->
     gtag('js', new Date());
     gtag('config', 'G-KJGNL3KJL0');
   </script>
-  <!-- Stay22 affiliate -->
+  <!-- Travelpayouts affiliate -->
   <script data-cmp-ab="2">
     (function () {
         var script = document.createElement("script");
