@@ -32,22 +32,36 @@
             two.parentNode.insertBefore(twenty, two);
           })(window, document, 'script', 'https://scripts.stay22.com/letmeallez.js');
         </script>
-        <title>Ski Lift Records &amp; Facts – Global Ski Atlas</title>
-        <meta name="description" content="Discover ski lift records: the world's longest gondola, most northern chairlift, and more. Browse named lifts by type, resort, and country worldwide." />
-        <!-- Open Graph -->
-        <meta property="og:title" content="Ski Lift Records &amp; Facts – Global Ski Atlas" />
-        <meta property="og:description" content="Discover ski lift records: the world's longest gondola, most northern chairlift, and more. Browse named lifts by type, resort, and country worldwide." />
+        <title>World Ski Lift Statistics &amp; Records | Global Ski Atlas</title>
+        <meta name="description" content="Records from 5,654 mapped ski lifts. Longest is the Teleférico de Mérida at 12.12 km. Also the shortest, northernmost, and southernmost lifts." />
+        <meta property="og:title" content="World Ski Lift Statistics &amp; Records | Global Ski Atlas" />
+        <meta property="og:description" content="Records from 5,654 mapped ski lifts. Longest is the Teleférico de Mérida at 12.12 km. Also the shortest, northernmost, and southernmost lifts." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://globalskiatlas.com/SkiLiftFacts.html" />
         <meta property="og:image" content="https://globalskiatlas.com/assets/og-banner.png" />
+        <meta property="og:image:alt" content="Global Ski Atlas map of ski areas" />
         <meta property="og:site_name" content="Global Ski Atlas" />
-        <!-- Twitter Card -->
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Ski Lift Records &amp; Facts – Global Ski Atlas" />
-        <meta name="twitter:description" content="The world's longest, shortest, most northern and most southern ski lifts. Browse gondolas, chairlifts, and more by resort and country." />
+        <meta name="twitter:title" content="World Ski Lift Statistics &amp; Records | Global Ski Atlas" />
+        <meta name="twitter:description" content="Records from 5,654 mapped ski lifts. Longest is the Teleférico de Mérida at 12.12 km." />
         <meta name="twitter:image" content="https://globalskiatlas.com/assets/og-banner.png" />
-        <!-- Canonical -->
         <link rel="canonical" href="https://globalskiatlas.com/SkiLiftFacts.html" />
+        <script type="application/ld+json">
+        {"@context":"https://schema.org","@graph":[
+          {"@type":"TechArticle","@id":"https://globalskiatlas.com/SkiLiftFacts.html#article","headline":"World Ski Lift Statistics & Records","description":"Longest, shortest, northernmost, and southernmost ski lifts from lifts.parquet.","dateModified":"2026-10-02","inLanguage":"en","author":{"@type":"Organization","name":"Global Ski Atlas","url":"https://globalskiatlas.com/"}},
+          {"@type":"Dataset","@id":"https://globalskiatlas.com/SkiLiftFacts.html#dataset","name":"Ski lifts","description":"Mapped ski lifts. Each row has a name, aerialway type, length, latitude, resort, and country.","creator":{"@type":"Organization","name":"Global Ski Atlas"},"distribution":{"@type":"DataDownload","encodingFormat":"application/vnd.apache.parquet","contentUrl":"https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/lifts.parquet"},"variableMeasured":["length","latitude","aerialway","resort","country"]},
+          {"@type":"ItemList","@id":"https://globalskiatlas.com/SkiLiftFacts.html#records","name":"Ski lift records","itemListElement":[
+            {"@type":"ListItem","position":1,"name":"Longest ski lift: Teleférico de Mérida, Venezuela, 12.12 km, cable car"},
+            {"@type":"ListItem","position":2,"name":"Shortest ski lift: unnamed, Italy, 6 m"},
+            {"@type":"ListItem","position":3,"name":"Northernmost ski lift: unnamed drag lift, Greenland, 66.9433°N"},
+            {"@type":"ListItem","position":4,"name":"Southernmost ski lift: Telesilla del Bosque, Cerro Castor, Argentina, -54.7235°"}
+          ]},
+          {"@type":"BreadcrumbList","itemListElement":[
+            {"@type":"ListItem","position":1,"name":"Home","item":"https://globalskiatlas.com/"},
+            {"@type":"ListItem","position":2,"name":"Lift records","item":"https://globalskiatlas.com/SkiLiftFacts.html"}
+          ]}
+        ]}
+        </script>
         <link rel="shortcut icon" href="./assets/logo.png?v=2" type="image/x-icon" />
         <link rel="stylesheet" href="./css/tailwind-build.css" />
         <link rel="stylesheet" href="css/index.css" />
@@ -138,8 +152,18 @@
 
         <!-- Hero -->
         <section class="tw-relative tw-flex tw-min-h-[40vh] tw-w-full tw-flex-col tw-place-content-center tw-place-items-center tw-overflow-hidden tw-py-12 tw-px-6">
-            <h1 class="tw-text-4xl tw-font-bold tw-text-gray-900 max-md:tw-text-2xl tw-text-center">Ski Lift Facts</h1>
-            <p class="tw-mt-4 tw-max-w-2xl tw-text-center tw-text-xl tw-text-gray-600">Records and superlatives from our worldwide ski lift dataset</p>
+            <h1 class="tw-text-4xl tw-font-bold tw-text-gray-900 max-md:tw-text-2xl tw-text-center">Global Ski Lift Statistics &amp; World Records</h1>
+            <p class="tw-mt-4 tw-max-w-2xl tw-text-center tw-text-xl tw-text-gray-600">Length and latitude come from lifts.parquet. Gondolas, chairs, and surface lifts share one length ranking until you filter by type.</p>
+            <table class="lift-table tw-mt-6 tw-max-w-3xl">
+                <caption class="tw-text-left tw-font-medium tw-pb-2">Ski lift records in the initial document</caption>
+                <thead><tr><th>Record</th><th>Lift</th><th>Measure</th><th>Place</th></tr></thead>
+                <tbody>
+                    <tr><td>Longest</td><td>Teleférico de Mérida</td><td>12.12 km (7.53 mi), cable car</td><td>Venezuela</td></tr>
+                    <tr><td>Shortest</td><td>(unnamed)</td><td>6 m (18 ft)</td><td>Italy</td></tr>
+                    <tr><td>Northernmost</td><td>(unnamed)</td><td>66.9433° N, drag lift</td><td>Greenland</td></tr>
+                    <tr><td>Southernmost</td><td>Telesilla del Bosque</td><td>-54.7235°, chairlift</td><td>Cerro Castor, Argentina</td></tr>
+                </tbody>
+            </table>
             <div class="tw-mt-6 tw-flex tw-flex-wrap tw-place-items-center tw-gap-4">
                 <div class="tw-flex tw-place-items-center tw-gap-3">
                     <label for="country-filter" class="tw-text-gray-700 tw-font-medium">Filter by country:</label>
@@ -188,12 +212,12 @@
         <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6" id="fact-longest">
             <div class="reveal-up tw-flex tw-min-h-[60vh] tw-place-content-center tw-place-items-center tw-gap-[10%] max-lg:tw-flex-col max-lg:tw-gap-10">
                 <div class="tw-flex">
-                    <div id="map-longest" class="fact-map placeholder loading tw-flex-shrink-0"><div class="loading-spinner"></div><span>Loading…</span></div>
+                    <div id="map-longest" class="fact-map placeholder loading tw-flex-shrink-0" role="region" aria-label="Map of the longest ski lift, Teleférico de Mérida"><div class="loading-spinner" aria-hidden="true"></div><span>Loading map…</span></div>
                 </div>
                 <div class="tw-mt-6 tw-flex tw-max-w-[450px] tw-flex-col tw-gap-4">
-                    <h3 class="tw-text-4xl tw-font-medium">Longest Lift</h3>
-                    <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700" id="fact-longest-name">—</p>
-                    <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600" id="fact-longest-desc">—</p>
+                    <h2 class="tw-text-4xl tw-font-medium">What is the longest ski lift?</h2>
+                    <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700" id="fact-longest-name">Teleférico de Mérida</p>
+                    <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600" id="fact-longest-desc">12.12 km (7.53 mi) · Cable Car · Venezuela</p>
                 </div>
             </div>
         </section>
@@ -202,12 +226,12 @@
         <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6" id="fact-shortest">
             <div class="reveal-up tw-flex tw-min-h-[60vh] tw-place-content-center tw-place-items-center tw-gap-[10%] max-lg:tw-flex-col max-lg:tw-gap-10">
                 <div class="tw-mt-6 tw-flex tw-max-w-[450px] tw-flex-col tw-gap-4">
-                    <h3 class="tw-text-4xl tw-font-medium">Shortest Lift</h3>
-                    <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700" id="fact-shortest-name">—</p>
-                    <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600" id="fact-shortest-desc">—</p>
+                    <h2 class="tw-text-4xl tw-font-medium">What is the shortest ski lift?</h2>
+                    <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700" id="fact-shortest-name">(unnamed)</p>
+                    <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600" id="fact-shortest-desc">6 m (18 ft) · Yes · Italy</p>
                 </div>
                 <div class="tw-flex">
-                    <div id="map-shortest" class="fact-map placeholder loading tw-flex-shrink-0"><div class="loading-spinner"></div><span>Loading…</span></div>
+                    <div id="map-shortest" class="fact-map placeholder loading tw-flex-shrink-0" role="region" aria-label="Map of the shortest ski lift"><div class="loading-spinner" aria-hidden="true"></div><span>Loading map…</span></div>
                 </div>
             </div>
         </section>
@@ -216,12 +240,12 @@
         <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6" id="fact-northern">
             <div class="reveal-up tw-flex tw-min-h-[60vh] tw-place-content-center tw-place-items-center tw-gap-[10%] max-lg:tw-flex-col max-lg:tw-gap-10">
                 <div class="tw-flex">
-                    <div id="map-northern" class="fact-map placeholder loading tw-flex-shrink-0"><div class="loading-spinner"></div><span>Loading…</span></div>
+                    <div id="map-northern" class="fact-map placeholder loading tw-flex-shrink-0" role="region" aria-label="Map of the northernmost ski lift"><div class="loading-spinner" aria-hidden="true"></div><span>Loading map…</span></div>
                 </div>
                 <div class="tw-mt-6 tw-flex tw-max-w-[450px] tw-flex-col tw-gap-4">
-                    <h3 class="tw-text-4xl tw-font-medium">Most Northern Lift</h3>
-                    <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700" id="fact-northern-name">—</p>
-                    <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600" id="fact-northern-desc">—</p>
+                    <h2 class="tw-text-4xl tw-font-medium">What is the northernmost ski lift?</h2>
+                    <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700" id="fact-northern-name">(unnamed)</p>
+                    <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600" id="fact-northern-desc">455 m (1,493 ft) · Drag Lift · Greenland · 66.9433° N</p>
                 </div>
             </div>
         </section>
@@ -230,12 +254,12 @@
         <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6" id="fact-southern">
             <div class="reveal-up tw-flex tw-min-h-[60vh] tw-place-content-center tw-place-items-center tw-gap-[10%] max-lg:tw-flex-col max-lg:tw-gap-10">
                 <div class="tw-mt-6 tw-flex tw-max-w-[450px] tw-flex-col tw-gap-4">
-                    <h3 class="tw-text-4xl tw-font-medium">Most Southern Lift</h3>
-                    <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700" id="fact-southern-name">—</p>
-                    <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600" id="fact-southern-desc">—</p>
+                    <h2 class="tw-text-4xl tw-font-medium">What is the southernmost ski lift?</h2>
+                    <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700" id="fact-southern-name">Telesilla del Bosque</p>
+                    <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600" id="fact-southern-desc">859 m (2,819 ft) · Chairlift · Cerro Castor · Argentina · -54.7235°</p>
                 </div>
                 <div class="tw-flex">
-                    <div id="map-southern" class="fact-map placeholder loading tw-flex-shrink-0"><div class="loading-spinner"></div><span>Loading…</span></div>
+                    <div id="map-southern" class="fact-map placeholder loading tw-flex-shrink-0" role="region" aria-label="Map of the southernmost ski lift, Telesilla del Bosque"><div class="loading-spinner" aria-hidden="true"></div><span>Loading map…</span></div>
                 </div>
             </div>
         </section>
@@ -244,7 +268,7 @@
         <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6 tw-pb-16" id="fact-named">
             <div class="reveal-up tw-flex tw-w-full tw-flex-col tw-place-content-center tw-place-items-center tw-gap-8">
                 <div class="tw-flex tw-w-full tw-max-w-[960px] tw-flex-col tw-gap-2 tw-text-center">
-                    <h3 class="tw-text-4xl tw-font-medium">Named Lifts</h3>
+                    <h2 class="tw-text-4xl tw-font-medium">Which ski lifts have a name?</h2>
                     <p class="tw-text-xl tw-text-gray-600">Lifts with official names — including resort, country, and lift type. Click a column header to sort.</p>
                 </div>
                 <div class="tw-w-full tw-max-w-[960px] tw-flex tw-gap-3 tw-flex-wrap tw-place-items-center">

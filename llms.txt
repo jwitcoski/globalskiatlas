@@ -15,9 +15,9 @@ When citing a resort count, name the file `ski_areas_analyzed.parquet`, the filt
 - [Drive time](https://globalskiatlas.com/DriveTimeMap.html): How long it takes to reach resorts from a start point.
 - [Resort comparison](https://globalskiatlas.com/resort-comparison.html): Side-by-side resort stats.
 - [Tier ranking](https://globalskiatlas.com/resort-tier-rank.html): Ranked tiers from the same analyzed dataset.
-- [Resort facts](https://globalskiatlas.com/SkiResortFacts.html): Aggregate resort statistics.
-- [Trail facts](https://globalskiatlas.com/SkiTrailFacts.html): Piste statistics.
-- [Lift facts](https://globalskiatlas.com/SkiLiftFacts.html): Lift statistics.
+- [What is the largest ski resort in the world?](https://globalskiatlas.com/SkiResortFacts.html): Pyhätunturi - Luosto, Finland, 52,131 acres (total_area_acres). Northernmost: Nedover Alpinbakke, Norway, 78.2°N. Southernmost: Cerro Castor, Argentina. Most trails: Les 3 Vallées, 1,648.
+- [What is the longest ski trail in the world?](https://globalskiatlas.com/SkiTrailFacts.html): Cache Mountain Loop Trail, United States, 56.63 km in pistes.parquet. Northernmost: Brigette Couloir, Canada, 71.1059°N.
+- [What is the longest ski lift in the world?](https://globalskiatlas.com/SkiLiftFacts.html): Teleférico de Mérida, Venezuela, 12.12 km cable car in lifts.parquet. Southernmost: Telesilla del Bosque, Cerro Castor, Argentina.
 - [Weather map](https://globalskiatlas.com/weather-map.html): Weather over the resort map.
 - [Skiing AI](https://globalskiatlas.com/skiing-ai.html): On-site assistant over the atlas.
 

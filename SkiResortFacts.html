@@ -32,22 +32,37 @@
             two.parentNode.insertBefore(twenty, two);
           })(window, document, 'script', 'https://scripts.stay22.com/letmeallez.js');
         </script>
-        <title>Ski Resort Records &amp; Facts – Global Ski Atlas</title>
-        <meta name="description" content="Explore ski resort records: the world's largest, smallest, most northern, most southern, and most trails. Data-driven facts from 3,000+ ski resorts worldwide." />
-        <!-- Open Graph -->
-        <meta property="og:title" content="Ski Resort Records &amp; Facts – Global Ski Atlas" />
-        <meta property="og:description" content="Explore ski resort records: the world's largest, smallest, most northern, most southern, and most trails. Data-driven facts from 3,000+ ski resorts worldwide." />
+        <title>World Ski Resort Statistics &amp; Records | Global Ski Atlas</title>
+        <meta name="description" content="Records from 3,036 downhill ski resorts. Largest area: Pyhätunturi - Luosto, 52,131 acres. Most trails: Les 3 Vallées, 1,648. Japan has 413 resorts." />
+        <meta property="og:title" content="World Ski Resort Statistics &amp; Records | Global Ski Atlas" />
+        <meta property="og:description" content="Records from 3,036 downhill ski resorts. Largest area: Pyhätunturi - Luosto, 52,131 acres. Most trails: Les 3 Vallées, 1,648." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://globalskiatlas.com/SkiResortFacts.html" />
         <meta property="og:image" content="https://globalskiatlas.com/assets/og-banner.png" />
+        <meta property="og:image:alt" content="Global Ski Atlas map of ski areas" />
         <meta property="og:site_name" content="Global Ski Atlas" />
-        <!-- Twitter Card -->
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Ski Resort Records &amp; Facts – Global Ski Atlas" />
-        <meta name="twitter:description" content="The world's largest, smallest, most northern, most southern ski resorts and more. Data from 3,000+ resorts." />
+        <meta name="twitter:title" content="World Ski Resort Statistics &amp; Records | Global Ski Atlas" />
+        <meta name="twitter:description" content="Largest mapped area: Pyhätunturi - Luosto, 52,131 acres. Most trails: Les 3 Vallées, 1,648." />
         <meta name="twitter:image" content="https://globalskiatlas.com/assets/og-banner.png" />
-        <!-- Canonical -->
         <link rel="canonical" href="https://globalskiatlas.com/SkiResortFacts.html" />
+        <script type="application/ld+json">
+        {"@context":"https://schema.org","@graph":[
+          {"@type":"TechArticle","@id":"https://globalskiatlas.com/SkiResortFacts.html#article","headline":"World Ski Resort Statistics & Records","description":"Resort records from ski_areas_analyzed: area, latitude, and trail count.","dateModified":"2026-10-02","inLanguage":"en","author":{"@type":"Organization","name":"Global Ski Atlas","url":"https://globalskiatlas.com/"}},
+          {"@type":"Dataset","@id":"https://globalskiatlas.com/SkiResortFacts.html#dataset","name":"Analyzed ski areas","description":"Downhill ski resorts. Each row has a name, country, total area acres, trail count, and latitude.","creator":{"@type":"Organization","name":"Global Ski Atlas"},"distribution":{"@type":"DataDownload","encodingFormat":"application/vnd.apache.parquet","contentUrl":"https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/ski_areas_analyzed.parquet"},"variableMeasured":["total_area_acres","downhill_trails","centroid_lat","country"]},
+          {"@type":"ItemList","@id":"https://globalskiatlas.com/SkiResortFacts.html#records","name":"Ski resort records","itemListElement":[
+            {"@type":"ListItem","position":1,"name":"Largest area: Pyhätunturi - Luosto, Finland, 52,131 acres"},
+            {"@type":"ListItem","position":2,"name":"Fewest trails: AfriSki, Lesotho, 1 trail"},
+            {"@type":"ListItem","position":3,"name":"Northernmost: Nedover Alpinbakke, Norway, 78.2°"},
+            {"@type":"ListItem","position":4,"name":"Southernmost: Cerro Castor, Argentina, -54.7°"},
+            {"@type":"ListItem","position":5,"name":"Most trails: Les 3 Vallées, France, 1,648"}
+          ]},
+          {"@type":"BreadcrumbList","itemListElement":[
+            {"@type":"ListItem","position":1,"name":"Home","item":"https://globalskiatlas.com/"},
+            {"@type":"ListItem","position":2,"name":"Resort records","item":"https://globalskiatlas.com/SkiResortFacts.html"}
+          ]}
+        ]}
+        </script>
         <link rel="shortcut icon" href="./assets/logo.png?v=2" type="image/x-icon" />
         <link rel="stylesheet" href="./css/tailwind-build.css" />
         <link rel="stylesheet" href="css/index.css" />
@@ -118,8 +133,21 @@
         <div class="tw-flex-1 tw-min-h-0 tw-overflow-y-auto" style="margin-top: 60px;">
         <main class="tw-flex-1 tw-flex tw-flex-col">
         <section class="tw-relative tw-flex tw-min-h-[40vh] tw-w-full tw-flex-col tw-place-content-center tw-place-items-center tw-overflow-hidden tw-py-12 tw-px-6">
-            <h1 class="tw-text-4xl tw-font-bold tw-text-gray-900 max-md:tw-text-2xl tw-text-center">Ski Resort Facts</h1>
-            <p class="tw-mt-4 tw-max-w-2xl tw-text-center tw-text-xl tw-text-gray-600">Records and superlatives from our worldwide ski resort dataset</p>
+            <h1 class="tw-text-4xl tw-font-bold tw-text-gray-900 max-md:tw-text-2xl tw-text-center">Global Ski Resort Statistics &amp; World Records</h1>
+            <p class="tw-mt-4 tw-max-w-2xl tw-text-center tw-text-xl tw-text-gray-600">Each record is an extreme in the downhill rows of ski_areas_analyzed. Area uses total_area_acres when that column is filled. Latitude is the resort point.</p>
+            <table class="tw-mt-6 tw-max-w-3xl tw-w-full tw-text-left" style="border-collapse:collapse">
+                <caption class="tw-text-left tw-font-medium tw-pb-2">Ski resort records in the initial document</caption>
+                <thead><tr><th class="tw-p-2">Record</th><th class="tw-p-2">Resort</th><th class="tw-p-2">Measure</th><th class="tw-p-2">Country</th></tr></thead>
+                <tbody>
+                    <tr><td class="tw-p-2">Largest area</td><td class="tw-p-2">Pyhätunturi - Luosto</td><td class="tw-p-2">52,131 acres</td><td class="tw-p-2">Finland</td></tr>
+                    <tr><td class="tw-p-2">Fewest trails</td><td class="tw-p-2">AfriSki</td><td class="tw-p-2">1 trail</td><td class="tw-p-2">Lesotho</td></tr>
+                    <tr><td class="tw-p-2">Northernmost</td><td class="tw-p-2">Nedover Alpinbakke</td><td class="tw-p-2">78.2°</td><td class="tw-p-2">Norway</td></tr>
+                    <tr><td class="tw-p-2">Southernmost</td><td class="tw-p-2">Cerro Castor</td><td class="tw-p-2">-54.7°</td><td class="tw-p-2">Argentina</td></tr>
+                    <tr><td class="tw-p-2">Closest to the equator</td><td class="tw-p-2">Qianhai Snow World</td><td class="tw-p-2">22.7° from the equator</td><td class="tw-p-2">Unknown</td></tr>
+                    <tr><td class="tw-p-2">Most trails</td><td class="tw-p-2">The 3 Valleys (Les 3 Vallées)</td><td class="tw-p-2">1,648 trails</td><td class="tw-p-2">France</td></tr>
+                    <tr><td class="tw-p-2">Most resorts</td><td class="tw-p-2">Japan</td><td class="tw-p-2">413 downhill resorts</td><td class="tw-p-2">Japan</td></tr>
+                </tbody>
+            </table>
             <div class="tw-mt-6 tw-flex tw-flex-wrap tw-place-items-center tw-gap-4">
                 <div class="tw-flex tw-place-items-center tw-gap-3">
                     <label for="country-filter" class="tw-text-gray-700 tw-font-medium">Filter by country:</label>
@@ -149,7 +177,7 @@
 
         <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6" id="fact-scatter">
             <div class="reveal-up tw-flex tw-w-full tw-flex-col tw-place-content-center tw-place-items-center tw-gap-8">
-                <h3 class="tw-text-4xl tw-font-medium tw-text-center">Trails vs Acreage</h3>
+                <h2 class="tw-text-4xl tw-font-medium tw-text-center">How do ski resorts compare on trails and acres?</h2>
                 <p class="tw-text-xl tw-text-gray-600 tw-text-center tw-max-w-2xl">Number of trails and skiable area by resort. Outliers labeled.</p>
                 <div id="scatter-trails-area" class="scatter-chart tw-bg-gray-50 tw-rounded-xl tw-p-4 tw-flex tw-place-items-center tw-justify-center tw-text-gray-500"><div class="tw-flex tw-flex-col tw-place-items-center tw-gap-3"><div class="loading-spinner"></div><span>Loading scatter plot…</span></div></div>
             </div>
@@ -158,12 +186,12 @@
         <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6" id="fact-largest">
             <div class="reveal-up tw-flex tw-min-h-[60vh] tw-place-content-center tw-place-items-center tw-gap-[10%] max-lg:tw-flex-col max-lg:tw-gap-10">
                 <div class="tw-flex">
-                    <div id="map-largest" class="fact-map placeholder loading tw-flex-shrink-0"><div class="loading-spinner"></div><span>Loading…</span></div>
+                    <div id="map-largest" class="fact-map placeholder loading tw-flex-shrink-0" role="region" aria-label="Map of Pyhätunturi - Luosto, the largest mapped ski area"><div class="loading-spinner" aria-hidden="true"></div><span>Loading map…</span></div>
                 </div>
                 <div class="tw-mt-6 tw-flex tw-max-w-[450px] tw-flex-col tw-gap-4">
-                    <h3 class="tw-text-4xl tw-font-medium">Largest Resort by Area</h3>
-                    <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700" id="fact-largest-name">—</p>
-                    <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600" id="fact-largest-desc">—</p>
+                    <h2 class="tw-text-4xl tw-font-medium">What ski resort has the most skiable acres?</h2>
+                    <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700" id="fact-largest-name">Pyhätunturi - Luosto</p>
+                    <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600" id="fact-largest-desc">52,131 acres of skiable terrain. Finland.</p>
                     <div class="fact-links" id="fact-largest-links"></div>
                 </div>
             </div>
@@ -172,13 +200,13 @@
         <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6" id="fact-smallest">
             <div class="reveal-up tw-flex tw-min-h-[60vh] tw-place-content-center tw-place-items-center tw-gap-[10%] max-lg:tw-flex-col max-lg:tw-gap-10">
                 <div class="tw-mt-6 tw-flex tw-max-w-[450px] tw-flex-col tw-gap-4">
-                    <h3 class="tw-text-4xl tw-font-medium">Smallest Downhill Resort</h3>
-                    <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700" id="fact-smallest-name">—</p>
-                    <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600" id="fact-smallest-desc">—</p>
+                    <h2 class="tw-text-4xl tw-font-medium">What is the smallest downhill ski resort?</h2>
+                    <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700" id="fact-smallest-name">AfriSki</p>
+                    <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600" id="fact-smallest-desc">1 trail(s). Lesotho.</p>
                     <div class="fact-links" id="fact-smallest-links"></div>
                 </div>
                 <div class="tw-flex">
-                    <div id="map-smallest" class="fact-map placeholder loading tw-flex-shrink-0"><div class="loading-spinner"></div><span>Loading…</span></div>
+                    <div id="map-smallest" class="fact-map placeholder loading tw-flex-shrink-0" role="region" aria-label="Map of AfriSki, the downhill resort with the fewest trails"><div class="loading-spinner" aria-hidden="true"></div><span>Loading map…</span></div>
                 </div>
             </div>
         </section>
@@ -186,12 +214,12 @@
         <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6" id="fact-northern">
             <div class="reveal-up tw-flex tw-min-h-[60vh] tw-place-content-center tw-place-items-center tw-gap-[10%] max-lg:tw-flex-col max-lg:tw-gap-10">
                 <div class="tw-flex">
-                    <div id="map-northern" class="fact-map placeholder loading tw-flex-shrink-0"><div class="loading-spinner"></div><span>Loading…</span></div>
+                    <div id="map-northern" class="fact-map placeholder loading tw-flex-shrink-0" role="region" aria-label="Map of Nedover Alpinbakke, the northernmost ski resort"><div class="loading-spinner" aria-hidden="true"></div><span>Loading map…</span></div>
                 </div>
                 <div class="tw-mt-6 tw-flex tw-max-w-[450px] tw-flex-col tw-gap-4">
-                    <h3 class="tw-text-4xl tw-font-medium">Most Northern Resort</h3>
-                    <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700" id="fact-northern-name">—</p>
-                    <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600" id="fact-northern-desc">—</p>
+                    <h2 class="tw-text-4xl tw-font-medium">What is the northernmost ski resort?</h2>
+                    <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700" id="fact-northern-name">Nedover Alpinbakke</p>
+                    <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600" id="fact-northern-desc">78.2° latitude. Norway.</p>
                     <div class="fact-links" id="fact-northern-links"></div>
                 </div>
             </div>
@@ -200,13 +228,13 @@
         <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6" id="fact-southern">
             <div class="reveal-up tw-flex tw-min-h-[60vh] tw-place-content-center tw-place-items-center tw-gap-[10%] max-lg:tw-flex-col max-lg:tw-gap-10">
                 <div class="tw-mt-6 tw-flex tw-max-w-[450px] tw-flex-col tw-gap-4">
-                    <h3 class="tw-text-4xl tw-font-medium">Most Southern Resort</h3>
-                    <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700" id="fact-southern-name">—</p>
-                    <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600" id="fact-southern-desc">—</p>
+                    <h2 class="tw-text-4xl tw-font-medium">What is the southernmost ski resort?</h2>
+                    <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700" id="fact-southern-name">Cerro Castor</p>
+                    <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600" id="fact-southern-desc">-54.7° latitude. Argentina.</p>
                     <div class="fact-links" id="fact-southern-links"></div>
                 </div>
                 <div class="tw-flex">
-                    <div id="map-southern" class="fact-map placeholder loading tw-flex-shrink-0"><div class="loading-spinner"></div><span>Loading…</span></div>
+                    <div id="map-southern" class="fact-map placeholder loading tw-flex-shrink-0" role="region" aria-label="Map of Cerro Castor, the southernmost ski resort"><div class="loading-spinner" aria-hidden="true"></div><span>Loading map…</span></div>
                 </div>
             </div>
         </section>
@@ -214,12 +242,12 @@
         <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6" id="fact-equator">
             <div class="reveal-up tw-flex tw-min-h-[60vh] tw-place-content-center tw-place-items-center tw-gap-[10%] max-lg:tw-flex-col max-lg:tw-gap-10">
                 <div class="tw-flex">
-                    <div id="map-equator" class="fact-map placeholder loading tw-flex-shrink-0"><div class="loading-spinner"></div><span>Loading…</span></div>
+                    <div id="map-equator" class="fact-map placeholder loading tw-flex-shrink-0" role="region" aria-label="Map of Qianhai Snow World, the resort closest to the equator"><div class="loading-spinner" aria-hidden="true"></div><span>Loading map…</span></div>
                 </div>
                 <div class="tw-mt-6 tw-flex tw-max-w-[450px] tw-flex-col tw-gap-4">
-                    <h3 class="tw-text-4xl tw-font-medium">Closest to the Equator</h3>
-                    <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700" id="fact-equator-name">—</p>
-                    <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600" id="fact-equator-desc">—</p>
+                    <h2 class="tw-text-4xl tw-font-medium">Which ski resort is closest to the equator?</h2>
+                    <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700" id="fact-equator-name">Qianhai Snow World (前海冰雪世界)</p>
+                    <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600" id="fact-equator-desc">22.7° from the equator. Unknown.</p>
                     <div class="fact-links" id="fact-equator-links"></div>
                 </div>
             </div>
@@ -228,13 +256,13 @@
         <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6" id="fact-most-trails">
             <div class="reveal-up tw-flex tw-min-h-[60vh] tw-place-content-center tw-place-items-center tw-gap-[10%] max-lg:tw-flex-col max-lg:tw-gap-10">
                 <div class="tw-mt-6 tw-flex tw-max-w-[450px] tw-flex-col tw-gap-4">
-                    <h3 class="tw-text-4xl tw-font-medium">Resort with the Most Trails</h3>
-                    <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700" id="fact-most-trails-name">—</p>
-                    <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600" id="fact-most-trails-desc">—</p>
+                    <h2 class="tw-text-4xl tw-font-medium">Which ski resort has the most trails?</h2>
+                    <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700" id="fact-most-trails-name">The 3 Valleys (Les 3 Vallées)</p>
+                    <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600" id="fact-most-trails-desc">1,648 trails. France.</p>
                     <div class="fact-links" id="fact-most-trails-links"></div>
                 </div>
                 <div class="tw-flex">
-                    <div id="map-most-trails" class="fact-map placeholder loading tw-flex-shrink-0"><div class="loading-spinner"></div><span>Loading…</span></div>
+                    <div id="map-most-trails" class="fact-map placeholder loading tw-flex-shrink-0" role="region" aria-label="Map of Les 3 Vallées, the resort with the most trails"><div class="loading-spinner" aria-hidden="true"></div><span>Loading map…</span></div>
                 </div>
             </div>
         </section>
@@ -242,10 +270,10 @@
         <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6" id="fact-country">
             <div class="reveal-up tw-flex tw-min-h-[60vh] tw-w-full tw-flex-col tw-place-content-center tw-place-items-center tw-gap-8">
                 <div class="tw-flex tw-w-full tw-max-w-[900px] tw-flex-col tw-gap-4 tw-text-center">
-                    <h3 class="tw-text-4xl tw-font-medium">Resorts by Country</h3>
-                    <p class="tw-text-xl tw-text-gray-600" id="fact-country-desc">—</p>
+                    <h2 class="tw-text-4xl tw-font-medium">Which country has the most ski resorts?</h2>
+                    <p class="tw-text-xl tw-text-gray-600" id="fact-country-desc">Japan leads with 413 downhill ski resorts.</p>
                 </div>
-                <div id="map-world" class="placeholder loading tw-w-full"><div class="loading-spinner"></div><span>Loading world map…</span></div>
+                <div id="map-world" class="placeholder loading tw-w-full" role="region" aria-label="World map of downhill ski resorts by country"><div class="loading-spinner" aria-hidden="true"></div><span>Loading world map…</span></div>
             </div>
         </section>
 

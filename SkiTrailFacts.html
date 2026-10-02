@@ -32,22 +32,36 @@
             two.parentNode.insertBefore(twenty, two);
           })(window, document, 'script', 'https://scripts.stay22.com/letmeallez.js');
         </script>
-        <title>Ski Trail Records &amp; Facts – Global Ski Atlas</title>
-        <meta name="description" content="Discover ski trail records: the world's longest, shortest, most northern, and most southern downhill ski runs. Browse named trails by resort and country." />
-        <!-- Open Graph -->
-        <meta property="og:title" content="Ski Trail Records &amp; Facts – Global Ski Atlas" />
-        <meta property="og:description" content="Discover ski trail records: the world's longest, shortest, most northern, and most southern downhill ski runs. Browse named trails by resort and country." />
+        <title>World Ski Trail Statistics &amp; Records | Global Ski Atlas</title>
+        <meta name="description" content="Records from 48,602 mapped ski trails. Longest is Cache Mountain Loop Trail at 56.63 km. Northernmost is Brigette Couloir in Canada at 71.1059°N." />
+        <meta property="og:title" content="World Ski Trail Statistics &amp; Records | Global Ski Atlas" />
+        <meta property="og:description" content="Records from 48,602 mapped ski trails. Longest is Cache Mountain Loop Trail at 56.63 km. Northernmost is Brigette Couloir in Canada." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://globalskiatlas.com/SkiTrailFacts.html" />
         <meta property="og:image" content="https://globalskiatlas.com/assets/og-banner.png" />
+        <meta property="og:image:alt" content="Global Ski Atlas map of ski areas" />
         <meta property="og:site_name" content="Global Ski Atlas" />
-        <!-- Twitter Card -->
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Ski Trail Records &amp; Facts – Global Ski Atlas" />
-        <meta name="twitter:description" content="The world's longest, shortest, most northern and most southern ski trails. Browse named runs by resort and country." />
+        <meta name="twitter:title" content="World Ski Trail Statistics &amp; Records | Global Ski Atlas" />
+        <meta name="twitter:description" content="Longest mapped ski trail: Cache Mountain Loop Trail, 56.63 km. Northernmost: Brigette Couloir, Canada." />
         <meta name="twitter:image" content="https://globalskiatlas.com/assets/og-banner.png" />
-        <!-- Canonical -->
         <link rel="canonical" href="https://globalskiatlas.com/SkiTrailFacts.html" />
+        <script type="application/ld+json">
+        {"@context":"https://schema.org","@graph":[
+          {"@type":"TechArticle","@id":"https://globalskiatlas.com/SkiTrailFacts.html#article","headline":"World Ski Trail Statistics & Records","description":"Longest, shortest, northernmost, and southernmost ski trails from pistes.parquet.","dateModified":"2026-10-02","inLanguage":"en","author":{"@type":"Organization","name":"Global Ski Atlas","url":"https://globalskiatlas.com/"}},
+          {"@type":"Dataset","@id":"https://globalskiatlas.com/SkiTrailFacts.html#dataset","name":"Ski pistes","description":"Mapped ski trails. Each row has a name, length, latitude, resort, and country.","creator":{"@type":"Organization","name":"Global Ski Atlas"},"distribution":{"@type":"DataDownload","encodingFormat":"application/vnd.apache.parquet","contentUrl":"https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/combined/pistes.parquet"},"variableMeasured":["length","latitude","resort","country"]},
+          {"@type":"ItemList","@id":"https://globalskiatlas.com/SkiTrailFacts.html#records","name":"Ski trail records","itemListElement":[
+            {"@type":"ListItem","position":1,"name":"Longest ski trail: Cache Mountain Loop Trail, United States, 56.63 km"},
+            {"@type":"ListItem","position":2,"name":"Shortest ski trail: unnamed, United States, 5 m"},
+            {"@type":"ListItem","position":3,"name":"Northernmost ski trail: Brigette Couloir, Canada, 71.1059°N"},
+            {"@type":"ListItem","position":4,"name":"Southernmost ski trail: unnamed, Argentina, -54.7988°"}
+          ]},
+          {"@type":"BreadcrumbList","itemListElement":[
+            {"@type":"ListItem","position":1,"name":"Home","item":"https://globalskiatlas.com/"},
+            {"@type":"ListItem","position":2,"name":"Trail records","item":"https://globalskiatlas.com/SkiTrailFacts.html"}
+          ]}
+        ]}
+        </script>
         <link rel="shortcut icon" href="./assets/logo.png?v=2" type="image/x-icon" />
         <link rel="stylesheet" href="./css/tailwind-build.css" />
         <link rel="stylesheet" href="css/index.css" />
@@ -133,8 +147,18 @@
 
         <!-- Hero -->
         <section class="tw-relative tw-flex tw-min-h-[40vh] tw-w-full tw-flex-col tw-place-content-center tw-place-items-center tw-overflow-hidden tw-py-12 tw-px-6">
-            <h1 class="tw-text-4xl tw-font-bold tw-text-gray-900 max-md:tw-text-2xl tw-text-center">Ski Trail Facts</h1>
-            <p class="tw-mt-4 tw-max-w-2xl tw-text-center tw-text-xl tw-text-gray-600">Records and superlatives from our worldwide ski trail dataset</p>
+            <h1 class="tw-text-4xl tw-font-bold tw-text-gray-900 max-md:tw-text-2xl tw-text-center">Global Ski Trail Statistics &amp; World Records</h1>
+            <p class="tw-mt-4 tw-max-w-2xl tw-text-center tw-text-xl tw-text-gray-600">Length and latitude come from pistes.parquet. A trail with no name can still set a record. Filters below drop untyped ways, unnamed runs, or trails with no resort.</p>
+            <table class="trail-table tw-mt-6 tw-max-w-3xl">
+                <caption class="tw-text-left tw-font-medium tw-pb-2">Ski trail records in the initial document</caption>
+                <thead><tr><th>Record</th><th>Trail</th><th>Measure</th><th>Place</th></tr></thead>
+                <tbody>
+                    <tr><td>Longest</td><td>Cache Mountain Loop Trail</td><td>56.63 km (35.19 mi)</td><td>United States of America</td></tr>
+                    <tr><td>Shortest</td><td>(unnamed)</td><td>5 m (17 ft)</td><td>United States of America</td></tr>
+                    <tr><td>Northernmost</td><td>Brigette Couloir</td><td>71.1059° N</td><td>Canada</td></tr>
+                    <tr><td>Southernmost</td><td>(unnamed)</td><td>-54.7988°</td><td>Argentina</td></tr>
+                </tbody>
+            </table>
             <div class="tw-mt-6 tw-flex tw-flex-wrap tw-place-items-center tw-gap-4">
                 <div class="tw-flex tw-place-items-center tw-gap-3">
                     <label for="country-filter" class="tw-text-gray-700 tw-font-medium">Filter by country:</label>
@@ -190,12 +214,12 @@
         <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6" id="fact-longest">
             <div class="reveal-up tw-flex tw-min-h-[60vh] tw-place-content-center tw-place-items-center tw-gap-[10%] max-lg:tw-flex-col max-lg:tw-gap-10">
                 <div class="tw-flex">
-                    <div id="map-longest" class="fact-map placeholder loading tw-flex-shrink-0"><div class="loading-spinner"></div><span>Loading…</span></div>
+                    <div id="map-longest" class="fact-map placeholder loading tw-flex-shrink-0" role="region" aria-label="Map of the longest ski trail, Cache Mountain Loop Trail"><div class="loading-spinner" aria-hidden="true"></div><span>Loading map…</span></div>
                 </div>
                 <div class="tw-mt-6 tw-flex tw-max-w-[450px] tw-flex-col tw-gap-4">
-                    <h3 class="tw-text-4xl tw-font-medium">Longest Trail</h3>
-                    <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700" id="fact-longest-name">—</p>
-                    <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600" id="fact-longest-desc">—</p>
+                    <h2 class="tw-text-4xl tw-font-medium">What is the longest ski trail?</h2>
+                    <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700" id="fact-longest-name">Cache Mountain Loop Trail</p>
+                    <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600" id="fact-longest-desc">56.63 km (35.19 mi) · United States of America</p>
                 </div>
             </div>
         </section>
@@ -204,12 +228,12 @@
         <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6" id="fact-shortest">
             <div class="reveal-up tw-flex tw-min-h-[60vh] tw-place-content-center tw-place-items-center tw-gap-[10%] max-lg:tw-flex-col max-lg:tw-gap-10">
                 <div class="tw-mt-6 tw-flex tw-max-w-[450px] tw-flex-col tw-gap-4">
-                    <h3 class="tw-text-4xl tw-font-medium">Shortest Trail</h3>
-                    <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700" id="fact-shortest-name">—</p>
-                    <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600" id="fact-shortest-desc">—</p>
+                    <h2 class="tw-text-4xl tw-font-medium">What is the shortest ski trail?</h2>
+                    <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700" id="fact-shortest-name">(unnamed)</p>
+                    <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600" id="fact-shortest-desc">5 m (17 ft) · United States of America</p>
                 </div>
                 <div class="tw-flex">
-                    <div id="map-shortest" class="fact-map placeholder loading tw-flex-shrink-0"><div class="loading-spinner"></div><span>Loading…</span></div>
+                    <div id="map-shortest" class="fact-map placeholder loading tw-flex-shrink-0" role="region" aria-label="Map of the shortest ski trail"><div class="loading-spinner" aria-hidden="true"></div><span>Loading map…</span></div>
                 </div>
             </div>
         </section>
@@ -218,12 +242,12 @@
         <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6" id="fact-northern">
             <div class="reveal-up tw-flex tw-min-h-[60vh] tw-place-content-center tw-place-items-center tw-gap-[10%] max-lg:tw-flex-col max-lg:tw-gap-10">
                 <div class="tw-flex">
-                    <div id="map-northern" class="fact-map placeholder loading tw-flex-shrink-0"><div class="loading-spinner"></div><span>Loading…</span></div>
+                    <div id="map-northern" class="fact-map placeholder loading tw-flex-shrink-0" role="region" aria-label="Map of the northernmost ski trail, Brigette Couloir"><div class="loading-spinner" aria-hidden="true"></div><span>Loading map…</span></div>
                 </div>
                 <div class="tw-mt-6 tw-flex tw-max-w-[450px] tw-flex-col tw-gap-4">
-                    <h3 class="tw-text-4xl tw-font-medium">Most Northern Trail</h3>
-                    <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700" id="fact-northern-name">—</p>
-                    <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600" id="fact-northern-desc">—</p>
+                    <h2 class="tw-text-4xl tw-font-medium">What is the northernmost ski trail?</h2>
+                    <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700" id="fact-northern-name">Brigette Couloir</p>
+                    <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600" id="fact-northern-desc">71.1059° N · Canada</p>
                 </div>
             </div>
         </section>
@@ -232,12 +256,12 @@
         <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6" id="fact-southern">
             <div class="reveal-up tw-flex tw-min-h-[60vh] tw-place-content-center tw-place-items-center tw-gap-[10%] max-lg:tw-flex-col max-lg:tw-gap-10">
                 <div class="tw-mt-6 tw-flex tw-max-w-[450px] tw-flex-col tw-gap-4">
-                    <h3 class="tw-text-4xl tw-font-medium">Most Southern Trail</h3>
-                    <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700" id="fact-southern-name">—</p>
-                    <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600" id="fact-southern-desc">—</p>
+                    <h2 class="tw-text-4xl tw-font-medium">What is the southernmost ski trail?</h2>
+                    <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700" id="fact-southern-name">(unnamed)</p>
+                    <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600" id="fact-southern-desc">-54.7988° · Argentina</p>
                 </div>
                 <div class="tw-flex">
-                    <div id="map-southern" class="fact-map placeholder loading tw-flex-shrink-0"><div class="loading-spinner"></div><span>Loading…</span></div>
+                    <div id="map-southern" class="fact-map placeholder loading tw-flex-shrink-0" role="region" aria-label="Map of the southernmost ski trail"><div class="loading-spinner" aria-hidden="true"></div><span>Loading map…</span></div>
                 </div>
             </div>
         </section>
@@ -246,7 +270,7 @@
         <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-overflow-hidden tw-p-6 tw-pb-16" id="fact-named">
             <div class="reveal-up tw-flex tw-w-full tw-flex-col tw-place-content-center tw-place-items-center tw-gap-8">
                 <div class="tw-flex tw-w-full tw-max-w-[960px] tw-flex-col tw-gap-2 tw-text-center">
-                    <h3 class="tw-text-4xl tw-font-medium">Named Trails</h3>
+                    <h2 class="tw-text-4xl tw-font-medium">Which ski trails have a name?</h2>
                     <p class="tw-text-xl tw-text-gray-600">Trails with official names — including resort and country. Click a column header to sort.</p>
                 </div>
                 <div class="tw-w-full tw-max-w-[960px] tw-flex tw-gap-3 tw-flex-wrap tw-place-items-center">
