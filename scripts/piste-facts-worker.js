@@ -126,12 +126,68 @@ export function decodePisteTile(buf, z, x, y, VectorTile, Pbf) {
   return rows;
 }
 
+const EXCLUDED_LIFTS = new Set(['zip_line', 'goods']);
+
+function summarizeLift(props, length, maxLat, minLat, z, x, y, first) {
+  let aerialway = prop(props, ['aerialway', 'Aerialway', 'lift_type', 'type']);
+  if (!aerialway) aerialway = tag(props, 'aerialway');
+  aerialway = aerialway ? String(aerialway).toLowerCase().trim() : '';
+  if (EXCLUDED_LIFTS.has(aerialway)) return null;
+  const nameRaw = prop(props, ['name', 'Name', 'lift_name']);
+  const name = nameRaw && String(nameRaw).trim() ? String(nameRaw).trim() : null;
+  const localRaw = prop(props, ['Ski Area', 'ski_area', 'resort_name', 'area_name', 'resort', 'ski_area_name', 'skiarea_name']);
+  const local = (localRaw != null && String(localRaw).trim() !== '')
+    ? String(localRaw).trim()
+    : (tag(props, 'resort_name') || tag(props, 'area_name') || '');
+  const enRaw = prop(props, ['resort_english_name', 'ski_area_english_name', 'english_name', 'englishName']);
+  const en = enRaw != null && String(enRaw).trim() !== '' ? String(enRaw).trim() : '';
+  const resort = en && local && en !== local ? en + ' (' + local + ')' : (en || local || '—');
+  const countryRaw = prop(props, ['Country', 'country', 'country_name', 'addr:country']);
+  const country = (countryRaw && String(countryRaw).trim()) ? String(countryRaw).trim() : (tag(props, 'country') || '—');
+  const stateRaw = prop(props, ['State', 'state', 'addr:state', 'addr:province']);
+  const state = (stateRaw && String(stateRaw).trim()) ? String(stateRaw).trim() : (tag(props, 'state') || '—');
+  const key = pisteFeatureKey(props, { coordinates: [first] });
+  return { key, name, resort, country, state, aerialway, length, maxLat, minLat, lat: first[1], lng: first[0], z, x, y };
+}
+
+export function decodeLiftTile(buf, z, x, y, VectorTile, Pbf) {
+  const bytes = buf instanceof ArrayBuffer ? new Uint8Array(buf) : buf;
+  const tile = new VectorTile(new Pbf(bytes));
+  const layer = tile.layers.lifts;
+  if (!layer) return [];
+  const extent = layer.extent || 4096;
+  const rows = [];
+  for (let i = 0; i < layer.length; i++) {
+    const feature = layer.feature(i);
+    if (feature.type !== 2) continue;
+    const rings = feature.loadGeometry();
+    let length = 0, maxLat = -Infinity, minLat = Infinity, first = null;
+    for (const ring of rings) {
+      let prev = null;
+      for (const pt of ring) {
+        const ll = project(pt.x, pt.y, extent, z, x, y);
+        if (!first) first = ll;
+        if (prev) length += haversine(prev, ll);
+        if (ll[1] > maxLat) maxLat = ll[1];
+        if (ll[1] < minLat) minLat = ll[1];
+        prev = ll;
+      }
+    }
+    if (length <= 0.005 || !first) continue;
+    const row = summarizeLift(feature.properties, length, maxLat, minLat, z, x, y, first);
+    if (row) rows.push(row);
+  }
+  return rows;
+}
+
 if (typeof DedicatedWorkerGlobalScope !== 'undefined' && self instanceof DedicatedWorkerGlobalScope) {
   self.onmessage = async (event) => {
-    const { id, z, x, y, buffer } = event.data;
+    const { id, z, x, y, buffer, layer } = event.data;
     try {
       const { VectorTile, Pbf } = await getMvtLibs();
-      const rows = decodePisteTile(buffer, z, x, y, VectorTile, Pbf);
+      const rows = layer === 'lifts'
+        ? decodeLiftTile(buffer, z, x, y, VectorTile, Pbf)
+        : decodePisteTile(buffer, z, x, y, VectorTile, Pbf);
       self.postMessage({ id, rows });
     } catch (err) {
       self.postMessage({ id, error: String(err && err.message || err) });

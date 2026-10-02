@@ -64,7 +64,8 @@
             .scatter-tooltip { position: fixed; z-index: 9999; padding: 8px 12px; background: #1e293b; color: #fff; border-radius: 8px; font-size: 13px; pointer-events: none; box-shadow: 0 4px 12px rgba(0,0,0,0.2); line-height: 1.5; }
             .loading-spinner { width: 28px; height: 28px; border: 3px solid #e5e7eb; border-top-color: #0d9488; border-radius: 50%; animation: spin 0.8s linear infinite; }
             @keyframes spin { to { transform: rotate(360deg); } }
-            .fact-map.placeholder.loading, #map-world.placeholder.loading { flex-direction: column; gap: 8px; }
+            .page-btn { padding: 5px 12px; border-radius: 8px; border: 1px solid #e5e7eb; background: #fff; cursor: pointer; font-size: 13px; color: #374151; text-decoration: none; display: inline-block; }
+            .fact-links { display: flex; gap: 8px; margin-top: 8px; }
         </style>
     </head>
     <body class="tw-flex tw-min-h-[100vh] tw-flex-col tw-bg-[#fff]">
@@ -119,19 +120,29 @@
         <section class="tw-relative tw-flex tw-min-h-[40vh] tw-w-full tw-flex-col tw-place-content-center tw-place-items-center tw-overflow-hidden tw-py-12 tw-px-6">
             <h1 class="tw-text-4xl tw-font-bold tw-text-gray-900 max-md:tw-text-2xl tw-text-center">Ski Resort Facts</h1>
             <p class="tw-mt-4 tw-max-w-2xl tw-text-center tw-text-xl tw-text-gray-600">Records and superlatives from our worldwide ski resort dataset</p>
-            <div class="tw-mt-6 tw-flex tw-place-items-center tw-gap-3">
-                <label for="country-filter" class="tw-text-gray-700 tw-font-medium">Filter by country:</label>
-                <select id="country-filter" disabled class="tw-rounded-lg tw-border tw-border-gray-300 tw-bg-gray-100 tw-px-4 tw-py-2 tw-text-base tw-text-gray-500 focus:tw-outline-none focus:tw-ring-2 focus:tw-ring-teal-500 disabled:tw-cursor-not-allowed disabled:tw-opacity-60">
-                    <option value="">All countries</option>
-                </select>
+            <div class="tw-mt-6 tw-flex tw-flex-wrap tw-place-items-center tw-gap-4">
+                <div class="tw-flex tw-place-items-center tw-gap-3">
+                    <label for="country-filter" class="tw-text-gray-700 tw-font-medium">Filter by country:</label>
+                    <select id="country-filter" disabled class="tw-rounded-lg tw-border tw-border-gray-300 tw-bg-gray-100 tw-px-4 tw-py-2 tw-text-base tw-text-gray-500 focus:tw-outline-none focus:tw-ring-2 focus:tw-ring-teal-500 disabled:tw-cursor-not-allowed disabled:tw-opacity-60">
+                        <option value="">All countries</option>
+                    </select>
+                </div>
+                <div class="tw-flex tw-place-items-center tw-gap-3">
+                    <label for="state-filter" class="tw-text-gray-700 tw-font-medium">State / province:</label>
+                    <select id="state-filter" disabled class="tw-rounded-lg tw-border tw-border-gray-300 tw-bg-gray-100 tw-px-4 tw-py-2 tw-text-base tw-text-gray-500 focus:tw-outline-none focus:tw-ring-2 focus:tw-ring-teal-500 disabled:tw-cursor-not-allowed disabled:tw-opacity-60">
+                        <option value="">All states / provinces</option>
+                    </select>
+                </div>
             </div>
         </section>
 
         <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-place-content-center tw-place-items-center tw-overflow-hidden tw-p-6">
             <div class="reveal-up tw-flex tw-min-h-[140px] tw-w-full tw-max-w-[80%] tw-place-items-center tw-justify-around tw-gap-8 tw-rounded-xl tw-bg-[#e7e6e685] tw-p-4 max-lg:tw-max-w-full max-md:tw-flex-col" id="facts-summary">
-                <div class="tw-flex tw-flex-col tw-place-items-center tw-gap-3 tw-text-gray-600">
-                    <div class="loading-spinner"></div>
-                    <span>Loading ski facts…</span>
+                <div class="tw-flex tw-w-full tw-max-w-md tw-flex-col tw-items-center tw-gap-3 tw-text-gray-600">
+                    <div class="tw-h-2 tw-w-full tw-overflow-hidden tw-rounded-full tw-bg-gray-200" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="20" id="resort-load-progress">
+                        <div id="resort-load-bar" class="tw-h-full tw-rounded-full tw-bg-teal-600" style="width:20%"></div>
+                    </div>
+                    <span id="resort-load-label">Loading resorts…</span>
                 </div>
             </div>
         </section>
@@ -153,6 +164,7 @@
                     <h3 class="tw-text-4xl tw-font-medium">Largest Resort by Area</h3>
                     <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700" id="fact-largest-name">—</p>
                     <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600" id="fact-largest-desc">—</p>
+                    <div class="fact-links" id="fact-largest-links"></div>
                 </div>
             </div>
         </section>
@@ -163,6 +175,7 @@
                     <h3 class="tw-text-4xl tw-font-medium">Smallest Downhill Resort</h3>
                     <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700" id="fact-smallest-name">—</p>
                     <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600" id="fact-smallest-desc">—</p>
+                    <div class="fact-links" id="fact-smallest-links"></div>
                 </div>
                 <div class="tw-flex">
                     <div id="map-smallest" class="fact-map placeholder loading tw-flex-shrink-0"><div class="loading-spinner"></div><span>Loading…</span></div>
@@ -179,6 +192,7 @@
                     <h3 class="tw-text-4xl tw-font-medium">Most Northern Resort</h3>
                     <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700" id="fact-northern-name">—</p>
                     <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600" id="fact-northern-desc">—</p>
+                    <div class="fact-links" id="fact-northern-links"></div>
                 </div>
             </div>
         </section>
@@ -189,6 +203,7 @@
                     <h3 class="tw-text-4xl tw-font-medium">Most Southern Resort</h3>
                     <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700" id="fact-southern-name">—</p>
                     <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600" id="fact-southern-desc">—</p>
+                    <div class="fact-links" id="fact-southern-links"></div>
                 </div>
                 <div class="tw-flex">
                     <div id="map-southern" class="fact-map placeholder loading tw-flex-shrink-0"><div class="loading-spinner"></div><span>Loading…</span></div>
@@ -205,6 +220,7 @@
                     <h3 class="tw-text-4xl tw-font-medium">Closest to the Equator</h3>
                     <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700" id="fact-equator-name">—</p>
                     <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600" id="fact-equator-desc">—</p>
+                    <div class="fact-links" id="fact-equator-links"></div>
                 </div>
             </div>
         </section>
@@ -215,6 +231,7 @@
                     <h3 class="tw-text-4xl tw-font-medium">Resort with the Most Trails</h3>
                     <p class="tw-mt-2 tw-text-xl tw-font-medium tw-text-gray-700" id="fact-most-trails-name">—</p>
                     <p class="tw-mt-4 tw-text-xl tw-leading-relaxed tw-text-gray-600" id="fact-most-trails-desc">—</p>
+                    <div class="fact-links" id="fact-most-trails-links"></div>
                 </div>
                 <div class="tw-flex">
                     <div id="map-most-trails" class="fact-map placeholder loading tw-flex-shrink-0"><div class="loading-spinner"></div><span>Loading…</span></div>
@@ -278,12 +295,14 @@
         <script type="module">
             import { createMapLibre } from './scripts/map-core.js';
             import { addSkiPmtilesToMap, fetchSkiAreaCatalog } from './scripts/pmtiles-core.js';
+            import { fetchPlayableCatalog, playableHrefForResort } from './scripts/playable-match.js';
             console.log('[SkiResortFacts] Module started');
             (async function () {
                 const NAME_KEYS = ['name', 'resort_name', 'title', 'area_name', 'Name'];
                 const ENGLISH_NAME_KEYS = ['english_name', 'englishName'];
                 const ID_KEYS = ['id', 'ref', 'area_id', 'resort_id', 'skiresort_id'];
                 const COUNTRY_KEYS = ['country', 'Country', 'country_name', 'addr:country'];
+                const STATE_KEYS = ['state', 'State', 'addr:state', 'addr:province'];
                 const AREA_KEYS = ['total_area_acres', 'Total Area Acres', 'area_acres', 'skiable_terrain_acres', 'skiable_area_acres'];
                 const TRAILS_KEYS = ['downhill_trails', 'number_of_downhill_trails', 'Downhill Trails', 'trails'];
                 const RESORT_TYPE_KEYS = ['resort_type', 'Resort Type'];
@@ -396,6 +415,11 @@
                 try {
                     console.log('[SkiResortFacts] Loading resort catalog…');
                     const catalog = await fetchSkiAreaCatalog();
+                    const loadLabel = document.getElementById('resort-load-label');
+                    const loadBar = document.getElementById('resort-load-bar');
+                    if (loadLabel) loadLabel.textContent = catalog.length.toLocaleString() + ' resorts loaded';
+                    if (loadBar) loadBar.style.width = '100%';
+                    const playableResorts = await fetchPlayableCatalog().catch(() => []);
                     const analyzedRows = catalog.map((f) => ({ ...(f.properties || {}), geometry: f.geometry }));
                     const dataAnalyzed = analyzedRows;
                     let outlineFeatures = [];
@@ -415,8 +439,26 @@
                         return enStr || localStr || 'Unknown';
                     };
                     const getCountry = (r) => getProp(r, COUNTRY_KEYS) || 'Unknown';
+                    const getState = (r) => {
+                        const v = getProp(r, STATE_KEYS);
+                        return v != null && String(v).trim() ? String(v).trim() : '';
+                    };
+                    function resortLinks(row) {
+                        const lat = getLat(row);
+                        const lon = getLon(row);
+                        if (lat == null || lon == null) return '';
+                        const resort = getName(row).replace(/\s+\([^)]*\)$/, '');
+                        const map = 'mainmap.html?' + new URLSearchParams({ lat: String(lat), lng: String(lon), z: '14' }).toString();
+                        const ski = playableHrefForResort({ name: resort }, { lat, lon, name: resort }, playableResorts);
+                        return `<a class="page-btn" href="${map}">Map</a>` + (ski ? `<a class="page-btn" href="${ski}">Ski</a>` : '');
+                    }
+                    function setLinks(id, row) {
+                        const el = document.getElementById(id);
+                        if (el) el.innerHTML = row ? resortLinks(row) : '';
+                    }
 
                     const countrySelect = document.getElementById('country-filter');
+                    const stateSelect = document.getElementById('state-filter');
                     const byCountryAll = {};
                     downhillAll.forEach((r) => { const c = getCountry(r); byCountryAll[c] = (byCountryAll[c] || 0) + 1; });
                     const countryNames = Object.keys(byCountryAll).sort();
@@ -429,6 +471,26 @@
                     countrySelect.disabled = false;
                     countrySelect.classList.remove('tw-bg-gray-100', 'tw-text-gray-500');
                     countrySelect.classList.add('tw-bg-white', 'tw-text-gray-900');
+                    function fillStates(countryVal) {
+                        const prev = stateSelect.value;
+                        const states = new Set();
+                        downhillAll.forEach((r) => {
+                            if (countryVal && getCountry(r) !== countryVal) return;
+                            const s = getState(r);
+                            if (s) states.add(s);
+                        });
+                        stateSelect.innerHTML = '<option value="">All states / provinces</option>';
+                        [...states].sort().forEach((s) => {
+                            const opt = document.createElement('option');
+                            opt.value = s; opt.textContent = s;
+                            stateSelect.appendChild(opt);
+                        });
+                        stateSelect.value = states.has(prev) ? prev : '';
+                        stateSelect.disabled = false;
+                        stateSelect.classList.remove('tw-bg-gray-100', 'tw-text-gray-500');
+                        stateSelect.classList.add('tw-bg-white', 'tw-text-gray-900');
+                    }
+                    fillStates('');
 
                     let downhill = downhillAll;
                     let byCountry = { ...byCountryAll };
@@ -495,6 +557,7 @@
                                 if (factMapInstances[id]) { factMapInstances[id].remove(); factMapInstances[id] = null; }
                                 const el = document.getElementById(id);
                                 if (el) { el.innerHTML = ''; el.classList.add('placeholder'); el.textContent = '—'; }
+                                setLinks(id.replace('map-', 'fact-') + '-links', null);
                             });
                             return;
                         }
@@ -527,6 +590,12 @@
                         setFact('fact-southern-name', 'fact-southern-desc', getName(southern), minLat.toFixed(1) + '\u00B0 latitude. ' + getCountry(southern) + '.');
                         setFact('fact-equator-name', 'fact-equator-desc', getName(equator), Math.abs(getLat(equator)).toFixed(1) + '\u00B0 from the equator. ' + getCountry(equator) + '.');
                         setFact('fact-most-trails-name', 'fact-most-trails-desc', getName(mostTrails), maxTrails.toLocaleString() + ' trails. ' + getCountry(mostTrails) + '.');
+                        setLinks('fact-largest-links', largest);
+                        setLinks('fact-smallest-links', smallest);
+                        setLinks('fact-northern-links', northern);
+                        setLinks('fact-southern-links', southern);
+                        setLinks('fact-equator-links', equator);
+                        setLinks('fact-most-trails-links', mostTrails);
                         setFact(null, 'fact-country-desc', null, topCountry + ' leads with ' + topCount.toLocaleString() + ' downhill ski resorts.');
                         scatterData = downhill.map((r) => ({
                             trails: numVal(r, TRAILS_KEYS),
@@ -578,8 +647,9 @@
                             noControl: true
                         });
                         await addSkiPmtilesToMap(m, { pistesWidth: 3 });
+                        new maptilersdk.Marker({ color: '#0d9488' }).setLngLat([lon, lat]).addTo(m);
                         factMapInstances[containerId] = m;
-                        m.flyTo({ center: [lon, lat], zoom: 13, duration: 600 });
+                        m.jumpTo({ center: [lon, lat], zoom: 13 });
                     }
 
                     const COUNTRY_ALIAS = {
@@ -810,16 +880,25 @@
                     console.log('[SkiResortFacts] Initial applyFacts(downhillAll) done');
 
                     countrySelect.addEventListener('change', () => {
-                        const val = countrySelect.value;
-                        countrySelect.disabled = true;
-                        const summaryEl = document.getElementById('facts-summary');
-                        const prevSummary = summaryEl ? summaryEl.innerHTML : '';
-                        if (summaryEl) summaryEl.innerHTML = '<div class="tw-flex tw-flex-col tw-place-items-center tw-gap-3 tw-text-gray-600"><div class="loading-spinner"></div><span>Updating…</span></div>';
-                        requestAnimationFrame(() => {
-                            const filtered = val ? downhillAll.filter((r) => getCountry(r) === val) : downhillAll;
-                            applyFacts(filtered);
-                            countrySelect.disabled = false;
+                        fillStates(countrySelect.value);
+                        const countryVal = countrySelect.value;
+                        const stateVal = stateSelect.value;
+                        const filtered = downhillAll.filter((r) => {
+                            if (countryVal && getCountry(r) !== countryVal) return false;
+                            if (stateVal && getState(r) !== stateVal) return false;
+                            return true;
                         });
+                        applyFacts(filtered);
+                    });
+                    stateSelect.addEventListener('change', () => {
+                        const countryVal = countrySelect.value;
+                        const stateVal = stateSelect.value;
+                        const filtered = downhillAll.filter((r) => {
+                            if (countryVal && getCountry(r) !== countryVal) return false;
+                            if (stateVal && getState(r) !== stateVal) return false;
+                            return true;
+                        });
+                        applyFacts(filtered);
                     });
                 } catch (e) {
                     console.error('[SkiResortFacts] Load error', e);

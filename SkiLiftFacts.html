@@ -78,7 +78,9 @@
             .sort-icon { margin-left: 4px; font-style: normal; opacity: 0.4; }
             .sort-icon.active { opacity: 1; color: #0d9488; }
             .table-pagination { display: flex; align-items: center; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
-            .page-btn { padding: 5px 12px; border-radius: 8px; border: 1px solid #e5e7eb; background: #fff; cursor: pointer; font-size: 13px; color: #374151; }
+            .page-btn { padding: 5px 12px; border-radius: 8px; border: 1px solid #e5e7eb; background: #fff; cursor: pointer; font-size: 13px; color: #374151; text-decoration: none; display: inline-block; }
+            .trail-actions { white-space: nowrap; }
+            .trail-actions .page-btn + .page-btn { margin-left: 6px; }
             .page-btn:hover { background: #f1f5f9; }
             .page-btn.active { background: #0d9488; color: #fff; border-color: #0d9488; }
             .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
@@ -151,15 +153,29 @@
                         <option value="">All types</option>
                     </select>
                 </div>
+                <div class="tw-flex tw-place-items-center tw-gap-3">
+                    <label for="state-filter" class="tw-text-gray-700 tw-font-medium">State / province:</label>
+                    <select id="state-filter" disabled class="tw-rounded-lg tw-border tw-border-gray-300 tw-bg-gray-100 tw-px-4 tw-py-2 tw-text-base tw-text-gray-500 focus:tw-outline-none focus:tw-ring-2 focus:tw-ring-teal-500 disabled:tw-cursor-not-allowed disabled:tw-opacity-60">
+                        <option value="">All states / provinces</option>
+                    </select>
+                </div>
+            </div>
+            <div class="tw-mt-4">
+                <label class="tw-flex tw-place-items-center tw-gap-2 tw-cursor-pointer tw-select-none">
+                    <input type="checkbox" id="named-only" class="tw-w-4 tw-h-4 tw-accent-teal-600 tw-cursor-pointer" />
+                    <span class="tw-text-gray-700 tw-font-medium">Only show named lifts</span>
+                </label>
             </div>
         </section>
 
         <!-- Summary -->
         <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-place-content-center tw-place-items-center tw-overflow-hidden tw-p-6">
             <div class="reveal-up tw-flex tw-min-h-[140px] tw-w-full tw-max-w-[80%] tw-place-items-center tw-justify-around tw-gap-8 tw-rounded-xl tw-bg-[#e7e6e685] tw-p-4 max-lg:tw-max-w-full max-md:tw-flex-col" id="facts-summary">
-                <div class="tw-flex tw-flex-col tw-place-items-center tw-gap-3 tw-text-gray-600">
-                    <div class="loading-spinner"></div>
-                    <span>Loading lift facts…</span>
+                <div class="tw-flex tw-w-full tw-max-w-md tw-flex-col tw-items-center tw-gap-3 tw-text-gray-600">
+                    <div class="tw-h-2 tw-w-full tw-overflow-hidden tw-rounded-full tw-bg-gray-200" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="lift-load-progress">
+                        <div id="lift-load-bar" class="tw-h-full tw-rounded-full tw-bg-teal-600" style="width:0%"></div>
+                    </div>
+                    <span id="lift-load-label">0 lifts loaded</span>
                 </div>
             </div>
         </section>
@@ -285,7 +301,8 @@
         </script>
         <script type="module">
             import { createMapLibre } from './scripts/map-core.js';
-            import { addSkiPmtilesToMap, createSkiPmtilesMap, loadPmtilesLayerFeatures } from './scripts/pmtiles-core.js';
+            import { addSkiPmtilesToMap, loadLiftFactRows, loadLiftGeometry } from './scripts/pmtiles-core.js';
+            import { fetchPlayableCatalog, playableHrefForResort } from './scripts/playable-match.js';
             (async function () {
 
                 const NAME_KEYS      = ['name', 'Name', 'lift_name'];
@@ -444,7 +461,8 @@
                 async function initLiftMap(containerId, row) {
                     const el = document.getElementById(containerId);
                     if (!el || typeof maptilersdk === 'undefined') return;
-                    const geom = row.geometry;
+                    const geom = row.geometry || await loadLiftGeometry(row.z, row.x, row.y, row.key);
+                    row.geometry = geom;
                     if (!geom) return;
                     const centroid = liftCentroid(geom);
                     if (!centroid) return;
@@ -454,6 +472,7 @@
                     }
                     el.classList.remove('placeholder', 'loading');
                     el.innerHTML = '';
+                    const color = liftColor(row.aerialway);
                     const { map: m } = await createMapLibre({
                         containerId,
                         center: [centroid[0], centroid[1]],
@@ -461,8 +480,19 @@
                         noControl: true
                     });
                     await addSkiPmtilesToMap(m, { pistesWidth: 3 });
+                    m.addSource('fact-lift', { type: 'geojson', data: { type: 'Feature', properties: {}, geometry: geom } });
+                    m.addLayer({ id: 'fact-lift-casing', type: 'line', source: 'fact-lift', paint: { 'line-color': '#ffffff', 'line-width': 9 } });
+                    m.addLayer({ id: 'fact-lift-line', type: 'line', source: 'fact-lift', paint: { 'line-color': color, 'line-width': 5 } });
+                    const coords = allCoords(geom);
+                    let minLng = Infinity, minLat = Infinity, maxLng = -Infinity, maxLat = -Infinity;
+                    for (const [lng, lat] of coords) {
+                        if (lng < minLng) minLng = lng;
+                        if (lng > maxLng) maxLng = lng;
+                        if (lat < minLat) minLat = lat;
+                        if (lat > maxLat) maxLat = lat;
+                    }
                     factMapInstances[containerId] = m;
-                    m.flyTo({ center: [centroid[0], centroid[1]], zoom: 14, duration: 500 });
+                    if (minLng !== Infinity) m.fitBounds([[minLng, minLat], [maxLng, maxLat]], { padding: 28, maxZoom: 16, duration: 0 });
                 }
 
                 function setFact(nameId, descId, name, desc) {
@@ -479,6 +509,7 @@
                 // Table state
                 let namedRows = [];
                 let filteredNamed = [];
+                let playableResorts = [];
                 let sortCol = 'length';
                 let sortDir = -1;
                 let currentPage = 1;
@@ -512,16 +543,26 @@
                         const icon = isActive ? (sortDir === -1 ? '&#9660;' : '&#9650;') : '&#8597;';
                         thead += `<th data-col="${col.key}">${col.label} <em class="sort-icon ${isActive ? 'active' : ''}">${icon}</em></th>`;
                     });
-                    thead += '</tr></thead>';
+                    thead += '<th></th></tr></thead>';
+
+                    function skiHref(r) {
+                        const resort = r.resort && r.resort !== '—' ? r.resort.replace(/\s+\([^)]*\)$/, '') : '';
+                        return playableHrefForResort({ name: resort }, { lat: r.lat, lon: r.lng, name: resort }, playableResorts);
+                    }
+                    function mapHref(r) {
+                        return 'mainmap.html?' + new URLSearchParams({ lat: String(r.lat), lng: String(r.lng), z: '16' }).toString();
+                    }
 
                     let tbody = '<tbody>';
                     pageRows.forEach((r) => {
+                        const ski = skiHref(r);
                         tbody += `<tr>
                             <td class="tw-font-medium">${escHtml(r.name)}</td>
                             <td><span class="type-badge ${typeCssClass(r.rawType)}">${escHtml(r.type)}</span></td>
                             <td>${escHtml(r.resort)}</td>
                             <td>${escHtml(r.country)}</td>
                             <td class="tw-font-mono tw-text-sm">${formatKm(r.length)}</td>
+                            <td class="trail-actions"><a class="page-btn" href="${escHtml(mapHref(r))}">Map</a>${ski ? `<a class="page-btn" href="${escHtml(ski)}">Ski</a>` : ''}</td>
                         </tr>`;
                     });
                     tbody += '</tbody>';
@@ -585,46 +626,71 @@
 
                 // Load lift features from PMTiles overview layer
                 try {
-                    const liftFeats = await loadPmtilesLayerFeatures('lifts', 10);
-                    const data = liftFeats.map((f) => ({ ...f.properties, geometry: f.geometry }));
+                    const loadBar = document.getElementById('lift-load-bar');
+                    const loadLabel = document.getElementById('lift-load-label');
+                    const loadProgress = document.getElementById('lift-load-progress');
+                    let loadPaint = 0;
+                    const [withLength, playableList] = await Promise.all([
+                        loadLiftFactRows(10, (p) => {
+                            if (loadPaint) return;
+                            loadPaint = requestAnimationFrame(() => {
+                                loadPaint = 0;
+                                const pct = p.tilesTotal ? Math.round((100 * p.tilesDone) / p.tilesTotal) : 0;
+                                if (loadBar) loadBar.style.width = pct + '%';
+                                if (loadProgress) loadProgress.setAttribute('aria-valuenow', String(pct));
+                                if (loadLabel) loadLabel.textContent = p.trails.toLocaleString() + ' lifts loaded';
+                            });
+                        }),
+                        fetchPlayableCatalog().catch(() => [])
+                    ]);
+                    playableResorts = playableList;
 
-                    const lifts = data.filter((r) => r.geometry && (r.geometry.type === 'LineString' || r.geometry.type === 'MultiLineString'));
-                    const EXCLUDED_TYPES = new Set(['zip_line', 'goods']);
-                    const withLength = lifts
-                        .filter((r) => !EXCLUDED_TYPES.has(getAerialway(r)))
-                        .map((r) => ({ row: r, length: liftLength(r.geometry) }))
-                        .filter((x) => x.length > 0.005);
-
+                    const namedOnlyCb = document.getElementById('named-only');
                     const countrySet = new Set();
                     const typeSet = new Set();
-                    withLength.forEach(({ row }) => {
-                        const c = getCountry(row);
-                        if (c && c !== '—') countrySet.add(c);
-                        const t = getAerialway(row);
-                        if (t) typeSet.add(t);
+                    withLength.forEach((row) => {
+                        if (row.country && row.country !== '—') countrySet.add(row.country);
+                        if (row.aerialway) typeSet.add(row.aerialway);
                     });
 
                     const countrySelect = document.getElementById('country-filter');
+                    const stateSelect = document.getElementById('state-filter');
                     const typeSelect = document.getElementById('type-filter');
                     [...countrySet].sort().forEach((c) => {
                         const opt = document.createElement('option');
                         opt.value = c; opt.textContent = c;
                         countrySelect.appendChild(opt);
                     });
-                    // Sort types by count descending so most common appear first
                     const typeCounts = {};
-                    withLength.forEach(({ row }) => { const t = getAerialway(row); if (t) typeCounts[t] = (typeCounts[t] || 0) + 1; });
+                    withLength.forEach((row) => { if (row.aerialway) typeCounts[row.aerialway] = (typeCounts[row.aerialway] || 0) + 1; });
                     [...typeSet].sort((a, b) => (typeCounts[b] || 0) - (typeCounts[a] || 0)).forEach((t) => {
                         const opt = document.createElement('option');
                         opt.value = t; opt.textContent = typeLabel(t) + ' (' + (typeCounts[t] || 0).toLocaleString() + ')';
                         typeSelect.appendChild(opt);
                     });
 
-                    [countrySelect, typeSelect].forEach((sel) => {
+                    function enableSelect(sel) {
                         sel.disabled = false;
                         sel.classList.remove('tw-bg-gray-100', 'tw-text-gray-500');
                         sel.classList.add('tw-bg-white', 'tw-text-gray-900');
-                    });
+                    }
+                    function fillStates(countryVal) {
+                        const prev = stateSelect.value;
+                        const states = new Set();
+                        for (const row of withLength) {
+                            if (countryVal && row.country !== countryVal) continue;
+                            if (row.state && row.state !== '—') states.add(row.state);
+                        }
+                        stateSelect.innerHTML = '<option value="">All states / provinces</option>';
+                        [...states].sort().forEach((s) => {
+                            const opt = document.createElement('option');
+                            opt.value = s; opt.textContent = s;
+                            stateSelect.appendChild(opt);
+                        });
+                        stateSelect.value = states.has(prev) ? prev : '';
+                    }
+                    fillStates('');
+                    [countrySelect, stateSelect, typeSelect].forEach(enableSelect);
 
                     function applyFacts(set) {
                         if (!set.length) {
@@ -639,26 +705,22 @@
                         let longest = set[0], shortest = set[0];
                         let maxLen = set[0].length, minLen = set[0].length;
                         let northern = set[0], southern = set[0];
-                        let maxLat = liftMaxLat(set[0].row.geometry);
-                        let minLat = liftMinLat(set[0].row.geometry);
+                        let maxLat = set[0].maxLat;
+                        let minLat = set[0].minLat;
 
-                        set.forEach(({ row, length }) => {
-                            if (length > maxLen) { maxLen = length; longest = { row, length }; }
-                            if (length < minLen) { minLen = length; shortest = { row, length }; }
-                            const mx = liftMaxLat(row.geometry);
-                            const mn = liftMinLat(row.geometry);
-                            if (mx > maxLat) { maxLat = mx; northern = { row, length }; }
-                            if (mn < minLat) { minLat = mn; southern = { row, length }; }
+                        set.forEach((item) => {
+                            if (item.length > maxLen) { maxLen = item.length; longest = item; }
+                            if (item.length < minLen) { minLen = item.length; shortest = item; }
+                            if (item.maxLat > maxLat) { maxLat = item.maxLat; northern = item; }
+                            if (item.minLat < minLat) { minLat = item.minLat; southern = item; }
                         });
 
                         const totalCount = set.length;
-                        const namedCount = set.filter(({ row }) => getLiftName(row) !== null).length;
-                        const countriesCount = new Set(set.map(({ row }) => getCountry(row)).filter((c) => c !== '—')).size;
+                        const namedCount = set.filter((row) => row.name).length;
+                        const countriesCount = new Set(set.map((row) => row.country).filter((c) => c !== '—')).size;
                         const avgLen = set.reduce((s, x) => s + x.length, 0) / set.length;
-
-                        // Most common lift type
                         const tc = {};
-                        set.forEach(({ row }) => { const t = getAerialway(row); if (t) tc[t] = (tc[t] || 0) + 1; });
+                        set.forEach((row) => { if (row.aerialway) tc[row.aerialway] = (tc[row.aerialway] || 0) + 1; });
                         const topType = Object.entries(tc).sort((a, b) => b[1] - a[1])[0];
 
                         document.getElementById('facts-summary').innerHTML =
@@ -669,41 +731,34 @@
                             (topType ? `<div class="tw-flex tw-max-w-[200px] tw-flex-col tw-place-items-center tw-gap-2 tw-text-center"><span class="tw-text-xl tw-font-bold" style="color:#0d9488">${typeLabel(topType[0])}</span><span class="tw-text-gray-700">most common type (${topType[1].toLocaleString()})</span></div>` : '');
 
                         function descLine(item, lat) {
-                            const n = getLiftName(item.row) || '(unnamed)';
-                            const t = getAerialway(item.row);
-                            const resort = getResortName(item.row);
-                            const country = getCountry(item.row);
                             return [
                                 formatKm(item.length),
-                                t ? typeLabel(t) : null,
-                                resort !== '—' ? resort : null,
-                                country !== '—' ? country : null,
+                                item.aerialway ? typeLabel(item.aerialway) : null,
+                                item.resort !== '—' ? item.resort : null,
+                                item.country !== '—' ? item.country : null,
                                 lat != null ? lat.toFixed(4) + '\u00B0' : null,
                             ].filter(Boolean).join(' · ');
                         }
 
-                        setFact('fact-longest-name', 'fact-longest-desc', getLiftName(longest.row) || '(unnamed)', descLine(longest));
-                        initLiftMap('map-longest', longest.row);
+                        setFact('fact-longest-name', 'fact-longest-desc', longest.name || '(unnamed)', descLine(longest));
+                        initLiftMap('map-longest', longest);
+                        setFact('fact-shortest-name', 'fact-shortest-desc', shortest.name || '(unnamed)', descLine(shortest));
+                        initLiftMap('map-shortest', shortest);
+                        setFact('fact-northern-name', 'fact-northern-desc', northern.name || '(unnamed)', descLine(northern, maxLat) + ' N');
+                        initLiftMap('map-northern', northern);
+                        setFact('fact-southern-name', 'fact-southern-desc', southern.name || '(unnamed)', descLine(southern, minLat));
+                        initLiftMap('map-southern', southern);
 
-                        setFact('fact-shortest-name', 'fact-shortest-desc', getLiftName(shortest.row) || '(unnamed)', descLine(shortest));
-                        initLiftMap('map-shortest', shortest.row);
-
-                        setFact('fact-northern-name', 'fact-northern-desc', getLiftName(northern.row) || '(unnamed)', descLine(northern, maxLat) + ' N');
-                        initLiftMap('map-northern', northern.row);
-
-                        setFact('fact-southern-name', 'fact-southern-desc', getLiftName(southern.row) || '(unnamed)', descLine(southern, minLat));
-                        initLiftMap('map-southern', southern.row);
-
-                        namedRows = set
-                            .filter(({ row }) => getLiftName(row) !== null)
-                            .map(({ row, length }) => ({
-                                name:    getLiftName(row),
-                                type:    typeLabel(getAerialway(row)),
-                                rawType: getAerialway(row),
-                                resort:  getResortName(row),
-                                country: getCountry(row),
-                                length,
-                            }));
+                        namedRows = set.filter((row) => row.name).map((row) => ({
+                            name: row.name,
+                            type: typeLabel(row.aerialway),
+                            rawType: row.aerialway,
+                            resort: row.resort,
+                            country: row.country,
+                            length: row.length,
+                            lat: row.lat,
+                            lng: row.lng
+                        }));
                         filteredNamed = [...namedRows];
                         sortNamed(); currentPage = 1; renderTable();
                     }
@@ -712,18 +767,24 @@
 
                     function refilter() {
                         const countryVal = countrySelect.value;
+                        const stateVal = stateSelect.value;
                         const typeVal = typeSelect.value;
-                        const filtered = withLength.filter(({ row }) => {
-                            if (countryVal && getCountry(row) !== countryVal) return false;
-                            if (typeVal && getAerialway(row) !== typeVal) return false;
+                        const namedOnly = namedOnlyCb.checked;
+                        const filtered = withLength.filter((row) => {
+                            if (namedOnly && !row.name) return false;
+                            if (countryVal && row.country !== countryVal) return false;
+                            if (stateVal && row.state !== stateVal) return false;
+                            if (typeVal && row.aerialway !== typeVal) return false;
                             return true;
                         });
                         applyFacts(filtered);
                         applyNamedFilter(document.getElementById('lift-search').value, countryVal, typeVal);
                     }
 
-                    countrySelect.addEventListener('change', refilter);
+                    countrySelect.addEventListener('change', () => { fillStates(countrySelect.value); refilter(); });
+                    stateSelect.addEventListener('change', refilter);
                     typeSelect.addEventListener('change', refilter);
+                    namedOnlyCb.addEventListener('change', refilter);
                     document.getElementById('lift-search').addEventListener('input', (e) => {
                         applyNamedFilter(e.target.value, countrySelect.value, typeSelect.value);
                     });

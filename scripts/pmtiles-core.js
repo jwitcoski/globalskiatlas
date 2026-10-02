@@ -1044,6 +1044,14 @@ async function mapPool(items, limit, fn) {
  * @returns {Promise<Array<{key:string,name:?string,resort:string,country:string,rawDiff:string,pisteType:string,length:number,maxLat:number,minLat:number,z:number,x:number,y:number}>>}
  */
 export async function loadPisteFactRows(zoom = 10, onProgress) {
+  return loadLayerFactRows('pistes', zoom, onProgress);
+}
+
+export async function loadLiftFactRows(zoom = 10, onProgress) {
+  return loadLayerFactRows('lifts', zoom, onProgress);
+}
+
+async function loadLayerFactRows(layer, zoom = 10, onProgress) {
   if (!overviewPm) {
     const { PMTiles } = await loadPmtilesLib();
     overviewPm = new PMTiles(config.PMTILES_OVERVIEW_URL);
@@ -1099,7 +1107,7 @@ export async function loadPisteFactRows(zoom = 10, onProgress) {
             };
             worker.addEventListener('message', onMsg);
             worker.addEventListener('error', onErr);
-            worker.postMessage({ id, z, x, y, buffer }, [buffer]);
+            worker.postMessage({ id, z, x, y, buffer, layer }, [buffer]);
           }));
           chain = job.then(() => {}, () => {});
           return job;
@@ -1112,7 +1120,8 @@ export async function loadPisteFactRows(zoom = 10, onProgress) {
   }
 
   if (!workers.length) {
-    const { decodePisteTile } = await import('./piste-facts-worker.js');
+    const mod = await import('./piste-facts-worker.js');
+    const decode = layer === 'lifts' ? mod.decodeLiftTile : mod.decodePisteTile;
     const { VectorTile, Pbf } = await getMvtLibs();
     await mapPool(tiles, 12, async (key) => {
       const [x, y] = key.split(',').map(Number);
@@ -1121,7 +1130,7 @@ export async function loadPisteFactRows(zoom = 10, onProgress) {
         finishTile();
         return;
       }
-      finishTile(decodePisteTile(resp.data, zoom, x, y, VectorTile, Pbf));
+      finishTile(decode(resp.data, zoom, x, y, VectorTile, Pbf));
     });
     return [...seen.values()];
   }
@@ -1165,18 +1174,26 @@ export async function loadPisteFactRows(zoom = 10, onProgress) {
   } finally {
     for (const slot of workers) slot.worker.terminate();
   }
-  pmtilesLog('loadPisteFactRows', { zoom, tiles: tiles.length, rows: seen.size });
+  pmtilesLog('loadLayerFactRows', { layer, zoom, tiles: tiles.length, rows: seen.size });
   return [...seen.values()];
 }
 
 /** Geometry for one fact-row map, after the slim scan. */
 export async function loadPisteGeometry(z, x, y, key) {
+  return loadFactGeometry('pistes', z, x, y, key);
+}
+
+export async function loadLiftGeometry(z, x, y, key) {
+  return loadFactGeometry('lifts', z, x, y, key);
+}
+
+async function loadFactGeometry(layer, z, x, y, key) {
   if (!overviewPm) {
     const { PMTiles } = await loadPmtilesLib();
     overviewPm = new PMTiles(config.PMTILES_OVERVIEW_URL);
   }
   const { pisteFeatureKey } = await import('./piste-facts-worker.js');
-  const batch = await fetchLayerGeoFeatures(overviewPm, 'pistes', z, x, y);
+  const batch = await fetchLayerGeoFeatures(overviewPm, layer, z, x, y);
   for (const f of batch) {
     if (pisteFeatureKey(f.properties, f.geometry) === key) return f.geometry;
   }
