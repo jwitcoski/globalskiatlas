@@ -1025,6 +1025,164 @@ export async function queryPmtilesLayerGrid(map, sourceLayer, zoom = 10) {
   return [...seen.values()];
 }
 
+/** Run async work over items with a fixed number of in-flight calls. */
+async function mapPool(items, limit, fn) {
+  const list = [...items];
+  let next = 0;
+  const workers = Array.from({ length: Math.min(limit, list.length) }, async () => {
+    while (next < list.length) {
+      const idx = next++;
+      await fn(list[idx]);
+    }
+  });
+  await Promise.all(workers);
+}
+
+/**
+ * Slim piste rows for the facts page. Tile bytes are decoded on worker threads
+ * so the main thread is not stuck turning every trail into GeoJSON.
+ * @returns {Promise<Array<{key:string,name:?string,resort:string,country:string,rawDiff:string,pisteType:string,length:number,maxLat:number,minLat:number,z:number,x:number,y:number}>>}
+ */
+export async function loadPisteFactRows(zoom = 10, onProgress) {
+  if (!overviewPm) {
+    const { PMTiles } = await loadPmtilesLib();
+    overviewPm = new PMTiles(config.PMTILES_OVERVIEW_URL);
+  }
+  const catalog = await fetchSkiAreaCatalog();
+  const tileKeys = new Set();
+  for (const f of catalog) {
+    const coords = f.geometry?.coordinates;
+    if (!coords || coords.length < 2) continue;
+    const [lon, lat] = coords;
+    const [x, y] = lngLatToTileXY(lon, lat, zoom);
+    tileKeys.add(`${x},${y}`);
+  }
+  const tiles = [...tileKeys];
+  const seen = new Map();
+  let tilesDone = 0;
+  const report = () => {
+    if (onProgress) onProgress({ trails: seen.size, tilesDone, tilesTotal: tiles.length });
+  };
+  const finishTile = (rows) => {
+    if (rows) {
+      for (const row of rows) {
+        if (!seen.has(row.key)) seen.set(row.key, row);
+      }
+    }
+    tilesDone++;
+    report();
+  };
+  report();
+
+  const cores = Math.min(4, navigator.hardwareConcurrency || 2);
+  let workers = [];
+  try {
+    let jobId = 0;
+    workers = Array.from({ length: cores }, () => {
+      const worker = new Worker(new URL('./piste-facts-worker.js', import.meta.url), { type: 'module' });
+      let chain = Promise.resolve();
+      return {
+        worker,
+        run(z, x, y, buffer) {
+          const id = ++jobId;
+          const job = chain.then(() => new Promise((resolve, reject) => {
+            const onMsg = (event) => {
+              if (event.data?.id !== id) return;
+              cleanup();
+              if (event.data.error) reject(new Error(event.data.error));
+              else resolve(event.data.rows || []);
+            };
+            const onErr = (err) => { cleanup(); reject(err); };
+            const cleanup = () => {
+              worker.removeEventListener('message', onMsg);
+              worker.removeEventListener('error', onErr);
+            };
+            worker.addEventListener('message', onMsg);
+            worker.addEventListener('error', onErr);
+            worker.postMessage({ id, z, x, y, buffer }, [buffer]);
+          }));
+          chain = job.then(() => {}, () => {});
+          return job;
+        }
+      };
+    });
+  } catch (err) {
+    workers = [];
+    pmtilesWarn('piste fact workers unavailable', err?.message || err);
+  }
+
+  if (!workers.length) {
+    const { decodePisteTile } = await import('./piste-facts-worker.js');
+    const { VectorTile, Pbf } = await getMvtLibs();
+    await mapPool(tiles, 12, async (key) => {
+      const [x, y] = key.split(',').map(Number);
+      const resp = await overviewPm.getZxy(zoom, x, y);
+      if (!resp?.data?.byteLength) {
+        finishTile();
+        return;
+      }
+      finishTile(decodePisteTile(resp.data, zoom, x, y, VectorTile, Pbf));
+    });
+    return [...seen.values()];
+  }
+
+  const jobs = [];
+  const waiters = [];
+  let fetching = true;
+  const pushJob = (job) => {
+    const waiter = waiters.shift();
+    if (waiter) waiter(job);
+    else jobs.push(job);
+  };
+  const pullJob = () => {
+    if (jobs.length) return Promise.resolve(jobs.shift());
+    if (!fetching) return Promise.resolve(null);
+    return new Promise((resolve) => waiters.push(resolve));
+  };
+
+  const decodeDone = Promise.all(workers.map(async (slot) => {
+    for (;;) {
+      const job = await pullJob();
+      if (!job) return;
+      finishTile(await slot.run(job.z, job.x, job.y, job.buffer));
+    }
+  }));
+
+  try {
+    await mapPool(tiles, 16, async (key) => {
+      const [x, y] = key.split(',').map(Number);
+      const resp = await overviewPm.getZxy(zoom, x, y);
+      if (!resp?.data?.byteLength) {
+        finishTile();
+        return;
+      }
+      const bytes = new Uint8Array(resp.data);
+      pushJob({ z: zoom, x, y, buffer: bytes.buffer });
+    });
+    fetching = false;
+    while (waiters.length) waiters.shift()(null);
+    await decodeDone;
+  } finally {
+    for (const slot of workers) slot.worker.terminate();
+  }
+  pmtilesLog('loadPisteFactRows', { zoom, tiles: tiles.length, rows: seen.size });
+  return [...seen.values()];
+}
+
+/** Geometry for one fact-row map, after the slim scan. */
+export async function loadPisteGeometry(z, x, y, key) {
+  if (!overviewPm) {
+    const { PMTiles } = await loadPmtilesLib();
+    overviewPm = new PMTiles(config.PMTILES_OVERVIEW_URL);
+  }
+  const { pisteFeatureKey } = await import('./piste-facts-worker.js');
+  const batch = await fetchLayerGeoFeatures(overviewPm, 'pistes', z, x, y);
+  for (const f of batch) {
+    if (pisteFeatureKey(f.properties, f.geometry) === key) return f.geometry;
+  }
+  return null;
+}
+
 /** Load features by sampling z/x/y tiles at each resort centroid (sparse PMTiles archive). */
 async function loadPmtilesLayerFeaturesFromResorts(sourceLayer, zoom = 10) {
   if (!overviewPm) {
@@ -1041,14 +1199,15 @@ async function loadPmtilesLayerFeaturesFromResorts(sourceLayer, zoom = 10) {
     tileKeys.add(`${x},${y}`);
   }
   const seen = new Map();
-  for (const key of tileKeys) {
+  await getMvtLibs();
+  await mapPool(tileKeys, 12, async (key) => {
     const [x, y] = key.split(',').map(Number);
     const batch = await fetchLayerGeoFeatures(overviewPm, sourceLayer, zoom, x, y);
     for (const f of batch) {
       const dedupe = featureDedupeKey(f);
       if (!seen.has(dedupe)) seen.set(dedupe, f);
     }
-  }
+  });
   pmtilesLog('loadPmtilesLayerFeaturesFromResorts', { sourceLayer, zoom, features: seen.size, tiles: tileKeys.size });
   return [...seen.values()];
 }
@@ -1061,13 +1220,14 @@ export async function loadPmtilesLayerFeaturesDirect(sourceLayer, zoom = 10) {
   }
   const tiles = worldCoverageTiles(zoom);
   const seen = new Map();
-  for (const [x, y] of tiles) {
+  await getMvtLibs();
+  await mapPool(tiles, 12, async ([x, y]) => {
     const batch = await fetchLayerGeoFeatures(overviewPm, sourceLayer, zoom, x, y);
     for (const f of batch) {
       const key = featureDedupeKey(f);
       if (!seen.has(key)) seen.set(key, f);
     }
-  }
+  });
   if (seen.size === 0) {
     pmtilesLog('coarse grid found no features', { sourceLayer, zoom });
     return [];

@@ -73,7 +73,9 @@
             .sort-icon { margin-left: 4px; font-style: normal; opacity: 0.4; }
             .sort-icon.active { opacity: 1; color: #0d9488; }
             .table-pagination { display: flex; align-items: center; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
-            .page-btn { padding: 5px 12px; border-radius: 8px; border: 1px solid #e5e7eb; background: #fff; cursor: pointer; font-size: 13px; color: #374151; }
+            .page-btn { padding: 5px 12px; border-radius: 8px; border: 1px solid #e5e7eb; background: #fff; cursor: pointer; font-size: 13px; color: #374151; text-decoration: none; display: inline-block; }
+            .trail-actions { white-space: nowrap; }
+            .trail-actions .page-btn + .page-btn { margin-left: 6px; }
             .page-btn:hover { background: #f1f5f9; }
             .page-btn.active { background: #0d9488; color: #fff; border-color: #0d9488; }
             .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
@@ -141,6 +143,12 @@
                     </select>
                 </div>
                 <div class="tw-flex tw-place-items-center tw-gap-3">
+                    <label for="state-filter" class="tw-text-gray-700 tw-font-medium">State / province:</label>
+                    <select id="state-filter" disabled class="tw-rounded-lg tw-border tw-border-gray-300 tw-bg-gray-100 tw-px-4 tw-py-2 tw-text-base tw-text-gray-500 focus:tw-outline-none focus:tw-ring-2 focus:tw-ring-teal-500 disabled:tw-cursor-not-allowed disabled:tw-opacity-60">
+                        <option value="">All states / provinces</option>
+                    </select>
+                </div>
+                <div class="tw-flex tw-place-items-center tw-gap-3">
                     <label for="diff-filter" class="tw-text-gray-700 tw-font-medium">Difficulty:</label>
                     <select id="diff-filter" disabled class="tw-rounded-lg tw-border tw-border-gray-300 tw-bg-gray-100 tw-px-4 tw-py-2 tw-text-base tw-text-gray-500 focus:tw-outline-none focus:tw-ring-2 focus:tw-ring-teal-500 disabled:tw-cursor-not-allowed disabled:tw-opacity-60">
                         <option value="">All difficulties</option>
@@ -152,6 +160,10 @@
                     <input type="checkbox" id="exclude-untyped" class="tw-w-4 tw-h-4 tw-accent-teal-600 tw-cursor-pointer" />
                     <span class="tw-text-gray-700 tw-font-medium">Only show trails with an explicit <code class="tw-bg-gray-100 tw-rounded tw-px-1 tw-text-sm">piste:type=downhill</code> tag</span>
                 </label>
+                <label class="tw-flex tw-place-items-center tw-gap-2 tw-cursor-pointer tw-select-none">
+                    <input type="checkbox" id="named-only" class="tw-w-4 tw-h-4 tw-accent-teal-600 tw-cursor-pointer" />
+                    <span class="tw-text-gray-700 tw-font-medium">Only show named trails</span>
+                </label>
                 <p class="tw-text-sm tw-text-gray-500 tw-max-w-xl tw-text-center">
                     Many OSM trails omit the type tag entirely, which can let non-ski features (hiking paths, snowmobile routes) slip through. Enable this to restrict results to confirmed downhill pistes only.
                 </p>
@@ -161,9 +173,11 @@
         <!-- Summary -->
         <section class="tw-relative tw-flex tw-w-full tw-max-w-[100vw] tw-flex-col tw-place-content-center tw-place-items-center tw-overflow-hidden tw-p-6">
             <div class="reveal-up tw-flex tw-min-h-[140px] tw-w-full tw-max-w-[80%] tw-place-items-center tw-justify-around tw-gap-8 tw-rounded-xl tw-bg-[#e7e6e685] tw-p-4 max-lg:tw-max-w-full max-md:tw-flex-col" id="facts-summary">
-                <div class="tw-flex tw-flex-col tw-place-items-center tw-gap-3 tw-text-gray-600">
-                    <div class="loading-spinner"></div>
-                    <span>Loading trail facts…</span>
+                <div class="tw-flex tw-w-full tw-max-w-md tw-flex-col tw-items-center tw-gap-3 tw-text-gray-600">
+                    <div class="tw-h-2 tw-w-full tw-overflow-hidden tw-rounded-full tw-bg-gray-200" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="trail-load-progress">
+                        <div id="trail-load-bar" class="tw-h-full tw-rounded-full tw-bg-teal-600" style="width:0%"></div>
+                    </div>
+                    <span id="trail-load-label">0 trails loaded</span>
                 </div>
             </div>
         </section>
@@ -289,65 +303,10 @@
         </script>
         <script type="module">
             import { createMapLibre } from './scripts/map-core.js';
-            import { addSkiPmtilesToMap, createSkiPmtilesMap, loadPmtilesLayerFeatures } from './scripts/pmtiles-core.js';
+            import { addSkiPmtilesToMap, loadPisteFactRows, loadPisteGeometry } from './scripts/pmtiles-core.js';
+            import { fetchPlayableCatalog, playableHrefForResort } from './scripts/playable-match.js';
             (async function () {
 
-                const NAME_KEYS = ['name', 'Name', 'trail_name', 'piste_name'];
-                const RESORT_KEYS = ['Ski Area', 'ski_area', 'resort_name', 'area_name', 'resort', 'ski_area_name', 'skiarea_name'];
-                const RESORT_ENGLISH_NAME_KEYS = ['resort_english_name', 'ski_area_english_name', 'english_name', 'englishName'];
-                const COUNTRY_KEYS = ['Country', 'country', 'country_name', 'addr:country'];
-                const DIFF_KEYS = ['piste:difficulty', 'piste_difficulty', 'difficulty'];
-                const PISTE_TYPE_KEYS = ['piste:type', 'piste_type'];
-
-                function getProp(obj, keys) {
-                    if (!obj) return undefined;
-                    for (const k of keys) {
-                        if (Object.prototype.hasOwnProperty.call(obj, k)) return obj[k];
-                    }
-                    return undefined;
-                }
-
-                function getFromOtherTags(props, tagKey) {
-                    if (!props || typeof props.other_tags !== 'string') return null;
-                    const m = props.other_tags.match(new RegExp('"' + tagKey + '"=>"([^"]+)"'));
-                    return m ? m[1] : null;
-                }
-
-                function getTrailName(row) {
-                    const v = getProp(row, NAME_KEYS);
-                    if (v && String(v).trim()) return String(v).trim();
-                    return null;
-                }
-                function getResortName(row) {
-                    const local = getProp(row, RESORT_KEYS);
-                    const localStr = (local != null && String(local).trim() !== '') ? String(local).trim() : (getFromOtherTags(row, 'resort_name') || getFromOtherTags(row, 'area_name') || '');
-                    const en = getProp(row, RESORT_ENGLISH_NAME_KEYS);
-                    const enStr = (en != null && en !== '') ? String(en).trim() : '';
-                    if (enStr && localStr && enStr !== localStr) return enStr + ' (' + localStr + ')';
-                    return enStr || localStr || '—';
-                }
-                function getCountry(row) {
-                    const v = getProp(row, COUNTRY_KEYS);
-                    if (v && String(v).trim()) return String(v).trim();
-                    const ot = getFromOtherTags(row, 'country');
-                    if (ot) return ot;
-                    return '—';
-                }
-                function getDifficulty(row) {
-                    let v = getProp(row, DIFF_KEYS);
-                    if (!v) v = getFromOtherTags(row, 'piste:difficulty');
-                    return v ? String(v).toLowerCase().trim() : '';
-                }
-                function getPisteType(row) {
-                    let v = getProp(row, PISTE_TYPE_KEYS);
-                    if (!v) v = getFromOtherTags(row, 'piste:type');
-                    return v ? String(v).toLowerCase().trim() : '';
-                }
-                function isDownhillTrail(row, excludeUntyped) {
-                    const t = getPisteType(row);
-                    if (excludeUntyped) return t === 'downhill' || t === 'freeride';
-                    return t === '' || t === 'downhill' || t === 'freeride';
-                }
                 function diffLabel(d) {
                     if (!d) return 'Unknown';
                     return d.charAt(0).toUpperCase() + d.slice(1);
@@ -361,35 +320,12 @@
                     return 'diff-other';
                 }
 
-                // Haversine distance between two [lon, lat] points in km
-                function haversine(c1, c2) {
-                    const R = 6371;
-                    const dLat = (c2[1] - c1[1]) * Math.PI / 180;
-                    const dLon = (c2[0] - c1[0]) * Math.PI / 180;
-                    const a = Math.sin(dLat / 2) ** 2 +
-                        Math.cos(c1[1] * Math.PI / 180) * Math.cos(c2[1] * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
-                    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-                }
-
-                function lineLength(coords) {
-                    let total = 0;
-                    for (let i = 1; i < coords.length; i++) total += haversine(coords[i - 1], coords[i]);
-                    return total;
-                }
-
-                function trailLength(geom) {
-                    if (!geom || !geom.coordinates) return 0;
-                    if (geom.type === 'LineString') return lineLength(geom.coordinates);
-                    if (geom.type === 'MultiLineString') {
-                        return geom.coordinates.reduce((s, seg) => s + lineLength(seg), 0);
-                    }
-                    return 0;
-                }
-
                 function allCoords(geom) {
                     if (!geom || !geom.coordinates) return [];
                     if (geom.type === 'LineString') return geom.coordinates;
                     if (geom.type === 'MultiLineString') return geom.coordinates.flat();
+                    if (geom.type === 'Polygon') return geom.coordinates[0] || [];
+                    if (geom.type === 'MultiPolygon') return (geom.coordinates[0] && geom.coordinates[0][0]) || [];
                     return [];
                 }
 
@@ -401,34 +337,17 @@
                     return [xs / coords.length, ys / coords.length];
                 }
 
-                function trailMaxLat(geom) {
-                    return Math.max(...allCoords(geom).map((c) => c[1]));
-                }
-                function trailMinLat(geom) {
-                    return Math.min(...allCoords(geom).map((c) => c[1]));
-                }
-
                 function formatKm(km) {
                     if (km >= 1) return km.toFixed(2) + ' km (' + (km * 0.621371).toFixed(2) + ' mi)';
                     return (km * 1000).toFixed(0) + ' m (' + (km * 3280.84).toFixed(0) + ' ft)';
-                }
-
-                function boundsFromGeom(geom) {
-                    const coords = allCoords(geom);
-                    if (!coords.length) return null;
-                    let minLng = Infinity, minLat = Infinity, maxLng = -Infinity, maxLat = -Infinity;
-                    coords.forEach(([lng, lat]) => {
-                        if (lng < minLng) minLng = lng; if (lng > maxLng) maxLng = lng;
-                        if (lat < minLat) minLat = lat; if (lat > maxLat) maxLat = lat;
-                    });
-                    return [[minLng, minLat], [maxLng, maxLat]];
                 }
 
                 const factMapInstances = {};
                 async function initTrailMap(containerId, row) {
                     const el = document.getElementById(containerId);
                     if (!el || typeof maptilersdk === 'undefined') return;
-                    const geom = row.geometry;
+                    const geom = row.geometry || await loadPisteGeometry(row.z, row.x, row.y, row.key);
+                    row.geometry = geom;
                     if (!geom) return;
                     const centroid = trailCentroid(geom);
                     if (!centroid) return;
@@ -438,7 +357,7 @@
                     }
                     el.classList.remove('placeholder', 'loading');
                     el.innerHTML = '';
-                    const diff = getDifficulty(row);
+                    const diff = row.rawDiff;
                     let color = '#64748b';
                     if (diff === 'easy' || diff === 'novice' || diff === 'beginner') color = '#22c55e';
                     else if (diff === 'intermediate' || diff === 'medium') color = '#2563eb';
@@ -451,8 +370,43 @@
                         noControl: true
                     });
                     await addSkiPmtilesToMap(m, { pistesWidth: 3 });
+                    m.addSource('fact-trail', {
+                        type: 'geojson',
+                        data: { type: 'Feature', properties: {}, geometry: geom }
+                    });
+                    const isArea = geom.type === 'Polygon' || geom.type === 'MultiPolygon';
+                    if (isArea) {
+                        m.addLayer({
+                            id: 'fact-trail-fill',
+                            type: 'fill',
+                            source: 'fact-trail',
+                            paint: { 'fill-color': color, 'fill-opacity': 0.45 }
+                        });
+                    }
+                    m.addLayer({
+                        id: 'fact-trail-casing',
+                        type: 'line',
+                        source: 'fact-trail',
+                        paint: { 'line-color': '#ffffff', 'line-width': isArea ? 5 : 9 }
+                    });
+                    m.addLayer({
+                        id: 'fact-trail-line',
+                        type: 'line',
+                        source: 'fact-trail',
+                        paint: { 'line-color': color, 'line-width': isArea ? 3 : 5 }
+                    });
+                    const coords = allCoords(geom);
+                    let minLng = Infinity, minLat = Infinity, maxLng = -Infinity, maxLat = -Infinity;
+                    for (const [lng, lat] of coords) {
+                        if (lng < minLng) minLng = lng;
+                        if (lng > maxLng) maxLng = lng;
+                        if (lat < minLat) minLat = lat;
+                        if (lat > maxLat) maxLat = lat;
+                    }
                     factMapInstances[containerId] = m;
-                    m.flyTo({ center: [centroid[0], centroid[1]], zoom: 14, duration: 500 });
+                    if (minLng !== Infinity) {
+                        m.fitBounds([[minLng, minLat], [maxLng, maxLat]], { padding: 28, maxZoom: 16, duration: 0 });
+                    }
                 }
 
                 function setFact(nameId, descId, name, desc) {
@@ -465,6 +419,7 @@
                 // Named trails table state
                 let namedRows = [];
                 let filteredNamed = [];
+                let playableResorts = [];
                 let sortCol = 'length';
                 let sortDir = -1; // -1 = desc, 1 = asc
                 let currentPage = 1;
@@ -499,7 +454,21 @@
                         const icon = isActive ? (sortDir === -1 ? '&#9660;' : '&#9650;') : '&#8597;';
                         thead += `<th data-col="${col.key}">${col.label} <em class="sort-icon ${isActive ? 'active' : ''}">${icon}</em></th>`;
                     });
+                    thead += '<th></th>';
                     thead += '</tr></thead>';
+
+                    function skiHref(r) {
+                        const resort = r.resort && r.resort !== '—' ? r.resort.replace(/\s+\([^)]*\)$/, '') : '';
+                        return playableHrefForResort({ name: resort }, { lat: r.lat, lon: r.lng, name: resort }, playableResorts);
+                    }
+                    function mapHref(r) {
+                        const q = new URLSearchParams({
+                            lat: String(r.lat),
+                            lng: String(r.lng),
+                            z: '16'
+                        });
+                        return 'mainmap.html?' + q.toString();
+                    }
 
                     let tbody = '<tbody>';
                     pageRows.forEach((r) => {
@@ -511,6 +480,7 @@
                             <td>${escHtml(r.country)}</td>
                             <td class="tw-font-mono tw-text-sm">${formatKm(r.length)}</td>
                             <td><span class="diff-badge ${dClass}">${escHtml(dLabel)}</span></td>
+                            <td class="trail-actions"><a class="page-btn" href="${escHtml(mapHref(r))}">Map</a>${skiHref(r) ? `<a class="page-btn" href="${escHtml(skiHref(r))}">Ski</a>` : ''}</td>
                         </tr>`;
                     });
                     tbody += '</tbody>';
@@ -598,31 +568,37 @@
 
                 // Main data load (PMTiles)
                 try {
-                    const pisteFeats = await loadPmtilesLayerFeatures('pistes', 10);
-                    const data = pisteFeats.map((f) => ({ ...f.properties, geometry: f.geometry }));
+                    const loadBar = document.getElementById('trail-load-bar');
+                    const loadLabel = document.getElementById('trail-load-label');
+                    const loadProgress = document.getElementById('trail-load-progress');
+                    let loadPaint = 0;
+                    const [withLength, playableList] = await Promise.all([
+                        loadPisteFactRows(10, (p) => {
+                        if (loadPaint) return;
+                        loadPaint = requestAnimationFrame(() => {
+                            loadPaint = 0;
+                            const pct = p.tilesTotal ? Math.round((100 * p.tilesDone) / p.tilesTotal) : 0;
+                            if (loadBar) loadBar.style.width = pct + '%';
+                            if (loadProgress) loadProgress.setAttribute('aria-valuenow', String(pct));
+                            if (loadLabel) loadLabel.textContent = p.trails.toLocaleString() + ' trails loaded';
+                        });
+                    }),
+                        fetchPlayableCatalog().catch(() => [])
+                    ]);
+                    playableResorts = playableList;
 
                     const excludeUntypedCb = document.getElementById('exclude-untyped');
-                    const allTrails = data.filter((r) =>
-                        r.geometry &&
-                        (r.geometry.type === 'LineString' || r.geometry.type === 'MultiLineString')
-                    );
-                    const trails = allTrails.filter((r) => isDownhillTrail(r, false));
-
-                    // Compute lengths
-                    const withLength = trails.map((r) => ({ row: r, length: trailLength(r.geometry) })).filter((x) => x.length > 0.01);
-
-                    // Country / difficulty sets
+                    const namedOnlyCb = document.getElementById('named-only');
                     const countrySet = new Set();
                     const diffSet = new Set();
-                    withLength.forEach(({ row }) => {
-                        const c = getCountry(row);
-                        if (c && c !== '—') countrySet.add(c);
-                        const d = getDifficulty(row);
-                        if (d) diffSet.add(d);
+                    withLength.forEach((row) => {
+                        if (row.country && row.country !== '—') countrySet.add(row.country);
+                        if (row.rawDiff) diffSet.add(row.rawDiff);
                     });
 
                     // Populate filters
                     const countrySelect = document.getElementById('country-filter');
+                    const stateSelect = document.getElementById('state-filter');
                     const diffSelect = document.getElementById('diff-filter');
                     [...countrySet].sort().forEach((c) => {
                         const opt = document.createElement('option');
@@ -634,12 +610,30 @@
                         opt.value = d; opt.textContent = diffLabel(d);
                         diffSelect.appendChild(opt);
                     });
-                    countrySelect.disabled = false;
-                    diffSelect.disabled = false;
-                    countrySelect.classList.remove('tw-bg-gray-100', 'tw-text-gray-500');
-                    countrySelect.classList.add('tw-bg-white', 'tw-text-gray-900');
-                    diffSelect.classList.remove('tw-bg-gray-100', 'tw-text-gray-500');
-                    diffSelect.classList.add('tw-bg-white', 'tw-text-gray-900');
+                    function enableSelect(el) {
+                        el.disabled = false;
+                        el.classList.remove('tw-bg-gray-100', 'tw-text-gray-500');
+                        el.classList.add('tw-bg-white', 'tw-text-gray-900');
+                    }
+                    function fillStates(countryVal) {
+                        const prev = stateSelect.value;
+                        const states = new Set();
+                        for (const row of withLength) {
+                            if (countryVal && row.country !== countryVal) continue;
+                            if (row.state && row.state !== '—') states.add(row.state);
+                        }
+                        stateSelect.innerHTML = '<option value="">All states / provinces</option>';
+                        [...states].sort().forEach((s) => {
+                            const opt = document.createElement('option');
+                            opt.value = s; opt.textContent = s;
+                            stateSelect.appendChild(opt);
+                        });
+                        stateSelect.value = states.has(prev) ? prev : '';
+                    }
+                    fillStates('');
+                    enableSelect(countrySelect);
+                    enableSelect(stateSelect);
+                    enableSelect(diffSelect);
 
                     let activeSet = withLength;
 
@@ -658,21 +652,19 @@
                         let longest = set[0], shortest = set[0];
                         let maxLen = set[0].length, minLen = set[0].length;
                         let northern = set[0], southern = set[0];
-                        let maxLat = trailMaxLat(set[0].row.geometry);
-                        let minLat = trailMinLat(set[0].row.geometry);
+                        let maxLat = set[0].maxLat;
+                        let minLat = set[0].minLat;
 
-                        set.forEach(({ row, length }) => {
-                            if (length > maxLen) { maxLen = length; longest = { row, length }; }
-                            if (length < minLen) { minLen = length; shortest = { row, length }; }
-                            const mx = trailMaxLat(row.geometry);
-                            const mn = trailMinLat(row.geometry);
-                            if (mx > maxLat) { maxLat = mx; northern = { row, length }; }
-                            if (mn < minLat) { minLat = mn; southern = { row, length }; }
+                        set.forEach((item) => {
+                            if (item.length > maxLen) { maxLen = item.length; longest = item; }
+                            if (item.length < minLen) { minLen = item.length; shortest = item; }
+                            if (item.maxLat > maxLat) { maxLat = item.maxLat; northern = item; }
+                            if (item.minLat < minLat) { minLat = item.minLat; southern = item; }
                         });
 
                         const totalCount = set.length;
-                        const namedCount = set.filter(({ row }) => getTrailName(row) !== null).length;
-                        const countriesCount = new Set(set.map(({ row }) => getCountry(row)).filter((c) => c !== '—')).size;
+                        const namedCount = set.filter((row) => row.name).length;
+                        const countriesCount = new Set(set.map((row) => row.country).filter((c) => c !== '—')).size;
                         const avgLen = set.reduce((s, x) => s + x.length, 0) / set.length;
 
                         document.getElementById('facts-summary').innerHTML =
@@ -681,62 +673,53 @@
                             `<div class="tw-flex tw-max-w-[200px] tw-flex-col tw-place-items-center tw-gap-2 tw-text-center"><span class="tw-text-3xl tw-font-bold" style="color:#0d9488">${countriesCount}</span><span class="tw-text-gray-700">countries</span></div>` +
                             `<div class="tw-flex tw-max-w-[200px] tw-flex-col tw-place-items-center tw-gap-2 tw-text-center"><span class="tw-text-3xl tw-font-bold" style="color:#BDB8FF">${formatKm(avgLen)}</span><span class="tw-text-gray-700">avg trail length</span></div>`;
 
-                        const longestName = getTrailName(longest.row) || '(unnamed)';
-                        const longestResort = getResortName(longest.row);
-                        const longestCountry = getCountry(longest.row);
-                        const longestDiff = getDifficulty(longest.row);
+                        const longestName = longest.name || '(unnamed)';
                         setFact('fact-longest-name', 'fact-longest-desc',
                             longestName,
-                            formatKm(longest.length) + (longestDiff ? ' · ' + diffLabel(longestDiff) : '') +
-                            (longestResort !== '—' ? ' · ' + longestResort : '') +
-                            (longestCountry !== '—' ? ' · ' + longestCountry : '')
+                            formatKm(longest.length) + (longest.rawDiff ? ' · ' + diffLabel(longest.rawDiff) : '') +
+                            (longest.resort !== '—' ? ' · ' + longest.resort : '') +
+                            (longest.country !== '—' ? ' · ' + longest.country : '')
                         );
-                        initTrailMap('map-longest', longest.row);
+                        initTrailMap('map-longest', longest);
 
-                        const shortestName = getTrailName(shortest.row) || '(unnamed)';
-                        const shortestResort = getResortName(shortest.row);
-                        const shortestCountry = getCountry(shortest.row);
-                        const shortestDiff = getDifficulty(shortest.row);
+                        const shortestName = shortest.name || '(unnamed)';
                         setFact('fact-shortest-name', 'fact-shortest-desc',
                             shortestName,
-                            formatKm(shortest.length) + (shortestDiff ? ' · ' + diffLabel(shortestDiff) : '') +
-                            (shortestResort !== '—' ? ' · ' + shortestResort : '') +
-                            (shortestCountry !== '—' ? ' · ' + shortestCountry : '')
+                            formatKm(shortest.length) + (shortest.rawDiff ? ' · ' + diffLabel(shortest.rawDiff) : '') +
+                            (shortest.resort !== '—' ? ' · ' + shortest.resort : '') +
+                            (shortest.country !== '—' ? ' · ' + shortest.country : '')
                         );
-                        initTrailMap('map-shortest', shortest.row);
+                        initTrailMap('map-shortest', shortest);
 
-                        const northernName = getTrailName(northern.row) || '(unnamed)';
-                        const northernResort = getResortName(northern.row);
-                        const northernCountry = getCountry(northern.row);
+                        const northernName = northern.name || '(unnamed)';
                         setFact('fact-northern-name', 'fact-northern-desc',
                             northernName,
                             maxLat.toFixed(4) + '\u00B0 N' +
-                            (northernResort !== '—' ? ' · ' + northernResort : '') +
-                            (northernCountry !== '—' ? ' · ' + northernCountry : '')
+                            (northern.resort !== '—' ? ' · ' + northern.resort : '') +
+                            (northern.country !== '—' ? ' · ' + northern.country : '')
                         );
-                        initTrailMap('map-northern', northern.row);
+                        initTrailMap('map-northern', northern);
 
-                        const southernName = getTrailName(southern.row) || '(unnamed)';
-                        const southernResort = getResortName(southern.row);
-                        const southernCountry = getCountry(southern.row);
+                        const southernName = southern.name || '(unnamed)';
                         setFact('fact-southern-name', 'fact-southern-desc',
                             southernName,
                             minLat.toFixed(4) + '\u00B0' +
-                            (northernResort !== '—' ? ' · ' + southernResort : '') +
-                            (southernCountry !== '—' ? ' · ' + southernCountry : '')
+                            (southern.resort !== '—' ? ' · ' + southern.resort : '') +
+                            (southern.country !== '—' ? ' · ' + southern.country : '')
                         );
-                        initTrailMap('map-southern', southern.row);
+                        initTrailMap('map-southern', southern);
 
-                        // Named trails table
                         namedRows = set
-                            .filter(({ row }) => getTrailName(row) !== null)
-                            .map(({ row, length }) => ({
-                                name: getTrailName(row),
-                                resort: getResortName(row),
-                                country: getCountry(row),
-                                length,
-                                difficulty: diffLabel(getDifficulty(row)) || 'Unknown',
-                                rawDiff: getDifficulty(row)
+                            .filter((row) => row.name)
+                            .map((row) => ({
+                                name: row.name,
+                                resort: row.resort,
+                                country: row.country,
+                                length: row.length,
+                                difficulty: diffLabel(row.rawDiff) || 'Unknown',
+                                rawDiff: row.rawDiff,
+                                lat: row.lat,
+                                lng: row.lng
                             }));
                         filteredNamed = [...namedRows];
                         sortNamed();
@@ -749,12 +732,16 @@
                     // Filter event handlers
                     function refilter() {
                         const countryVal = countrySelect.value;
+                        const stateVal = stateSelect.value;
                         const diffVal = diffSelect.value;
                         const excludeUntyped = excludeUntypedCb.checked;
-                        const filtered = withLength.filter(({ row }) => {
-                            if (!isDownhillTrail(row, excludeUntyped)) return false;
-                            if (countryVal && getCountry(row) !== countryVal) return false;
-                            if (diffVal && getDifficulty(row) !== diffVal) return false;
+                        const namedOnly = namedOnlyCb.checked;
+                        const filtered = withLength.filter((row) => {
+                            if (excludeUntyped && row.pisteType !== 'downhill' && row.pisteType !== 'freeride') return false;
+                            if (namedOnly && !row.name) return false;
+                            if (countryVal && row.country !== countryVal) return false;
+                            if (stateVal && row.state !== stateVal) return false;
+                            if (diffVal && row.rawDiff !== diffVal) return false;
                             return true;
                         });
                         applyFacts(filtered);
@@ -762,9 +749,14 @@
                         applyNamedFilter(search, countryVal, diffVal);
                     }
 
-                    countrySelect.addEventListener('change', refilter);
+                    countrySelect.addEventListener('change', () => {
+                        fillStates(countrySelect.value);
+                        refilter();
+                    });
+                    stateSelect.addEventListener('change', refilter);
                     diffSelect.addEventListener('change', refilter);
                     excludeUntypedCb.addEventListener('change', refilter);
+                    namedOnlyCb.addEventListener('change', refilter);
                     document.getElementById('trail-search').addEventListener('input', (e) => {
                         applyNamedFilter(e.target.value, countrySelect.value, diffSelect.value);
                     });
