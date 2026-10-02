@@ -1047,8 +1047,26 @@ export async function loadPisteFactRows(zoom = 10, onProgress) {
   return loadLayerFactRows('pistes', zoom, onProgress);
 }
 
-export async function loadLiftFactRows(zoom = 10, onProgress) {
-  return loadLayerFactRows('lifts', zoom, onProgress);
+export async function loadLiftFactRows(_zoom = 10, onProgress) {
+  if (onProgress) onProgress({ trails: 0, tilesDone: 0, tilesTotal: 1 });
+  const { asyncBufferFromUrl, parquetRead } = await import('https://esm.sh/hyparquet@1.25.1');
+  const file = await asyncBufferFromUrl({ url: config.PARQUET_LIFTS_URL });
+  let rows = [];
+  await parquetRead({
+    file,
+    columns: ['name', 'aerialway', 'Country', 'State', 'Ski Area', 'other_tags', 'geometry', 'osm_id'],
+    rowFormat: 'object',
+    onComplete(data) { rows = data; }
+  });
+  const { liftFactFromParquet } = await import('./piste-facts-worker.js');
+  const out = [];
+  for (const row of rows) {
+    const fact = liftFactFromParquet(row);
+    if (fact) out.push(fact);
+  }
+  if (onProgress) onProgress({ trails: out.length, tilesDone: 1, tilesTotal: 1 });
+  pmtilesLog('loadLiftFactRows', { rows: out.length });
+  return out;
 }
 
 async function loadLayerFactRows(layer, zoom = 10, onProgress) {

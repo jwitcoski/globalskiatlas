@@ -150,6 +150,51 @@ function summarizeLift(props, length, maxLat, minLat, z, x, y, first) {
   return { key, name, resort, country, state, aerialway, length, maxLat, minLat, lat: first[1], lng: first[0], z, x, y };
 }
 
+export function liftFactFromParquet(row) {
+  const geom = row?.geometry;
+  if (!geom || !geom.coordinates) return null;
+  const isLine = geom.type === 'LineString' || geom.type === 'MultiLineString';
+  const isArea = geom.type === 'Polygon' || geom.type === 'MultiPolygon';
+  if (!isLine && !isArea) return null;
+  const parts = isLine
+    ? (geom.type === 'LineString' ? [geom.coordinates] : geom.coordinates)
+    : (geom.type === 'Polygon' ? [geom.coordinates[0]] : (geom.coordinates[0] ? [geom.coordinates[0][0]] : []));
+  let length = 0, maxLat = -Infinity, minLat = Infinity, first = null;
+  for (const ring of parts) {
+    if (!ring) continue;
+    let prev = null;
+    for (const c of ring) {
+      if (!first) first = c;
+      if (prev) length += haversine(prev, c);
+      if (c[1] > maxLat) maxLat = c[1];
+      if (c[1] < minLat) minLat = c[1];
+      prev = c;
+    }
+  }
+  if (isArea) length /= 2;
+  if (length <= 0.005 || !first) return null;
+  let aerialway = row.aerialway || '';
+  if (!aerialway && typeof row.other_tags === 'string') {
+    const m = row.other_tags.match(/"aerialway"=>"([^"]+)"/);
+    if (m) aerialway = m[1];
+  }
+  aerialway = String(aerialway || '').toLowerCase().trim();
+  if (!aerialway || ['station', 'pylon', 'zip_line', 'goods', 'no', 'abandoned', 'proposed', 'disused', 'exit'].includes(aerialway)) return null;
+  const props = {
+    name: row.name,
+    aerialway: row.aerialway,
+    Country: row.Country,
+    State: row.State,
+    'Ski Area': row['Ski Area'],
+    other_tags: row.other_tags,
+    osm_id: row.osm_id
+  };
+  const fact = summarizeLift(props, length, maxLat, minLat, 0, 0, 0, first);
+  if (!fact) return null;
+  fact.geometry = geom;
+  return fact;
+}
+
 export function decodeLiftTile(buf, z, x, y, VectorTile, Pbf) {
   const bytes = buf instanceof ArrayBuffer ? new Uint8Array(buf) : buf;
   const tile = new VectorTile(new Pbf(bytes));
