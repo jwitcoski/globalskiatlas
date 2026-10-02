@@ -46,7 +46,7 @@ import {
   getIconId,
   addResortIconImages
 } from './resort-tier-icons.js';
-import { initSkiFeaturePopups } from './ski-feature-popups.js?v=10';
+import { initSkiFeaturePopups } from './ski-feature-popups.js?v=11';
 import {
   buildResortPopupHtml,
   buildResortHoverHtml,
@@ -144,9 +144,10 @@ const SKI_PMTILES_OPTIONS = {
 fetchSkiAreaCatalog().catch(() => {});
 
 async function addResortMarkerLayers(map, resortFeatures) {
+  resortFeatures.forEach((f, i) => { if (f.id == null) f.id = i + 1; });
   const data = { type: 'FeatureCollection', features: resortFeatures };
   if (!map.getSource('ski-resorts')) {
-    map.addSource('ski-resorts', { type: 'geojson', data, generateId: true });
+    map.addSource('ski-resorts', { type: 'geojson', data });
   } else {
     map.getSource('ski-resorts').setData(data);
   }
@@ -171,6 +172,20 @@ async function addResortMarkerLayers(map, resortFeatures) {
     });
   }
 
+  if (!map.getLayer('ski-resort-selected')) {
+    map.addLayer({
+      id: 'ski-resort-selected',
+      type: 'circle',
+      source: 'ski-resorts',
+      paint: {
+        'circle-radius': ['interpolate', ['linear'], ['zoom'], 3, 10, 8, 16, 12, 22],
+        'circle-color': 'rgba(0,0,0,0)',
+        'circle-stroke-color': '#ea580c',
+        'circle-stroke-width': ['case', ['boolean', ['feature-state', 'selected'], false], 4, 0]
+      }
+    });
+  }
+
   await addResortIconImages(map);
 
   for (const tier of ['small', 'medium', 'large', 'mega']) {
@@ -192,12 +207,13 @@ async function addResortMarkerLayers(map, resortFeatures) {
       },
       paint: {
         'icon-halo-color': SELECTED_STROKE_COLOR,
-        'icon-halo-width': ['case', ['boolean', ['feature-state', 'selected'], false], 2, 0]
+        'icon-halo-width': ['case', ['boolean', ['feature-state', 'selected'], false], 6, 0]
       }
     });
   }
 
   ensureBoundaryLayersOnBottom(map);
+  if (map.getLayer('ski-resort-selected')) map.moveLayer('ski-resort-selected');
 }
 
 const RESORT_TIERS = ['small', 'medium', 'large', 'mega'];
@@ -223,6 +239,7 @@ function loadMs(t0) {
 export async function initSkiResortMap(options = {}) {
   const tInit = performance.now();
   const includeRoadTripButton = !!options.includeRoadTripButton;
+  const tripAddOnly = !!options.tripAddOnly;
   const containerId = options.containerId || 'map';
   const loadAds = options.loadAds !== false;
   const region = options.region || null;
@@ -675,12 +692,36 @@ export async function initSkiResortMap(options = {}) {
     });
   }
 
+  let tripPopup = null;
+  function showTripAdd(lngLat, name, country) {
+    hideResortPanel();
+    const label = escapeHtml(String(name || 'Stop'));
+    const rc = country ? escapeHtml(String(country)) : '';
+    const lat = Number(lngLat?.lat);
+    const lng = Number(lngLat?.lng);
+    if (!tripPopup) {
+      tripPopup = new maptilersdk.Popup({ closeButton: true, maxWidth: '240px', className: 'rtp-add-popup' });
+    }
+    tripPopup
+      .setLngLat(lngLat)
+      .setHTML(
+        `<div class="rtp-stop-popup"><strong>${label}</strong>` +
+        `<button type="button" class="rtp-add-btn" data-resort-name="${label}" data-resort-lat="${lat}" data-resort-lon="${lng}" data-resort-country="${rc}">Add to trip</button></div>`
+      )
+      .addTo(map);
+  }
+
   function showResortPopup(_lngLat, props, extras = {}) {
     let properties = extras.properties || {};
     if (!extras.properties) {
       try { properties = JSON.parse(props._propsJson || '{}'); } catch (_) { /* ignore */ }
     }
     const latlng = extras.latlng || { lat: _lngLat?.lat, lng: _lngLat?.lng };
+    if (tripAddOnly) {
+      const name = extras.name || props._name || getProp(properties, NAME_KEYS);
+      showTripAdd(latlng, name, getProp(properties, COUNTRY_KEYS));
+      return;
+    }
     const wikiPage = extras.wikiPage !== undefined ? extras.wikiPage : findWikiPage(properties);
     let playablePath = extras.playablePath !== undefined ? extras.playablePath : props._playablePath;
     if (!playablePath && gameResorts.length) {
@@ -785,16 +826,18 @@ export async function initSkiResortMap(options = {}) {
       map.on('mouseleave', id, () => { map.getCanvas().style.cursor = ''; hideVtTip(); });
       map.on('click', id, (e) => {
         if (!e.features.length) return;
-        selectResortFeature(e.features[0]);
+        if (!tripAddOnly) selectResortFeature(e.features[0]);
         const p = e.features[0].properties;
         if (playableMode && p._playablePath && onPlayablePick) {
           onPlayablePick(p._playablePath);
           return;
         }
-        if (id.includes('circles') && !region) {
+        const [featLng, featLat] = e.features[0].geometry?.coordinates || [];
+        const at = Number.isFinite(featLng) ? { lng: featLng, lat: featLat } : e.lngLat;
+        if (!tripAddOnly && id.includes('circles') && !region) {
           map.flyTo({ center: e.lngLat, zoom: Math.max(map.getZoom() + 4, 11), duration: 500 });
         } else {
-          showResortPopup(e.lngLat, p);
+          showResortPopup(at, p);
         }
       });
     });
@@ -813,6 +856,7 @@ export async function initSkiResortMap(options = {}) {
     await restoreSkiPmtilesAfterStyleChange(map, SKI_PMTILES_OPTIONS);
     if (adminGeometry) addAdminRegionOverlay(map, adminGeometry);
     await addResortMarkerLayers(map, resortFeatures);
+    applyTripHighlights();
     if (isCountryRegion && admin1Collection.features.length) {
       addAdmin1InteractiveLayer(map, admin1Collection);
     }
@@ -937,10 +981,38 @@ export async function initSkiResortMap(options = {}) {
     else setTimeout(loadAd, 1500);
   }
 
-  initSkiFeaturePopups(map, { escapeHtml, tipEl: vtTipEl });
+  let tripHighlightPoints = [];
+  const tripHighlightIds = new Set();
+  function applyTripHighlights() {
+    for (const id of tripHighlightIds) {
+      try { map.setFeatureState({ source: 'ski-resorts', id }, { selected: false }); } catch (_) { /* style swap */ }
+    }
+    tripHighlightIds.clear();
+    const norm = (s) => String(s || '').toLowerCase().replace(/\s+/g, ' ').trim();
+    for (const f of resortFeatures) {
+      const [lng, lat] = f.geometry?.coordinates || [];
+      const fname = norm(f.properties?._name);
+      const onTrip = tripHighlightPoints.some((p) => {
+        const near = Number.isFinite(p.lat) && Number.isFinite(lat)
+          && Math.abs(p.lat - lat) < 0.02 && Math.abs(p.lng - lng) < 0.02;
+        if (near) return true;
+        const pname = norm(p.name);
+        return Boolean(fname && pname && (fname === pname || fname.startsWith(pname) || pname.startsWith(fname)));
+      });
+      if (!onTrip || f.id == null) continue;
+      tripHighlightIds.add(f.id);
+      try { map.setFeatureState({ source: 'ski-resorts', id: f.id }, { selected: true }); } catch (_) { /* style swap */ }
+    }
+  }
+  function highlightTripResorts(points) {
+    tripHighlightPoints = Array.isArray(points) ? points : [];
+    applyTripHighlights();
+  }
+
+  initSkiFeaturePopups(map, { escapeHtml, tipEl: vtTipEl, tripAddOnly });
   initResortPopupScopeSwitcher(resortStatsIndex, escapeHtml);
 
   console.log('[ski-map] interactive', loadMs(tInit) + 'ms from init');
   globalThis.__gsaMapLoad = Object.assign(globalThis.__gsaMapLoad || {}, { interactiveMs: loadMs(tInit) });
-  return { map, searchResorts, escapeHtml, restoreOverlays };
+  return { map, searchResorts, escapeHtml, restoreOverlays, highlightTripResorts };
 }

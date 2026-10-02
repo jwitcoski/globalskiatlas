@@ -26,6 +26,13 @@ import {
   getDefaultFeatureScope
 } from './ski-feature-charts.js';
 
+function tripAddHtml(escapeHtml, name, lngLat, country) {
+  const label = escapeHtml(String(name || 'Stop'));
+  const rc = country ? escapeHtml(String(country)) : '';
+  return `<div class="rtp-stop-popup"><strong>${label}</strong>` +
+    `<button type="button" class="rtp-add-btn" data-resort-name="${label}" data-resort-lat="${Number(lngLat?.lat) || 0}" data-resort-lon="${Number(lngLat?.lng) || 0}" data-resort-country="${rc}">Add to trip</button></div>`;
+}
+
 function difficultyBadgeHtml(diff, escapeHtml) {
   const color = DIFF_COLORS[diff] || '#64748b';
   const label = diffLabel(diff);
@@ -350,9 +357,12 @@ export function initSkiFeaturePopups(map, options = {}) {
     lastPopupMeta = meta;
     lastPopupLngLat = e.lngLat;
     setOpenSkiFeatureMeta(meta);
+    const html = options.tripAddOnly
+      ? tripAddHtml(escapeHtml, meta.name || (kind === 'lift' ? 'Lift' : 'Trail'), e.lngLat, meta.country)
+      : buildPopupHtml(meta, globalIndex, viewportIndex, escapeHtml);
     popup
       .setLngLat(e.lngLat)
-      .setHTML(buildPopupHtml(meta, globalIndex, viewportIndex, escapeHtml))
+      .setHTML(html)
       .addTo(map);
     hideTip();
   }

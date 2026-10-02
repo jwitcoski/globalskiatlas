@@ -17,19 +17,17 @@ function foldDiacritics(str) { if (str == null || str === '') return ''; return 
 
 function countryToRegion(c) {
   if (!c || typeof c !== 'string') return null;
-  const s = c.toLowerCase().trim();
-  if (/^(united states|usa|u\.?s\.?a\.?|canada|mexico|guatemala|belize|honduras|el salvador|nicaragua|costa rica|panama)$/i.test(s)) return 'Americas';
-  if (/^(argentina|bolivia|brazil|chile|colombia|ecuador|peru|venezuela|uruguay|paraguay)$/i.test(s))                             return 'Americas';
-  if (/^(japan|china|south korea|north korea|taiwan|mongolia)$/i.test(s))                                                         return 'Asia Pacific';
-  if (/^(australia|new zealand)$/i.test(s))                                                                                       return 'Asia Pacific';
-  if (/^(india|nepal|pakistan|kazakhstan|uzbekistan|kyrgyzstan|tajikistan)$/i.test(s))                                            return 'Asia Pacific';
-  if (/^(russia|georgia|armenia|azerbaijan)$/i.test(s))                                                                           return 'Europe';
-  if (/(austria|belgium|bulgaria|croatia|cyprus|czech|denmark|estonia|finland|france|germany|greece|hungary|iceland|ireland|italy|latvia|liechtenstein|lithuania|luxembourg|malta|netherlands|norway|poland|portugal|romania|slovakia|slovenia|spain|sweden|switzerland|turkey|ukraine|united kingdom|uk|andorra|monaco|serbia|bosnia|montenegro|albania|macedonia|belarus|moldova)/i.test(s)) return 'Europe';
-  return 'Other';
+  let s = c.toLowerCase().trim().replace(/^the\s+/, '');
+  s = s.replace(/\s+of america$/, '');
+  if (/^(us|u\.s\.|usa|u\.s\.a\.|united states|canada|mexico|guatemala|belize|honduras|el salvador|nicaragua|costa rica|panama|argentina|bolivia|brazil|chile|colombia|ecuador|peru|venezuela|uruguay|paraguay)$/.test(s)) return 'Americas';
+  if (/^(japan|china|south korea|north korea|korea|taiwan|mongolia|australia|new zealand|india|nepal|pakistan|kazakhstan|uzbekistan|kyrgyzstan|tajikistan)$/.test(s)) return 'Asia Pacific';
+  if (/^(russia|georgia|armenia|azerbaijan|austria|belgium|bulgaria|croatia|cyprus|czech republic|czechia|denmark|estonia|finland|france|germany|greece|hungary|iceland|ireland|italy|latvia|liechtenstein|lithuania|luxembourg|malta|netherlands|norway|poland|portugal|romania|slovakia|slovenia|spain|sweden|switzerland|turkey|türkiye|ukraine|united kingdom|uk|great britain|andorra|monaco|serbia|bosnia and herzegovina|montenegro|albania|north macedonia|macedonia|belarus|moldova)$/.test(s)) return 'Europe';
+  return null;
 }
 
-export function initRoadTripPlanner({ map, searchResorts, escapeHtml }) {
+export function initRoadTripPlanner({ map, searchResorts, escapeHtml, highlightTripResorts }) {
   let rtpHomeWaypoint    = null;
+  let startMarker        = null;
   let rtpResortWaypoints = [];
   let rtpEndMode         = 'last';
   let rtpEndWaypoint     = null;
@@ -188,6 +186,7 @@ export function initRoadTripPlanner({ map, searchResorts, escapeHtml }) {
     }
     rtpSetMaxHint(rtpResortWaypoints.length >= RTP_MAX_RESORTS);
     rtpUpdateRegionWarning();
+    highlightTripResorts?.(rtpResortWaypoints.map((wp) => ({ lat: wp.lat, lng: wp.lng, name: wp.name })));
   }
 
   // ── Geocoding (MapTiler — works in browser; Nominatim blocks missing User-Agent) ─
@@ -218,6 +217,7 @@ export function initRoadTripPlanner({ map, searchResorts, escapeHtml }) {
         rtpHomeStatus.textContent = '✓ ' + result.label;
         rtpHomeStatus.style.color = '#16a34a';
       }
+      syncStartMarker();
       return true;
     } catch (_) {
       return false;
@@ -253,6 +253,7 @@ export function initRoadTripPlanner({ map, searchResorts, escapeHtml }) {
         rtpHomeWaypoint = result;
         rtpHomeStatus.textContent = '✓ ' + result.label;
         rtpHomeStatus.style.color = '#16a34a';
+        syncStartMarker();
         rtpUpdateUI();
         map.flyTo({ center: [result.lng, result.lat], zoom: 10, duration: 800 });
       } else {
@@ -267,7 +268,15 @@ export function initRoadTripPlanner({ map, searchResorts, escapeHtml }) {
     }
   });
   rtpHomeInput?.addEventListener('keydown', (e) => { if (e.key === 'Enter') rtpGeoBtn?.click(); });
-  rtpHomeInput?.addEventListener('input', () => rtpUpdateUI());
+  rtpHomeInput?.addEventListener('input', () => {
+    const typed = rtpHomeInput.value.trim();
+    const saved = rtpHomeWaypoint?.label || '';
+    if (rtpHomeWaypoint && typed !== saved) {
+      rtpHomeWaypoint = null;
+      syncStartMarker();
+    }
+    rtpUpdateUI();
+  });
 
   // Geolocation
   rtpLocBtn?.addEventListener('click', () => {
@@ -284,6 +293,8 @@ export function initRoadTripPlanner({ map, searchResorts, escapeHtml }) {
         rtpHomeInput.value = 'My Location';
         rtpHomeStatus.textContent = '✓ Using your current location';
         rtpHomeStatus.style.color = '#16a34a';
+        syncStartMarker();
+        map.flyTo({ center: [rtpHomeWaypoint.lng, rtpHomeWaypoint.lat], zoom: 10, duration: 800 });
         rtpUpdateUI();
         map.flyTo({ center: [pos.coords.longitude, pos.coords.latitude], zoom: 10, duration: 800 });
         rtpLocBtn.innerHTML = '<i class="bi bi-geo-alt-fill"></i> Use my location';
@@ -451,6 +462,34 @@ export function initRoadTripPlanner({ map, searchResorts, escapeHtml }) {
     return `<div class="rtp-directions"><div class="rtp-dir-title">Turn-by-turn directions</div><ol class="rtp-dir-list">${items}</ol></div>`;
   }
 
+  function clearHomeWaypoint() {
+    rtpHomeWaypoint = null;
+    if (rtpHomeInput) rtpHomeInput.value = '';
+    if (rtpHomeStatus) rtpHomeStatus.textContent = '';
+    syncStartMarker();
+    clearRoute();
+    rtpUpdateUI();
+  }
+
+  function syncStartMarker() {
+    if (startMarker) {
+      startMarker.remove();
+      startMarker = null;
+    }
+    if (!rtpHomeWaypoint) return;
+    const el = document.createElement('div');
+    el.className = 'rtp-start-pin';
+    el.innerHTML = `<span>S</span><button type="button" class="rtp-start-x" aria-label="Remove starting point">&times;</button>`;
+    el.querySelector('.rtp-start-x').addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      clearHomeWaypoint();
+    });
+    startMarker = new maptilersdk.Marker({ element: el, anchor: 'center' })
+      .setLngLat([rtpHomeWaypoint.lng, rtpHomeWaypoint.lat])
+      .addTo(map);
+  }
+
   function makeWaypointMarker(lng, lat, html, popupHtml) {
     const el = document.createElement('div');
     el.innerHTML = html;
@@ -507,8 +546,7 @@ export function initRoadTripPlanner({ map, searchResorts, escapeHtml }) {
         let html, popupHtml;
 
         if (isStart && usesHome) {
-          html      = `<div style="background:#16a34a;color:#fff;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 2px 6px rgba(0,0,0,0.35)">🏠</div>`;
-          popupHtml = `<strong>Start:</strong> ${escapeHtml(wp.label || '')}`;
+          return;
         } else if (isEnd) {
           html      = `<div style="background:#dc2626;color:#fff;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 2px 6px rgba(0,0,0,0.35)">🏁</div>`;
           popupHtml = `<strong>End:</strong> ${escapeHtml(wp.label || '')}`;
@@ -549,6 +587,7 @@ export function initRoadTripPlanner({ map, searchResorts, escapeHtml }) {
   // ── Clear all ──────────────────────────────────────────────────────────
   rtpClearBtn?.addEventListener('click', () => {
     rtpHomeWaypoint    = null;
+    syncStartMarker();
     rtpResortWaypoints = [];
     rtpEndMode         = 'last';
     rtpEndWaypoint     = null;

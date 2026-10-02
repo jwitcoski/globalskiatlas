@@ -381,19 +381,21 @@
     .map-chart-wrapper { position: relative; flex: 1; min-width: 320px; }
     .print-chart-btn {
       position: absolute;
-      top: 12px;
-      right: 12px;
+      top: 8px;
+      right: 8px;
       z-index: 10;
       display: none;
       align-items: center;
-      gap: 6px;
-      padding: 8px 14px;
+      justify-content: center;
+      width: 44px;
+      height: 44px;
+      padding: 0;
       border: 1px solid #d1d5db;
       border-radius: 8px;
       background: #fff;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
       cursor: pointer;
-      font-size: 14px;
+      font-size: 18px;
     }
     .print-chart-btn:hover { background: #f9fafb; border-color: #9ca3af; }
     .print-chart-btn.visible { display: flex; }
@@ -503,7 +505,7 @@
         </div>
         <div id="clay-compare" aria-label="3D scenes"></div>
         <button type="button" id="print-chart-btn" class="print-chart-btn" aria-label="Print comparison chart">
-          <i class="bi bi-printer"></i> Print
+          <i class="bi bi-printer" aria-hidden="true"></i>
         </button>
       </div>
       <div class="controls">
