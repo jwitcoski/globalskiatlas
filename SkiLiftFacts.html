@@ -165,6 +165,10 @@
                     <input type="checkbox" id="named-only" class="tw-w-4 tw-h-4 tw-accent-teal-600 tw-cursor-pointer" />
                     <span class="tw-text-gray-700 tw-font-medium">Only show named lifts</span>
                 </label>
+                <label class="tw-mt-2 tw-flex tw-place-items-center tw-gap-2 tw-cursor-pointer tw-select-none">
+                    <input type="checkbox" id="resort-only" class="tw-w-4 tw-h-4 tw-accent-teal-600 tw-cursor-pointer" />
+                    <span class="tw-text-gray-700 tw-font-medium">Only show lifts tied to a ski resort</span>
+                </label>
             </div>
         </section>
 
@@ -427,6 +431,8 @@
                     if (!geom || !geom.coordinates) return [];
                     if (geom.type === 'LineString') return geom.coordinates;
                     if (geom.type === 'MultiLineString') return geom.coordinates.flat();
+                    if (geom.type === 'Polygon') return geom.coordinates[0] || [];
+                    if (geom.type === 'MultiPolygon') return (geom.coordinates[0] && geom.coordinates[0][0]) || [];
                     return [];
                 }
 
@@ -463,9 +469,14 @@
                     if (!el || typeof maptilersdk === 'undefined') return;
                     const geom = row.geometry || await loadLiftGeometry(row.z, row.x, row.y, row.key);
                     row.geometry = geom;
-                    if (!geom) return;
-                    const centroid = liftCentroid(geom);
-                    if (!centroid) return;
+                    const centroid = geom ? liftCentroid(geom) : null;
+                    if (!geom || !centroid) {
+                        if (factMapInstances[containerId]) {
+                            factMapInstances[containerId].remove();
+                            factMapInstances[containerId] = null;
+                        }
+                        return;
+                    }
                     if (factMapInstances[containerId]) {
                         factMapInstances[containerId].remove();
                         factMapInstances[containerId] = null;
@@ -481,6 +492,9 @@
                     });
                     await addSkiPmtilesToMap(m, { pistesWidth: 3 });
                     m.addSource('fact-lift', { type: 'geojson', data: { type: 'Feature', properties: {}, geometry: geom } });
+                    if (geom.type === 'Polygon' || geom.type === 'MultiPolygon') {
+                        m.addLayer({ id: 'fact-lift-fill', type: 'fill', source: 'fact-lift', paint: { 'fill-color': color, 'fill-opacity': 0.45 } });
+                    }
                     m.addLayer({ id: 'fact-lift-casing', type: 'line', source: 'fact-lift', paint: { 'line-color': '#ffffff', 'line-width': 9 } });
                     m.addLayer({ id: 'fact-lift-line', type: 'line', source: 'fact-lift', paint: { 'line-color': color, 'line-width': 5 } });
                     const coords = allCoords(geom);
@@ -646,6 +660,7 @@
                     playableResorts = playableList;
 
                     const namedOnlyCb = document.getElementById('named-only');
+                    const resortOnlyCb = document.getElementById('resort-only');
                     const countrySet = new Set();
                     const typeSet = new Set();
                     withLength.forEach((row) => {
@@ -770,8 +785,10 @@
                         const stateVal = stateSelect.value;
                         const typeVal = typeSelect.value;
                         const namedOnly = namedOnlyCb.checked;
+                        const resortOnly = resortOnlyCb.checked;
                         const filtered = withLength.filter((row) => {
                             if (namedOnly && !row.name) return false;
+                            if (resortOnly && (!row.resort || row.resort === '—')) return false;
                             if (countryVal && row.country !== countryVal) return false;
                             if (stateVal && row.state !== stateVal) return false;
                             if (typeVal && row.aerialway !== typeVal) return false;
@@ -785,6 +802,7 @@
                     stateSelect.addEventListener('change', refilter);
                     typeSelect.addEventListener('change', refilter);
                     namedOnlyCb.addEventListener('change', refilter);
+                    resortOnlyCb.addEventListener('change', refilter);
                     document.getElementById('lift-search').addEventListener('input', (e) => {
                         applyNamedFilter(e.target.value, countrySelect.value, typeSelect.value);
                     });

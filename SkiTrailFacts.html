@@ -164,6 +164,10 @@
                     <input type="checkbox" id="named-only" class="tw-w-4 tw-h-4 tw-accent-teal-600 tw-cursor-pointer" />
                     <span class="tw-text-gray-700 tw-font-medium">Only show named trails</span>
                 </label>
+                <label class="tw-flex tw-place-items-center tw-gap-2 tw-cursor-pointer tw-select-none">
+                    <input type="checkbox" id="resort-only" class="tw-w-4 tw-h-4 tw-accent-teal-600 tw-cursor-pointer" />
+                    <span class="tw-text-gray-700 tw-font-medium">Only show trails tied to a ski resort</span>
+                </label>
                 <p class="tw-text-sm tw-text-gray-500 tw-max-w-xl tw-text-center">
                     Many OSM trails omit the type tag entirely, which can let non-ski features (hiking paths, snowmobile routes) slip through. Enable this to restrict results to confirmed downhill pistes only.
                 </p>
@@ -589,6 +593,7 @@
 
                     const excludeUntypedCb = document.getElementById('exclude-untyped');
                     const namedOnlyCb = document.getElementById('named-only');
+                    const resortOnlyCb = document.getElementById('resort-only');
                     const countrySet = new Set();
                     const diffSet = new Set();
                     withLength.forEach((row) => {
@@ -736,9 +741,11 @@
                         const diffVal = diffSelect.value;
                         const excludeUntyped = excludeUntypedCb.checked;
                         const namedOnly = namedOnlyCb.checked;
+                        const resortOnly = resortOnlyCb.checked;
                         const filtered = withLength.filter((row) => {
                             if (excludeUntyped && row.pisteType !== 'downhill' && row.pisteType !== 'freeride') return false;
                             if (namedOnly && !row.name) return false;
+                            if (resortOnly && (!row.resort || row.resort === '—')) return false;
                             if (countryVal && row.country !== countryVal) return false;
                             if (stateVal && row.state !== stateVal) return false;
                             if (diffVal && row.rawDiff !== diffVal) return false;
@@ -757,6 +764,7 @@
                     diffSelect.addEventListener('change', refilter);
                     excludeUntypedCb.addEventListener('change', refilter);
                     namedOnlyCb.addEventListener('change', refilter);
+                    resortOnlyCb.addEventListener('change', refilter);
                     document.getElementById('trail-search').addEventListener('input', (e) => {
                         applyNamedFilter(e.target.value, countrySelect.value, diffSelect.value);
                     });
