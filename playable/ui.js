@@ -147,13 +147,18 @@ export function clayLoadHtml(data) {
     ${bar}`;
 }
 
-function actions(rows) {
+function stayLinkHtml(href) {
+  if (!href) return "";
+  return `<a class="btn ghost stay-link" href="${esc(href)}" target="_blank" rel="noopener noreferrer sponsored">Find hotels nearby</a>`;
+}
+
+function actions(rows, extra = "") {
   return `<div class="actions">${rows
     .map(
       ([act, label, kind]) =>
         `<button type="button" class="btn ${kind || ""}" data-act="${act}">${label}</button>`,
     )
-    .join("")}</div>`;
+    .join("")}${extra}</div>`;
 }
 
 export function compactUi() {
@@ -340,10 +345,13 @@ export function openPanel(ui, kind, data) {
       <p class="fine">Best time ${data.bestTime}</p>
       ${data.osmFixHtml || ""}
       <div class="sf-finish-slot">${data.chartsHtml || ""}</div>
-      ${actions([
-        ["restart", "Ski again", "primary"],
-        ["lobby", "Other trail", "ghost"],
-      ])}`;
+      ${actions(
+        [
+          ["restart", "Ski again", "primary"],
+          ["lobby", "Other trail", "ghost"],
+        ],
+        stayLinkHtml(data.stayHref),
+      )}`;
     return;
   }
   if (kind === "dnf") {

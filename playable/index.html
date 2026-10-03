@@ -356,10 +356,15 @@
     #panel .trail.on { background: rgba(40,50,60,.08); outline: 1px solid #2a3238; }
     #panel .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
     .btn {
+      display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box;
       min-height: 44px; min-width: 120px; padding: 0 16px; border-radius: 4px; border: 1px solid transparent;
-      font-weight: 700; cursor: pointer; color: #101418;
+      font: 700 16px/1 system-ui, sans-serif; cursor: pointer; color: #101418;
     }
     .btn.primary { background: #2a3238; color: #f4f6f8; }
+    .actions a.stay-link {
+      display: inline-flex; align-items: center; text-decoration: none;
+      background: #0f766e; color: #f4f8fb; border-color: transparent;
+    }
     .btn.ghost { background: transparent; color: #2a3238; border-color: rgba(42,50,56,.28); }
     .btn:hover { filter: brightness(1.08); }
     .btn:active { transform: scale(.98); }
@@ -780,6 +785,6 @@
     { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
                    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }
   </script>
-  <script type="module" src="./main.js?v=claypick5"></script>
+  <script type="module" src="./main.js?v=claypick6"></script>
 </body>
 </html>

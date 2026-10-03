@@ -45,7 +45,7 @@ import {
   fitComposer,
 } from "./look.js?v=spray3";
 import { addResortIsland, updateIslandDust, updateIslandLod, setIslandOpacity, resetIslandLod } from "./island.js?v=lod3b";
-import { bindUi, setHud, openPanel, closePanel, updateLoading, clayLoadHtml, setOsmMapNote, setResortTitle, compactUi, setFlybyChrome, setHelpTips, paintSnowBtn } from "./ui.js?v=claypick5";
+import { bindUi, setHud, openPanel, closePanel, updateLoading, clayLoadHtml, setOsmMapNote, setResortTitle, compactUi, setFlybyChrome, setHelpTips, paintSnowBtn } from "./ui.js?v=claypick6";
 import { atlasStatsHtml, prefetchWikiIndex } from "./atlas-stats.js?v=stats1";
 import { bindFinishChartScope, finishChartsHtml, prefetchFinishCharts } from "./finish-charts.js?v=1";
 import { bindOsmFix, osmFixHtml, osmFixContext } from "./osm-fix.js?v=1";
@@ -377,11 +377,35 @@ function currentOsmFix(compact = false) {
   );
 }
 
+function hotelStayHref() {
+  const terrain = lastManifest?.terrain || {};
+  const catalog = currentCatalogResort() || {};
+  const lat = Number(terrain.origin_latitude ?? catalog.lat ?? catalog.latitude);
+  const lon = Number(terrain.origin_longitude ?? catalog.lon ?? catalog.longitude);
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return "";
+  const checkIn = new Date();
+  checkIn.setDate(checkIn.getDate() + 14);
+  const checkOut = new Date(checkIn);
+  checkOut.setDate(checkOut.getDate() + 2);
+  const q = new URLSearchParams({
+    aid: "6abe4ecf20efb8597f4c40dc",
+    lat: String(lat),
+    lng: String(lon),
+    checkin: checkIn.toLocaleDateString("en-CA"),
+    checkout: checkOut.toLocaleDateString("en-CA"),
+    adults: "2",
+    campaign: "playable-finish",
+    address: resortTitleText(),
+  });
+  return `https://www.stay22.com/embed/gm?${q}`;
+}
+
 function openRunEnd(kind, extra) {
   const seq = ++endSeq;
   const catalog = currentCatalogResort();
   openPanel(ui, kind, {
     ...extra,
+    stayHref: kind === "finished" ? hotelStayHref() : "",
     osmFixHtml: currentOsmFix(),
     chartsHtml: finishChartsHtml(activeCourse, catalog),
   });
