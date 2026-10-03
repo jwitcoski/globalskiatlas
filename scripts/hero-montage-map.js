@@ -954,6 +954,10 @@ export async function initHeroMontageMap(container, options = {}) {
     camera,
     getPickables: () => entityPickables,
     onSelect: (entity) => {
+      if (typeof options.onTrailPick === "function") {
+        if (entity?.entityType === "piste") options.onTrailPick(entity);
+        return;
+      }
       entityPanel.show(entity, entity?.entityType === "resort" ? regionResortStats : undefined);
     },
     onHover: (entity, event) => {

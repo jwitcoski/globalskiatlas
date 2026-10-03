@@ -47,11 +47,12 @@ import {
   fitComposer,
 } from "./look.js?v=spray3";
 import { addResortIsland, updateIslandDust, updateIslandLod, setIslandOpacity, resetIslandLod } from "./island.js?v=lod3b";
-import { bindUi, setHud, openPanel, closePanel, updateLoading, setOsmMapNote, setResortTitle, compactUi, setFlybyChrome, setHelpTips, paintSnowBtn } from "./ui.js?v=snow17";
+import { bindUi, setHud, openPanel, closePanel, updateLoading, clayLoadHtml, setOsmMapNote, setResortTitle, compactUi, setFlybyChrome, setHelpTips, paintSnowBtn } from "./ui.js?v=claypick3";
 import { atlasStatsHtml, prefetchWikiIndex } from "./atlas-stats.js?v=stats1";
 import { bindFinishChartScope, finishChartsHtml, prefetchFinishCharts } from "./finish-charts.js?v=1";
 import { bindOsmFix, osmFixHtml, osmFixContext } from "./osm-fix.js?v=1";
 import { showPickerMap, destroyPickerMap } from "./picker-map.js?v=lod4";
+import { showClayPicker, hideClayPicker } from "./clay-pick.js";
 import { resolveVisitorNearestClay } from "/scripts/clay/nearest-resort.js";
 import { capDpr, attachDebug } from "./debug.js?v=mob1";
 import { intentsFrom, isTurning, analogAxes } from "./input.js?v=s2";
@@ -342,8 +343,17 @@ function loadGltf(url, onProgress) {
   });
 }
 
+function breathe() {
+  return new Promise((resolve) => setTimeout(resolve, 0));
+}
+
 function pushLoad(partial) {
   Object.assign(loadUi, partial);
+  const slot = document.getElementById("clay-load");
+  if (clayHold && slot) {
+    slot.innerHTML = clayLoadHtml({ ...loadUi, ready: terrainReady });
+    return;
+  }
   updateLoading(ui, loadUi);
 }
 
@@ -468,7 +478,12 @@ function setFlybyAuto(on) {
   setFlybyChrome(ui, true, flyby.auto, flyby.showTrails);
 }
 
+let clayHold = false;
+let terrainReady = false;
+let pickedTrail = null;
+
 function showReady() {
+  if (clayHold) return;
   if (TRAILER) {
     closePanel(ui);
     return;
@@ -738,6 +753,14 @@ function onUiAct(act, courseId) {
     enterFlyby();
     return;
   }
+  if (act === "ski-trail") {
+    if (!terrainReady || !pickedTrail) return;
+    const course = matchClayTrail(pickedTrail);
+    if (course) applyCourse(course);
+    endClayPick();
+    resetRun({ lobby: false });
+    return;
+  }
   if (act === "snow-level" && courseId) {
     setSnowLevel(courseId);
     applySnowLevel(scene);
@@ -942,6 +965,13 @@ function resetRun(opts = {}) {
   finishedShown = false;
   dnfShown = false;
   run.dnfReason = "";
+  if (clayHold) {
+    run.phase = "ready";
+    setPlayableVisible(false);
+    orbit.enabled = false;
+    renderer.domElement.style.display = "none";
+    return;
+  }
   if (opts.lobby === false) {
     closePanel(ui);
     exitLobby();
@@ -995,6 +1025,42 @@ function rememberScenePath(path) {
   history.replaceState({}, "", u);
 }
 
+function matchClayTrail(entity) {
+  const name = String(entity?.name || "").trim().toLowerCase();
+  const osm = String(entity?.osmId || "");
+  if (osm) {
+    const byId = trailChoices.find((r) => String(r.id || "").includes(osm));
+    if (byId) return byId;
+  }
+  if (name) {
+    const byName = trailChoices.find((r) => String(r.name || r.displayName || "").trim().toLowerCase() === name);
+    if (byName) return byName;
+  }
+  return activeCourse || trailChoices[0] || null;
+}
+
+function endClayPick() {
+  clayHold = false;
+  hideClayPicker();
+  const host = document.getElementById("clay-pick");
+  if (host) host.hidden = true;
+  document.body.classList.remove("clay-pick");
+  renderer.domElement.hidden = false;
+  renderer.domElement.style.display = "block";
+}
+
+function paintClay(name) {
+  openPanel(ui, "clay", {
+    name,
+    trail: pickedTrail?.name || "",
+    ready: terrainReady,
+    message: loadUi.message,
+    pct: loadUi.pct,
+    sizeHint: loadUi.sizeHint,
+    keyboard: !compactUi(),
+  });
+}
+
 async function openMountain(path) {
   const rel = path.replace(/^\/+|\/+$/g, "");
   rememberScenePath(rel);
@@ -1004,19 +1070,34 @@ async function openMountain(path) {
   destroyPickerMap();
   const catalog = catalogHub?.data?.resorts?.find((r) => String(r.path || "").replace(/\/+$/, "") === rel) || null;
   const name = String(catalog?.name || rel.split("/")[0] || "Mountain").replace(/_/g, " ");
+  const clayId = String(catalog?.id || rel.split("/")[0] || "");
+  clayHold = true;
+  terrainReady = false;
+  pickedTrail = null;
+  renderer.domElement.hidden = true;
+  renderer.domElement.style.display = "none";
+  const host = document.getElementById("clay-pick");
+  if (host) host.hidden = false;
+  paintClay(name);
+  showClayPicker(document.getElementById("clay-pick-stage"), clayId, (entity) => {
+    pickedTrail = entity;
+    paintClay(name);
+  }).catch((err) => console.warn("clay picker failed", err));
   loadUi = { name, message: "Reading the scene manifest…", stage: "manifest", factsHtml: "" };
-  openPanel(ui, "loading", loadUi);
   atlasStatsHtml({
     name,
     country: catalog?.country,
     location: catalog?.location,
     id: catalog?.id,
-  })
-    .then((html) => {
-      if (html) pushLoad({ factsHtml: html });
-    })
-    .catch(() => {});
-  await loadMountain();
+  }).catch(() => {});
+  try {
+    await loadMountain();
+    terrainReady = true;
+    if (clayHold) paintClay(name);
+  } catch (e) {
+    endClayPick();
+    throw e;
+  }
 }
 
 function catalogUrls() {
@@ -1059,6 +1140,7 @@ async function fetchCatalog() {
 }
 
 async function loadMountain() {
+  await breathe();
   pushLoad({ message: "Reading the scene manifest…" });
   const manifest = await loadJSON("scene-manifest.json");
   lastManifest = manifest;
@@ -1143,6 +1225,7 @@ async function loadMountain() {
 
   const drap = (x, z) => hf.sample(x, z);
   pushLoad({ message: "Draping OSM on the mountain…", pct: 0.92 });
+  await breathe();
   const osmCounts = await addOsmWorld(THREE, scene, SCENE_ROOT, manifest, drap);
   console.info("OSM world", osmCounts);
   pushLoad({ message: "Readying the run…", pct: 0.98 });
@@ -1413,7 +1496,7 @@ document.addEventListener("visibilitychange", () => {
 
 function tick(now) {
   requestAnimationFrame(tick);
-  if (document.body.classList.contains("picker")) {
+  if (clayHold || document.body.classList.contains("picker")) {
     last = now;
     return;
   }

@@ -131,6 +131,22 @@ export function updateLoading(ui, data) {
       ${facts}`;
 }
 
+export function clayLoadHtml(data) {
+  if (data.ready) {
+    return `<p class="kicker">Ready</p><p>The mountain is ready.</p>`;
+  }
+  const pct = data.pct;
+  const bar =
+    pct != null
+      ? `<div class="load-bar"><span style="width:${Math.round(Math.min(100, Math.max(2, pct * 100)))}%"></span></div>`
+      : `<div class="load-bar indet"><span></span></div>`;
+  const size = data.sizeHint ? `<p class="fine">${esc(data.sizeHint)}</p>` : "";
+  return `<p class="kicker">Loading</p>
+    <p>${esc(data.message || "DEM + OSM scene…")}</p>
+    ${size}
+    ${bar}`;
+}
+
 function actions(rows) {
   return `<div class="actions">${rows
     .map(
@@ -230,9 +246,11 @@ export function openPanel(ui, kind, data) {
   ui.overlay.hidden = false;
   ui.overlay.classList.toggle("lobby", kind === "ready");
   ui.overlay.classList.toggle("picker", kind === "mountains");
+  ui.overlay.classList.toggle("clay", kind === "clay");
   ui.overlay.classList.toggle("finish", kind === "finished" || kind === "dnf");
   document.body.classList.toggle("lobby", kind === "ready");
   document.body.classList.toggle("picker", kind === "mountains");
+  document.body.classList.toggle("clay-pick", kind === "clay");
   setResortTitle(ui, kind === "ready" ? data.resortName || "" : "");
   if (kind !== "ready") setOsmMapNote(ui, "");
   if (kind === "loading") {
@@ -246,6 +264,31 @@ export function openPanel(ui, kind, data) {
     return;
   }
   delete ui.overlay.dataset.loading;
+  if (kind === "clay") {
+    const trail = data.trail ? esc(data.trail) : "";
+    const keys = data.keyboard
+      ? `<p class="fine">Arrow keys steer · Space jump · Q and E shove</p>`
+      : "";
+    const load = `<div id="clay-load">${clayLoadHtml(data)}</div>`;
+    const change = ["mountains", "Change mountain", "ghost"];
+    ui.panel.innerHTML = trail
+      ? `${load}
+      <p class="kicker">Conditions</p>
+      <h2>${trail}</h2>
+      <p>Pick the day. More conditions will land here later.</p>
+      ${snowLevelHtml()}
+      ${keys}
+      ${actions([["ski-trail", data.ready ? "Ski this trail" : "Getting the mountain ready…", "primary"], change])}`
+      : `${load}
+      <p class="kicker">${esc(data.name || "Mountain")}</p>
+      <h2>${data.keyboard ? "Click a trail" : "Tap a trail"}</h2>
+      <p>Orbit and zoom the hill, then pick the run you want.</p>
+      ${keys}
+      ${actions([change])}`;
+    const go = ui.panel.querySelector('[data-act="ski-trail"]');
+    if (go && !data.ready) go.disabled = true;
+    return;
+  }
   if (kind === "mountains") {
     ui.panel.innerHTML = `<div class="world-head">
         <p class="kicker"><a class="atlas-home" href="/">Global Ski Atlas</a> · Pick a mountain</p>
@@ -348,9 +391,9 @@ export function setHelpTips(ui, on) {
 export function closePanel(ui) {
   if (ui.overlay) {
     ui.overlay.hidden = true;
-    ui.overlay.classList.remove("lobby", "picker", "finish");
+    ui.overlay.classList.remove("lobby", "picker", "clay", "finish");
   }
-  document.body.classList.remove("lobby", "picker");
+  document.body.classList.remove("lobby", "picker", "clay-pick");
   setResortTitle(ui, "");
   setOsmMapNote(ui, "");
 }
