@@ -154,6 +154,14 @@
   width: min(92vw, 720px);
   max-width: min(92vw, 720px);
 }
+@media (max-width: 720px) {
+  .maplibregl-popup.ski-feature-popup .maplibregl-popup-content,
+  .mapboxgl-popup.ski-feature-popup .mapboxgl-popup-content {
+    max-height: 42vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
 .sr-popup-wide { max-width: 100%; }
 .sr-popup-header { margin-bottom: 6px; }
 .sr-title-row {
