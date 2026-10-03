@@ -2,11 +2,9 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-import { GUI } from "three/addons/libs/lil-gui.module.min.js";
 import { makeHeightfield } from "./heightfield.js?v=cam2";
 import {
   makeSkier,
-  poseTune,
   spawnOnSlope,
   stepSki,
   orientSkier,
@@ -47,7 +45,7 @@ import {
   fitComposer,
 } from "./look.js?v=spray3";
 import { addResortIsland, updateIslandDust, updateIslandLod, setIslandOpacity, resetIslandLod } from "./island.js?v=lod3b";
-import { bindUi, setHud, openPanel, closePanel, updateLoading, clayLoadHtml, setOsmMapNote, setResortTitle, compactUi, setFlybyChrome, setHelpTips, paintSnowBtn } from "./ui.js?v=claypick3";
+import { bindUi, setHud, openPanel, closePanel, updateLoading, clayLoadHtml, setOsmMapNote, setResortTitle, compactUi, setFlybyChrome, setHelpTips, paintSnowBtn } from "./ui.js?v=claypick5";
 import { atlasStatsHtml, prefetchWikiIndex } from "./atlas-stats.js?v=stats1";
 import { bindFinishChartScope, finishChartsHtml, prefetchFinishCharts } from "./finish-charts.js?v=1";
 import { bindOsmFix, osmFixHtml, osmFixContext } from "./osm-fix.js?v=1";
@@ -817,17 +815,6 @@ function fitRenderer() {
 }
 
 const skier = makeSkier(THREE, scene);
-{
-  const gui = new GUI({ title: "Skier pose" });
-  const folder = gui.addFolder("Stance");
-  folder.add(poseTune, "manual").name("manual tuck");
-  folder.add(poseTune, "tuckAmount", 0, 1, 0.01);
-  folder.add(poseTune, "torsoPitch", 0, 60, 1).name("torso pitch");
-  folder.add(poseTune, "shoulderAbduct", 0, 25, 1).name("shoulder abduct");
-  folder.add(poseTune, "shoulderFlex", 0, 60, 1).name("shoulder flex");
-  folder.add(poseTune, "elbowBend", 40, 120, 1).name("elbow bend");
-  folder.open();
-}
 const yeti = makeYeti(THREE, scene);
 const blob = addContactBlob(THREE, scene);
 const spray = makeSpray(THREE, scene);

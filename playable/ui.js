@@ -269,22 +269,23 @@ export function openPanel(ui, kind, data) {
     const keys = data.keyboard
       ? `<p class="fine">Arrow keys steer · Space jump · Q and E shove</p>`
       : "";
-    const load = `<div id="clay-load">${clayLoadHtml(data)}</div>`;
-    const change = ["mountains", "Change mountain", "ghost"];
-    ui.panel.innerHTML = trail
-      ? `${load}
-      <p class="kicker">Conditions</p>
-      <h2>${trail}</h2>
-      <p>Pick the day. More conditions will land here later.</p>
-      ${snowLevelHtml()}
-      ${keys}
-      ${actions([["ski-trail", data.ready ? "Ski this trail" : "Getting the mountain ready…", "primary"], change])}`
-      : `${load}
-      <p class="kicker">${esc(data.name || "Mountain")}</p>
-      <h2>${data.keyboard ? "Click a trail" : "Tap a trail"}</h2>
-      <p>Orbit and zoom the hill, then pick the run you want.</p>
-      ${keys}
-      ${actions([change])}`;
+    const dock = trail
+      ? `<div class="clay-dock">
+          <p class="kicker">Trail</p>
+          <h2>${trail}</h2>
+          ${snowLevelHtml()}
+          ${actions([["ski-trail", data.ready ? "Play" : "Getting the mountain ready…", "primary"]])}
+        </div>`
+      : "";
+    ui.panel.innerHTML = `<button type="button" class="btn ghost clay-change" data-act="mountains">Change mountain</button>
+      <div class="clay-head">
+        <p class="kicker">${esc(data.name || "Mountain")}</p>
+        <h2>${data.keyboard ? "Click a trail" : "Tap a trail"}</h2>
+        <p>Orbit and zoom the hill, then pick the run you want.</p>
+        ${keys}
+      </div>
+      <div id="clay-load" class="clay-load">${clayLoadHtml(data)}</div>
+      ${dock}`;
     const go = ui.panel.querySelector('[data-act="ski-trail"]');
     if (go && !data.ready) go.disabled = true;
     return;

@@ -541,10 +541,46 @@
     #clay-pick-stage { position: absolute; inset: 0; }
     #clay-pick-stage canvas { display: block; width: 100%; height: 100%; touch-action: none; }
     #overlay.clay {
-      align-items: flex-end; justify-content: center;
+      align-items: stretch; justify-content: stretch;
       pointer-events: none; background: transparent;
+      padding: 0;
     }
-    #overlay.clay #panel { pointer-events: auto; margin-bottom: 8px; }
+    #overlay.clay #panel {
+      position: absolute; inset: 0; width: auto; max-width: none;
+      background: transparent; border: 0; padding: 0;
+      pointer-events: none;
+    }
+    #overlay.clay .clay-change,
+    #overlay.clay .clay-head,
+    #overlay.clay .clay-load,
+    #overlay.clay .clay-dock { pointer-events: auto; }
+    #overlay.clay .clay-change {
+      position: absolute; top: var(--pad); left: var(--pad-l); z-index: 2;
+    }
+    #overlay.clay .clay-head {
+      position: absolute; top: var(--pad); left: 50%; transform: translateX(-50%);
+      width: min(280px, 46vw); text-align: center; z-index: 1;
+      background: rgba(255,255,255,.78); border: 1px solid rgba(255,255,255,.9);
+      border-radius: 4px; padding: 10px 12px;
+    }
+    #overlay.clay .clay-head h2 { font-size: 18px; }
+    #overlay.clay .clay-head p { margin: 4px 0 0; }
+    #overlay.clay .clay-load {
+      position: absolute; top: var(--pad); right: var(--pad-r); z-index: 2;
+      width: min(240px, 42vw);
+      background: rgba(255,255,255,.78); border: 1px solid rgba(255,255,255,.9);
+      border-radius: 4px; padding: 10px 12px;
+    }
+    #overlay.clay .clay-load h2 { display: none; }
+    #overlay.clay .clay-dock {
+      position: absolute; left: var(--pad-l); top: calc(var(--pad) + 56px);
+      width: min(260px, 46vw); z-index: 2;
+      background: rgba(255,255,255,.78); border: 1px solid rgba(255,255,255,.9);
+      border-radius: 4px; padding: 12px 14px;
+    }
+    body.compact-ui #overlay.clay .clay-dock { width: min(200px, 48vw); }
+    body.compact-ui #overlay.clay .clay-head { width: min(220px, 46vw); }
+    body.compact-ui #overlay.clay .clay-head h2 { font-size: 15px; margin: 0; }
     body.clay-pick:not(.compact-ui) #pads { display: none !important; }
     body.clay-pick.compact-ui #pads { display: flex; }
     #overlay.picker {
@@ -744,6 +780,6 @@
     { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
                    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }
   </script>
-  <script type="module" src="./main.js?v=claypick4"></script>
+  <script type="module" src="./main.js?v=claypick5"></script>
 </body>
 </html>
