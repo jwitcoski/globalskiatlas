@@ -398,6 +398,11 @@
                         noControl: true
                     });
                     await addSkiPmtilesToMap(m, { pistesWidth: 3 });
+                    const canvas = el.querySelector('canvas');
+                    if (canvas) {
+                        canvas.setAttribute('role', 'img');
+                        canvas.setAttribute('aria-label', el.getAttribute('aria-label') || 'Ski trail map');
+                    }
                     m.addSource('fact-trail', {
                         type: 'geojson',
                         data: { type: 'Feature', properties: {}, geometry: geom }
@@ -508,7 +513,7 @@
                             <td>${escHtml(r.country)}</td>
                             <td class="tw-font-mono tw-text-sm">${formatKm(r.length)}</td>
                             <td><span class="diff-badge ${dClass}">${escHtml(dLabel)}</span></td>
-                            <td class="trail-actions"><a class="page-btn" href="${escHtml(mapHref(r))}">Map</a>${skiHref(r) ? `<a class="page-btn" href="${escHtml(skiHref(r))}">Ski</a>` : ''}</td>
+                            <td class="trail-actions"><a class="page-btn" href="${escHtml(mapHref(r))}" aria-label="Map of ${escHtml(r.name)}">Map</a>${skiHref(r) ? `<a class="page-btn" href="${escHtml(skiHref(r))}" aria-label="Ski ${escHtml(r.resort)}">Ski</a>` : ''}</td>
                         </tr>`;
                     });
                     tbody += '</tbody>';

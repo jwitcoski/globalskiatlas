@@ -515,6 +515,11 @@
                         noControl: true
                     });
                     await addSkiPmtilesToMap(m, { pistesWidth: 3 });
+                    const canvas = el.querySelector('canvas');
+                    if (canvas) {
+                        canvas.setAttribute('role', 'img');
+                        canvas.setAttribute('aria-label', el.getAttribute('aria-label') || 'Ski lift map');
+                    }
                     m.addSource('fact-lift', { type: 'geojson', data: { type: 'Feature', properties: {}, geometry: geom } });
                     if (geom.type === 'Polygon' || geom.type === 'MultiPolygon') {
                         m.addLayer({ id: 'fact-lift-fill', type: 'fill', source: 'fact-lift', paint: { 'fill-color': color, 'fill-opacity': 0.45 } });
@@ -600,7 +605,7 @@
                             <td>${escHtml(r.resort)}</td>
                             <td>${escHtml(r.country)}</td>
                             <td class="tw-font-mono tw-text-sm">${formatKm(r.length)}</td>
-                            <td class="trail-actions"><a class="page-btn" href="${escHtml(mapHref(r))}">Map</a>${ski ? `<a class="page-btn" href="${escHtml(ski)}">Ski</a>` : ''}</td>
+                            <td class="trail-actions"><a class="page-btn" href="${escHtml(mapHref(r))}" aria-label="Map of ${escHtml(r.name)}">Map</a>${ski ? `<a class="page-btn" href="${escHtml(ski)}" aria-label="Ski ${escHtml(r.resort)}">Ski</a>` : ''}</td>
                         </tr>`;
                     });
                     tbody += '</tbody>';

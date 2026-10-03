@@ -478,7 +478,8 @@
                         const resort = getName(row).replace(/\s+\([^)]*\)$/, '');
                         const map = 'mainmap.html?' + new URLSearchParams({ lat: String(lat), lng: String(lon), z: '14' }).toString();
                         const ski = playableHrefForResort({ name: resort }, { lat, lon, name: resort }, playableResorts);
-                        return `<a class="page-btn" href="${map}">Map</a>` + (ski ? `<a class="page-btn" href="${ski}">Ski</a>` : '');
+                        const q = resort.replace(/"/g, '&quot;');
+                        return `<a class="page-btn" href="${map}" aria-label="Map of ${q}">Map</a>` + (ski ? `<a class="page-btn" href="${ski}" aria-label="Ski ${q}">Ski</a>` : '');
                     }
                     function setLinks(id, row) {
                         const el = document.getElementById(id);
@@ -678,6 +679,11 @@
                         new maptilersdk.Marker({ color: '#0d9488' }).setLngLat([lon, lat]).addTo(m);
                         factMapInstances[containerId] = m;
                         m.jumpTo({ center: [lon, lat], zoom: 13 });
+                        const canvas = el.querySelector('canvas');
+                        if (canvas) {
+                            canvas.setAttribute('role', 'img');
+                            canvas.setAttribute('aria-label', el.getAttribute('aria-label') || 'Ski resort map');
+                        }
                     }
 
                     const COUNTRY_ALIAS = {
@@ -767,6 +773,11 @@
                                 noControl: true
                             });
                             await addSkiPmtilesToMap(m, { includeResortDetail: false });
+                            const worldCanvas = el.querySelector('canvas');
+                            if (worldCanvas) {
+                                worldCanvas.setAttribute('role', 'img');
+                                worldCanvas.setAttribute('aria-label', el.getAttribute('aria-label') || 'World map of downhill ski resorts');
+                            }
                             m.addSource('countries', { type: 'geojson', data: worldGeo });
                             m.addLayer({
                                 id: 'countries-fill',
@@ -838,7 +849,12 @@
                         const w = Math.min(640, el.clientWidth || 640) - margin.left - margin.right;
                         const h = 360 - margin.top - margin.bottom;
                         el.innerHTML = '';
-                        const svg = d3.select('#scatter-trails-area').append('svg').attr('width', w + margin.left + margin.right).attr('height', h + margin.top + margin.bottom);
+                        el.setAttribute('role', 'group');
+                        el.setAttribute('aria-label', 'Chart of trail count versus acres for downhill ski resorts');
+                        const svg = d3.select('#scatter-trails-area').append('svg')
+                            .attr('role', 'img')
+                            .attr('aria-label', 'Scatter plot of trail count versus acres')
+                            .attr('width', w + margin.left + margin.right).attr('height', h + margin.top + margin.bottom);
                         const g = svg.append('g').attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
                         const x = d3.scaleLinear().domain([0, d3.max(scatterData, (d) => d.trails) * 1.02]).range([0, w]);
                         const y = d3.scaleLinear().domain([0, d3.max(scatterData, (d) => d.area) * 1.02]).range([h, 0]);
@@ -862,6 +878,8 @@
                         };
                         const hideTooltip = () => { tooltip.style.display = 'none'; };
                         g.selectAll('circle').data(scatterData).enter().append('circle')
+                            .attr('role', 'img')
+                            .attr('aria-label', (d) => d.name + ', ' + d.trails.toLocaleString() + ' trails, ' + d.area.toLocaleString() + ' acres, ' + d.country)
                             .attr('cx', (d) => x(d.trails)).attr('cy', (d) => y(d.area))
                             .attr('r', (d) => isOutlier(d) ? 5 : 3)
                             .attr('fill', (d) => isOutlier(d) ? '#0d9488' : '#94a3b8')
