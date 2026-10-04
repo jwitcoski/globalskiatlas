@@ -503,6 +503,8 @@ function setFlybyAuto(on) {
 let clayHold = false;
 let terrainReady = false;
 let pickedTrail = null;
+let clayResortId = "";
+let clayResortName = "";
 
 function showReady() {
   if (clayHold) return;
@@ -760,7 +762,7 @@ function onUiAct(act, courseId) {
     return;
   }
   if (act === "lobby") {
-    if (run) resetRun({ lobby: true, reframe: true });
+    showClayAgain();
     return;
   }
   if (act === "mountains") {
@@ -1060,6 +1062,24 @@ function endClayPick() {
   renderer.domElement.style.display = "block";
 }
 
+function showClayAgain() {
+  if (!clayResortId) {
+    if (run) resetRun({ lobby: true, reframe: true });
+    return;
+  }
+  clayHold = true;
+  pickedTrail = null;
+  renderer.domElement.hidden = true;
+  renderer.domElement.style.display = "none";
+  const host = document.getElementById("clay-pick");
+  if (host) host.hidden = false;
+  paintClay(clayResortName);
+  showClayPicker(document.getElementById("clay-pick-stage"), clayResortId, (entity) => {
+    pickedTrail = entity;
+    paintClay(clayResortName);
+  }).catch((err) => console.warn("clay picker failed", err));
+}
+
 function paintClay(name) {
   openPanel(ui, "clay", {
     name,
@@ -1082,6 +1102,8 @@ async function openMountain(path) {
   const catalog = catalogHub?.data?.resorts?.find((r) => String(r.path || "").replace(/\/+$/, "") === rel) || null;
   const name = String(catalog?.name || rel.split("/")[0] || "Mountain").replace(/_/g, " ");
   const clayId = String(catalog?.id || rel.split("/")[0] || "");
+  clayResortId = clayId;
+  clayResortName = name;
   clayHold = true;
   terrainReady = false;
   pickedTrail = null;
