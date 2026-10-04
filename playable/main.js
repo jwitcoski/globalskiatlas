@@ -45,7 +45,7 @@ import {
   fitComposer,
 } from "./look.js?v=s5";
 import { addResortIsland, updateIslandDust, updateIslandLod, setIslandOpacity, resetIslandLod } from "./island.js?v=lod3b";
-import { bindUi, setHud, openPanel, closePanel, updateLoading, clayLoadHtml, setOsmMapNote, setResortTitle, compactUi, setFlybyChrome, setHelpTips, paintSnowBtn } from "./ui.js?v=claypick6";
+import { bindUi, setHud, openPanel, closePanel, updateLoading, clayLoadHtml, setOsmMapNote, setResortTitle, compactUi, setFlybyChrome, setHelpTips, paintSnowBtn } from "./ui.js?v=claypick7";
 import { atlasStatsHtml, prefetchWikiIndex } from "./atlas-stats.js?v=stats1";
 import { bindFinishChartScope, finishChartsHtml, prefetchFinishCharts } from "./finish-charts.js?v=1";
 import { bindOsmFix, osmFixHtml, osmFixContext } from "./osm-fix.js?v=1";
@@ -405,7 +405,7 @@ function openRunEnd(kind, extra) {
   const catalog = currentCatalogResort();
   openPanel(ui, kind, {
     ...extra,
-    stayHref: kind === "finished" ? hotelStayHref() : "",
+    stayHref: hotelStayHref(),
     osmFixHtml: currentOsmFix(),
     chartsHtml: finishChartsHtml(activeCourse, catalog),
   });

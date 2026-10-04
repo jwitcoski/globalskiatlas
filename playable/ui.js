@@ -364,10 +364,13 @@ export function openPanel(ui, kind, data) {
       <p>Score ${data.score} · ${data.time}</p>
       ${data.osmFixHtml || ""}
       <div class="sf-finish-slot">${data.chartsHtml || ""}</div>
-      ${actions([
-        ["restart", "Restart", "primary"],
-        ["lobby", "Other trail", "ghost"],
-      ])}`;
+      ${actions(
+        [
+          ["restart", "Restart", "primary"],
+          ["lobby", "Other trail", "ghost"],
+        ],
+        stayLinkHtml(data.stayHref),
+      )}`;
     return;
   }
   ui.panel.innerHTML = `<p class="kicker">Error</p><h2>Load failed</h2><p>${data.message || ""}</p>
