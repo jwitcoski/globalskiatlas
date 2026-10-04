@@ -23,7 +23,7 @@ import {
   startShove,
   shoveShouldHit,
   markShoveHit,
-} from "./physics.js?v=ready3";
+} from "./physics.js?v=s5";
 import { featuredCourses, attachPisteDifficulty, courseFinish, createRun, tickRun, formatTime } from "./run.js?v=map4";
 import { coordsToXz, attachPiste, resetScore, tickScore, commitBestScore, formatScore, applyWipeout } from "./score.js?v=snow1";
 import { orientPiste, alongTrack, alongPolyline, placeGates, addGateMeshes, clearGateMeshes, resetGates, tickGates } from "./gates.js?v=vis18";
@@ -43,7 +43,7 @@ import {
   setInspectAtmosphere,
   makeComposer,
   fitComposer,
-} from "./look.js?v=spray3";
+} from "./look.js?v=s5";
 import { addResortIsland, updateIslandDust, updateIslandLod, setIslandOpacity, resetIslandLod } from "./island.js?v=lod3b";
 import { bindUi, setHud, openPanel, closePanel, updateLoading, clayLoadHtml, setOsmMapNote, setResortTitle, compactUi, setFlybyChrome, setHelpTips, paintSnowBtn } from "./ui.js?v=claypick6";
 import { atlasStatsHtml, prefetchWikiIndex } from "./atlas-stats.js?v=stats1";
@@ -53,8 +53,8 @@ import { showPickerMap, destroyPickerMap } from "./picker-map.js?v=lod4";
 import { showClayPicker, hideClayPicker } from "./clay-pick.js";
 import { resolveVisitorNearestClay } from "/scripts/clay/nearest-resort.js";
 import { capDpr, attachDebug } from "./debug.js?v=mob1";
-import { intentsFrom, isTurning, analogAxes } from "./input.js?v=s2";
-import { bindMobileChrome, bindPads } from "./mobile.js?v=s4";
+import { intentsFrom, isTurning, analogAxes } from "./input.js?v=s5";
+import { bindMobileChrome, bindPads } from "./mobile.js?v=s5";
 import { bakePisteSculpt, drapeSculptOnMesh } from "./piste-sculpt.js?v=feel3";
 import { addTrailMarks, clearTrailMarks, repairFences, updateTrailMarks } from "./trail-marks.js?v=marks12";
 import { makeYeti, resetYeti, parkYetiAtStart, tickYeti } from "./yeti.js?v=vis16";

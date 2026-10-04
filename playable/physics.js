@@ -1,6 +1,6 @@
 /** Arcade ski on DEM. Gravity is fall-line only (none on flats). Custom, not Rapier. */
 
-import { analogAxes } from "./input.js?v=s1";
+import { analogAxes } from "./input.js?v=s5";
 
 const G_FALL = 32;
 const TURN = 0.98;

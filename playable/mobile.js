@@ -1,6 +1,6 @@
 /** Landscape-first playable. Analog stick + pads; lock requested on Ski. */
 
-import { setAnalogSteer, clearAnalog } from "./input.js?v=s4";
+import { setAnalogSteer, clearAnalog } from "./input.js?v=s5";
 
 const DEAD = 0.12;
 

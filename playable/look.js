@@ -6,7 +6,7 @@ import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
-import { intentsFrom } from "./input.js?v=s2";
+import { intentsFrom } from "./input.js?v=s5";
 
 const SUN_DIR = { x: 0.42, y: 0.88, z: 0.22 };
 const FOG = 0xc5dff0;
