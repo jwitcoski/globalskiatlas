@@ -92,6 +92,13 @@ jobs:
           aws s3 cp wiki/css/style.css s3://globalskiatlas.com/wiki/css/style.css \
             --content-type text/css \
             --cache-control "public, max-age=300, must-revalidate"
+          # Cached 301s still request /auth/config/, which CloudFront maps to this key.
+          aws s3 cp auth/config s3://globalskiatlas.com/auth/config \
+            --content-type application/json \
+            --cache-control "public, max-age=300, must-revalidate"
+          aws s3 cp auth/config s3://globalskiatlas.com/auth/config/index.html \
+            --content-type application/json \
+            --cache-control "public, max-age=300, must-revalidate"
 
       - name: Invalidate CloudFront cache
         run: |
