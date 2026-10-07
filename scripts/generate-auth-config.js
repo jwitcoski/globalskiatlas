@@ -32,6 +32,10 @@ const config = {
 };
 
 const outPath = path.resolve(__dirname, '..', 'auth', 'config');
+if (!config.configured && fs.existsSync(outPath)) {
+  console.log('COGNITO_* unset; left existing auth/config in place.');
+  process.exit(0);
+}
 fs.mkdirSync(path.dirname(outPath), { recursive: true });
 fs.writeFileSync(outPath, JSON.stringify(config, null, 0) + '\n', 'utf8');
 console.log(config.configured ? 'Wrote auth/config (Cognito configured).' : 'Wrote auth/config (Cognito not configured).');

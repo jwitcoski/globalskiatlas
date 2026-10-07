@@ -33,11 +33,19 @@ app.use(express.json());
 const PORT = Number(process.env.PORT) || 3000;
 
 // --- Cognito config ----------------------------------------------------------
+function readAuthConfigFile() {
+  try {
+    return JSON.parse(fs.readFileSync(path.join(__dirname, 'auth', 'config'), 'utf8'));
+  } catch (e) {
+    return {};
+  }
+}
+const fileAuth = readAuthConfigFile();
 const cognito = {
-  userPoolId: process.env.COGNITO_USER_POOL_ID || '',
-  region:     process.env.COGNITO_REGION || 'us-east-1',
-  clientId:   process.env.COGNITO_CLIENT_ID || '',
-  domain:     process.env.COGNITO_DOMAIN || '',
+  userPoolId: process.env.COGNITO_USER_POOL_ID || fileAuth.userPoolId || '',
+  region:     process.env.COGNITO_REGION || fileAuth.region || 'us-east-1',
+  clientId:   process.env.COGNITO_CLIENT_ID || fileAuth.clientId || '',
+  domain:     process.env.COGNITO_DOMAIN || fileAuth.domain || '',
 };
 const domainUrl = cognito.domain
   ? (cognito.domain.includes('://') ? cognito.domain : `https://${cognito.domain}.auth.${cognito.region}.amazoncognito.com`)
