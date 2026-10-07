@@ -60,9 +60,12 @@ function handler(event) {
 
   // 4. Extensionless paths → trailing slash so S3 can serve directory index.html.
   // /playable and /blog both 403 without this; default root object only covers /.
+  // /auth/config is a real extensionless object (Cognito JSON). Slash-redirecting it
+  // rewrites to /auth/config/index.html, which S3 answers with 403.
+  var extensionlessFiles = { '/auth/config': true };
   var lastSlash = uri.lastIndexOf('/');
   var lastSegment = uri.slice(lastSlash + 1);
-  if (uri !== '/' && uri.charAt(uri.length - 1) !== '/' && lastSegment.indexOf('.') === -1) {
+  if (uri !== '/' && uri.charAt(uri.length - 1) !== '/' && lastSegment.indexOf('.') === -1 && !extensionlessFiles[uri]) {
     needRedirect = true;
     newPath = uri + '/';
   }
