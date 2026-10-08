@@ -7,7 +7,7 @@ import { addOsmTraffic } from "./traffic.js?v=vis16";
 import { alongPolyline, polylineLen } from "./gates.js?v=vis17";
 import { liftType, liftCableHeight, makeLiftTerminal, makeLiftCarrier, makeLiftSkier } from "./lift-graphics.js?v=s2";
 import { createLiftMotion } from "./lift-motion.js";
-import { snowTerrainMaterial } from "./ground.js?v=g4";
+import { snowTerrainMaterial } from "./ground.js?v=g5";
 import { PALETTE } from "/scripts/clay/config.js";
 import { addClayBuilding } from "/scripts/clay/buildings.js";
 import {
@@ -18,7 +18,8 @@ import {
   forestRingsFromFC,
   getSnowLevel,
   loadSnowLevel,
-} from "./snow.js?v=snow17";
+  snowEdgeFade,
+} from "./snow.js?v=snow18";
 
 const GRID = 12;
 const MAX_FILL_SPAN = 700;
@@ -533,6 +534,8 @@ const snowCoverFill = snowTerrainMaterial(THREE, {
   polygonOffsetFactor: 1,
   polygonOffsetUnits: 1,
 });
+/* Every piste-snow mesh carries a snowEdge attribute (see drapePisteFill); without it the fringe discards everything. */
+snowCoverFill.defines.SNOW_EDGE = "";
 
 function clearGroup(g) {
   if (!g) return;
@@ -543,10 +546,13 @@ function clearGroup(g) {
   }
 }
 
-function drapePisteSnow(ringXz, holesXz, elevFn) {
+function snowPolyEn(ringXz, holesXz) {
   const outer = xzRingToEn(ringXz);
-  const holes = (holesXz || []).map(xzRingToEn);
-  const mesh = drapePisteFill(outer, holes, elevFn, 0.08, snowCoverFill);
+  return { outer, holes: (holesXz || []).map(xzRingToEn), bb: ringBBox(outer) };
+}
+
+function drapePisteSnow(poly, cover, elevFn) {
+  const mesh = drapePisteFill(poly.outer, poly.holes, elevFn, 0.08, snowCoverFill, (pos) => snowEdgeFade(pos, poly, cover));
   if (mesh) {
     mesh.name = "piste-snow";
     mesh.userData.pisteKind = "snow";
@@ -564,17 +570,18 @@ function paintTrailCover(root, cover, elevFn) {
     root.add(snowG);
   }
   clearGroup(snowG);
+  const polys = [];
   for (const it of cover.items || []) {
     const ring = it.snow || it.bare;
-    if (!ring || ring.length < 3) continue;
-    const mesh = drapePisteSnow(ring, it.holes, elevFn);
-    if (mesh) snowG.add(mesh);
+    if (ring && ring.length >= 3) polys.push(snowPolyEn(ring, it.holes));
   }
   if (getSnowLevel() === "midWinter") {
-    for (const ring of cover.patches || []) {
-      const mesh = drapePisteSnow(ring, [], elevFn);
-      if (mesh) snowG.add(mesh);
-    }
+    for (const ring of cover.patches || []) polys.push(snowPolyEn(ring, []));
+  }
+  // ponytail: edge probes test every snow polygon (bbox-culled); fine for ~100s of pistes, grid-hash them if a mega resort stalls.
+  for (const poly of polys) {
+    const mesh = drapePisteSnow(poly, polys, elevFn);
+    if (mesh) snowG.add(mesh);
   }
 }
 
@@ -591,6 +598,8 @@ export function applySnowLevel(scene) {
   const mat = scene?.userData?.snowMat;
   if (mat?.color) mat.color.setHex(p.terrain);
   if (mat?.userData.ground) mat.userData.ground.uDirt.value = p.offPiste ? 0 : 1;
+  /* Snow under snow in wonderland: no melt fringe. */
+  snowCoverFill.userData.ground.uEdge.value = p.offPiste ? 0 : 1;
   for (const mesh of scene?.userData?.island?.tops || []) {
     if (mesh.material?.color) mesh.material.color.setHex(p.terrain);
   }
@@ -949,7 +958,7 @@ function drapeFill(outer, holes, elevFn, lift, material, maxSpan = MAX_FILL_SPAN
 }
 
 /** Piste snow: finer DEM grid + edge lerp so the border follows the OSM ring, not stair-steps. */
-function drapePisteFill(outer, holes, elevFn, lift, material) {
+function drapePisteFill(outer, holes, elevFn, lift, material, edgeFn) {
   const bb = ringBBox(outer);
   if (!Number.isFinite(bb.span) || bb.span < 1) return null;
   const step = 3.5;
@@ -1077,6 +1086,7 @@ function drapePisteFill(outer, holes, elevFn, lift, material) {
   if (!index.length) return null;
   const geo = new THREE.BufferGeometry();
   geo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+  if (edgeFn) geo.setAttribute("snowEdge", new THREE.Float32BufferAttribute(edgeFn(positions), 1));
   geo.setIndex(index);
   geo.computeVertexNormals();
   return new THREE.Mesh(geo, material);

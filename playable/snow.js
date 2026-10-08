@@ -75,6 +75,77 @@ function pointInEn(e, n, ring) {
   return inside;
 }
 
+/** Width of the patchy, thinning fringe inside a snow polygon where it meets bare ground. */
+export const SNOW_FRINGE_M = 4;
+
+function inPolyEn(e, n, p) {
+  const b = p.bb;
+  if (b && (e < b.minX || e > b.maxX || n < b.minY || n > b.maxY)) return false;
+  return pointInEn(e, n, p.outer) && !(p.holes || []).some((h) => h.length >= 3 && pointInEn(e, n, h));
+}
+
+/**
+ * Per-vertex 0..1: distance to the nearest edge of `poly` that borders bare ground, over `fringe` m.
+ * Edges shared with another snow polygon in `cover` don't count, so touching pistes never show a dirt seam.
+ * pos is xyz with z = -north; polygons are { outer, holes, bb? } rings of [east, north].
+ */
+export function snowEdgeFade(pos, poly, cover, fringe = SNOW_FRINGE_M) {
+  const covered = (e, n) => cover.some((p) => inPolyEn(e, n, p));
+  const cell = fringe;
+  const buckets = new Map();
+  const key = (ix, iy) => (ix + 32768) * 65536 + (iy + 32768);
+  for (const ring of [poly.outer, ...(poly.holes || [])]) {
+    const m = ring?.length || 0;
+    for (let i = 0; i < m; i++) {
+      const a = ring[i];
+      const b = ring[(i + 1) % m];
+      const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+      if (len < 1e-3) continue;
+      /* Fringe-length pieces, so an edge only partly shared with a neighbour still fringes where it meets dirt. */
+      const parts = Math.ceil(len / fringe);
+      const dx = (b[0] - a[0]) / parts;
+      const dy = (b[1] - a[1]) / parts;
+      const ox = (-dy / (len / parts)) * 0.6;
+      const oy = (dx / (len / parts)) * 0.6;
+      for (let p = 0; p < parts; p++) {
+        const ae = a[0] + dx * p;
+        const an = a[1] + dy * p;
+        const me = ae + dx * 0.5;
+        const mn = an + dy * 0.5;
+        if (covered(me + ox, mn + oy) && covered(me - ox, mn - oy)) continue;
+        const seg = [ae, an, dx, dy, dx * dx + dy * dy];
+        const x0 = Math.floor((Math.min(ae, ae + dx) - fringe) / cell);
+        const x1 = Math.floor((Math.max(ae, ae + dx) + fringe) / cell);
+        const y0 = Math.floor((Math.min(an, an + dy) - fringe) / cell);
+        const y1 = Math.floor((Math.max(an, an + dy) + fringe) / cell);
+        for (let ix = x0; ix <= x1; ix++) {
+          for (let iy = y0; iy <= y1; iy++) {
+            const k = key(ix, iy);
+            const list = buckets.get(k);
+            if (list) list.push(seg);
+            else buckets.set(k, [seg]);
+          }
+        }
+      }
+    }
+  }
+  const n = pos.length / 3;
+  const out = new Float32Array(n).fill(1);
+  for (let i = 0; i < n; i++) {
+    const e = pos[i * 3];
+    const nn = -pos[i * 3 + 2];
+    const segs = buckets.get(key(Math.floor(e / cell), Math.floor(nn / cell)));
+    if (!segs) continue;
+    let best = fringe;
+    for (const [ae, an, dx, dy, l2] of segs) {
+      const t = Math.max(0, Math.min(1, ((e - ae) * dx + (nn - an) * dy) / l2));
+      best = Math.min(best, Math.hypot(e - ae - dx * t, nn - an - dy * t));
+    }
+    out[i] = best / fringe;
+  }
+  return out;
+}
+
 function inForest(e, n, forests) {
   for (const r of forests || []) {
     if (pointInEn(e, n, r)) return true;
@@ -436,6 +507,21 @@ function selfCheck() {
   const mixed = { items: [], skiRings: cover.skiRings, patches: [blobRing(40, 12, 8, 8, 1)] };
   equal(onPisteAt(40, 12, mixed, "midWinter", pts), true);
   equal(onPisteAt(40, 12, mixed, "spring", pts), false);
+  /* Two 20 m squares sharing the edge east = 20; vertices at north = 10, z = -north. */
+  const sq = (e0) => ({ outer: [[e0, 0], [e0 + 20, 0], [e0 + 20, 20], [e0, 20]], holes: [] });
+  const A = sq(0);
+  const B = sq(20);
+  const vx = new Float32Array([1.5, 0, -10, 19.5, 0, -10, 10, 0, -10, 10, 0, -0.75]);
+  const fadeA = snowEdgeFade(vx, A, [A, B], 3);
+  ok(Math.abs(fadeA[0] - 0.5) < 1e-4, `bare edge fade ${fadeA[0]}`);
+  ok(fadeA[1] === 1, `shared edge seam ${fadeA[1]}`);
+  ok(fadeA[2] === 1, `interior fade ${fadeA[2]}`);
+  ok(Math.abs(fadeA[3] - 0.25) < 1e-4, `south edge fade ${fadeA[3]}`);
+  ok(snowEdgeFade(vx, A, [A], 3)[1] < 0.2, "lone piste east edge should fringe");
+  /* C covers only the north half of A's east edge: the bare south half must still fringe. */
+  const C = { outer: [[20, 10], [30, 10], [30, 20], [20, 20]], holes: [] };
+  const half = snowEdgeFade(new Float32Array([19.5, 0, -3, 19.5, 0, -16]), A, [A, C], 3);
+  ok(half[0] < 0.2 && half[1] === 1, `partly shared edge ${half[0]} / ${half[1]}`);
   console.log("snow.js ok");
 }
 

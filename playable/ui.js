@@ -1,6 +1,6 @@
 /** HUD and overlay helpers. UI reads game state; it does not own piste/DNF rules. */
 
-import { SNOW_KEYS, SNOW_LABEL, getSnowLevel } from "./snow.js?v=snow17";
+import { SNOW_KEYS, SNOW_LABEL, getSnowLevel } from "./snow.js?v=snow18";
 
 export function bindUi() {
   return {

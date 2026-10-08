@@ -12,6 +12,9 @@ const SPARKLE_DENSITY = 0.5;
 const GRAIN = 1.4;
 const SHADOW_TINT = 0xc0d3ea;
 const SHADOW_TINT_AMT = 0.8;
+/* Piste melt fringe (width SNOW_FRINGE_M in snow.js): how deep holes eat in (0..1 of the fringe), and thin-snow tint. */
+const EDGE_REACH = 0.9;
+const EDGE_THIN = "0.8, 0.74, 0.66";
 
 function hash4(i, j, k, seed) {
   let n = Math.imul(i, 374761393) ^ Math.imul(j, 668265263) ^ Math.imul(k, 1440662683) ^ Math.imul(seed, 1274126177);
@@ -119,25 +122,32 @@ export function snowTerrainMaterial(THREE, opts = {}) {
     uGrain: { value: GRAIN },
     uShadowTint: { value: new THREE.Color(SHADOW_TINT) },
     uShadowAmt: { value: SHADOW_TINT_AMT },
+    uEdge: { value: 1 },
   };
   mat.userData.ground = u;
   mat.onBeforeCompile = (shader) => {
     Object.assign(shader.uniforms, u);
     /* No vertex displacement: skis and ski-wake sit on the DEM height, so any raise buries them. */
     shader.vertexShader = shader.vertexShader
-      .replace("#include <common>", "#include <common>\nvarying vec3 vGroundW;")
+      .replace(
+        "#include <common>",
+        "#include <common>\nvarying vec3 vGroundW;\n#ifdef SNOW_EDGE\nattribute float snowEdge;\nvarying float vSnowEdge;\n#endif",
+      )
       .replace(
         "#include <begin_vertex>",
-        "#include <begin_vertex>\n\tvGroundW = (modelMatrix * vec4(transformed, 1.0)).xyz;",
+        "#include <begin_vertex>\n\tvGroundW = (modelMatrix * vec4(transformed, 1.0)).xyz;\n#ifdef SNOW_EDGE\n\tvSnowEdge = snowEdge;\n#endif",
       );
     shader.fragmentShader = shader.fragmentShader
       .replace(
         "#include <common>",
         `#include <common>
         uniform sampler2D uSnowTex, uDirtTex;
-        uniform float uDirt, uSparkle, uGrain, uShadowAmt;
+        uniform float uDirt, uSparkle, uGrain, uShadowAmt, uEdge;
         uniform vec3 uShadowTint;
         varying vec3 vGroundW;
+        #ifdef SNOW_EDGE
+        varying float vSnowEdge;
+        #endif
         float gHash(vec2 p){
           vec3 q = fract(vec3(p.xyx) * 0.1031);
           q += dot(q, q.yzx + 33.33);
@@ -177,6 +187,13 @@ export function snowTerrainMaterial(THREE, opts = {}) {
           float cav = smoothstep(0.05, 0.6, gA.b * 0.45 + gB.b * 0.55);
           diffuseColor.rgb *= mix(vec3(0.72, 0.79, 0.90), vec3(1.0), cav);
           diffuseColor.rgb *= (0.955 + 0.045 * gB.b * gNear) * (0.97 + 0.03 * gC.b);
+          #ifdef SNOW_EDGE
+          /* Melt fringe: drifts (high billows) hold out to the edge, hollows melt first; what's left near the edge is thin. */
+          float gCut = (1.0 - smoothstep(0.25, 0.75, gA.b * 0.55 + gC.b * 0.25 + gB.b * 0.2)) * ${EDGE_REACH.toFixed(2)};
+          float gEdge = mix(1.0, vSnowEdge, uEdge);
+          if (gEdge < gCut) discard;
+          diffuseColor.rgb *= mix(vec3(${EDGE_THIN}), vec3(1.0), smoothstep(0.0, 0.3, gEdge - gCut));
+          #endif
         }`,
       )
       .replace(
