@@ -397,15 +397,20 @@ function redundancySvg(rows) {
   const byLifts = [...rows].sort((a, b) => b.lifts - a.lifts).slice(0, 4);
   const byWorst = rows.filter((r) => r.lifts >= 6).sort((a, b) => b.worst - a.worst).slice(0, 4);
   const best = rows.filter((r) => r.lifts >= 10).sort((a, b) => a.worst - b.worst).slice(0, 2);
-  const outliers = new Set([...byLifts, ...byWorst, ...best]);
+  const minLifts = rows.length <= 25 ? 5 : rows.length <= 150 ? 10 : Infinity;
+  const small = rows.length <= 150 ? rows.filter((r) => r.lifts >= minLifts).sort((a, b) => b.lifts - a.lifts) : null;
+  const outliers = new Set(small || [...byLifts, ...byWorst, ...best]);
   const boxes = [];
   const labels = [...outliers].map((r) => {
-    const name = r.name.length > 24 ? r.name.slice(0, 23) + "…" : r.name;
-    const w = name.length * 5.6, right = sx(r.lifts) > L + pw * 0.62;
-    const x = right ? sx(r.lifts) - 6 - w : sx(r.lifts) + 6, y = sy(r.worst) + 4;
-    const box = { l: x - 2, r: x + w + 2, t: y - 11, b: y + 3 };
-    if (boxes.some((o) => box.l < o.r && box.r > o.l && box.t < o.b && box.b > o.t)) return "";
-    boxes.push(box);
+    const short = r.name.replace(/ (Ski & Snowboard Resort|Ski Resort|Resort|Ski Area|Ski Center|Club)$/i, "");
+    const name = short.length > 22 ? short.slice(0, 21) + "…" : short;
+    const w = name.length * 5.6, y = sy(r.worst) + 4;
+    const sides = [sx(r.lifts) - 6 - w, sx(r.lifts) + 6];
+    if (sx(r.lifts) <= L + pw * 0.62) sides.reverse();
+    const hit = (b) => b.l < L || b.r > W || boxes.some((o) => b.l < o.r && b.r > o.l && b.t < o.b && b.b > o.t);
+    const x = sides.find((sx0) => !hit({ l: sx0 - 2, r: sx0 + w + 2, t: y - 11, b: y + 3 }));
+    if (x === undefined) return "";
+    boxes.push({ l: x - 2, r: x + w + 2, t: y - 11, b: y + 3 });
     return `<text x="${x}" y="${y}" font-size="10" font-weight="600" fill="#1e293b">${esc(name)}</text>`;
   }).join("");
   const dots = rows.map((r) => {
@@ -426,21 +431,33 @@ async function bootRedundancyScatter(el) {
   const data = await (await fetch(el.dataset.src)).json();
   el.innerHTML = `<div class="guide-chart-title">${esc(el.dataset.title || "")}</div>
     <div class="guide-chart-sub">${esc(el.dataset.sub || "")}</div>
-    <div class="guide-filter"><label>Country <select></select></label><label>State / province <select></select></label></div>
+    <div class="guide-filter"><label>Country <select></select></label></div>
+    <fieldset class="guide-states"><legend>State / province (pick any) <button type="button">Clear</button></legend><div></div></fieldset>
     <div data-plot></div>`;
-  const [cSel, sSel] = el.querySelectorAll("select");
+  const cSel = el.querySelector("select");
+  const box = el.querySelector(".guide-states div");
   const plot = el.querySelector("[data-plot]");
+  const picked = new Set();
   const uniq = (rows, k) => [...new Set(rows.map((r) => r[k]).filter(Boolean))].sort();
-  const fill = (sel, vals, all) => (sel.innerHTML = `<option value="">${all}</option>` + vals.map((v) => `<option>${esc(v)}</option>`).join(""));
   const draw = () => {
-    plot.innerHTML = redundancySvg(data.filter((r) => (!cSel.value || r.country === cSel.value) && (!sSel.value || r.state === sSel.value)));
+    plot.innerHTML = redundancySvg(data.filter((r) => (!cSel.value || r.country === cSel.value) && (!picked.size || picked.has(r.state))));
   };
-  fill(cSel, uniq(data, "country"), "All countries");
+  cSel.innerHTML = '<option value="">All countries</option>' + uniq(data, "country").map((v) => `<option>${esc(v)}</option>`).join("");
   cSel.addEventListener("change", () => {
-    fill(sSel, uniq(data.filter((r) => !cSel.value || r.country === cSel.value), "state"), "All");
+    const states = uniq(data.filter((r) => !cSel.value || r.country === cSel.value), "state");
+    [...picked].forEach((s) => states.includes(s) || picked.delete(s));
+    box.innerHTML = states.map((s) => `<label><input type="checkbox" value="${esc(s)}"${picked.has(s) ? " checked" : ""}> ${esc(s)}</label>`).join("");
     draw();
   });
-  sSel.addEventListener("change", draw);
+  box.addEventListener("change", (e) => {
+    e.target.checked ? picked.add(e.target.value) : picked.delete(e.target.value);
+    draw();
+  });
+  el.querySelector(".guide-states button").addEventListener("click", () => {
+    picked.clear();
+    box.querySelectorAll("input").forEach((i) => (i.checked = false));
+    draw();
+  });
   cSel.dispatchEvent(new Event("change"));
 }
 

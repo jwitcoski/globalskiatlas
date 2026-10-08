@@ -373,6 +373,45 @@ body > main[class] {
   font: inherit;
   color: #111827;
 }
+.guide-states {
+  border: 0;
+  margin: 0 0 0.4rem;
+  padding: 0;
+  font-size: 0.75rem;
+  color: #475569;
+}
+.guide-states legend button {
+  min-height: 32px;
+  margin-left: 0.4rem;
+  padding: 0 0.6rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #fff;
+  color: #1a4d8c;
+}
+.guide-states div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  max-height: 7.5rem;
+  margin-top: 0.3rem;
+  overflow-y: auto;
+}
+.guide-states label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-height: 32px;
+  padding: 0 0.5rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.guide-states label:has(input:checked) {
+  border-color: #0f766e;
+  background: #f0fdfa;
+  color: #0f766e;
+}
 .guide-chart-title {
   font-size: 0.85rem;
   font-weight: 600;

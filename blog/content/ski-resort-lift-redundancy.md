@@ -4,7 +4,7 @@
 </div>
 <div class="guide-visual">
 <div class="guide-chart guide-chart--auto" data-chart="redundancy" data-src="data/lift-redundancy.json" data-title="Lift network size vs. worst single closure" data-sub="One dot per resort. Lower is more redundant. Hover a dot for the lift."></div>
-<p class="guide-caption">Filter by country, then state or province. Outliers are labeled.</p>
+<p class="guide-caption">Filter by country, then tick one or more states or provinces. Outliers are labeled.</p>
 </div>
 </div>
 
