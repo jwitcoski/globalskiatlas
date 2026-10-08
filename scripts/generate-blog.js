@@ -267,6 +267,7 @@ function generatePostHtml(post, bodyHtml, bySlug) {
   </main>
   ${siteFooter()}
   <script src="../index.js"></script>${mapScripts}
+  <script src="../scripts/site-nav.js?v=6" defer></script>
 </body>
 </html>
 `;
@@ -325,6 +326,7 @@ function generateIndexHtml(posts) {
   </main>
   ${siteFooter()}
   <script src="../index.js"></script>
+  <script src="../scripts/site-nav.js?v=6" defer></script>
 </body>
 </html>
 `;

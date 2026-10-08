@@ -96,6 +96,11 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://globalskiatlas.com/blog/ski-resort-lift-redundancy.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://globalskiatlas.com/blog/how-global-ski-atlas-data-pipeline-works.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>

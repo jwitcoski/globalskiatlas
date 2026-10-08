@@ -120,7 +120,7 @@ function barChart(title, sub, rows) {
       const w = (r.n / max) * barW;
       return `<text x="0" y="${y + 13}" font-size="11" fill="#334155">${r.k}</text>
         <rect x="${left}" y="${y}" width="${w}" height="${bh}" fill="${r.c || "#0f766e"}"/>
-        <text x="${left + w + 6}" y="${y + 13}" font-size="11" fill="#111827">${r.n.toLocaleString()}</text>`;
+        <text x="${left + w + 6}" y="${y + 13}" font-size="11" fill="#111827">${r.t ?? r.n.toLocaleString()}</text>`;
     })
     .join("");
   return `<div class="guide-chart-title">${title}</div>
@@ -293,6 +293,20 @@ function bootCharts(s, passes) {
         rows.map((r, i) => ({ k: shortName(r), n: Math.round(num(r[metric])), c: i === 0 ? navy : teal }))
       );
     }
+    if (kind === "bars") {
+      // data-items="Label:12.5|Other:3"; values are precomputed offline, data-unit is appended to the value label.
+      const unit = el.dataset.unit || "";
+      const rows = (el.dataset.items || "").split("|").map((s) => {
+        const i = s.lastIndexOf(":");
+        return { k: s.slice(0, i), n: Number(s.slice(i + 1)) };
+      });
+      const hi = Math.max(...rows.map((r) => r.n));
+      el.innerHTML = barChart(
+        el.dataset.title || "",
+        el.dataset.sub || "",
+        rows.map((r) => ({ ...r, t: r.n.toLocaleString() + unit, c: r.n === hi ? navy : teal }))
+      );
+    }
     if (kind === "lifts") {
       const rows = Object.entries(s.lifts)
         .sort((a, b) => b[1] - a[1])
@@ -370,7 +384,68 @@ async function loadPasses() {
   }
 }
 
+const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+
+function redundancySvg(rows) {
+  if (!rows.length) return '<p class="guide-chart-sub">No scored resorts here.</p>';
+  const W = 440, H = 300, L = 40, R = 10, T = 10, B = 34;
+  const pw = W - L - R, ph = H - T - B;
+  const xMax = Math.max(5, Math.ceil(Math.max(...rows.map((r) => r.lifts)) / 5) * 5);
+  const yMax = Math.min(100, Math.max(10, Math.ceil(Math.max(...rows.map((r) => r.worst)) / 10) * 10));
+  const sx = (v) => L + (v / xMax) * pw, sy = (v) => T + ph - (v / yMax) * ph;
+  const ticks = (max) => [0, 1, 2, 3, 4, 5].map((i) => Math.round((max * i) / 5));
+  const byLifts = [...rows].sort((a, b) => b.lifts - a.lifts).slice(0, 4);
+  const byWorst = rows.filter((r) => r.lifts >= 6).sort((a, b) => b.worst - a.worst).slice(0, 4);
+  const best = rows.filter((r) => r.lifts >= 10).sort((a, b) => a.worst - b.worst).slice(0, 2);
+  const outliers = new Set([...byLifts, ...byWorst, ...best]);
+  const boxes = [];
+  const labels = [...outliers].map((r) => {
+    const name = r.name.length > 24 ? r.name.slice(0, 23) + "…" : r.name;
+    const w = name.length * 5.6, right = sx(r.lifts) > L + pw * 0.62;
+    const x = right ? sx(r.lifts) - 6 - w : sx(r.lifts) + 6, y = sy(r.worst) + 4;
+    const box = { l: x - 2, r: x + w + 2, t: y - 11, b: y + 3 };
+    if (boxes.some((o) => box.l < o.r && box.r > o.l && box.t < o.b && box.b > o.t)) return "";
+    boxes.push(box);
+    return `<text x="${x}" y="${y}" font-size="10" font-weight="600" fill="#1e293b">${esc(name)}</text>`;
+  }).join("");
+  const dots = rows.map((r) => {
+    const o = outliers.has(r);
+    return `<circle cx="${sx(r.lifts)}" cy="${sy(r.worst)}" r="${o ? 4.5 : 3}" fill="${o ? "#0f766e" : "#94a3b8"}" opacity="${o ? 0.95 : 0.55}"><title>${esc(r.name)} (${esc(r.state || r.country)})
+${r.lifts} lifts in loop · ${r.km} lappable km
+Worst closure: ${r.lift}, ${r.worst}% lost · worst split ${r.split}%</title></circle>`;
+  }).join("");
+  const grid = ticks(yMax).map((v) => `<line x1="${L}" x2="${L + pw}" y1="${sy(v)}" y2="${sy(v)}" stroke="#e5e7eb"/><text x="${L - 5}" y="${sy(v) + 3}" font-size="9" text-anchor="end" fill="#64748b">${v}%</text>`).join("")
+    + ticks(xMax).map((v) => `<text x="${sx(v)}" y="${T + ph + 13}" font-size="9" text-anchor="middle" fill="#64748b">${v}</text>`).join("");
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Scatter of lifts in main loop versus worst single closure, ${rows.length} resorts">${grid}
+    <text x="${L + pw / 2}" y="${H - 4}" font-size="10" text-anchor="middle" fill="#374151">Lifts in main loop</text>
+    <text transform="rotate(-90)" x="${-(T + ph / 2)}" y="10" font-size="10" text-anchor="middle" fill="#374151">Worst single closure (% km lost)</text>
+    ${dots}${labels}</svg>`;
+}
+
+async function bootRedundancyScatter(el) {
+  const data = await (await fetch(el.dataset.src)).json();
+  el.innerHTML = `<div class="guide-chart-title">${esc(el.dataset.title || "")}</div>
+    <div class="guide-chart-sub">${esc(el.dataset.sub || "")}</div>
+    <div class="guide-filter"><label>Country <select></select></label><label>State / province <select></select></label></div>
+    <div data-plot></div>`;
+  const [cSel, sSel] = el.querySelectorAll("select");
+  const plot = el.querySelector("[data-plot]");
+  const uniq = (rows, k) => [...new Set(rows.map((r) => r[k]).filter(Boolean))].sort();
+  const fill = (sel, vals, all) => (sel.innerHTML = `<option value="">${all}</option>` + vals.map((v) => `<option>${esc(v)}</option>`).join(""));
+  const draw = () => {
+    plot.innerHTML = redundancySvg(data.filter((r) => (!cSel.value || r.country === cSel.value) && (!sSel.value || r.state === sSel.value)));
+  };
+  fill(cSel, uniq(data, "country"), "All countries");
+  cSel.addEventListener("change", () => {
+    fill(sSel, uniq(data.filter((r) => !cSel.value || r.country === cSel.value), "state"), "All");
+    draw();
+  });
+  sSel.addEventListener("change", draw);
+  cSel.dispatchEvent(new Event("change"));
+}
+
 async function main() {
+  document.querySelectorAll('[data-chart="redundancy"]').forEach((el) => bootRedundancyScatter(el).catch((err) => console.warn("[guide-maps] redundancy", err)));
   const [rows, passes] = await Promise.all([loadSkiAreasAnalyzed(), loadPasses()]);
   bootCharts(stats(rows), passes);
   await bootAllMaps();

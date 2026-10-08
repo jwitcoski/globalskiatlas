@@ -63,6 +63,7 @@ Code: https://github.com/jwitcoski/globalskiatlas_data
 - Choosing a resort: https://globalskiatlas.com/blog/how-to-choose-a-ski-resort.html
 - U.S. states: https://globalskiatlas.com/blog/us-states-most-ski-resorts.html
 - Latitude extremes: https://globalskiatlas.com/blog/northernmost-southernmost-ski-resorts.html
+- Lift redundancy: https://globalskiatlas.com/blog/ski-resort-lift-redundancy.html
 - What the stats mean: https://globalskiatlas.com/blog/ski-resort-stats-explained.html
 - Lift types: https://globalskiatlas.com/blog/ski-lift-types-explained.html
 - Trail maps: https://globalskiatlas.com/blog/how-to-read-ski-trail-map.html

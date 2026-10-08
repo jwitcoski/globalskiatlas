@@ -166,5 +166,16 @@
     "wide": true,
     "mapGuide": true,
     "related": ["how-many-ski-resorts-worldwide", "how-to-choose-a-ski-resort", "how-to-tag-a-ski-resort-in-openstreetmap"]
+  },
+  {
+    "slug": "ski-resort-lift-redundancy",
+    "title": "Which Ski Resorts Have the Best Lift Redundancy? An N-1 Test on 426 Lift Networks",
+    "description": "Close one lift, measure what terrain you can no longer lap. Mount Snow loses under 1%. Silver Star loses 45% when Putnam Express stops.",
+    "pillar": "Reveal the dataset",
+    "date": "2026-10-08",
+    "readTime": 11,
+    "wide": true,
+    "mapGuide": true,
+    "related": ["ski-lift-types-explained", "largest-ski-resorts-in-the-world", "how-to-tag-a-ski-resort-in-openstreetmap"]
   }
 ]

@@ -39,6 +39,7 @@ When citing a resort count, name the file `ski_areas_analyzed.parquet`, the filt
 - [How to choose a resort](https://globalskiatlas.com/blog/how-to-choose-a-ski-resort.html): Decision factors tied to mapped attributes.
 - [U.S. states with the most resorts](https://globalskiatlas.com/blog/us-states-most-ski-resorts.html): State counts from the analyzed file.
 - [Northernmost and southernmost resorts](https://globalskiatlas.com/blog/northernmost-southernmost-ski-resorts.html): Extremes by latitude in the dataset.
+- [Lift redundancy](https://globalskiatlas.com/blog/ski-resort-lift-redundancy.html): N-1 lift closure test on OSM lift and piste networks.
 - [Ski resort stats explained](https://globalskiatlas.com/blog/ski-resort-stats-explained.html): What the published numbers mean.
 - [Lift types](https://globalskiatlas.com/blog/ski-lift-types-explained.html): How lift tags differ.
 - [How to read a trail map](https://globalskiatlas.com/blog/how-to-read-ski-trail-map.html): Trail-map conventions.

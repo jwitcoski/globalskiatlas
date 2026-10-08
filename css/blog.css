@@ -352,6 +352,27 @@ body > main[class] {
   width: 100%;
   max-height: 300px;
 }
+.guide-chart--auto {
+  height: auto;
+}
+.guide-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  margin-bottom: 0.4rem;
+  font-size: 0.75rem;
+  color: #475569;
+}
+.guide-filter select {
+  min-height: 44px;
+  margin-left: 0.3rem;
+  padding: 0 0.5rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #fff;
+  font: inherit;
+  color: #111827;
+}
 .guide-chart-title {
   font-size: 0.85rem;
   font-weight: 600;
