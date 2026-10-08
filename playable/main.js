@@ -28,7 +28,7 @@ import { featuredCourses, attachPisteDifficulty, courseFinish, createRun, tickRu
 import { coordsToXz, attachPiste, resetScore, tickScore, commitBestScore, formatScore, applyWipeout } from "./score.js?v=snow1";
 import { orientPiste, alongTrack, alongPolyline, placeGates, addGateMeshes, clearGateMeshes, resetGates, tickGates } from "./gates.js?v=vis18";
 import { addOsmWorld, applyPisteDecorDifficultyScheme, applySnowLevel } from "./osm-world.js?v=snow1";
-import { snowTerrainMaterial, makeGroundScatter, updateGroundScatter } from "./ground.js?v=g3";
+import { snowTerrainMaterial, makeGroundScatter, updateGroundScatter } from "./ground.js?v=g4";
 import {
   addSkyAndLights,
   followSky,

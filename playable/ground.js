@@ -3,10 +3,15 @@
 const TEX = 256;
 const SNOW_MACRO_M = 9;
 const SNOW_MICRO_M = 1.4;
+const SNOW_BROAD_M = 37;
 const DIRT_MACRO_M = 24;
 const DIRT_MICRO_M = 1.7;
 const DIRT_BROAD_M = 67;
 const SPARKLE = 0.55;
+const SPARKLE_DENSITY = 0.5;
+const GRAIN = 1.4;
+const SHADOW_TINT = 0xc0d3ea;
+const SHADOW_TINT_AMT = 0.8;
 
 function hash4(i, j, k, seed) {
   let n = Math.imul(i, 374761393) ^ Math.imul(j, 668265263) ^ Math.imul(k, 1440662683) ^ Math.imul(seed, 1274126177);
@@ -111,6 +116,9 @@ export function snowTerrainMaterial(THREE, opts = {}) {
     uDirtTex: { value: tex.dirt },
     uDirt: { value: 0 },
     uSparkle: { value: SPARKLE },
+    uGrain: { value: GRAIN },
+    uShadowTint: { value: new THREE.Color(SHADOW_TINT) },
+    uShadowAmt: { value: SHADOW_TINT_AMT },
   };
   mat.userData.ground = u;
   mat.onBeforeCompile = (shader) => {
@@ -127,24 +135,39 @@ export function snowTerrainMaterial(THREE, opts = {}) {
         "#include <common>",
         `#include <common>
         uniform sampler2D uSnowTex, uDirtTex;
-        uniform float uDirt, uSparkle;
+        uniform float uDirt, uSparkle, uGrain, uShadowAmt;
+        uniform vec3 uShadowTint;
         varying vec3 vGroundW;
         float gHash(vec2 p){
           vec3 q = fract(vec3(p.xyx) * 0.1031);
           q += dot(q, q.yzx + 33.33);
           return fract((q.x + q.y) * q.z);
+        }
+        /* Each grain is a tiny mirror with a random tilt: it flashes only when it bisects sun and eye, so it twinkles as you move. */
+        float gGlint(vec2 grid, vec3 n, vec3 h){
+          vec2 hc = mod(floor(grid), 512.0);
+          if (gHash(hc + 1.7) > ${SPARKLE_DENSITY.toFixed(2)}) return 0.0;
+          vec2 c = 0.2 + 0.6 * vec2(gHash(hc + 7.3), gHash(hc + 19.1));
+          float grain = 1.0 - smoothstep(0.06, 0.2, length(fract(grid) - c));
+          vec3 jit = vec3(gHash(hc + 3.1), gHash(hc + 5.7), gHash(hc + 11.3)) - 0.5;
+          vec3 facet = normalize(n + (viewMatrix * vec4(jit, 0.0)).xyz * 1.1);
+          return grain * pow(max(dot(facet, h), 0.0), 160.0);
         }`,
       )
       .replace(
         "#include <color_fragment>",
         `#include <color_fragment>
         bool gDirt = uDirt > 0.5;
+        float gDist = length(vViewPosition);
+        /* Rotated, non-multiple third scale so no tile ever lines up with itself. */
+        vec2 gRot = mat2(0.8, -0.6, 0.6, 0.8) * vGroundW.xz;
         vec4 gA = gDirt ? texture2D(uDirtTex, vGroundW.xz / ${f(DIRT_MACRO_M)}) : texture2D(uSnowTex, vGroundW.xz / ${f(SNOW_MACRO_M)});
         vec4 gB = gDirt ? texture2D(uDirtTex, vGroundW.xz / ${f(DIRT_MICRO_M)}) : texture2D(uSnowTex, vGroundW.xz / ${f(SNOW_MICRO_M)});
+        vec4 gC = gDirt ? texture2D(uDirtTex, gRot / ${f(DIRT_BROAD_M)}) : texture2D(uSnowTex, gRot / ${f(SNOW_BROAD_M)});
+        /* Fine grain fades out with distance before it turns into mip mush / moire; the broad layer takes over. */
+        float gNear = 1.0 - smoothstep(18.0, 50.0, gDist);
         if (gDirt) {
-          /* Second, rotated, non-multiple scale so the 24 m tile never lines up with itself. */
-          vec2 gRot = mat2(0.8, -0.6, 0.6, 0.8) * vGroundW.xz;
-          float gMottle = gA.a * 0.55 + texture2D(uDirtTex, gRot / ${f(DIRT_BROAD_M)}).a * 0.45;
+          float gMottle = gA.a * 0.55 + gC.a * 0.45;
           float m = gMottle * 0.7 + gB.b * 0.3;
           vec3 base = diffuseColor.rgb;
           diffuseColor.rgb = mix(base * vec3(0.55, 0.47, 0.40), base, smoothstep(0.28, 0.52, m));
@@ -153,32 +176,49 @@ export function snowTerrainMaterial(THREE, opts = {}) {
         } else {
           float cav = smoothstep(0.05, 0.6, gA.b * 0.45 + gB.b * 0.55);
           diffuseColor.rgb *= mix(vec3(0.72, 0.79, 0.90), vec3(1.0), cav);
+          diffuseColor.rgb *= (0.955 + 0.045 * gB.b * gNear) * (0.97 + 0.03 * gC.b);
         }`,
       )
       .replace(
         "#include <normal_fragment_maps>",
         `#include <normal_fragment_maps>
         {
-          vec2 gSlope = gDirt ? (gA.rg - 0.5) * 0.5 + (gB.rg - 0.5) * 1.3 : (gA.rg - 0.5) * 1.2 + (gB.rg - 0.5) * 1.1;
+          vec2 gSlope = gDirt ? (gA.rg - 0.5) * 0.5 + (gB.rg - 0.5) * 1.3
+            : (gA.rg - 0.5) * 1.2 + (gB.rg - 0.5) * uGrain * gNear + (gC.rg - 0.5) * 0.8;
           vec3 gN = (vec4(normal, 0.0) * viewMatrix).xyz;
           gN.xz += gSlope * gN.y;
           normal = normalize((viewMatrix * vec4(gN, 0.0)).xyz);
         }`,
       )
       .replace(
+        "#include <lights_fragment_end>",
+        `#include <lights_fragment_end>
+        /* Shade = how little sun reaches this pixel (cast shadow or facing away). The flat white hemi fill
+           reads gray there, so swap its hue for sky blue at equal luminance; sunlit snow keeps the warm sun. */
+        float gShade = 0.0;
+        if (!gDirt) {
+          const vec3 gLum = vec3(0.2126, 0.7152, 0.0722);
+          float gSun = dot(reflectedLight.directDiffuse, gLum) / max(dot(reflectedLight.indirectDiffuse, gLum), 1e-4);
+          gShade = 1.0 - smoothstep(0.1, 1.2, gSun);
+          vec3 gK = mix(vec3(1.0), uShadowTint / dot(uShadowTint, gLum), gShade * uShadowAmt);
+          reflectedLight.directDiffuse *= gK;
+          reflectedLight.indirectDiffuse *= gK;
+        }`,
+      )
+      .replace(
         "#include <dithering_fragment>",
         `#include <dithering_fragment>
         #if NUM_DIR_LIGHTS > 0
-        /* Each grain is a tiny mirror with a random tilt: it flashes only when it bisects sun and eye, so it twinkles as you move. */
-        float gSpark = (1.0 - uDirt) * (1.0 - smoothstep(6.0, 30.0, length(vViewPosition)));
+        /* Two grain sizes so a glint stays about a pixel wide near and far; no glints in shadow. */
+        float gSpark = (1.0 - uDirt) * (1.0 - gShade) * uSparkle;
         if (gSpark > 0.002) {
-          vec2 grid = vGroundW.xz * 7.0;
-          vec2 hc = mod(floor(grid), 512.0);
-          float grain = 1.0 - smoothstep(0.08, 0.22, length(fract(grid) - vec2(gHash(hc + 7.3), gHash(hc + 19.1))));
-          vec3 jit = vec3(gHash(hc + 3.1), gHash(hc + 5.7), gHash(hc + 11.3)) - 0.5;
-          vec3 facet = normalize(normal + (viewMatrix * vec4(jit, 0.0)).xyz * 1.1);
-          vec3 H = normalize(directionalLights[0].direction + normalize(vViewPosition));
-          gl_FragColor.rgb += vec3(0.9, 0.95, 1.0) * pow(max(dot(facet, H), 0.0), 220.0) * grain * gSpark * uSparkle * 4.0;
+          vec3 gH = normalize(directionalLights[0].direction + normalize(vViewPosition));
+          float gFar = smoothstep(6.0, 22.0, gDist);
+          float gFade = 1.0 - smoothstep(45.0, 90.0, gDist);
+          float g = 0.0;
+          if (gFar < 1.0) g += (1.0 - gFar) * gGlint(vGroundW.xz * 7.0, normal, gH);
+          if (gFar > 0.0 && gFade > 0.0) g += gFar * gFade * gGlint(vGroundW.xz * 1.8 + 41.0, normal, gH);
+          gl_FragColor.rgb += vec3(0.9, 0.95, 1.0) * g * gSpark * 4.0;
         }
         #endif`,
       );
