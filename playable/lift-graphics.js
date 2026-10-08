@@ -1,4 +1,5 @@
 import { PALETTE } from "/scripts/clay/config.js";
+import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 
 const AERIAL_TYPES = new Set(["cable_car", "gondola", "chair_lift", "mixed_lift"]);
 const TREE_HEIGHT = 9;
@@ -90,15 +91,66 @@ function makeGondola(THREE, steel, mixed) {
   return cabin;
 }
 
+/* Fixed-grip quad, meters below the cable grip; riders face +z (direction of travel). */
+const CHAIR_W = 2.2;
+const CHAIR_SEAT_Y = -2.6;
+const CHAIR_SEAT_D = 0.5;
+let chairGeo = null;
+
+function chairGeometry(THREE) {
+  if (chairGeo) return chairGeo;
+  const frame = [];
+  const pad = [];
+  const box = (list, w, h, d, x, y, z, rx = 0) => {
+    const g = new THREE.BoxGeometry(w, h, d);
+    if (rx) g.rotateX(rx);
+    list.push(g.translate(x, y, z));
+  };
+  const up = new THREE.Vector3(0, 1, 0);
+  const rod = (ax, ay, az, bx, by, bz, r = 0.035) => {
+    const a = new THREE.Vector3(ax, ay, az);
+    const dir = new THREE.Vector3(bx, by, bz).sub(a);
+    const g = new THREE.CylinderGeometry(r, r, dir.length(), 6);
+    g.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(up, dir.clone().normalize()));
+    frame.push(g.translate(ax + dir.x / 2, ay + dir.y / 2, az + dir.z / 2));
+  };
+  const hw = CHAIR_W / 2;
+  const sy = CHAIR_SEAT_Y;
+  const backZ = -CHAIR_SEAT_D * 0.5 - 0.05;
+  box(frame, 0.22, 0.22, 0.5, 0, -0.05, 0);
+  rod(0, -0.1, 0, 0, sy + 0.95, 0, 0.055);
+  rod(0, sy + 0.95, 0, 0, sy + 0.72, backZ - 0.08, 0.055);
+  rod(-hw, sy + 0.72, backZ - 0.08, hw, sy + 0.72, backZ - 0.08, 0.045);
+  box(pad, CHAIR_W - 0.08, 0.1, CHAIR_SEAT_D, 0, sy, 0);
+  box(pad, CHAIR_W - 0.08, 0.55, 0.08, 0, sy + 0.36, backZ, -0.16);
+  for (const s of [-1, 1]) {
+    const x = s * hw;
+    rod(x, sy + 0.72, backZ - 0.08, x, sy - 0.06, backZ, 0.04);
+    rod(x, sy - 0.06, backZ, x, sy - 0.06, CHAIR_SEAT_D * 0.5, 0.035);
+    rod(x, sy + 0.28, backZ, x, sy + 0.28, CHAIR_SEAT_D * 0.4, 0.03);
+    rod(x, sy + 0.72, backZ - 0.08, x, sy + 0.42, CHAIR_SEAT_D * 0.75, 0.03);
+    rod(s * 0.45, sy + 0.42, CHAIR_SEAT_D * 0.75, s * 0.45, sy - 0.42, CHAIR_SEAT_D * 0.95, 0.025);
+  }
+  rod(-hw, sy + 0.42, CHAIR_SEAT_D * 0.75, hw, sy + 0.42, CHAIR_SEAT_D * 0.75, 0.035);
+  rod(-0.75, sy - 0.42, CHAIR_SEAT_D * 0.95, 0.75, sy - 0.42, CHAIR_SEAT_D * 0.95, 0.04);
+  const merge = (list) => {
+    const out = mergeGeometries(list.map((g) => g.toNonIndexed()));
+    out.computeVertexNormals();
+    return out;
+  };
+  chairGeo = { frame: merge(frame), pad: merge(pad) };
+  return chairGeo;
+}
+
+let padMat = null;
+
+/** Two meshes per chair (shared geometry), so a long lift costs two draw calls per chair, not fourteen. */
 function makeChair(THREE, steel) {
+  const g = chairGeometry(THREE);
+  padMat ||= new THREE.MeshLambertMaterial({ color: 0x1e3a5f, flatShading: true });
   const chair = new THREE.Group();
-  const hanger = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 1.2, 6), steel);
-  hanger.position.y = -0.6;
-  const seat = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.06, 0.34), steel);
-  seat.position.y = -1.15;
-  const back = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.32, 0.05), steel);
-  back.position.set(0, -0.98, -0.16);
-  chair.add(hanger, seat, back);
+  chair.add(new THREE.Mesh(g.frame, steel), new THREE.Mesh(g.pad, padMat));
+  chair.userData.seat = { y: CHAIR_SEAT_Y + 0.05, x: -CHAIR_W * 0.22, z: 0.02 };
   return chair;
 }
 

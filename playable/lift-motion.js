@@ -1,4 +1,4 @@
-import { isAerialLift, liftCableHeight } from "./lift-graphics.js?v=s2";
+import { isAerialLift, liftCableHeight } from "./lift-graphics.js?v=s3";
 
 function pathLength(points) {
   let total = 0;
@@ -33,6 +33,13 @@ export function createLiftMotion(THREE, scene, type, points, elevFn, makeCarrier
     const carrier = makeCarrier();
     const rider = makeSkier(0x285b9f + (i % 3) * 0x241800);
     rider.visible = type === "magic_carpet" || (aerial && type !== "cable_car" && i % 2 === 0);
+    const seat = carrier.userData.seat;
+    if (seat) {
+      /* Full-body riders sit with hips on the seat (legs hang to the footrest); a torso-only rider sits on it. */
+      const box = new THREE.Box3().setFromObject(rider);
+      const h = box.max.y - box.min.y;
+      rider.position.set(seat.x, seat.y - box.min.y - (h > 1.2 ? h * 0.5 : 0), seat.z);
+    }
     carrier.add(rider);
     root.add(carrier);
     carriers.push({ carrier, offset: (i / count) * length, direction: i % 2 ? -1 : 1 });
@@ -58,6 +65,8 @@ export function updateLiftMotion(THREE, motion, dt) {
     const sample = pointAt(motion.points, distance);
     const height = liftCableHeight(motion.type);
     item.carrier.position.set(sample.point.x, sample.point.y + height, sample.point.z);
-    item.carrier.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), new THREE.Vector3(sample.tangent.x, 0, sample.tangent.z).normalize());
+    /* Chairs and cabins face the way they travel, so the return line isn't riding backwards. */
+    const face = isAerialLift(motion.type) && motion.type !== "cable_car" ? item.direction : 1;
+    item.carrier.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), new THREE.Vector3(sample.tangent.x * face, 0, sample.tangent.z * face).normalize());
   }
 }

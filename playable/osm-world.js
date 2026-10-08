@@ -5,8 +5,8 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { styleForPisteFeature, classifyDifficulty } from "./trail-map.js?v=scheme1";
 import { addOsmTraffic } from "./traffic.js?v=vis16";
 import { alongPolyline, polylineLen } from "./gates.js?v=vis17";
-import { liftType, liftCableHeight, makeLiftTerminal, makeLiftCarrier, makeLiftSkier } from "./lift-graphics.js?v=s2";
-import { createLiftMotion } from "./lift-motion.js";
+import { liftType, liftCableHeight, makeLiftTerminal, makeLiftCarrier, makeLiftSkier } from "./lift-graphics.js?v=s3";
+import { createLiftMotion } from "./lift-motion.js?v=2";
 import { snowTerrainMaterial } from "./ground.js?v=g5";
 import { PALETTE } from "/scripts/clay/config.js";
 import { addClayBuilding } from "/scripts/clay/buildings.js";
@@ -736,6 +736,8 @@ function drapeLine(coords, elevFn, lift, material) {
 const TOWER_H = 12;
 const TOWER_STEP = 44;
 const MAX_TOWERS = 180;
+/* Collision radius of a lift tower footing (trees use 0.55 × scale). */
+const LIFT_POLE_R = 0.5;
 /** ponytail: keep the 80 largest OSM footprints; cluster if a resort needs more. */
 const MAX_CLAY_BUILDINGS = 80;
 
@@ -868,6 +870,10 @@ function addLiftKit(fc, elevFn, scene, counts, kit) {
     return arr.filter((_, i) => i % step === 0).slice(0, max);
   }
   const towers = stride(towerPts, MAX_TOWERS);
+  /* Towers join the tree hash (trees are planted first), so physics bounces, crashes, and near-misses on them like trunks. */
+  const poleXzr = [];
+  for (const t of towers) if (t.type !== "magic_carpet") poleXzr.push(t.p.x, t.p.z, LIFT_POLE_R);
+  if (poleXzr.length) scene.userData.treeHash = buildTreeHash([...(scene.userData.treeHash?.xzr || []), ...poleXzr]);
   if (kit?.tower && towers.length) {
     const spots = towers.map((t) => {
       const want = new THREE.Vector3(t.tangent.x, 0, t.tangent.z);
