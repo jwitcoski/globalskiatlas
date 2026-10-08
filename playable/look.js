@@ -276,7 +276,7 @@ export function makeSpray(THREE, scene) {
       map: flakeTexture(THREE),
       /* Faint cool grey: pure white vanishes against lit snow. */
       color: 0xc2cfdd,
-      size: 0.78,
+      size: SPRAY_SIZE,
       transparent: true,
       opacity: 0.4,
       depthWrite: false,
@@ -286,7 +286,21 @@ export function makeSpray(THREE, scene) {
   pts.frustumCulled = false;
   pts.renderOrder = 4;
   scene.add(pts);
-  return { pts, pos, n, t: 0 };
+  return { pts, pos, n, t: 0, puff: 0, lastSpeed: 0 };
+}
+
+const SPRAY_SIZE = 0.78;
+/* Powder puff: one soft burst when a turn skids hard (lateral m/s) or the skier stops fast (m/s²). */
+const PUFF_SKID = 4.5;
+const PUFF_DECEL = 9;
+const PUFF_DECAY = 3.2;
+const PUFF_OPACITY = 0.5;
+
+/** Rising edge only: a held skid makes one puff, not a stream; decays to 0 in ~1 s. */
+export function tickPuff(puff, speed, lastSpeed, skid, air, dt) {
+  const decel = (lastSpeed - speed) / Math.max(dt, 1e-3);
+  const hard = !air && lastSpeed > 2 && (skid > PUFF_SKID || decel > PUFF_DECEL);
+  return (hard && puff < 0.25 ? 1 : puff) * Math.exp(-dt * PUFF_DECAY);
 }
 
 function skiTails(skier) {
@@ -317,6 +331,9 @@ export function updateSpray(spray, skier, heading, speed, dt, keys, hf, opts = {
   const sz = Math.cos(heading);
   const show = !opts.air && (speed > 3.5 || braking || turning);
   const boost = (braking ? 1.7 : 1) * (turning ? 1.4 : 1) * (powder ? 1.55 : 1) + skid;
+  spray.puff = tickPuff(spray.puff, speed, spray.lastSpeed, opts.skid || 0, !!opts.air, dt);
+  spray.lastSpeed = speed;
+  const puff = spray.puff;
   for (let i = 0; i < n; i++) {
     const k = (i / n + spray.t * (0.55 + boost * 0.2)) % 1;
     const tail = tails[i % 2] || origin;
@@ -324,8 +341,8 @@ export function updateSpray(spray, skier, heading, speed, dt, keys, hf, opts = {
     const r1 = ((i * 0.618034) % 1) - 0.5;
     const r2 = (i * 0.414214) % 1;
     const back = 0.45 + k * (1.2 + boost) * (0.7 + r2 * 0.6);
-    const up = Math.max(0, k * (0.5 + boost * 0.55) * (0.6 + r2 * 0.8) - k * k * (0.4 + boost * 0.3));
-    const side = ((i % 2 === 0 ? -1 : 1) * (0.22 + boost * 0.14) + r1 * (0.5 + boost * 0.3)) * k;
+    const up = Math.max(0, k * (0.5 + boost * 0.55) * (0.6 + r2 * 0.8) - k * k * (0.4 + boost * 0.3)) * (1 + puff * 1.2);
+    const side = ((i % 2 === 0 ? -1 : 1) * (0.22 + boost * 0.14) + r1 * (0.5 + boost * 0.3)) * k * (1 + puff * 1.5);
     const i3 = i * 3;
     const x = tail.x - sx * back + sz * side;
     const z = tail.z - sz * back - sx * side;
@@ -337,7 +354,8 @@ export function updateSpray(spray, skier, heading, speed, dt, keys, hf, opts = {
   }
   /* Turns and braking always throw a readable plume; a straight glide stays subtle. */
   const op = show ? Math.min(0.9, (turning || braking ? 0.5 : 0.12) + (Math.max(0, speed - 2) / 45) * boost) : 0;
-  spray.pts.material.opacity = op;
+  spray.pts.material.opacity = Math.max(op, puff * PUFF_OPACITY);
+  spray.pts.material.size = SPRAY_SIZE * (1 + puff * 0.9);
   spray.pts.geometry.attributes.position.needsUpdate = true;
 }
 

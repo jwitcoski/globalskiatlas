@@ -43,7 +43,7 @@ import {
   setInspectAtmosphere,
   makeComposer,
   fitComposer,
-} from "./look.js?v=s5";
+} from "./look.js?v=s6";
 import { addResortIsland, updateIslandDust, updateIslandLod, setIslandOpacity, resetIslandLod } from "./island.js?v=lod3b";
 import { bindUi, setHud, openPanel, closePanel, updateLoading, clayLoadHtml, setOsmMapNote, setResortTitle, compactUi, setFlybyChrome, setHelpTips, paintSnowBtn } from "./ui.js?v=claypick7";
 import { atlasStatsHtml, prefetchWikiIndex } from "./atlas-stats.js?v=stats1";
@@ -58,7 +58,7 @@ import { bindMobileChrome, bindPads } from "./mobile.js?v=s5";
 import { bakePisteSculpt, drapeSculptOnMesh } from "./piste-sculpt.js?v=feel3";
 import { addTrailMarks, clearTrailMarks, repairFences, updateTrailMarks } from "./trail-marks.js?v=marks12";
 import { makeYeti, resetYeti, parkYetiAtStart, tickYeti } from "./yeti.js?v=vis16";
-import { createSkiWake, clearSkiWake, pushSkiWake, updateSkiWake } from "./ski-wake.js?v=feel2";
+import { createSkiWake, clearSkiWake, pushSkiWake, updateSkiWake } from "./ski-wake.js?v=powder1";
 import {
   addTrailMap,
   setTrailMapSelection,
@@ -844,7 +844,7 @@ const skier = makeSkier(THREE, scene);
 const yeti = makeYeti(THREE, scene);
 const blob = addContactBlob(THREE, scene);
 const spray = makeSpray(THREE, scene);
-const wake = createSkiWake(THREE, scene);
+const wake = createSkiWake(THREE, scene, look.sun);
 const flakes = makeFallingSnow(THREE, scene);
 const scatter = makeGroundScatter(THREE, scene);
 const bareAt = (x, z) => onPisteAt(x, z, run.trailCover, undefined, run.pistePts) === false;
