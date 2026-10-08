@@ -55,6 +55,10 @@
   white-space: nowrap;
 }
 
+.clay-entity-tooltip[hidden] {
+  display: none;
+}
+
 .clay-entity-tooltip strong {
   overflow: hidden;
   font-size: 12px;
