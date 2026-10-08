@@ -134,10 +134,19 @@ export function createClayEntityPicker({ canvas, camera, getPickables, onSelect,
     press = null;
   }
 
+  function clearHover() {
+    if (!hovered) return;
+    if (hovered !== selected) setHighlight(hovered, false);
+    hovered = null;
+    canvas.style.cursor = "grab";
+    onHover?.(null);
+  }
+
   canvas.addEventListener("pointerdown", onPointerDown);
   canvas.addEventListener("pointermove", onPointerMove);
   canvas.addEventListener("pointerup", onPointerUp);
   canvas.addEventListener("pointercancel", onPointerCancel);
+  canvas.addEventListener("pointerleave", clearHover);
   canvas.addEventListener("click", onClick);
 
   return {
@@ -153,6 +162,7 @@ export function createClayEntityPicker({ canvas, camera, getPickables, onSelect,
       canvas.removeEventListener("pointermove", onPointerMove);
       canvas.removeEventListener("pointerup", onPointerUp);
       canvas.removeEventListener("pointercancel", onPointerCancel);
+      canvas.removeEventListener("pointerleave", clearHover);
       canvas.removeEventListener("click", onClick);
     },
   };
