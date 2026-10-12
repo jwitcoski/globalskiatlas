@@ -386,9 +386,9 @@ async function loadPasses() {
 
 const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
 
-function redundancySvg(rows) {
+function redundancySvg(rows, wide = false) {
   if (!rows.length) return '<p class="guide-chart-sub">No scored resorts here.</p>';
-  const W = 440, H = 300, L = 40, R = 10, T = 10, B = 34;
+  const W = wide ? 960 : 440, H = wide ? 420 : 300, L = 40, R = 10, T = 10, B = 34;
   const pw = W - L - R, ph = H - T - B;
   const xMax = Math.max(5, Math.ceil(Math.max(...rows.map((r) => r.lifts)) / 5) * 5);
   const yMax = Math.min(100, Math.max(10, Math.ceil(Math.max(...rows.map((r) => r.worst)) / 10) * 10));
@@ -438,13 +438,14 @@ async function bootRedundancyScatter(el) {
   const box = el.querySelector(".guide-states div");
   const plot = el.querySelector("[data-plot]");
   const picked = new Set();
+  const wide = !!el.closest(".guide-step--wide");
   const uniq = (rows, k) => [...new Set(rows.map((r) => r[k]).filter(Boolean))].sort();
   const draw = () => {
-    plot.innerHTML = redundancySvg(data.filter((r) => (!cSel.value || r.country === cSel.value) && (!picked.size || picked.has(r.state))));
+    plot.innerHTML = redundancySvg(data.filter((r) => (!cSel.value || r.country === cSel.value) && (!picked.size || picked.has(r.state))), wide);
   };
   cSel.innerHTML = '<option value="">All countries</option>' + uniq(data, "country").map((v) => `<option>${esc(v)}</option>`).join("");
   cSel.addEventListener("change", () => {
-    const states = uniq(data.filter((r) => !cSel.value || r.country === cSel.value), "state");
+    const states = cSel.value ? uniq(data.filter((r) => r.country === cSel.value), "state") : [];
     [...picked].forEach((s) => states.includes(s) || picked.delete(s));
     box.innerHTML = states.map((s) => `<label><input type="checkbox" value="${esc(s)}"${picked.has(s) ? " checked" : ""}> ${esc(s)}</label>`).join("");
     draw();

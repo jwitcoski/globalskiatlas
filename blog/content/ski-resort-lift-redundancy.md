@@ -1,10 +1,10 @@
-<div class="guide-step">
+<div class="guide-step guide-step--wide">
 <div class="guide-copy">
-<p>A chair goes on wind hold, or a gearbox fails on a Tuesday. How much of the mountain still works? We ran that test on every lift network we could build from OpenStreetMap: close one lift, see what terrain you can no longer lap, put it back, close the next one. Power-grid engineers call this an N-1 contingency check. Of the 83 resorts with at least ten lifts in their main loop and a well-connected map, the median worst single closure takes out 12.7% of the lappable piste. Mount Snow loses under 1% no matter which chair stops. At Silver Star, closing Putnam Express cuts off 45%.</p>
+<p>A chair goes on wind hold, or a gearbox fails on a Tuesday. How much of the mountain still works? We ran that test on every lift network we could build from OpenStreetMap, 1,967 ski areas in 54 countries: close one lift, see what terrain you can no longer lap, put it back, close the next one. Power-grid engineers call this an N-1 contingency check. Of the 435 resorts with at least ten lifts in their main loop and a well-connected map, the median worst single closure takes out 12.9% of the lappable piste. Big Alpine domains like Les 3 Vallées (134 loop lifts, 5.2%) barely notice any one lift. At Panorama in British Columbia, closing Champagne Express cuts off 64%.</p>
 </div>
 <div class="guide-visual">
-<div class="guide-chart guide-chart--auto" data-chart="redundancy" data-src="data/lift-redundancy.json" data-title="Lift network size vs. worst single closure" data-sub="One dot per resort. Lower is more redundant. Hover a dot for the lift."></div>
-<p class="guide-caption">Filter by country, then tick one or more states or provinces. Outliers are labeled.</p>
+<div class="guide-chart guide-chart--auto" data-chart="redundancy" data-src="data/lift-redundancy.json" data-title="Lift network size vs. worst single closure" data-sub="One dot per resort, 1,888 resorts in 52 countries. Lower is more redundant. Hover a dot for the lift."></div>
+<p class="guide-caption">Pick a country, then tick one or more states or provinces. Outliers are labeled.</p>
 </div>
 </div>
 
@@ -12,8 +12,8 @@
 <div class="guide-copy">
 <h2>Step 1. Turn the mountain into a graph</h2>
 <p>The inputs are the public <code>lifts.parquet</code> and <code>pistes.parquet</code> files from <a href="../DownloadData.html">Download Data</a>. Every lift becomes two stations, bottom and top, joined by a one-way ride. Gondolas, cable cars, and funiculars get a ride down as well, because you can usually download them. Every downhill piste (plus <code>piste:type=connection</code> links) becomes a chain of one-way segments, pointing the way the OSM way is drawn. OSM convention is that pistes are drawn downhill and lifts bottom to top.</p>
-<p>Pistes join where their vertices sit within 30 m of each other. A station connects to any piste vertex within 100 m, which covers the walk from the unload ramp to the first turn. That's the whole graph: about 3,400 lifts across 426 ski areas that have at least three lifts and some mapped downhill runs.</p>
-<p>OSM isn't perfect about direction. Mount Sunapee's summit express, for example, is drawn from the summit down. So before building the graph, the script lets nearby pistes vote: runs should start near a lift's top and end near its bottom. If the vote clearly disagrees with the drawn direction, the lift is flipped. 122 of the 3,404 lifts got flipped that way. The vote isn't certain: Sunapee's express didn't get a clear enough margin to flip, so Sunapee isn't quoted anywhere below.</p>
+<p>Pistes join where their vertices sit within 30 m of each other. A station connects to any piste vertex within 100 m, which covers the walk from the unload ramp to the first turn. That's the whole graph: 18,181 lifts across 1,967 ski areas that have at least three lifts and some mapped downhill runs.</p>
+<p>OSM isn't perfect about direction. Mount Sunapee's summit express, for example, is drawn from the summit down. So before building the graph, the script lets nearby pistes vote: runs should start near a lift's top and end near its bottom. If the vote clearly disagrees with the drawn direction, the lift is flipped. 531 of the 18,181 lifts got flipped that way. The vote isn't certain: Sunapee's express didn't get a clear enough margin to flip, so Sunapee isn't quoted anywhere below.</p>
 </div>
 <div class="guide-visual">
 <div class="guide-map-host is-home" data-kind="sunapee" data-center="-72.077,43.326" data-zoom="13.6" data-detail="1"></div>
@@ -30,11 +30,11 @@
 <p>Segments that were lappable before and aren't lappable from any loop now. This is the "that pod is closed" number, and it's what the rankings below use.</p>
 <h3>Resort split</h3>
 <p>Segments that are still lappable, but only from a loop that's no longer connected to the main one. Close the hinge lift and the mountain becomes two smaller resorts. You can still ski the far side if you're already there, but you can't get there from the base.</p>
-<p>Each resort gets a worst single closure (the max terrain lost), a mean closure across all its loop lifts, and a worst split.</p>
+<p>Each resort gets a worst single closure (the max terrain lost), a mean closure across all its loop lifts, and a worst split. A resort is scored only if at least 60% of its mapped piste sits inside some loop, which leaves 1,888 of the 1,967 areas.</p>
 </div>
 <div class="guide-visual">
-<div class="guide-chart" data-chart="bars" data-unit=" resorts" data-items="Under 5%:15|5–10%:15|10–20%:31|20–30%:15|30%+:7" data-title="Worst single closure, 83 resorts" data-sub="Share of lappable km lost when the worst lift stops (10+ loop lifts)"></div>
-<p class="guide-caption">Most resorts with 10+ lifts have one chair worth 10–20% of their terrain.</p>
+<div class="guide-chart" data-chart="bars" data-unit=" resorts" data-items="Under 5%:53|5–10%:104|10–20%:165|20–30%:71|30%+:42" data-title="Worst single closure, 435 resorts" data-sub="Share of lappable km lost when the worst lift stops (10+ loop lifts)"></div>
+<p class="guide-caption">Most resorts with 10+ lifts have one lift worth 10–20% of their terrain.</p>
 <div class="guide-map-host is-home" data-kind="vail" data-center="-106.36,39.61" data-zoom="12" data-detail="1"></div>
 <p class="guide-caption">Vail. Closing Tea Cup Express loses only 2.2% of the terrain but splits 20.6% of the network (Blue Sky Basin and China Bowl) away from the front side.</p>
 </div>
@@ -42,22 +42,23 @@
 
 <div class="guide-step guide-step--flip">
 <div class="guide-copy">
-<h2>Step 3. More lifts, more redundancy (mostly)</h2>
-<p>Size is the first-order effect. A five-lift hill usually has one chair that is the mountain. By twenty lifts, the network has enough overlapping pods that a single failure is a nuisance rather than a closure. These medians are across every area with at least 60% of its mapped piste inside some loop:</p>
+<h2>Step 3. More lifts, more redundancy</h2>
+<p>Size is the first-order effect. A five-lift hill usually has one lift that is the mountain. By twenty lifts, the network has enough overlapping pods that a single failure is a nuisance rather than a closure. These medians are across every scored area:</p>
 <table>
 <thead><tr><th>Lifts in main loop</th><th>Areas</th><th>Median worst closure</th><th>Median mean closure</th></tr></thead>
 <tbody>
-<tr><td>3–5</td><td>176</td><td>33.8%</td><td>11.1%</td></tr>
-<tr><td>6–9</td><td>145</td><td>22.6%</td><td>5.0%</td></tr>
-<tr><td>10–19</td><td>70</td><td>14.9%</td><td>1.9%</td></tr>
-<tr><td>20+</td><td>13</td><td>9.9%</td><td>1.1%</td></tr>
+<tr><td>3–5</td><td>806</td><td>36.2%</td><td>12.8%</td></tr>
+<tr><td>6–9</td><td>489</td><td>25.7%</td><td>6.9%</td></tr>
+<tr><td>10–19</td><td>308</td><td>16.3%</td><td>2.9%</td></tr>
+<tr><td>20–39</td><td>100</td><td>9.0%</td><td>1.2%</td></tr>
+<tr><td>40+</td><td>27</td><td>6.3%</td><td>0.7%</td></tr>
 </tbody>
 </table>
-<p>The mean closure falls much faster than the worst. Big resorts are full of lifts that duplicate each other, but almost every one still has a single chair guarding a pod with nothing else on it. That chair sets the worst-case number.</p>
+<p>The mean closure falls much faster than the worst. Big resorts are full of lifts that duplicate each other, but almost every one still has a single lift guarding a pod with nothing else on it. That lift sets the worst-case number. Even the 27 domains with 40+ loop lifts, almost all of them in the Alps, still lose a median 6.3% to their worst closure.</p>
 </div>
 <div class="guide-visual">
-<div class="guide-chart" data-chart="bars" data-unit="%" data-items="3–5 lifts:33.8|6–9 lifts:22.6|10–19 lifts:14.9|20+ lifts:9.9" data-title="Median worst closure by network size" data-sub="Lifts in the main loop, 404 areas"></div>
-<p class="guide-caption">Each step up in size roughly takes a third off the worst case.</p>
+<div class="guide-chart" data-chart="bars" data-unit="%" data-items="3–5 lifts:36.2|6–9 lifts:25.7|10–19 lifts:16.3|20–39 lifts:9|40+ lifts:6.3" data-title="Median worst closure by network size" data-sub="Lifts in the main loop, 1,730 areas"></div>
+<p class="guide-caption">Each step up in size takes roughly a third off the worst case.</p>
 <div class="guide-map-host is-home" data-kind="mtsnow" data-center="-72.91,42.962" data-zoom="13.4" data-detail="1"></div>
 <p class="guide-caption">Mount Snow: 18 loop lifts across the Main Face, North Face, and Carinthia. The worst closure (Beartrap #14) loses 0.8%.</p>
 </div>
@@ -66,90 +67,134 @@
 <div class="guide-step">
 <div class="guide-copy">
 <h2>Step 4. The big-resort table</h2>
-<p>Thirteen areas have twenty or more lifts in their main loop and clean enough connectivity to score. Sorted by worst single closure:</p>
+<p>51 areas have thirty or more lifts in their main loop and a map connected enough to score. 42 of them are in Europe. These are the most redundant, plus the best-known names from the rest of the list, sorted by worst single closure:</p>
 <table>
-<thead><tr><th>Ski area</th><th>Loop lifts</th><th>Lappable km</th><th>Worst closure</th><th>Worst lift</th><th>Worst split</th></tr></thead>
+<thead><tr><th>Ski area</th><th>Country</th><th>Loop lifts</th><th>Lappable km</th><th>Worst closure</th><th>Worst lift</th></tr></thead>
 <tbody>
-<tr><td>Vail</td><td>30</td><td>141</td><td>6.3%</td><td>Orient Express</td><td>20.6%</td></tr>
-<tr><td>Deer Valley</td><td>31</td><td>161</td><td>6.4%</td><td>Vulcan Express</td><td>10.9%</td></tr>
-<tr><td>Killington</td><td>22</td><td>102</td><td>7.4%</td><td>Skyeship Stage 1</td><td>0.0%</td></tr>
-<tr><td>Whistler Blackcomb</td><td>33</td><td>311</td><td>8.7%</td><td>Peak Express</td><td>1.3%</td></tr>
-<tr><td>Copper Mountain</td><td>21</td><td>94</td><td>9.0%</td><td>Super Bee</td><td>12.6%</td></tr>
-<tr><td>Park City</td><td>40</td><td>229</td><td>11.0%</td><td>Tombstone Express</td><td>42.2%</td></tr>
-<tr><td>Palisades Tahoe</td><td>28</td><td>68</td><td>11.6%</td><td>Headwall Express</td><td>10.8%</td></tr>
-<tr><td>Cerro Catedral</td><td>30</td><td>56</td><td>11.8%</td><td>Telecabina Amancay</td><td>2.4%</td></tr>
-<tr><td>Breckenridge</td><td>30</td><td>102</td><td>12.7%</td><td>Falcon SuperChair</td><td>0.8%</td></tr>
-<tr><td>Big Sky</td><td>35</td><td>225</td><td>20.5%</td><td>Madison 8</td><td>22.2%</td></tr>
-<tr><td>Winter Park</td><td>22</td><td>112</td><td>22.2%</td><td>Panoramic Express</td><td>13.6%</td></tr>
+<tr><td>Trysil</td><td>Norway</td><td>37</td><td>96</td><td>2.6%</td><td>F12 Familietrekket</td></tr>
+<tr><td>Serre Chevalier</td><td>France</td><td>68</td><td>154</td><td>3.0%</td><td>Clot Gauthier</td></tr>
+<tr><td>Skicircus Saalbach Hinterglemm Leogang Fieberbrunn</td><td>Austria</td><td>77</td><td>220</td><td>3.8%</td><td>Reckmoos Süd</td></tr>
+<tr><td>Zillertal Arena</td><td>Austria</td><td>53</td><td>121</td><td>4.1%</td><td>Falschbach</td></tr>
+<tr><td>Les Sybelles</td><td>France</td><td>70</td><td>156</td><td>4.2%</td><td>Eau d'Olle Express</td></tr>
+<tr><td>Evasion Mont Blanc</td><td>France</td><td>58</td><td>311</td><td>4.3%</td><td>Croix du Christ</td></tr>
+<tr><td>Les 3 Vallées</td><td>France</td><td>134</td><td>383</td><td>5.2%</td><td>Pointe de la Masse</td></tr>
+<tr><td>SkiWelt Wilder Kaiser Brixental</td><td>Austria</td><td>76</td><td>223</td><td>5.4%</td><td>Hartkaiserbahn</td></tr>
+<tr><td>Tignes - Val d'Isère</td><td>France</td><td>76</td><td>240</td><td>5.8%</td><td>TCD10 des Boisses</td></tr>
+<tr><td>Vail</td><td>USA</td><td>30</td><td>141</td><td>6.3%</td><td>Orient Express</td></tr>
+<tr><td>Deer Valley</td><td>USA</td><td>31</td><td>161</td><td>6.4%</td><td>Vulcan Express</td></tr>
+<tr><td>Zermatt (Swiss side)</td><td>Switzerland</td><td>38</td><td>142</td><td>7.0%</td><td>Gant - Hohtälli</td></tr>
+<tr><td>Ski Arlberg</td><td>Austria</td><td>87</td><td>340</td><td>7.2%</td><td>Trittalpbahn</td></tr>
+<tr><td>KitzSki</td><td>Austria</td><td>45</td><td>185</td><td>8.1%</td><td>Hahnenkammbahn</td></tr>
+<tr><td>Whistler Blackcomb</td><td>Canada</td><td>33</td><td>311</td><td>8.7%</td><td>Peak Express</td></tr>
+<tr><td>Perisher</td><td>Australia</td><td>46</td><td>87</td><td>8.7%</td><td>Pleasant Valley Quad</td></tr>
+<tr><td>Alpe d'Huez Grand Domaine</td><td>France</td><td>78</td><td>174</td><td>10.3%</td><td>Pic Blanc 3</td></tr>
+<tr><td>Park City</td><td>USA</td><td>40</td><td>229</td><td>11.0%</td><td>Tombstone Express</td></tr>
+<tr><td>Breckenridge</td><td>USA</td><td>30</td><td>102</td><td>12.7%</td><td>Falcon SuperChair</td></tr>
+<tr><td>Big Sky</td><td>USA</td><td>36</td><td>237</td><td>19.5%</td><td>Madison 8</td></tr>
 </tbody>
 </table>
-<p>Afton Alps (20 lifts, 0%) and Mammoth (60.7% worst split, but only 61% of its piste mapped into loops) are left out of the table. Afton is a short Minnesota hill where every lift serves the same slope. Mammoth's split number most likely reflects gaps in the map, not the mountain.</p>
-<p>Killington is the interesting one: no splits at all, because so many base areas and connector trails overlap. Whistler is the best combination of size and robustness. It has 311 km of lappable terrain and nothing worse than Peak Express, whose 8.7% is the alpine bowl it serves.</p>
+<p>Les 3 Vallées is the standout for size. It has 383 km of lappable terrain, and the worst lift to lose is the Pointe de la Masse gondola above Les Menuires, worth 5.2%. Trysil tops the table for a different reason: Norway's biggest resort is one mountain covered in parallel surface lifts, so almost every lift has a twin.</p>
+<p>Whistler is still the best combination of size and robustness outside Europe: 311 km and nothing worse than Peak Express, whose 8.7% is the alpine bowl it serves. Big Sky is the fragile giant. Madison 8 guards 46 km on its own.</p>
 </div>
 <div class="guide-visual">
-<div class="guide-chart" data-chart="bars" data-unit="%" data-items="Vail:6.3|Deer Valley:6.4|Killington:7.4|Whistler Blackcomb:8.7|Copper Mountain:9|Park City:11|Palisades Tahoe:11.6|Cerro Catedral:11.8|Breckenridge:12.7|Big Sky:20.5|Winter Park:22.2" data-title="Big resorts: worst single closure" data-sub="20+ loop lifts, share of lappable km lost"></div>
+<div class="guide-chart" data-chart="bars" data-unit="%" data-items="Trysil:2.6|Serre Chevalier:3|Skicircus Saalbach:3.8|Les 3 Vallées:5.2|Tignes - Val d'Isère:5.8|Vail:6.3|Ski Arlberg:7.2|Whistler Blackcomb:8.7|Park City:11|Big Sky:19.5" data-title="Big resorts: worst single closure" data-sub="30+ loop lifts, share of lappable km lost"></div>
 <p class="guide-caption">Shorter bar = more redundant.</p>
-<div class="guide-map-host is-home" data-kind="killington" data-center="-72.80,43.613" data-zoom="12.6" data-detail="1"></div>
-<p class="guide-caption">Killington. Six peaks and multiple base areas leave no single lift that cuts the network in two.</p>
+<div class="guide-map-host is-home" data-kind="trois-vallees" data-center="6.59,45.36" data-zoom="11.2" data-detail="1"></div>
+<p class="guide-caption">Les 3 Vallées. 134 loop lifts across Courchevel, Méribel, Les Menuires, and Val Thorens. No single closure costs more than 5.2%.</p>
 </div>
 </div>
 
 <div class="guide-step guide-step--flip">
 <div class="guide-copy">
-<h2>Step 5. Keystone lifts</h2>
-<p>Flip the question: which individual lifts guard the most terrain? These are each resort's worst closure, ranked by kilometers lost.</p>
+<h2>Step 5. Country by country</h2>
+<p>Group the 435 ranked resorts by country and a pattern shows up that isn't just size. These are medians for every country with at least five ranked resorts:</p>
 <table>
-<thead><tr><th>Lift</th><th>Ski area</th><th>Km lost</th><th>Share</th><th>Runs cut off include</th></tr></thead>
+<thead><tr><th>Country</th><th>Ranked resorts</th><th>Median loop lifts</th><th>Median worst closure</th></tr></thead>
 <tbody>
-<tr><td>Madison 8</td><td>Big Sky</td><td>46.3</td><td>20.5%</td><td>Park Avenue, Elkhorn, Meriwether</td></tr>
-<tr><td>Putnam Express</td><td>Silver Star</td><td>46.0</td><td>44.8%</td><td>Sunny Ridge, Bon Diablo, Spirit Bowl</td></tr>
-<tr><td>Paradise Express</td><td>Powder Mountain</td><td>43.0</td><td>35.1%</td><td>Rendezvous, Sanctuary, Cobabe Canyon</td></tr>
-<tr><td>Gem Lake Express</td><td>Big White</td><td>34.8</td><td>35.5%</td><td>Blackout, Blue Ribbon, Showdown</td></tr>
-<tr><td>Sundance Express</td><td>Sun Peaks</td><td>33.7</td><td>21.8%</td><td>Three Bears, Fairways Ski Back</td></tr>
-<tr><td>Peak Express</td><td>Whistler Blackcomb</td><td>26.9</td><td>8.7%</td><td>Peak to Creek, Shale Slope, Grande Finale</td></tr>
-<tr><td>Tombstone Express</td><td>Park City</td><td>25.2</td><td>11.0%</td><td>Cloud 9, Sidewinder, Encore</td></tr>
-<tr><td>Pine Creek Express #6</td><td>Bogus Basin</td><td>24.9</td><td>33.7%</td><td>Upper Nugget, Paradise Cat Track</td></tr>
-<tr><td>Panoramic Express</td><td>Winter Park</td><td>24.8</td><td>22.2%</td><td>Primrose, Lupin, Fireberry Glade</td></tr>
-<tr><td>Alpine Springs</td><td>Aspen Snowmass</td><td>24.8</td><td>20.2%</td><td>Cookies, Tom's Trace, Lodgepole</td></tr>
+<tr><td>Finland</td><td>7</td><td>14</td><td>4.6%</td></tr>
+<tr><td>Sweden</td><td>18</td><td>17</td><td>8.6%</td></tr>
+<tr><td>France</td><td>79</td><td>19</td><td>10.9%</td></tr>
+<tr><td>United States</td><td>74</td><td>12</td><td>12.0%</td></tr>
+<tr><td>Italy</td><td>42</td><td>16</td><td>12.3%</td></tr>
+<tr><td>Spain</td><td>11</td><td>14</td><td>12.4%</td></tr>
+<tr><td>Switzerland</td><td>44</td><td>15</td><td>13.5%</td></tr>
+<tr><td>Austria</td><td>58</td><td>18.5</td><td>13.6%</td></tr>
+<tr><td>Japan</td><td>17</td><td>13</td><td>16.3%</td></tr>
+<tr><td>Germany</td><td>8</td><td>15</td><td>16.3%</td></tr>
+<tr><td>Norway</td><td>11</td><td>13</td><td>19.0%</td></tr>
+<tr><td>China</td><td>10</td><td>11</td><td>21.1%</td></tr>
+<tr><td>Canada</td><td>9</td><td>12</td><td>21.8%</td></tr>
 </tbody>
 </table>
-<p>The pattern is the back-side pod: a whole drainage reached over a ridge, with one high-speed chair to pull you out. Silver Star's Putnam Creek side and Big White's Gem Lake are the textbook cases. The terrain is excellent and the lift is a single point of failure. 76 of the 83 ranked resorts have a fixed-grip or detachable chair as their worst lift, not a gondola.</p>
+<p>Finland and Sweden win because their resorts are compact fells with lots of parallel surface lifts on one face, so losing any one barely matters. Canada sits at the bottom with the same lift counts as the US. Its big western resorts tend to hang a whole back-side drainage off one chair, which is exactly the shape this test punishes. Austria has more lifts per resort than anyone except France but only an average score. Many Austrian domains are chains of valleys linked by a single gondola, and the next two steps show what that does.</p>
 </div>
 <div class="guide-visual">
-<div class="guide-chart" data-chart="bars" data-unit=" km" data-items="Madison 8:46.3|Putnam Express:46|Paradise Express:43|Gem Lake Express:34.8|Sundance Express:33.7|Peak Express:26.9|Tombstone Express:25.2|Pine Creek #6:24.9|Panoramic Express:24.8|Alpine Springs:24.8" data-title="Keystone lifts: km of piste lost" data-sub="Each resort's worst closure, ranked by distance"></div>
-<p class="guide-caption">Big Sky, Silver Star, Powder Mountain, Big White, and Sun Peaks top the list.</p>
-<div class="guide-map-host is-home" data-kind="silverstar" data-center="-119.055,50.365" data-zoom="12.8" data-detail="1"></div>
-<p class="guide-caption">Silver Star. Everything on the Putnam Creek side drains to one chair.</p>
+<div class="guide-chart" data-chart="bars" data-unit="%" data-items="Finland:4.6|Sweden:8.6|France:10.9|United States:12|Italy:12.3|Switzerland:13.5|Austria:13.6|Japan:16.3|Norway:19|Canada:21.8" data-title="Median worst closure by country" data-sub="Resorts with 10+ loop lifts, countries with 5+ ranked resorts"></div>
+<p class="guide-caption">Nordic hills are the most redundant, western Canada the least.</p>
+<div class="guide-map-host is-home" data-kind="arlberg" data-center="10.17,47.17" data-zoom="11.4" data-detail="1"></div>
+<p class="guide-caption">Ski Arlberg. 87 loop lifts and 340 km, but closing Trittkopfbahn I strands 42% of the network on the Lech-Zürs side.</p>
 </div>
 </div>
 
 <div class="guide-step">
 <div class="guide-copy">
-<h2>Step 6. Splits: when one mountain becomes two</h2>
-<p>Park City is the cleanest split case. Close Iron Mountain Express or the Quicksilver Gondola and the network breaks along the old Canyons–Park City boundary. Either side still runs on its own, so terrain lost is small (5.9% and 0%), but 42% of the network detaches from the other half. Anyone parked on the wrong side has a long walk or a bus ride.</p>
-<p>Vail does the same thing at smaller scale. Tea Cup Express is the link between the front side and the back bowls, Blue Sky Basin, and China Bowl. Close it and Orient Express, Skyline, Pete's, Earl's, and Mongolia keep spinning, but as their own island. Deer Valley's Ruby Express (10.9%) does the same to the Empire and Lady Morgan pods.</p>
-<p>Splits matter more for guests than lost terrain does. A closed pod is a shorter trail list. A split is a skier who rode over in the morning and can't get back to their car.</p>
+<h2>Step 6. Keystone lifts</h2>
+<p>Flip the question: which individual lifts guard the most terrain? These are each resort's worst closure, ranked by kilometers lost.</p>
+<table>
+<thead><tr><th>Lift</th><th>Ski area</th><th>Km lost</th><th>Share</th><th>Runs cut off include</th></tr></thead>
+<tbody>
+<tr><td>Champagne Express</td><td>Panorama, Canada</td><td>62.7</td><td>63.7%</td><td>Strobl Strasse, Lower Millennium, Schober's Dream</td></tr>
+<tr><td>Madison 8</td><td>Big Sky, USA</td><td>46.3</td><td>19.5%</td><td>Park Avenue, Elkhorn, Meriwether</td></tr>
+<tr><td>Putnam Express</td><td>Silver Star, Canada</td><td>46.0</td><td>44.8%</td><td>Sunny Ridge, Bon Diablo, Holy Smokes</td></tr>
+<tr><td>Paradise Express</td><td>Powder Mountain, USA</td><td>43.0</td><td>28.6%</td><td>Meadow's Express, Rendezvous, Sanctuary</td></tr>
+<tr><td>Gem Lake Express</td><td>Big White, Canada</td><td>34.8</td><td>35.5%</td><td>Blackout, Blue Ribbon, Ogo Slow</td></tr>
+<tr><td>Sundance Express</td><td>Sun Peaks, Canada</td><td>33.7</td><td>21.8%</td><td>Back in Time, Fairways Ski Back, Three Bears Glades</td></tr>
+<tr><td>1号索道 (Gondola 1)</td><td>Hemu (Jikepulin), China</td><td>33.2</td><td>39.1%</td><td>丁香道, 蔷薇道, 冷杉道</td></tr>
+<tr><td>Peak Express</td><td>Whistler Blackcomb, Canada</td><td>26.9</td><td>8.7%</td><td>Peak to Creek, East Ridge, Shale Slope</td></tr>
+<tr><td>Tombstone Express</td><td>Park City, USA</td><td>25.2</td><td>11.0%</td><td>Cloud 9, Sidewinder, Encore</td></tr>
+<tr><td>Pine Creek Express #6</td><td>Bogus Basin, USA</td><td>24.9</td><td>33.7%</td><td>Upper Nugget, Paradise Cat Track</td></tr>
+</tbody>
+</table>
+<p>The pattern is the back-side pod: a whole drainage reached over a ridge, with one high-speed chair to pull you out. Panorama's upper mountain, Silver Star's Putnam Creek side, and Big White's Gem Lake are the textbook cases. Five of the ten are in western Canada. The first European entry is Trittalpbahn at Ski Arlberg, 12th at 24.5 km, but that's only 7.2% of a network that big.</p>
+<p>Chairs dominate: 280 of the 435 ranked resorts have a chairlift as their worst closure, 96 a gondola or cable car, and 56 a T-bar, platter, or other surface lift. Gondolas show up mostly in the Alps, where the critical link is often the cable car out of the valley.</p>
+<p>At the fragile end, Madrisa in Klosters (65.0%, Schaffürggli), Panorama (63.7%), Blatten-Belalp (54.2%), and Stoos (51.1%) all lose half their terrain or more to one lift.</p>
 </div>
 <div class="guide-visual">
-<div class="guide-chart" data-chart="bars" data-unit="%" data-items="Park City:42.2|Big Sky:22.2|Vail:20.6|Winter Park:13.6|Copper Mountain:12.6|Deer Valley:10.9|Palisades Tahoe:10.8" data-title="Worst split, big resorts" data-sub="Share of the main loop cut off (still skiable, not reachable)"></div>
-<p class="guide-caption">Park City's Canyons hinge is in a class of its own.</p>
-<div class="guide-map-host is-home" data-kind="parkcity" data-center="-111.55,40.655" data-zoom="12" data-detail="1"></div>
-<p class="guide-caption">Park City. Two lifts form the hinge between the Canyons side (west) and the original Park City side (east).</p>
+<div class="guide-chart" data-chart="bars" data-unit=" km" data-items="Champagne Express:62.7|Madison 8:46.3|Putnam Express:46|Paradise Express:43|Gem Lake Express:34.8|Sundance Express:33.7|Hemu Gondola 1:33.2|Peak Express:26.9|Tombstone Express:25.2|Pine Creek #6:24.9" data-title="Keystone lifts: km of piste lost" data-sub="Each resort's worst closure, ranked by distance"></div>
+<p class="guide-caption">Panorama, Big Sky, Silver Star, Powder Mountain, and Big White top the list.</p>
+<div class="guide-map-host is-home" data-kind="panorama" data-center="-116.24,50.455" data-zoom="12.6" data-detail="1"></div>
+<p class="guide-caption">Panorama. Champagne Express is the only way back up to most of the upper mountain.</p>
 </div>
 </div>
 
 <div class="guide-step guide-step--flip">
 <div class="guide-copy">
-<h2>Step 7. What this model can't see</h2>
+<h2>Step 7. Splits: when one mountain becomes two</h2>
+<p>Arosa Lenzerheide is the cleanest split case in the dataset. The two resorts were joined in 2014 by the Urdenbahn cable car across the Urdental. Close it and 89% of the network detaches from the other half. Both sides keep running, so terrain lost is small (5.7%), but anyone who crossed in the morning is on the wrong side of a valley.</p>
+<p>Park City does the same along the old Canyons-Park City boundary. Close Iron Mountain Express and 42% of the network splits off. KitzSki's 3S Bahn (41.6%) and Ski Arlberg's Trittkopfbahn I (41.9%) are the Austrian versions: one long cable link between ski areas that used to be separate. Vail's Tea Cup Express (20.6%) is the North American classic, the hinge between the front side and the back bowls.</p>
+<p>Splits matter more for guests than lost terrain does. A closed pod is a shorter trail list. A split is a skier who rode over in the morning and can't get back to their car.</p>
+<p>Some split numbers are the map talking, not the mountain. Dolomiti Superski, Hochoetz-Kühtai, and Champéry-Les Crosets show 100% splits because one OSM area outlines several resorts the piste network doesn't actually join. They're left out of the split chart.</p>
+</div>
+<div class="guide-visual">
+<div class="guide-chart" data-chart="bars" data-unit="%" data-items="Arosa Lenzerheide:89.2|Skicircus Saalbach:62.4|Park City:42.2|Ski Arlberg:41.9|KitzSki:41.6|Big Sky:21.1|Vail:20.6|Deer Valley:10.9" data-title="Worst split, big resorts" data-sub="Share of the main loop cut off (still skiable, not reachable)"></div>
+<p class="guide-caption">Link lifts between formerly separate resorts are the classic split.</p>
+<div class="guide-map-host is-home" data-kind="parkcity" data-center="-111.55,40.655" data-zoom="12" data-detail="1"></div>
+<p class="guide-caption">Park City. Two lifts form the hinge between the Canyons side (west) and the original Park City side (east).</p>
+</div>
+</div>
+
+<div class="guide-step">
+<div class="guide-copy">
+<h2>Step 8. What this model can't see</h2>
 <p>This is a topology test on open map data, so read the numbers as "how the network is shaped," not "what ops will open tomorrow."</p>
-<h3>Geography of the sample</h3>
-<p>The current <code>lifts.parquet</code> has lift lines mostly for the Americas, plus a couple of African areas. The big Alpine domains aren't in this run, which is why The 3 Valleys and Ski Arlberg are missing. When the extract carries their lift ways, the same script will score them.</p>
+<h3>How resorts are drawn</h3>
+<p>A resort is whatever one OSM ski-area outline covers. Umbrella areas like Dolomiti Superski or Paradiski group resorts the pistes don't connect. Cross-border domains are split by country, so Zermatt and Breuil-Cervinia score as two halves. Lifts more than 2 km from any outline aren't assigned to a resort at all.</p>
 <h3>No elevation</h3>
 <p>Direction comes from how ways are drawn plus the flip vote. A piste drawn uphill breaks a path. A traverse drawn the wrong way can invent one. A DEM lookup would settle direction properly.</p>
 <h3>Correlated failures</h3>
-<p>N-1 assumes one lift fails at a time. Real wind holds close every exposed summit chair at once, which is when redundancy matters most. Lift capacity and lift lines aren't modeled either: losing one of two parallel six-packs is 0% terrain lost and still a miserable morning.</p>
+<p>N-1 assumes one lift fails at a time. Real wind holds close every exposed summit lift at once, which is when redundancy matters most. Lift capacity and lift lines aren't modeled either: losing one of two parallel six-packs is 0% terrain lost and still a miserable morning.</p>
 <h3>Walking and roads</h3>
-<p>Anything more than 100 m from a station doesn't count as connected. A village walk, a skier bridge, or a shuttle bus can join two loops that this model treats as separate.</p>
+<p>Anything more than 100 m from a station doesn't count as connected. A village walk, a skier bridge, or a ski bus can join two loops that this model treats as separate. That matters most in the Alps, where linked villages often rely on exactly those.</p>
 <p>The fix for most of these is upstream. Draw lifts bottom to top, draw pistes downhill, and tag catwalks and skier bridges as <code>piste:type=connection</code>. <a href="how-to-tag-a-ski-resort-in-openstreetmap.html">The tagging walkthrough</a> covers the basics, and <a href="ski-lift-types-explained.html">the lift type guide</a> covers which <code>aerialway</code> values count as uphill transport.</p>
 </div>
 <div class="guide-visual">
@@ -158,11 +203,11 @@
 </div>
 </div>
 
-<div class="guide-step">
+<div class="guide-step guide-step--flip">
 <div class="guide-copy">
 <h2>Takeaway</h2>
-<p>The resorts with the best lift redundancy in this dataset are big, multi-base networks with overlapping pods: Vail, Deer Valley, Killington, and Whistler Blackcomb each stay above 90% open whichever lift you close. Mid-size eastern hills like Mount Snow and Stratton do even better on a percentage basis, because their chairs overlap on a few tightly connected faces. The most fragile networks put a whole drainage behind one chair. If your favorite runs are in that drainage, check that lift's status before you drive.</p>
-<p>The script is <code>scripts/lift-redundancy.mjs</code> in the site repo. It reads the same parquet files you can download, runs in seconds once the files are cached, and has a <code>--self-test</code> with a three-chair toy mountain. For per-lift details on the atlas side, start with <a href="../SkiLiftFacts.html">Ski Lift Facts</a>.</p>
+<p>The resorts with the best lift redundancy are big, multi-valley networks with overlapping pods. Les 3 Vallées, Serre Chevalier, Saalbach, Tignes-Val d'Isère, Vail, and Whistler Blackcomb each stay above 90% open whichever lift you close. Compact Nordic hills like Trysil do even better on a percentage basis, because their lifts overlap on one face. The most fragile networks put a whole drainage behind one chair, and western Canada has the most of them. In the Alps, the weak point is more often a split: the one gondola that links two valleys. If your favorite runs are behind either kind of lift, check its status before you drive.</p>
+<p>The script is <code>scripts/lift-redundancy.mjs</code> in the site repo. It reads the same parquet files you can download, runs in under a minute once the files are cached, and has a <code>--self-test</code> with a three-chair toy mountain. For per-lift details on the atlas side, start with <a href="../SkiLiftFacts.html">Ski Lift Facts</a>.</p>
 </div>
 <div class="guide-visual">
 <div class="guide-links">

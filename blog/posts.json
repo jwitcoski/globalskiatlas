@@ -169,8 +169,8 @@
   },
   {
     "slug": "ski-resort-lift-redundancy",
-    "title": "Which Ski Resorts Have the Best Lift Redundancy? An N-1 Test on 426 Lift Networks",
-    "description": "Close one lift, measure what terrain you can no longer lap. Mount Snow loses under 1%. Silver Star loses 45% when Putnam Express stops.",
+    "title": "Which Ski Resorts Have the Best Lift Redundancy? An N-1 Test on 1,888 Lift Networks in 52 Countries",
+    "description": "Close one lift, measure what terrain you can no longer lap. Les 3 Vallées loses at most 5%. Panorama loses 64% when Champagne Express stops.",
     "pillar": "Reveal the dataset",
     "date": "2026-10-08",
     "readTime": 11,

@@ -355,6 +355,12 @@ body > main[class] {
 .guide-chart--auto {
   height: auto;
 }
+.guide-step--wide {
+  grid-template-columns: 1fr;
+}
+.guide-step--wide .guide-chart svg {
+  max-height: 440px;
+}
 .guide-filter {
   display: flex;
   flex-wrap: wrap;
