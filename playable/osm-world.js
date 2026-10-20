@@ -26,7 +26,7 @@ const MAX_FILL_SPAN = 700;
 const TREE_STEP = 10;
 const TREE_STEP_WOOD = 6;
 const MAX_TREES = 8000;
-const PINE_GLB = new URL("./assets/models/snowy-pine-pack.glb", import.meta.url).href;
+const PINE_GLB = new URL("./assets/models/trees/snowy-pine-pack.glb", import.meta.url).href;
 const PINE_HEIGHT = 11;
 
 function u01(i, salt) {
@@ -36,7 +36,7 @@ function u01(i, salt) {
 let pinePack = null;
 let pinePackPromise = null;
 
-/** Three Sketchfab variants, Y-up, origin at the trunk base. Shared Lambert map so 8k instances still light with the snow. */
+/** Authored snowy pine pack, Y-up, origin at the trunk base. Shared Lambert map so 8k instances still light with the snow. */
 async function loadPinePack() {
   if (pinePack) return pinePack;
   if (pinePackPromise) return pinePackPromise;

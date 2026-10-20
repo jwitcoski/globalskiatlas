@@ -1,0 +1,51 @@
+{
+  "asset": "snowy pine pack",
+  "purpose": "Three instanced Three.js pines that replace a cone-on-cylinder tree",
+  "required_parts": [
+    "pine_spire",
+    "pine_broad",
+    "pine_young",
+    "one shared albedo with alpha"
+  ],
+  "relations": [
+    "origin at trunk-base center",
+    "lowest vertices are the trunk base ring",
+    "snow sits on upper boughs",
+    "needles hang under the snow",
+    "no roots, ground, pot, or snowdrift in the GLB"
+  ],
+  "style": ["game foliage", "snowy spruce", "alpha-card needles", "painted albedo"],
+  "finish": {
+    "profile": "game_ready_foliage",
+    "low_poly_explicitly_requested": true,
+    "triangle_ceiling_per_mesh": 900,
+    "surface_targets": [
+      "three different silhouettes",
+      "mid green needles",
+      "near-white snow",
+      "readable brown trunk about 0.3 m radius"
+    ]
+  },
+  "limits": {
+    "height_m": 11,
+    "triangles_per_mesh_max": 900,
+    "trunk_diameter_m": [0.4, 0.8],
+    "armature": false,
+    "shape_keys": false
+  },
+  "stages": [
+    "contract_and_references",
+    "primary_secondary_forms",
+    "materials_textures",
+    "export_validation"
+  ],
+  "approval_gates": [],
+  "animation": {"required": false},
+  "review_questions": [
+    "Does any variant still read as a green cone on a brown cylinder?",
+    "Are spire, broad, and young distinguishable from the front and the side?",
+    "Do green and snow both stay obvious on a white background?"
+  ],
+  "blender": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\blender.exe",
+  "blender_version": "5.2.2 LTS"
+}
