@@ -28,7 +28,7 @@ import { loadSkierModel, mountSkierModel } from "./skier-model.js?v=6";
 import { featuredCourses, attachPisteDifficulty, courseFinish, createRun, tickRun, formatTime } from "./run.js?v=map4";
 import { coordsToXz, attachPiste, resetScore, tickScore, commitBestScore, formatScore, applyWipeout } from "./score.js?v=snow1";
 import { orientPiste, alongTrack, alongPolyline, placeGates, addGateMeshes, clearGateMeshes, resetGates, tickGates } from "./gates.js?v=vis18";
-import { addOsmWorld, applyPisteDecorDifficultyScheme, applySnowLevel, bendPine, seatMagicCarpets, tickPines } from "./osm-world.js?v=tower9";
+import { addOsmWorld, applyPisteDecorDifficultyScheme, applySnowLevel, bendPine, seatMagicCarpets, tickPines } from "./osm-world.js?v=tower10";
 import { snowTerrainMaterial, makeGroundScatter, updateGroundScatter } from "./ground.js?v=g5";
 import {
   addSkyAndLights,
@@ -91,7 +91,7 @@ import {
   paintTrailerFrame,
 } from "./trailer.js?v=t2";
 import { createFlyby, prepFlybyTour, clearFlybyTour, tickFlybyZoom } from "./flyby.js?v=tour4";
-import { updateLiftMotion } from "./lift-motion.js?v=6";
+import { updateLiftMotion } from "./lift-motion.js?v=7";
 
 loadDifficultyScheme();
 

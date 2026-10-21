@@ -16,6 +16,8 @@ export function liftType(feature) {
   if (t === "chairlift") t = "chair_lift";
   if (t === "cablecar") t = "cable_car";
   if (t === "mixedlift") t = "mixed_lift";
+  if (t === "t_bar" || t === "tbar") t = "t-bar";
+  if (t === "button" || t === "poma") t = "platter";
   return t;
 }
 
@@ -27,10 +29,19 @@ const CARPET_SURFACE = 0.06;
 /* Haul and return ropes sit this far apart, and this far above the snow. */
 export const ROPE_LANE = 0.45;
 export const ROPE_HEIGHT = 1.05;
+/* T-bar and platter cables. The hanger reaches about thigh height. */
+export const DRAG_LANE = 1.65;
+export const DRAG_HEIGHT = 5.4;
+const DRAG_BAR = 0.92;
+
+export function isDragLift(type) {
+  return type === "t-bar" || type === "platter";
+}
 
 export function liftCableHeight(type) {
   if (type === "magic_carpet") return CARPET_SURFACE;
   if (type === "rope_tow") return ROPE_HEIGHT;
+  if (isDragLift(type)) return DRAG_HEIGHT;
   if (type === "gondola" || type === "cable_car") return GONDOLA_HEIGHT;
   return isAerialLift(type) ? AERIAL_HEIGHT : TREE_HEIGHT;
 }
@@ -73,6 +84,23 @@ export function makeLiftTerminal(THREE, type, steel, end = "return") {
       hut.position.set(-(ROPE_LANE + 1.35), 0.85, -0.5);
       const lid = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.1, 1.5), dark);
       lid.position.set(hut.position.x, 1.75, hut.position.z);
+      root.add(hut, lid);
+    }
+    return root;
+  }
+  if (isDragLift(type)) {
+    const wheel = new THREE.Mesh(new THREE.CylinderGeometry(DRAG_LANE, DRAG_LANE, 0.14, 24), dark);
+    wheel.position.y = DRAG_HEIGHT;
+    const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.22, 8), pole);
+    hub.position.y = DRAG_HEIGHT;
+    const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.14, DRAG_HEIGHT - 0.08, 8), pole);
+    mast.position.y = (DRAG_HEIGHT - 0.08) / 2;
+    root.add(wheel, hub, mast);
+    if (end === "drive") {
+      const hut = new THREE.Mesh(new THREE.BoxGeometry(1.8, 2.2, 1.6), wood);
+      hut.position.set(-(DRAG_LANE + 1.7), 1.1, -0.6);
+      const lid = new THREE.Mesh(new THREE.BoxGeometry(2.05, 0.12, 1.85), dark);
+      lid.position.set(hut.position.x, 2.26, hut.position.z);
       root.add(hut, lid);
     }
     return root;
@@ -386,6 +414,81 @@ export function makeRopeTow(THREE, points) {
   return group;
 }
 
+let dragCableMat = null;
+let platterMat = null;
+
+/** Overhead haul and return, on short masts. Points are on the ground line. */
+export function makeDragLift(THREE, points) {
+  const group = new THREE.Group();
+  if (!points || points.length < 2) return group;
+  if (!dragCableMat) dragCableMat = new THREE.MeshLambertMaterial({ color: 0x2c3138, side: THREE.DoubleSide });
+  const { post } = ropeMaterials(THREE);
+  const half = 0.035;
+  for (const lane of [-DRAG_LANE, DRAG_LANE]) {
+    addRibbon(THREE, group, offsetPoints(points, lane), dragCableMat, DRAG_HEIGHT - half, DRAG_HEIGHT + half);
+  }
+  let total = 0;
+  for (let i = 1; i < points.length; i++) total += points[i].distanceTo(points[i - 1]);
+  let dist = 0;
+  let next = 36;
+  const w = 0.06;
+  for (let i = 1; i < points.length; i++) {
+    const a = points[i - 1];
+    const b = points[i];
+    const seg = a.distanceTo(b);
+    if (seg < 1e-4) continue;
+    while (dist + seg >= next && next < total - 16) {
+      const t = (next - dist) / seg;
+      const p = { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t, z: a.z + (b.z - a.z) * t };
+      const tx = b.x - a.x;
+      const tz = b.z - a.z;
+      const len = Math.hypot(tx, tz) || 1;
+      const rx = tz / len;
+      const rz = -tx / len;
+      const fx = tx / len;
+      const fz = tz / len;
+      addRibbon(THREE, group, [
+        { x: p.x - rx * w, y: p.y, z: p.z - rz * w },
+        { x: p.x + rx * w, y: p.y, z: p.z + rz * w },
+      ], post, 0, DRAG_HEIGHT);
+      addRibbon(THREE, group, [
+        { x: p.x - fx * w, y: p.y, z: p.z - fz * w },
+        { x: p.x + fx * w, y: p.y, z: p.z + fz * w },
+      ], post, 0, DRAG_HEIGHT);
+      addRibbon(THREE, group, [
+        { x: p.x - rx * DRAG_LANE, y: p.y, z: p.z - rz * DRAG_LANE },
+        { x: p.x + rx * DRAG_LANE, y: p.y, z: p.z + rz * DRAG_LANE },
+      ], post, DRAG_HEIGHT - 0.04, DRAG_HEIGHT + 0.06);
+      next += 42;
+    }
+    dist += seg;
+  }
+  return group;
+}
+
+function makeDragHanger(THREE, type, steel) {
+  const hanger = new THREE.Group();
+  const drop = DRAG_HEIGHT - DRAG_BAR;
+  const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.04, drop, 6), steel);
+  shaft.position.y = -drop / 2;
+  hanger.add(shaft);
+  if (type === "platter") {
+    if (!platterMat) platterMat = new THREE.MeshLambertMaterial({ color: 0xd28b2d });
+    const disk = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.05, 12), platterMat);
+    disk.position.y = -drop;
+    hanger.add(disk);
+    hanger.userData.seat = { x: 0, y: -DRAG_HEIGHT, z: 0.12 };
+  } else {
+    const bar = new THREE.Mesh(new THREE.BoxGeometry(0.92, 0.06, 0.07), steel);
+    bar.position.y = -drop;
+    hanger.add(bar);
+    hanger.userData.seat = { x: -0.28, y: -DRAG_HEIGHT, z: 0.2 };
+    hanger.userData.seat2 = { x: 0.28, y: -DRAG_HEIGHT, z: 0.2 };
+  }
+  hanger.userData.stance = "stand";
+  return hanger;
+}
+
 export function makeLiftCarrier(THREE, type, steel) {
   if (type === "cable_car") {
     const car = new THREE.Mesh(new THREE.BoxGeometry(2.1, 1.15, 1.3), steel);
@@ -397,6 +500,7 @@ export function makeLiftCarrier(THREE, type, steel) {
   if (type === "chair_lift") return makeChair(THREE, steel);
   if (type === "magic_carpet") return new THREE.Group();
   if (type === "rope_tow") return new THREE.Group();
+  if (isDragLift(type)) return makeDragHanger(THREE, type, steel);
   const tow = new THREE.Group();
   const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.75, 5), steel);
   pole.position.y = -0.38;
