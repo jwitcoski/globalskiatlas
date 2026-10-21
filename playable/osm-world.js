@@ -893,7 +893,31 @@ function makeClayPylon(h, steel, dark) {
   return g;
 }
 
-function addLiftKit(fc, elevFn, scene, counts, kit) {
+const TOWER_URL = new URL("./assets/models/lift/tower.glb?v=1", import.meta.url).href;
+const TOWER_CABLE = 10.5;
+let towerProto = null;
+
+async function loadTowerProto() {
+  if (towerProto) return towerProto;
+  const gltf = await new GLTFLoader().loadAsync(TOWER_URL);
+  gltf.scene.updateMatrixWorld(true);
+  let geo = null;
+  let mat = null;
+  gltf.scene.traverse((o) => {
+    if (!o.isMesh || geo) return;
+    geo = o.geometry.clone();
+    geo.applyMatrix4(o.matrixWorld);
+    const src = Array.isArray(o.material) ? o.material[0] : o.material;
+    const map = src?.map || null;
+    if (map) map.colorSpace = THREE.SRGBColorSpace;
+    mat = new THREE.MeshLambertMaterial({ map, color: 0xffffff });
+  });
+  if (!geo || !mat) return null;
+  towerProto = { pieces: [{ geo, mat }] };
+  return towerProto;
+}
+
+async function addLiftKit(fc, elevFn, scene, counts, kit) {
   if (!fc) return;
   const cableMat = new THREE.MeshBasicMaterial({ color: PALETTE.cable });
   const steel = new THREE.MeshLambertMaterial({ color: PALETTE.lift, flatShading: true });
@@ -968,8 +992,15 @@ function addLiftKit(fc, elevFn, scene, counts, kit) {
     scene.userData.pineOwners = owners;
     scene.userData.treeHash = buildTreeHash([...(scene.userData.treeHash?.xzr || []), ...poleXzr]);
   }
-  if (kit?.tower && towers.length) {
-    const spots = towers.map((t) => {
+  let towerMesh = null;
+  try {
+    towerMesh = await loadTowerProto();
+  } catch (err) {
+    console.warn("lift tower", err);
+  }
+  const poles = towers.filter((t) => t.type !== "magic_carpet");
+  if (towerMesh && poles.length) {
+    const spots = poles.map((t) => {
       const want = new THREE.Vector3(t.tangent.x, 0, t.tangent.z);
       if (want.lengthSq() < 1e-8) want.set(0, 0, 1);
       else want.normalize();
@@ -978,10 +1009,10 @@ function addLiftKit(fc, elevFn, scene, counts, kit) {
         y: t.p.y,
         z: t.p.z,
         ry: Math.atan2(want.x, want.z),
-        s: kit.tower.unit,
+        s: (liftCableHeight(t.type) || TOWER_CABLE) / TOWER_CABLE,
       };
     });
-    plantProtoPieces(scene, kit.tower, spots, true);
+    plantProtoPieces(scene, towerMesh, spots, true);
   } else {
     for (const t of towers) {
       const h = liftCableHeight(t.type) || TOWER_H;
@@ -1001,7 +1032,7 @@ function addLiftKit(fc, elevFn, scene, counts, kit) {
   counts.lifts = cables;
   counts.lift_towers = towers.length;
   counts.lift_stations = stations;
-  counts.lift_source = kit?.tower ? "resort4" : "clay";
+  counts.lift_source = towerMesh ? "tower" : "clay";
   scene.userData.liftMotions = liftMotions;
 }
 
@@ -1421,7 +1452,7 @@ export async function addOsmWorld(THREE, scene, sceneRoot, manifest, elevFn) {
   scene.add(pisteRoot);
   scene.userData.pisteDecor = pisteRoot;
 
-  addLiftKit(await loadLayer("lifts"), elevFn, scene, counts, kit);
+  await addLiftKit(await loadLayer("lifts"), elevFn, scene, counts, kit);
   const roadsFc = await loadLayer("roads");
   if (roadsFc) {
     let n = 0;
