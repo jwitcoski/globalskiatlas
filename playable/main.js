@@ -91,7 +91,7 @@ import {
   paintTrailerFrame,
 } from "./trailer.js?v=t2";
 import { createFlyby, prepFlybyTour, clearFlybyTour, tickFlybyZoom } from "./flyby.js?v=tour4";
-import { updateLiftMotion } from "./lift-motion.js?v=7";
+import { updateLiftMotion } from "./lift-motion.js?v=9";
 
 loadDifficultyScheme();
 

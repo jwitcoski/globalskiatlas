@@ -149,18 +149,66 @@ export function makeLiftTerminal(THREE, type, steel, end = "return") {
   return root;
 }
 
-function makeGondola(THREE, steel, mixed) {
-  const cabin = new THREE.Group();
-  const body = new THREE.Mesh(new THREE.BoxGeometry(mixed ? 0.8 : 1.05, 0.72, 0.72), steel);
-  body.position.y = -0.58;
-  const glass = new THREE.Mesh(
-    new THREE.BoxGeometry(mixed ? 0.62 : 0.84, 0.4, 0.58),
-    new THREE.MeshStandardMaterial({ color: 0x9dd8e8, metalness: 0.2, roughness: 0.22, transparent: true, opacity: 0.82 }),
+/* Closed cabins. Grip is the origin; the mesh hangs below it and faces +Z. */
+const CABIN_URL = new URL("./assets/models/lift/cabins.glb?v=2", import.meta.url).href;
+let cabinTemplates = null;
+let cabinLoad = null;
+const cabinWaiters = [];
+
+function cabinLambert(THREE, source) {
+  const map = source?.map || null;
+  if (map) map.colorSpace = THREE.SRGBColorSpace;
+  return new THREE.MeshLambertMaterial({ map, color: 0xffffff });
+}
+
+function prepareCabinTemplates(THREE, root) {
+  const found = {};
+  root.traverse((o) => {
+    if (o.name === "Gondola" || o.name === "CableCar") found[o.name] = o;
+  });
+  const doomed = new Set();
+  let material = null;
+  for (const mesh of Object.values(found)) {
+    mesh.parent?.remove(mesh);
+    mesh.position.set(0, 0, 0);
+    mesh.rotation.set(0, 0, 0);
+    mesh.scale.set(1, 1, 1);
+    mesh.traverse((o) => {
+      if (!o.isMesh) return;
+      o.castShadow = false;
+      o.receiveShadow = false;
+      const src = Array.isArray(o.material) ? o.material[0] : o.material;
+      material ||= cabinLambert(THREE, src);
+      o.material = material;
+      if (src && src !== material) doomed.add(src);
+    });
+  }
+  for (const src of doomed) src.dispose?.();
+  cabinTemplates = found;
+  for (const waiter of cabinWaiters) {
+    const template = cabinTemplates[waiter.key];
+    if (template) waiter.group.add(template.clone(true));
+  }
+  cabinWaiters.length = 0;
+}
+
+function loadCabins(THREE) {
+  if (cabinLoad) return cabinLoad;
+  cabinLoad = new GLTFLoader().loadAsync(CABIN_URL).then(
+    (gltf) => prepareCabinTemplates(THREE, gltf.scene),
+    (err) => console.warn("cabin model", err),
   );
-  glass.position.y = -0.43;
-  const hanger = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.9, 6), steel);
-  hanger.position.y = -0.1;
-  cabin.add(hanger, body, glass);
+  return cabinLoad;
+}
+
+function makeCabin(THREE, key) {
+  const cabin = new THREE.Group();
+  const template = cabinTemplates?.[key];
+  if (template) cabin.add(template.clone(true));
+  else {
+    cabinWaiters.push({ group: cabin, key });
+    loadCabins(THREE);
+  }
   return cabin;
 }
 
@@ -490,13 +538,8 @@ function makeDragHanger(THREE, type, steel) {
 }
 
 export function makeLiftCarrier(THREE, type, steel) {
-  if (type === "cable_car") {
-    const car = new THREE.Mesh(new THREE.BoxGeometry(2.1, 1.15, 1.3), steel);
-    car.position.y = -1.0;
-    return car;
-  }
-  if (type === "gondola") return makeGondola(THREE, steel, false);
-  if (type === "mixed_lift") return makeGondola(THREE, steel, true);
+  if (type === "cable_car") return makeCabin(THREE, "CableCar");
+  if (type === "gondola" || type === "mixed_lift") return makeCabin(THREE, "Gondola");
   if (type === "chair_lift") return makeChair(THREE, steel);
   if (type === "magic_carpet") return new THREE.Group();
   if (type === "rope_tow") return new THREE.Group();

@@ -1,0 +1,48 @@
+{
+  "asset": "gondola and cable-car cabins",
+  "purpose": "game-ready closed cabins for the slope lifts, one GLB, grip at the origin",
+  "required_parts": [
+    "Gondola: rounded enclosed body, window band, short hanger, grip",
+    "CableCar: larger squarer body, taller window band, heavier hanger and yoke, grip",
+    "shared painted albedo for metal and glass"
+  ],
+  "relations": [
+    "grip is the object origin and the cable center",
+    "hanger runs from the grip down to the roof",
+    "cabin hangs below the grip",
+    "front is Blender -Y, which glTF Y-up export turns into +Z",
+    "mixed lifts reuse the gondola mesh"
+  ],
+  "style": ["painted lift-gray metal", "darker opaque window band", "original, not a copied cabin"],
+  "finish": {
+    "profile": "polished_smooth",
+    "low_poly_explicitly_requested": false,
+    "triangle_ceiling_each": 4000,
+    "surface_targets": [
+      "smooth rounded gondola roof",
+      "squarer cable-car body",
+      "readable window frames",
+      "connected hanger and grip"
+    ]
+  },
+  "limits": {
+    "gondola_body_m": [2.2, 1.8, 1.8],
+    "cable_car_body_m": [3.2, 2.2, 2.2],
+    "metalness": 0,
+    "animation": false
+  },
+  "stages": [
+    "contract_and_references",
+    "graybox",
+    "primary_secondary_forms",
+    "structural_refinement",
+    "materials_textures",
+    "surface_polish",
+    "export_validation"
+  ],
+  "approval_gates": [],
+  "review_questions": [
+    "Do the two cabins read as different vehicles from a distance?",
+    "Does the metal stay lift-gray and do the windows read against snow without transparency?"
+  ]
+}

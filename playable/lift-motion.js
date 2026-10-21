@@ -1,4 +1,4 @@
-import { isAerialLift, isDragLift, liftCableHeight, LIFT_LANE, ROPE_LANE, DRAG_LANE } from "./lift-graphics.js?v=s10";
+import { isAerialLift, isDragLift, liftCableHeight, LIFT_LANE, ROPE_LANE, DRAG_LANE } from "./lift-graphics.js?v=s12";
 
 function pathLength(points) {
   let total = 0;
@@ -32,7 +32,8 @@ export function createLiftMotion(THREE, scene, type, points, elevFn, makeCarrier
   for (let i = 0; i < count; i++) {
     const carrier = makeCarrier();
     const rider = makeSkier(0x285b9f + (i % 3) * 0x241800);
-    rider.visible = type === "magic_carpet" || type === "rope_tow" || (isDragLift(type) && i % 2 === 0) || (aerial && type !== "cable_car" && i % 2 === 0);
+    const enclosed = type === "cable_car" || type === "gondola" || type === "mixed_lift";
+    rider.visible = !enclosed && (type === "magic_carpet" || type === "rope_tow" || (isDragLift(type) && i % 2 === 0) || (aerial && i % 2 === 0));
     const seat = carrier.userData.seat;
     if (seat) {
       /* Full-body riders sit with hips on the seat (legs hang to the footrest); a torso-only rider sits on it. */

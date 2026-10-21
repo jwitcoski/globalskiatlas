@@ -1,0 +1,241 @@
+{
+  "actions": [],
+  "blender": {
+    "background": true,
+    "build_hash": "d13f752e3b9c",
+    "version": "5.2.2 LTS",
+    "version_tuple": [
+      5,
+      2,
+      2
+    ]
+  },
+  "hard_gate_pass": true,
+  "input": "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\lift\\cabins.glb",
+  "issues": [],
+  "material_details": [
+    {
+      "image_texture_nodes": 1,
+      "images": [
+        "cabins_albedo"
+      ],
+      "name": "cabins_albedo",
+      "node_count": 3,
+      "use_nodes": true
+    }
+  ],
+  "materials": [
+    "cabins_albedo"
+  ],
+  "meshes": [
+    {
+      "boundary_edges": 1948,
+      "connected_components": 166,
+      "data_name": "CableCar",
+      "degenerate_faces": 0,
+      "edges": 4400,
+      "flat_polygons": 748,
+      "invalid_vertices": 0,
+      "isolated_vertices": 0,
+      "material_slots": [
+        "cabins_albedo"
+      ],
+      "missing_material_faces": 0,
+      "modifiers": [],
+      "name": "CableCar",
+      "non_manifold_edges": 1948,
+      "polygons": 2284,
+      "refinement_modifiers": [],
+      "shape_keys": 0,
+      "smooth_polygon_ratio": 0.672504,
+      "smooth_polygons": 1536,
+      "source_polygons": 2284,
+      "source_vertices": 2250,
+      "triangles": 2284,
+      "uv_layers": 1,
+      "vertex_groups": 0,
+      "vertices": 2250,
+      "weighted_vertices": 0,
+      "wire_edges": 0,
+      "world_bounds": [
+        [
+          -1.644,
+          -1.144,
+          -3.1
+        ],
+        [
+          1.644,
+          1.144,
+          0.14
+        ]
+      ],
+      "zero_length_edges": 0
+    },
+    {
+      "boundary_edges": 1424,
+      "connected_components": 97,
+      "data_name": "Gondola",
+      "degenerate_faces": 0,
+      "edges": 3640,
+      "flat_polygons": 518,
+      "invalid_vertices": 0,
+      "isolated_vertices": 0,
+      "material_slots": [
+        "cabins_albedo"
+      ],
+      "missing_material_faces": 0,
+      "modifiers": [],
+      "name": "Gondola",
+      "non_manifold_edges": 1424,
+      "polygons": 1952,
+      "refinement_modifiers": [],
+      "shape_keys": 0,
+      "smooth_polygon_ratio": 0.734631,
+      "smooth_polygons": 1434,
+      "source_polygons": 1952,
+      "source_vertices": 1760,
+      "triangles": 1952,
+      "uv_layers": 1,
+      "vertex_groups": 0,
+      "vertices": 1760,
+      "weighted_vertices": 0,
+      "wire_edges": 0,
+      "world_bounds": [
+        [
+          -1.132,
+          -0.932,
+          -2.28
+        ],
+        [
+          1.132,
+          0.932,
+          0.13
+        ]
+      ],
+      "zero_length_edges": 0
+    }
+  ],
+  "objects": [
+    {
+      "action": null,
+      "collections": [
+        "Scene Collection"
+      ],
+      "dimensions": [
+        3.288,
+        2.288,
+        3.24
+      ],
+      "hidden_render": false,
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "name": "CableCar",
+      "parent": null,
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "transform_is_finite": true,
+      "type": "MESH"
+    },
+    {
+      "action": null,
+      "collections": [
+        "Scene Collection"
+      ],
+      "dimensions": [
+        2.264,
+        1.864,
+        2.41
+      ],
+      "hidden_render": false,
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "name": "Gondola",
+      "parent": null,
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "transform_is_finite": true,
+      "type": "MESH"
+    }
+  ],
+  "scene": {
+    "bounds": {
+      "dimensions": [
+        3.288,
+        2.288,
+        3.24
+      ],
+      "max": [
+        1.644,
+        1.144,
+        0.14
+      ],
+      "min": [
+        -1.644,
+        -1.144,
+        -3.1
+      ]
+    },
+    "fps": 24.0,
+    "frame_end": 250,
+    "frame_start": 1,
+    "name": "Scene"
+  },
+  "schema_version": 3,
+  "totals": {
+    "actions": 0,
+    "armatures": 0,
+    "bones": 0,
+    "boundary_edges": 3372,
+    "cameras": 0,
+    "constraints": 0,
+    "degenerate_faces": 0,
+    "edges": 8040,
+    "flat_polygons": 1266,
+    "geometry_nodes_modifiers": 0,
+    "images": 1,
+    "invalid_vertices": 0,
+    "isolated_vertices": 0,
+    "lights": 0,
+    "materials": 1,
+    "mesh_objects": 2,
+    "missing_material_faces": 0,
+    "node_materials": 1,
+    "non_manifold_edges": 3372,
+    "objects": 2,
+    "polygons": 4236,
+    "refinement_modifiers": 0,
+    "rigid_body_objects": 0,
+    "shape_keys": 0,
+    "simulation_modifiers": 0,
+    "smooth_polygons": 2970,
+    "textured_materials": 1,
+    "triangles": 4236,
+    "uv_mapped_meshes": 2,
+    "vertices": 4010,
+    "weighted_meshes": 0,
+    "wire_edges": 0,
+    "zero_length_edges": 0
+  }
+}

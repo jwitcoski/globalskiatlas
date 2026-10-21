@@ -1,0 +1,75 @@
+{
+  "schema_version": 2,
+  "evidence_settings_version": 2,
+  "studio": {
+    "presentation": "light",
+    "floor_color": [
+      0.32,
+      0.34,
+      0.36,
+      1.0
+    ],
+    "light_powers": [
+      32227.429194726574,
+      12890.97167789063,
+      48341.14379208986
+    ],
+    "camera_distance": 20.644799613952635,
+    "ortho_scale": 13.015199756622314,
+    "floor_size": 1795.199966430664,
+    "floor_offset": 0.05385599899291992,
+    "clip_start": 0.00897599983215332,
+    "clip_end": 8975.99983215332
+  },
+  "requested_presentation": "light",
+  "subject_luminance_hint": null,
+  "render_engine": "BLENDER_EEVEE",
+  "view_transform": "AgX",
+  "exposure": 0.0,
+  "input": "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\lift\\evidence\\cabins-spread.blend",
+  "blender_version": "5.2.2 LTS",
+  "resolution": 512,
+  "requested_views": [
+    "perspective",
+    "front",
+    "back",
+    "left",
+    "right",
+    "top"
+  ],
+  "evidence_scope": "full_multiview",
+  "focus_objects": [],
+  "geometry_hidden_for_focus": false,
+  "underside_floor_hidden": false,
+  "material_mode": "source",
+  "hidden_objects": [],
+  "head_texture": null,
+  "bounds": {
+    "min": [
+      -1.132,
+      -1.144,
+      -3.1
+    ],
+    "max": [
+      7.844,
+      1.144,
+      0.14
+    ],
+    "dimensions": [
+      8.976,
+      2.288,
+      3.24
+    ]
+  },
+  "views": [
+    "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\lift\\evidence\\cabins-multiview-final\\perspective.png",
+    "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\lift\\evidence\\cabins-multiview-final\\front.png",
+    "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\lift\\evidence\\cabins-multiview-final\\back.png",
+    "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\lift\\evidence\\cabins-multiview-final\\left.png",
+    "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\lift\\evidence\\cabins-multiview-final\\right.png",
+    "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\lift\\evidence\\cabins-multiview-final\\top.png"
+  ],
+  "contact_sheet": "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\lift\\evidence\\cabins-multiview-final\\contact_sheet.png",
+  "animation_frames": [],
+  "animation_contact_sheet": null
+}
