@@ -1,0 +1,59 @@
+{
+  "asset": "abominable snowman",
+  "purpose": "single game-ready chase creature for playable/yeti.js",
+  "required_parts": [
+    "shaggy torso and mane",
+    "heavy brow",
+    "dark muzzle",
+    "small dark eyes",
+    "long arms",
+    "large hands with separated digits",
+    "powerful legs",
+    "large planted foot and a lifted foot"
+  ],
+  "relations": [
+    "bind pose is a run contact, face along Blender -Y",
+    "opposite arm and leg",
+    "origin on the ground between the feet",
+    "planted sole is the lowest vertex",
+    "in-place YetiRun cycle, no root translation"
+  ],
+  "style": ["original creature", "off-white shaggy fur", "dark face and extremities"],
+  "finish": {
+    "profile": "polished_smooth",
+    "low_poly_explicitly_requested": false,
+    "triangle_ceiling": 12000,
+    "surface_targets": [
+      "fur reads as clumps in silhouette and albedo",
+      "face stays readable",
+      "fur value stays below snow white"
+    ]
+  },
+  "limits": {
+    "height_m": 3.4,
+    "max_width_m": 2.0,
+    "one_material": true,
+    "one_albedo": true,
+    "casts_shadow": false
+  },
+  "stages": [
+    "contract_and_references",
+    "graybox",
+    "primary_secondary_forms",
+    "structural_refinement",
+    "materials_textures",
+    "surface_polish",
+    "export_validation"
+  ],
+  "approval_gates": [],
+  "animation": {
+    "required": true,
+    "action": "YetiRun",
+    "critical_frames": [1, 8, 16]
+  },
+  "review_questions": [
+    "Does the silhouette read as a running snowman rather than a standing or T-pose figure?",
+    "Does the fur stay visible on a white or snow ground?",
+    "Is the body narrow enough that a 3.4 m catch is still fair?"
+  ]
+}

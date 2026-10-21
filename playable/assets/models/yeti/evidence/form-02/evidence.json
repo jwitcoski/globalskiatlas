@@ -1,0 +1,71 @@
+{
+  "schema_version": 2,
+  "evidence_settings_version": 2,
+  "studio": {
+    "presentation": "neutral",
+    "floor_color": [
+      0.025,
+      0.032,
+      0.045,
+      1.0
+    ],
+    "light_powers": [
+      4632.300871689586,
+      1852.9203486758342,
+      6948.451307534378
+    ],
+    "camera_distance": 7.827015972137451,
+    "ortho_scale": 4.934423112869262,
+    "floor_size": 680.6100845336914,
+    "floor_offset": 0.020418302536010742,
+    "clip_start": 0.003403050422668457,
+    "clip_end": 3403.050422668457
+  },
+  "requested_presentation": "neutral",
+  "subject_luminance_hint": 0.6185560061454759,
+  "render_engine": "BLENDER_EEVEE",
+  "view_transform": "AgX",
+  "exposure": 0.0,
+  "input": "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\yeti\\yeti.blend",
+  "blender_version": "5.2.2 LTS",
+  "resolution": 640,
+  "requested_views": [
+    "perspective",
+    "front",
+    "left",
+    "right"
+  ],
+  "evidence_scope": "partial_preview",
+  "focus_objects": [],
+  "geometry_hidden_for_focus": false,
+  "underside_floor_hidden": false,
+  "material_mode": "source",
+  "hidden_objects": [],
+  "head_texture": null,
+  "bounds": {
+    "min": [
+      -0.816035,
+      -1.126547,
+      0.0
+    ],
+    "max": [
+      0.810199,
+      0.745238,
+      3.40305
+    ],
+    "dimensions": [
+      1.626234,
+      1.871784,
+      3.40305
+    ]
+  },
+  "views": [
+    "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\yeti\\evidence\\form-02\\perspective.png",
+    "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\yeti\\evidence\\form-02\\front.png",
+    "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\yeti\\evidence\\form-02\\left.png",
+    "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\yeti\\evidence\\form-02\\right.png"
+  ],
+  "contact_sheet": "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\yeti\\evidence\\form-02\\contact_sheet.png",
+  "animation_frames": [],
+  "animation_contact_sheet": null
+}

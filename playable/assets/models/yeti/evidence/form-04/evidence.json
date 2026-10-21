@@ -1,0 +1,69 @@
+{
+  "schema_version": 2,
+  "evidence_settings_version": 2,
+  "studio": {
+    "presentation": "neutral",
+    "floor_color": [
+      0.025,
+      0.032,
+      0.045,
+      1.0
+    ],
+    "light_powers": [
+      4623.999610900887,
+      1849.5998443603548,
+      6935.999416351331
+    ],
+    "camera_distance": 7.8199996709823605,
+    "ortho_scale": 4.929999792575836,
+    "floor_size": 679.9999713897705,
+    "floor_offset": 0.020399999141693114,
+    "clip_start": 0.0033999998569488525,
+    "clip_end": 3399.9998569488525
+  },
+  "requested_presentation": "neutral",
+  "subject_luminance_hint": 0.6185560061454771,
+  "render_engine": "BLENDER_EEVEE",
+  "view_transform": "AgX",
+  "exposure": 0.0,
+  "input": "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\yeti\\yeti.blend",
+  "blender_version": "5.2.2 LTS",
+  "resolution": 720,
+  "requested_views": [
+    "perspective",
+    "front",
+    "left"
+  ],
+  "evidence_scope": "partial_preview",
+  "focus_objects": [],
+  "geometry_hidden_for_focus": false,
+  "underside_floor_hidden": false,
+  "material_mode": "source",
+  "hidden_objects": [],
+  "head_texture": null,
+  "bounds": {
+    "min": [
+      -0.871911,
+      -1.247357,
+      0.0
+    ],
+    "max": [
+      0.85686,
+      0.754917,
+      3.4
+    ],
+    "dimensions": [
+      1.728772,
+      2.002274,
+      3.4
+    ]
+  },
+  "views": [
+    "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\yeti\\evidence\\form-04\\perspective.png",
+    "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\yeti\\evidence\\form-04\\front.png",
+    "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\yeti\\evidence\\form-04\\left.png"
+  ],
+  "contact_sheet": "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\yeti\\evidence\\form-04\\contact_sheet.png",
+  "animation_frames": [],
+  "animation_contact_sheet": null
+}

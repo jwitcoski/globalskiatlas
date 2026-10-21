@@ -58,7 +58,7 @@ import { intentsFrom, isTurning, analogAxes } from "./input.js?v=s5";
 import { bindMobileChrome, bindPads } from "./mobile.js?v=s5";
 import { bakePisteSculpt, drapeSculptOnMesh } from "./piste-sculpt.js?v=feel3";
 import { addTrailMarks, clearTrailMarks, repairFences, updateTrailMarks } from "./trail-marks.js?v=marks12";
-import { makeYeti, resetYeti, parkYetiAtStart, tickYeti } from "./yeti.js?v=vis16";
+import { makeYeti, resetYeti, parkYetiAtStart, tickYeti } from "./yeti.js?v=vis19";
 import { createSkiWake, clearSkiWake, pushSkiWake, updateSkiWake } from "./ski-wake.js?v=powder1";
 import {
   addTrailMap,

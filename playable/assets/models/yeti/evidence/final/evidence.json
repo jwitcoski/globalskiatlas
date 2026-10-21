@@ -1,0 +1,75 @@
+{
+  "schema_version": 2,
+  "evidence_settings_version": 2,
+  "studio": {
+    "presentation": "light",
+    "floor_color": [
+      0.32,
+      0.34,
+      0.36,
+      1.0
+    ],
+    "light_powers": [
+      7743.998657226621,
+      3097.5994628906483,
+      11615.997985839931
+    ],
+    "camera_distance": 10.119999122619628,
+    "ortho_scale": 6.379999446868896,
+    "floor_size": 879.9999237060547,
+    "floor_offset": 0.026399997711181643,
+    "clip_start": 0.004399999618530274,
+    "clip_end": 4399.999618530273
+  },
+  "requested_presentation": "light",
+  "subject_luminance_hint": null,
+  "render_engine": "BLENDER_EEVEE",
+  "view_transform": "AgX",
+  "exposure": 0.0,
+  "input": "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\yeti\\yeti.glb",
+  "blender_version": "5.2.2 LTS",
+  "resolution": 640,
+  "requested_views": [
+    "perspective",
+    "front",
+    "back",
+    "left",
+    "right",
+    "top"
+  ],
+  "evidence_scope": "full_multiview",
+  "focus_objects": [],
+  "geometry_hidden_for_focus": false,
+  "underside_floor_hidden": false,
+  "material_mode": "source",
+  "hidden_objects": [],
+  "head_texture": null,
+  "bounds": {
+    "min": [
+      -0.951058,
+      -1.225532,
+      -1.0
+    ],
+    "max": [
+      0.951058,
+      1.0,
+      3.399999
+    ],
+    "dimensions": [
+      1.902116,
+      2.225532,
+      4.4
+    ]
+  },
+  "views": [
+    "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\yeti\\evidence\\final\\perspective.png",
+    "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\yeti\\evidence\\final\\front.png",
+    "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\yeti\\evidence\\final\\back.png",
+    "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\yeti\\evidence\\final\\left.png",
+    "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\yeti\\evidence\\final\\right.png",
+    "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\yeti\\evidence\\final\\top.png"
+  ],
+  "contact_sheet": "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\yeti\\evidence\\final\\contact_sheet.png",
+  "animation_frames": [],
+  "animation_contact_sheet": null
+}

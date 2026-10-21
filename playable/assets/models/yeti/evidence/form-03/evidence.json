@@ -1,0 +1,69 @@
+{
+  "schema_version": 2,
+  "evidence_settings_version": 2,
+  "studio": {
+    "presentation": "neutral",
+    "floor_color": [
+      0.025,
+      0.032,
+      0.045,
+      1.0
+    ],
+    "light_powers": [
+      3998.8095544777025,
+      1599.523821791081,
+      5998.214331716554
+    ],
+    "camera_distance": 7.272156238555907,
+    "ortho_scale": 4.584620237350464,
+    "floor_size": 632.3614120483398,
+    "floor_offset": 0.018970842361450194,
+    "clip_start": 0.003161807060241699,
+    "clip_end": 3161.807060241699
+  },
+  "requested_presentation": "neutral",
+  "subject_luminance_hint": 0.6185560061454798,
+  "render_engine": "BLENDER_EEVEE",
+  "view_transform": "AgX",
+  "exposure": 0.0,
+  "input": "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\yeti\\yeti.blend",
+  "blender_version": "5.2.2 LTS",
+  "resolution": 640,
+  "requested_views": [
+    "perspective",
+    "front",
+    "left"
+  ],
+  "evidence_scope": "partial_preview",
+  "focus_objects": [],
+  "geometry_hidden_for_focus": false,
+  "underside_floor_hidden": false,
+  "material_mode": "source",
+  "hidden_objects": [],
+  "head_texture": null,
+  "bounds": {
+    "min": [
+      -0.798793,
+      -1.156547,
+      0.0
+    ],
+    "max": [
+      0.791981,
+      0.697606,
+      3.161807
+    ],
+    "dimensions": [
+      1.590774,
+      1.854153,
+      3.161807
+    ]
+  },
+  "views": [
+    "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\yeti\\evidence\\form-03\\perspective.png",
+    "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\yeti\\evidence\\form-03\\front.png",
+    "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\yeti\\evidence\\form-03\\left.png"
+  ],
+  "contact_sheet": "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\yeti\\evidence\\form-03\\contact_sheet.png",
+  "animation_frames": [],
+  "animation_contact_sheet": null
+}

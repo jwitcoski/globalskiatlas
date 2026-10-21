@@ -1,0 +1,203 @@
+{
+  "actions": [],
+  "blender": {
+    "background": true,
+    "build_hash": "d13f752e3b9c",
+    "version": "5.2.2 LTS",
+    "version_tuple": [
+      5,
+      2,
+      2
+    ]
+  },
+  "hard_gate_pass": true,
+  "input": "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\yeti\\yeti.glb",
+  "issues": [],
+  "material_details": [
+    {
+      "image_texture_nodes": 1,
+      "images": [
+        "yeti_albedo"
+      ],
+      "name": "YetiFur",
+      "node_count": 3,
+      "use_nodes": true
+    }
+  ],
+  "materials": [
+    "YetiFur"
+  ],
+  "meshes": [
+    {
+      "boundary_edges": 9040,
+      "connected_components": 1141,
+      "data_name": "Yeti.001",
+      "degenerate_faces": 0,
+      "edges": 21728,
+      "flat_polygons": 0,
+      "invalid_vertices": 0,
+      "isolated_vertices": 0,
+      "material_slots": [
+        "YetiFur"
+      ],
+      "missing_material_faces": 0,
+      "modifiers": [
+        {
+          "name": "Armature",
+          "type": "ARMATURE"
+        }
+      ],
+      "name": "Yeti",
+      "non_manifold_edges": 9040,
+      "polygons": 11472,
+      "refinement_modifiers": [],
+      "shape_keys": 0,
+      "smooth_polygon_ratio": 1.0,
+      "smooth_polygons": 11472,
+      "source_polygons": 11472,
+      "source_vertices": 11223,
+      "triangles": 11472,
+      "uv_layers": 1,
+      "vertex_groups": 19,
+      "vertices": 11223,
+      "weighted_vertices": 11223,
+      "wire_edges": 0,
+      "world_bounds": [
+        [
+          -0.917354,
+          -1.225532,
+          -0.0
+        ],
+        [
+          0.88912,
+          0.743117,
+          3.399999
+        ]
+      ],
+      "zero_length_edges": 0
+    }
+  ],
+  "objects": [
+    {
+      "action": null,
+      "collections": [
+        "Scene Collection"
+      ],
+      "dimensions": [
+        1.806475,
+        1.968649,
+        3.4
+      ],
+      "hidden_render": false,
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "name": "Yeti",
+      "parent": "YetiRig",
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "transform_is_finite": true,
+      "type": "MESH"
+    },
+    {
+      "action": null,
+      "collections": [
+        "Scene Collection"
+      ],
+      "dimensions": [
+        1.859102,
+        1.884918,
+        3.098542
+      ],
+      "hidden_render": false,
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "name": "YetiRig",
+      "parent": null,
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "transform_is_finite": true,
+      "type": "ARMATURE"
+    }
+  ],
+  "scene": {
+    "bounds": {
+      "dimensions": [
+        1.806474,
+        1.968649,
+        3.399999
+      ],
+      "max": [
+        0.88912,
+        0.743117,
+        3.399999
+      ],
+      "min": [
+        -0.917354,
+        -1.225532,
+        -0.0
+      ]
+    },
+    "fps": 24.0,
+    "frame_end": 250,
+    "frame_start": 1,
+    "name": "Scene"
+  },
+  "schema_version": 3,
+  "totals": {
+    "actions": 0,
+    "armatures": 1,
+    "bones": 19,
+    "boundary_edges": 9040,
+    "cameras": 0,
+    "constraints": 0,
+    "degenerate_faces": 0,
+    "edges": 21728,
+    "flat_polygons": 0,
+    "geometry_nodes_modifiers": 0,
+    "images": 1,
+    "invalid_vertices": 0,
+    "isolated_vertices": 0,
+    "lights": 0,
+    "materials": 1,
+    "mesh_objects": 1,
+    "missing_material_faces": 0,
+    "node_materials": 1,
+    "non_manifold_edges": 9040,
+    "objects": 2,
+    "polygons": 11472,
+    "refinement_modifiers": 0,
+    "rigid_body_objects": 0,
+    "shape_keys": 0,
+    "simulation_modifiers": 0,
+    "smooth_polygons": 11472,
+    "textured_materials": 1,
+    "triangles": 11472,
+    "uv_mapped_meshes": 1,
+    "vertices": 11223,
+    "weighted_meshes": 1,
+    "wire_edges": 0,
+    "zero_length_edges": 0
+  }
+}
