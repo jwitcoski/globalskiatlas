@@ -23,8 +23,10 @@ export function isAerialLift(type) {
   return AERIAL_TYPES.has(type);
 }
 
+const CARPET_SURFACE = 0.06;
+
 export function liftCableHeight(type) {
-  if (type === "magic_carpet") return 0.55;
+  if (type === "magic_carpet") return CARPET_SURFACE;
   if (type === "gondola" || type === "cable_car") return GONDOLA_HEIGHT;
   return isAerialLift(type) ? AERIAL_HEIGHT : TREE_HEIGHT;
 }
@@ -48,6 +50,12 @@ export function makeLiftTerminal(THREE, type, steel, end = "return") {
   const { dark, wood, roof, platform } = terminalMaterials(THREE);
   const pole = steel || new THREE.MeshLambertMaterial({ color: PALETTE.lift });
   const h = liftCableHeight(type);
+  if (type === "magic_carpet") {
+    const hood = new THREE.Mesh(new THREE.BoxGeometry(1.75, 0.36, 1.45), dark);
+    hood.position.set(0, 0.28, -0.4);
+    root.add(hood);
+    return root;
+  }
   if (h < 2) {
     const housing = new THREE.Mesh(new THREE.BoxGeometry(3.2, 1.4, 2.2), pole);
     housing.position.set(0, 0.7, -1.2);
@@ -159,6 +167,110 @@ function makeChair(THREE, steel) {
   return chair;
 }
 
+let carpetMap = null;
+
+function magicCarpetMap(THREE) {
+  if (carpetMap) return carpetMap;
+  const canvas = document.createElement("canvas");
+  canvas.width = 64;
+  canvas.height = 64;
+  const g = canvas.getContext("2d");
+  g.fillStyle = "#1a1c20";
+  g.fillRect(0, 0, 64, 64);
+  g.fillStyle = "#5c6570";
+  for (let y = 6; y < 64; y += 16) {
+    for (let x = (y / 16) % 2 ? 2 : 10; x < 64; x += 16) {
+      g.beginPath();
+      g.arc(x, y, 3.4, 0, Math.PI * 2);
+      g.fill();
+    }
+  }
+  carpetMap = new THREE.CanvasTexture(canvas);
+  carpetMap.wrapS = carpetMap.wrapT = THREE.RepeatWrapping;
+  carpetMap.colorSpace = THREE.SRGBColorSpace;
+  return carpetMap;
+}
+
+/** Continuous belt. Points are already on the visible snow. */
+export function makeMagicCarpet(THREE, points) {
+  const group = new THREE.Group();
+  if (!points || points.length < 2) return group;
+  const width = 1.35;
+  const rights = points.map((p, i) => {
+    const a = points[Math.max(0, i - 1)];
+    const b = points[Math.min(points.length - 1, i + 1)];
+    const tx = b.x - a.x;
+    const tz = b.z - a.z;
+    const len = Math.hypot(tx, tz) || 1;
+    return { x: tz / len, z: -tx / len };
+  });
+  const pos = [];
+  const uv = [];
+  const idx = [];
+  let dist = 0;
+  for (let i = 0; i < points.length; i++) {
+    if (i) dist += points[i].distanceTo(points[i - 1]);
+    const p = points[i];
+    const r = rights[i];
+    const y = p.y + CARPET_SURFACE;
+    const hw = width / 2;
+    pos.push(p.x - r.x * hw, y, p.z - r.z * hw, p.x + r.x * hw, y, p.z + r.z * hw);
+    const v = dist / 0.55;
+    uv.push(0, v, 1, v);
+  }
+  for (let i = 0; i < points.length - 1; i++) {
+    const a = i * 2;
+    idx.push(a, a + 2, a + 1, a + 1, a + 2, a + 3);
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
+  geo.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2));
+  geo.setIndex(idx);
+  geo.computeVertexNormals();
+  const belt = new THREE.Mesh(
+    geo,
+    new THREE.MeshLambertMaterial({
+      map: magicCarpetMap(THREE),
+      color: 0xffffff,
+      side: THREE.DoubleSide,
+      polygonOffset: true,
+      polygonOffsetFactor: -2,
+      polygonOffsetUnits: -2,
+    }),
+  );
+  belt.renderOrder = 6;
+  belt.userData.snowLift = new Float32Array(points.length * 2).fill(CARPET_SURFACE);
+  group.add(belt);
+  const railMat = new THREE.MeshLambertMaterial({ color: 0x24282e, side: THREE.DoubleSide });
+  for (const side of [-1, 1]) {
+    const rp = [];
+    const ri = [];
+    const extra = [];
+    for (let i = 0; i < points.length; i++) {
+      const p = points[i];
+      const r = rights[i];
+      const x = p.x + r.x * side * (width / 2);
+      const z = p.z + r.z * side * (width / 2);
+      const y = p.y + CARPET_SURFACE;
+      rp.push(x, y, z, x, y + 0.14, z);
+      extra.push(CARPET_SURFACE, CARPET_SURFACE + 0.14);
+    }
+    for (let i = 0; i < points.length - 1; i++) {
+      const a = i * 2;
+      ri.push(a, a + 1, a + 2, a + 1, a + 3, a + 2);
+    }
+    const railGeo = new THREE.BufferGeometry();
+    railGeo.setAttribute("position", new THREE.Float32BufferAttribute(rp, 3));
+    railGeo.setIndex(ri);
+    railGeo.computeVertexNormals();
+    const rail = new THREE.Mesh(railGeo, railMat);
+    rail.userData.snowLift = extra;
+    rail.renderOrder = 6;
+    group.add(rail);
+  }
+  return group;
+}
+
 export function makeLiftCarrier(THREE, type, steel) {
   if (type === "cable_car") {
     const car = new THREE.Mesh(new THREE.BoxGeometry(2.1, 1.15, 1.3), steel);
@@ -168,17 +280,7 @@ export function makeLiftCarrier(THREE, type, steel) {
   if (type === "gondola") return makeGondola(THREE, steel, false);
   if (type === "mixed_lift") return makeGondola(THREE, steel, true);
   if (type === "chair_lift") return makeChair(THREE, steel);
-  if (type === "magic_carpet") {
-    const carpet = new THREE.Group();
-    const belt = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.16, 1.3), new THREE.MeshLambertMaterial({ color: 0xd15b2b }));
-    belt.position.y = -0.25;
-    const rail = new THREE.Mesh(new THREE.BoxGeometry(2.95, 0.12, 0.08), new THREE.MeshLambertMaterial({ color: 0xf0c24b }));
-    rail.position.set(0, -0.08, -0.6);
-    const rail2 = rail.clone();
-    rail2.position.z = 0.6;
-    carpet.add(belt, rail, rail2);
-    return carpet;
-  }
+  if (type === "magic_carpet") return new THREE.Group();
   if (type === "rope_tow") {
     const rope = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 1.8, 8), new THREE.MeshLambertMaterial({ color: 0xd28b2d }));
     rope.rotation.z = Math.PI / 2;

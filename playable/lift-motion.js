@@ -1,4 +1,4 @@
-import { isAerialLift, liftCableHeight, LIFT_LANE } from "./lift-graphics.js?v=s5";
+import { isAerialLift, liftCableHeight, LIFT_LANE } from "./lift-graphics.js?v=s8";
 
 function pathLength(points) {
   let total = 0;
@@ -28,7 +28,7 @@ export function createLiftMotion(THREE, scene, type, points, elevFn, makeCarrier
   const root = new THREE.Group();
   root.name = `lift-motion-${type}`;
   const carriers = [];
-  const count = type === "cable_car" ? 2 : type === "magic_carpet" ? 8 : aerial ? (type === "mixed_lift" ? 8 : 10) : 12;
+  const count = type === "cable_car" ? 2 : type === "magic_carpet" ? Math.max(2, Math.min(8, Math.round(length / 12))) : aerial ? (type === "mixed_lift" ? 8 : 10) : 12;
   for (let i = 0; i < count; i++) {
     const carrier = makeCarrier();
     const rider = makeSkier(0x285b9f + (i % 3) * 0x241800);
@@ -51,7 +51,7 @@ export function createLiftMotion(THREE, scene, type, points, elevFn, makeCarrier
 export function updateLiftMotion(THREE, motion, dt) {
   if (!motion) return;
   motion.time += dt;
-  const speed = motion.type === "cable_car" ? 7 : isAerialLift(motion.type) ? 5 : 3.2;
+  const speed = motion.type === "cable_car" ? 7 : motion.type === "magic_carpet" ? 1.3 : isAerialLift(motion.type) ? 5 : 3.2;
   for (const item of motion.carriers) {
     let distance;
     if (motion.type === "cable_car") {

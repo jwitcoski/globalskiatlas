@@ -5,8 +5,8 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { styleForPisteFeature, classifyDifficulty } from "./trail-map.js?v=scheme1";
 import { addOsmTraffic } from "./traffic.js?v=vis16";
 import { alongPolyline, polylineLen } from "./gates.js?v=vis17";
-import { liftType, liftCableHeight, LIFT_LANE, makeLiftTerminal, makeLiftCarrier, makeLiftSkier } from "./lift-graphics.js?v=s6";
-import { createLiftMotion } from "./lift-motion.js?v=3";
+import { liftType, liftCableHeight, LIFT_LANE, makeLiftTerminal, makeLiftCarrier, makeLiftSkier, makeMagicCarpet } from "./lift-graphics.js?v=s8";
+import { createLiftMotion } from "./lift-motion.js?v=5";
 import { snowTerrainMaterial } from "./ground.js?v=g5";
 import { PALETTE } from "/scripts/clay/config.js";
 import { addClayBuilding } from "/scripts/clay/buildings.js";
@@ -941,6 +941,51 @@ async function loadTowerProto() {
   return towerProto;
 }
 
+/** Drop magic-carpet belts onto the snow mesh that is actually showing. */
+export function seatMagicCarpets(scene, ground) {
+  if (!scene || !ground) return;
+  ground.updateMatrixWorld(true);
+  const raycaster = new THREE.Raycaster();
+  const down = new THREE.Vector3(0, -1, 0);
+  const origin = new THREE.Vector3();
+  function hitY(x, y, z) {
+    origin.set(x, y + 80, z);
+    raycaster.set(origin, down);
+    raycaster.far = 160;
+    const hits = raycaster.intersectObject(ground, true);
+    return hits.length ? hits[0].point.y : null;
+  }
+  scene.traverse((o) => {
+    const extra = o.userData?.snowLift;
+    if (!o.isMesh || !extra) return;
+    const pos = o.geometry.attributes.position;
+    let moved = false;
+    for (let i = 0; i < pos.count; i++) {
+      const y = hitY(pos.getX(i), pos.getY(i), pos.getZ(i));
+      if (y == null) continue;
+      pos.setY(i, y + extra[i]);
+      moved = true;
+    }
+    if (!moved) return;
+    pos.needsUpdate = true;
+    o.geometry.computeVertexNormals();
+  });
+  for (const m of scene.userData.liftMotions || []) {
+    if (m.type !== "magic_carpet") continue;
+    for (const p of m.points) {
+      const y = hitY(p.x, p.y, p.z);
+      if (y != null) p.y = y;
+    }
+  }
+  for (const t of scene.userData.carpetTerminals || []) {
+    const y = hitY(t.position.x, t.position.y, t.position.z);
+    if (y == null) continue;
+    t.updateMatrixWorld(true);
+    const box = new THREE.Box3().setFromObject(t);
+    if (Number.isFinite(box.min.y)) t.position.y += y - box.min.y;
+  }
+}
+
 async function addLiftKit(fc, elevFn, scene, counts, kit) {
   if (!fc) return;
   const cableMat = new THREE.MeshBasicMaterial({ color: PALETTE.cable });
@@ -950,6 +995,7 @@ async function addLiftKit(fc, elevFn, scene, counts, kit) {
   const terminals = [];
   const liftMotions = [];
   let cables = 0;
+  scene.userData.carpetTerminals = [];
   for (const f of fc.features || []) {
     const type = liftType(f);
     for (const coords of lineParts(f.geometry)) {
@@ -963,7 +1009,12 @@ async function addLiftKit(fc, elevFn, scene, counts, kit) {
       if (ground.length < 2) continue;
       const cableHeight = liftCableHeight(type);
       const liftPath = type === "gondola" ? straightLiftPath(ground) : ground;
-      if (type !== "magic_carpet") {
+      let motionPath = liftPath;
+      if (type === "magic_carpet") {
+        motionPath = sampleAlong(liftPath, 2);
+        for (const p of motionPath) p.y = elevFn(p.x, p.z);
+        scene.add(makeMagicCarpet(THREE, motionPath));
+      } else {
         const lane = LIFT_LANE * (cableHeight / TOWER_CABLE);
         for (const side of [-1, 1]) {
           const cable = offsetLiftPath(liftPath, lane * side).map((p) => new THREE.Vector3(p.x, p.y + cableHeight, p.z));
@@ -973,10 +1024,10 @@ async function addLiftKit(fc, elevFn, scene, counts, kit) {
         }
         cables += 1;
       }
-      const a = ground[0];
-      const b = ground[ground.length - 1];
-      const outStart = liftPath[1].clone().sub(liftPath[0]);
-      const outEnd = liftPath[liftPath.length - 2].clone().sub(liftPath[liftPath.length - 1]);
+      const a = motionPath[0];
+      const b = motionPath[motionPath.length - 1];
+      const outStart = motionPath[1].clone().sub(motionPath[0]);
+      const outEnd = motionPath[motionPath.length - 2].clone().sub(motionPath[motionPath.length - 1]);
       const skip = 18;
       terminals.push(
         { origin: a, tangent: outStart, type, end: "drive" },
@@ -986,7 +1037,7 @@ async function addLiftKit(fc, elevFn, scene, counts, kit) {
         THREE,
         scene,
         type,
-        liftPath,
+        motionPath,
         elevFn,
         () => makeLiftCarrier(THREE, type, steel),
         (color) => {
@@ -1055,6 +1106,7 @@ async function addLiftKit(fc, elevFn, scene, counts, kit) {
     const clone = makeLiftTerminal(THREE, t.type, steel, t.end);
     placeAlongLift(clone, t.origin, t.tangent);
     sitOnDem(clone, t.origin.y);
+    if (t.type === "magic_carpet") scene.userData.carpetTerminals.push(clone);
     scene.add(clone);
     stations += 1;
   }

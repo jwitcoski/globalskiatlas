@@ -28,7 +28,7 @@ import { loadSkierModel, mountSkierModel } from "./skier-model.js?v=6";
 import { featuredCourses, attachPisteDifficulty, courseFinish, createRun, tickRun, formatTime } from "./run.js?v=map4";
 import { coordsToXz, attachPiste, resetScore, tickScore, commitBestScore, formatScore, applyWipeout } from "./score.js?v=snow1";
 import { orientPiste, alongTrack, alongPolyline, placeGates, addGateMeshes, clearGateMeshes, resetGates, tickGates } from "./gates.js?v=vis18";
-import { addOsmWorld, applyPisteDecorDifficultyScheme, applySnowLevel, bendPine, tickPines } from "./osm-world.js?v=tower5";
+import { addOsmWorld, applyPisteDecorDifficultyScheme, applySnowLevel, bendPine, seatMagicCarpets, tickPines } from "./osm-world.js?v=tower8";
 import { snowTerrainMaterial, makeGroundScatter, updateGroundScatter } from "./ground.js?v=g5";
 import {
   addSkyAndLights,
@@ -91,7 +91,7 @@ import {
   paintTrailerFrame,
 } from "./trailer.js?v=t2";
 import { createFlyby, prepFlybyTour, clearFlybyTour, tickFlybyZoom } from "./flyby.js?v=tour4";
-import { updateLiftMotion } from "./lift-motion.js?v=3";
+import { updateLiftMotion } from "./lift-motion.js?v=5";
 
 loadDifficultyScheme();
 
@@ -626,6 +626,20 @@ function setTerrainLobbyMode(lobby) {
     terrain.visible = true;
     finalizeTerrainOpaque(terrain);
   }
+  seatShownCarpets(lobby);
+}
+
+function seatShownCarpets(lobby) {
+  const island = scene.userData.island;
+  const tops = island?.tops;
+  if (lobby && tops?.length) {
+    const pick = island.lodPick ?? 0;
+    scene.userData.carpetLod = pick;
+    seatMagicCarpets(scene, tops[pick] || tops[0]);
+    return;
+  }
+  scene.userData.carpetLod = null;
+  seatMagicCarpets(scene, scene.userData.terrainRoot);
 }
 
 function beginLobbyHandoff() {
@@ -662,6 +676,7 @@ function tickLobbyHandoff(dt) {
       terrain.visible = true;
       finalizeTerrainOpaque(terrain);
     }
+    seatShownCarpets(false);
     return false;
   }
   return true;
@@ -1349,6 +1364,12 @@ async function loadMountain() {
   try {
     addResortIsland(THREE, scene, hf, skiArea, scene.userData.osmHull);
     if (terrainRoot) terrainRoot.visible = false;
+    const tops = scene.userData.island?.tops || [];
+    const shown = tops.find((t) => t.visible) || tops[tops.length - 1];
+    if (shown) {
+      scene.userData.carpetLod = tops.indexOf(shown);
+      seatMagicCarpets(scene, shown);
+    }
   } catch (islandErr) {
     console.warn("resort island failed", islandErr);
     if (terrainRoot) terrainRoot.visible = true;
@@ -1723,6 +1744,8 @@ function tick(now) {
     fitLobbyClip(camera, orbit, frameDt, lobbySpan());
     updateTrailMapLod(trailMap, camera);
     updateIslandLod(scene.userData.island, camera);
+    const pick = scene.userData.island?.lodPick;
+    if (pick != null && pick !== scene.userData.carpetLod) seatShownCarpets(true);
   }
   if (lobbyHandoff) tickLobbyHandoff(frameDt);
   if (run?.phase === "ready") updateIslandDust(scene.userData.island, frameDt);
