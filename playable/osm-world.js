@@ -5,7 +5,7 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { styleForPisteFeature, classifyDifficulty } from "./trail-map.js?v=scheme1";
 import { addOsmTraffic } from "./traffic.js?v=vis16";
 import { alongPolyline, polylineLen } from "./gates.js?v=vis17";
-import { liftType, liftCableHeight, LIFT_LANE, makeLiftTerminal, makeLiftCarrier, makeLiftSkier } from "./lift-graphics.js?v=s5";
+import { liftType, liftCableHeight, LIFT_LANE, makeLiftTerminal, makeLiftCarrier, makeLiftSkier } from "./lift-graphics.js?v=s6";
 import { createLiftMotion } from "./lift-motion.js?v=3";
 import { snowTerrainMaterial } from "./ground.js?v=g5";
 import { PALETTE } from "/scripts/clay/config.js";
@@ -975,9 +975,13 @@ async function addLiftKit(fc, elevFn, scene, counts, kit) {
       }
       const a = ground[0];
       const b = ground[ground.length - 1];
-      const lineTan = new THREE.Vector3().subVectors(b, a);
+      const outStart = liftPath[1].clone().sub(liftPath[0]);
+      const outEnd = liftPath[liftPath.length - 2].clone().sub(liftPath[liftPath.length - 1]);
       const skip = 18;
-      terminals.push({ origin: a, tangent: lineTan.clone(), type }, { origin: b, tangent: lineTan.clone().negate(), type });
+      terminals.push(
+        { origin: a, tangent: outStart, type, end: "drive" },
+        { origin: b, tangent: outEnd, type, end: "return" },
+      );
       const motion = createLiftMotion(
         THREE,
         scene,
@@ -1048,7 +1052,7 @@ async function addLiftKit(fc, elevFn, scene, counts, kit) {
   }
   let stations = 0;
   for (const t of terminals) {
-    const clone = makeLiftTerminal(THREE, t.type, steel);
+    const clone = makeLiftTerminal(THREE, t.type, steel, t.end);
     placeAlongLift(clone, t.origin, t.tangent);
     sitOnDem(clone, t.origin.y);
     scene.add(clone);

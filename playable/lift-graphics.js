@@ -29,12 +29,24 @@ export function liftCableHeight(type) {
   return isAerialLift(type) ? AERIAL_HEIGHT : TREE_HEIGHT;
 }
 
-export function makeLiftTerminal(THREE, type, steel) {
+let terminalColors = null;
+
+function terminalMaterials(THREE) {
+  if (terminalColors) return terminalColors;
+  const lambert = (color) => new THREE.MeshLambertMaterial({ color });
+  terminalColors = {
+    dark: lambert(0x2a3038),
+    wood: lambert(0xc4a882),
+    roof: lambert(0x1c3d66),
+    platform: lambert(0xd7dde4),
+  };
+  return terminalColors;
+}
+
+export function makeLiftTerminal(THREE, type, steel, end = "return") {
   const root = new THREE.Group();
-  const dark = new THREE.MeshLambertMaterial({ color: 0x374151, flatShading: true });
-  const roof = new THREE.MeshLambertMaterial({ color: 0x0f766e, flatShading: true });
-  const platform = new THREE.MeshLambertMaterial({ color: 0x94a3b8, flatShading: true });
-  const pole = steel || new THREE.MeshLambertMaterial({ color: PALETTE.lift, flatShading: true });
+  const { dark, wood, roof, platform } = terminalMaterials(THREE);
+  const pole = steel || new THREE.MeshLambertMaterial({ color: PALETTE.lift });
   const h = liftCableHeight(type);
   if (h < 2) {
     const housing = new THREE.Mesh(new THREE.BoxGeometry(3.2, 1.4, 2.2), pole);
@@ -46,35 +58,37 @@ export function makeLiftTerminal(THREE, type, steel) {
     root.add(deck, housing, lid);
     return root;
   }
-  const gondola = type === "gondola" || type === "cable_car";
-  const lane = gondola ? 3.4 : 2.6;
-  const col = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.38, h, 6), pole);
-  const left = col.clone();
-  const right = col.clone();
-  left.position.set(-lane, h / 2, 0);
-  right.position.set(lane, h / 2, 0);
-  const beam = new THREE.Mesh(new THREE.BoxGeometry(lane * 2.4, 0.28, 0.28), dark);
-  beam.position.y = h * 0.94;
-  const wheelR = gondola ? 1.35 : 1.05;
-  const wheel = new THREE.Mesh(new THREE.CylinderGeometry(wheelR, wheelR, 0.32, 16), dark);
-  wheel.rotation.z = Math.PI / 2;
-  wheel.position.set(0, h, 0.55);
-  const hub = new THREE.Mesh(new THREE.CylinderGeometry(wheelR * 0.22, wheelR * 0.22, 0.4, 8), pole);
-  hub.rotation.z = Math.PI / 2;
-  hub.position.copy(wheel.position);
-  const deckH = gondola ? 1.15 : 0.95;
-  const deck = new THREE.Mesh(new THREE.BoxGeometry(lane * 3.2, 0.18, gondola ? 6.2 : 4.6), platform);
-  deck.position.set(0, deckH, -1.4);
-  const houseW = gondola ? 7.2 : 4.4;
-  const houseH = gondola ? 3.6 : 2.4;
-  const houseD = gondola ? 5.4 : 3.2;
-  const house = new THREE.Mesh(new THREE.BoxGeometry(houseW, houseH, houseD), pole);
-  house.position.set(0, houseH * 0.5, -2.6);
-  const cap = new THREE.Mesh(new THREE.BoxGeometry(houseW * 1.08, 0.22, houseD * 1.08), roof);
-  cap.position.set(0, houseH + 0.12, -2.6);
-  const bay = new THREE.Mesh(new THREE.BoxGeometry(houseW * 0.7, houseH * 0.5, 0.12), dark);
-  bay.position.set(0, houseH * 0.45, -2.6 + houseD * 0.5);
-  root.add(left, right, beam, wheel, hub, deck, house, cap, bay);
+  const lane = LIFT_LANE * (h / AERIAL_HEIGHT);
+  const drive = isAerialLift(type) && end === "drive";
+  const mastH = h - 0.16;
+  const mast = new THREE.Mesh(new THREE.CylinderGeometry(drive ? 0.42 : 0.5, drive ? 0.55 : 0.62, mastH, 10), pole);
+  mast.position.y = mastH / 2;
+  const wheel = new THREE.Mesh(new THREE.CylinderGeometry(lane, lane, 0.22, 28), dark);
+  wheel.position.y = h;
+  const tire = new THREE.Mesh(new THREE.CylinderGeometry(lane + 0.1, lane + 0.1, 0.1, 28), dark);
+  tire.position.y = h;
+  const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 0.28, 10), pole);
+  hub.position.y = h;
+  root.add(mast, wheel, tire, hub);
+  if (drive) {
+    const span = lane * 2 + 1.7;
+    const depth = lane * 2.2;
+    const cap = new THREE.Mesh(new THREE.BoxGeometry(span, 0.16, depth), roof);
+    cap.position.set(0, h + 0.95, -lane * 0.35);
+    const band = new THREE.Mesh(new THREE.BoxGeometry(span + 0.08, 0.55, depth + 0.08), wood);
+    band.position.set(0, h + 0.55, -lane * 0.35);
+    const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.32, 0.85, 8), pole);
+    neck.position.y = h + 0.5;
+    const deck = new THREE.Mesh(new THREE.BoxGeometry(span + 0.6, 0.14, lane * 1.5), platform);
+    deck.position.set(0, 0.07, 0.15);
+    root.add(cap, band, neck, deck);
+  } else {
+    const hut = new THREE.Mesh(new THREE.BoxGeometry(2.4, 2.5, 2.2), wood);
+    hut.position.set(-(lane + 2.3), 1.25, -1.4);
+    const hutRoof = new THREE.Mesh(new THREE.BoxGeometry(2.7, 0.14, 2.5), dark);
+    hutRoof.position.set(hut.position.x, 2.57, hut.position.z);
+    root.add(hut, hutRoof);
+  }
   return root;
 }
 
