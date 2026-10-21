@@ -1,4 +1,4 @@
-import { isAerialLift, liftCableHeight, LIFT_LANE } from "./lift-graphics.js?v=s8";
+import { isAerialLift, liftCableHeight, LIFT_LANE, ROPE_LANE } from "./lift-graphics.js?v=s9";
 
 function pathLength(points) {
   let total = 0;
@@ -28,11 +28,11 @@ export function createLiftMotion(THREE, scene, type, points, elevFn, makeCarrier
   const root = new THREE.Group();
   root.name = `lift-motion-${type}`;
   const carriers = [];
-  const count = type === "cable_car" ? 2 : type === "magic_carpet" ? Math.max(2, Math.min(8, Math.round(length / 12))) : aerial ? (type === "mixed_lift" ? 8 : 10) : 12;
+  const count = type === "cable_car" ? 2 : type === "magic_carpet" ? Math.max(2, Math.min(8, Math.round(length / 12))) : type === "rope_tow" ? Math.max(3, Math.min(12, Math.round(length / 16))) : aerial ? (type === "mixed_lift" ? 8 : 10) : 12;
   for (let i = 0; i < count; i++) {
     const carrier = makeCarrier();
     const rider = makeSkier(0x285b9f + (i % 3) * 0x241800);
-    rider.visible = type === "magic_carpet" || (aerial && type !== "cable_car" && i % 2 === 0);
+    rider.visible = type === "magic_carpet" || type === "rope_tow" || (aerial && type !== "cable_car" && i % 2 === 0);
     const seat = carrier.userData.seat;
     if (seat) {
       /* Full-body riders sit with hips on the seat (legs hang to the footrest); a torso-only rider sits on it. */
@@ -42,7 +42,7 @@ export function createLiftMotion(THREE, scene, type, points, elevFn, makeCarrier
     }
     carrier.add(rider);
     root.add(carrier);
-    carriers.push({ carrier, offset: (i / count) * length, direction: i % 2 ? -1 : 1 });
+    carriers.push({ carrier, offset: (i / count) * length, direction: type === "rope_tow" || type === "magic_carpet" ? 1 : i % 2 ? -1 : 1 });
   }
   scene.add(root);
   return { type, root, points, length, cableHeight: aerial ? 0 : 0, carriers, elevFn, time: 0 };
@@ -51,7 +51,7 @@ export function createLiftMotion(THREE, scene, type, points, elevFn, makeCarrier
 export function updateLiftMotion(THREE, motion, dt) {
   if (!motion) return;
   motion.time += dt;
-  const speed = motion.type === "cable_car" ? 7 : motion.type === "magic_carpet" ? 1.3 : isAerialLift(motion.type) ? 5 : 3.2;
+  const speed = motion.type === "cable_car" ? 7 : motion.type === "magic_carpet" ? 1.3 : motion.type === "rope_tow" ? 2.4 : isAerialLift(motion.type) ? 5 : 3.2;
   for (const item of motion.carriers) {
     let distance;
     if (motion.type === "cable_car") {
@@ -63,8 +63,8 @@ export function updateLiftMotion(THREE, motion, dt) {
       distance = (motion.time * speed + item.offset) % motion.length;
     }
     const sample = pointAt(motion.points, distance);
-    const height = liftCableHeight(motion.type);
-    const lane = motion.type === "magic_carpet" ? 0 : LIFT_LANE * (height / 10.5) * item.direction;
+    const height = motion.type === "rope_tow" ? 0 : liftCableHeight(motion.type);
+    const lane = motion.type === "rope_tow" ? ROPE_LANE + 0.35 : motion.type === "magic_carpet" ? 0 : LIFT_LANE * (height / 10.5) * item.direction;
     const span = Math.hypot(sample.tangent.x, sample.tangent.z) || 1;
     item.carrier.position.set(
       sample.point.x + (sample.tangent.z / span) * lane,

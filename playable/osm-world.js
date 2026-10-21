@@ -5,8 +5,8 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { styleForPisteFeature, classifyDifficulty } from "./trail-map.js?v=scheme1";
 import { addOsmTraffic } from "./traffic.js?v=vis16";
 import { alongPolyline, polylineLen } from "./gates.js?v=vis17";
-import { liftType, liftCableHeight, LIFT_LANE, makeLiftTerminal, makeLiftCarrier, makeLiftSkier, makeMagicCarpet } from "./lift-graphics.js?v=s8";
-import { createLiftMotion } from "./lift-motion.js?v=5";
+import { liftType, liftCableHeight, LIFT_LANE, makeLiftTerminal, makeLiftCarrier, makeLiftSkier, makeMagicCarpet, makeRopeTow } from "./lift-graphics.js?v=s9";
+import { createLiftMotion } from "./lift-motion.js?v=6";
 import { snowTerrainMaterial } from "./ground.js?v=g5";
 import { PALETTE } from "/scripts/clay/config.js";
 import { addClayBuilding } from "/scripts/clay/buildings.js";
@@ -971,7 +971,7 @@ export function seatMagicCarpets(scene, ground) {
     o.geometry.computeVertexNormals();
   });
   for (const m of scene.userData.liftMotions || []) {
-    if (m.type !== "magic_carpet") continue;
+    if (m.type !== "magic_carpet" && m.type !== "rope_tow") continue;
     for (const p of m.points) {
       const y = hitY(p.x, p.y, p.z);
       if (y != null) p.y = y;
@@ -1014,6 +1014,10 @@ async function addLiftKit(fc, elevFn, scene, counts, kit) {
         motionPath = sampleAlong(liftPath, 2);
         for (const p of motionPath) p.y = elevFn(p.x, p.z);
         scene.add(makeMagicCarpet(THREE, motionPath));
+      } else if (type === "rope_tow") {
+        motionPath = sampleAlong(liftPath, 2);
+        for (const p of motionPath) p.y = elevFn(p.x, p.z);
+        scene.add(makeRopeTow(THREE, motionPath));
       } else {
         const lane = LIFT_LANE * (cableHeight / TOWER_CABLE);
         for (const side of [-1, 1]) {
@@ -1051,9 +1055,11 @@ async function addLiftKit(fc, elevFn, scene, counts, kit) {
         },
       );
       if (motion) liftMotions.push(motion);
-      for (const p of sampleAlong(ground, TOWER_STEP)) {
-        if (p.distanceTo(a) < skip || p.distanceTo(b) < skip) continue;
-        towerPts.push({ p, tangent: tangentOn(liftPath, p), type });
+      if (type !== "magic_carpet" && type !== "rope_tow") {
+        for (const p of sampleAlong(ground, TOWER_STEP)) {
+          if (p.distanceTo(a) < skip || p.distanceTo(b) < skip) continue;
+          towerPts.push({ p, tangent: tangentOn(liftPath, p), type });
+        }
       }
     }
   }
@@ -1106,7 +1112,7 @@ async function addLiftKit(fc, elevFn, scene, counts, kit) {
     const clone = makeLiftTerminal(THREE, t.type, steel, t.end);
     placeAlongLift(clone, t.origin, t.tangent);
     sitOnDem(clone, t.origin.y);
-    if (t.type === "magic_carpet") scene.userData.carpetTerminals.push(clone);
+    if (t.type === "magic_carpet" || t.type === "rope_tow") scene.userData.carpetTerminals.push(clone);
     scene.add(clone);
     stations += 1;
   }

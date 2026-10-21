@@ -24,9 +24,13 @@ export function isAerialLift(type) {
 }
 
 const CARPET_SURFACE = 0.06;
+/* Haul and return ropes sit this far apart, and this far above the snow. */
+export const ROPE_LANE = 0.45;
+export const ROPE_HEIGHT = 1.05;
 
 export function liftCableHeight(type) {
   if (type === "magic_carpet") return CARPET_SURFACE;
+  if (type === "rope_tow") return ROPE_HEIGHT;
   if (type === "gondola" || type === "cable_car") return GONDOLA_HEIGHT;
   return isAerialLift(type) ? AERIAL_HEIGHT : TREE_HEIGHT;
 }
@@ -54,6 +58,23 @@ export function makeLiftTerminal(THREE, type, steel, end = "return") {
     const hood = new THREE.Mesh(new THREE.BoxGeometry(1.75, 0.36, 1.45), dark);
     hood.position.set(0, 0.28, -0.4);
     root.add(hood);
+    return root;
+  }
+  if (type === "rope_tow") {
+    const wheel = new THREE.Mesh(new THREE.CylinderGeometry(ROPE_LANE, ROPE_LANE, 0.1, 20), dark);
+    wheel.position.y = ROPE_HEIGHT;
+    const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.16, 8), pole);
+    hub.position.y = ROPE_HEIGHT;
+    const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.08, ROPE_HEIGHT - 0.05, 6), pole);
+    leg.position.y = (ROPE_HEIGHT - 0.05) / 2;
+    root.add(wheel, hub, leg);
+    if (end === "drive") {
+      const hut = new THREE.Mesh(new THREE.BoxGeometry(1.5, 1.7, 1.3), wood);
+      hut.position.set(-(ROPE_LANE + 1.35), 0.85, -0.5);
+      const lid = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.1, 1.5), dark);
+      lid.position.set(hut.position.x, 1.75, hut.position.z);
+      root.add(hut, lid);
+    }
     return root;
   }
   if (h < 2) {
@@ -271,6 +292,100 @@ export function makeMagicCarpet(THREE, points) {
   return group;
 }
 
+let ropeMats = null;
+
+function ropeMaterials(THREE) {
+  if (ropeMats) return ropeMats;
+  ropeMats = {
+    rope: new THREE.MeshLambertMaterial({ color: 0xc47a2a, side: THREE.DoubleSide }),
+    post: new THREE.MeshLambertMaterial({ color: PALETTE.lift, side: THREE.DoubleSide }),
+  };
+  return ropeMats;
+}
+
+function addRibbon(THREE, parent, pts, mat, y0, y1) {
+  if (!pts || pts.length < 2) return;
+  const pos = [];
+  const extra = [];
+  const idx = [];
+  for (let i = 0; i < pts.length; i++) {
+    const p = pts[i];
+    pos.push(p.x, p.y + y0, p.z, p.x, p.y + y1, p.z);
+    extra.push(y0, y1);
+  }
+  for (let i = 0; i < pts.length - 1; i++) {
+    const a = i * 2;
+    idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2);
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
+  geo.setIndex(idx);
+  geo.computeVertexNormals();
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.userData.snowLift = extra;
+  mesh.renderOrder = 6;
+  parent.add(mesh);
+}
+
+function offsetPoints(points, lane) {
+  return points.map((p, i) => {
+    const a = points[Math.max(0, i - 1)];
+    const b = points[Math.min(points.length - 1, i + 1)];
+    const tx = b.x - a.x;
+    const tz = b.z - a.z;
+    const len = Math.hypot(tx, tz) || 1;
+    return { x: p.x + (tz / len) * lane, y: p.y, z: p.z - (tx / len) * lane };
+  });
+}
+
+/** Two low ropes and short posts. Points are on the ground line. */
+export function makeRopeTow(THREE, points) {
+  const group = new THREE.Group();
+  if (!points || points.length < 2) return group;
+  const { rope, post } = ropeMaterials(THREE);
+  const half = 0.03;
+  for (const lane of [-ROPE_LANE, ROPE_LANE]) {
+    addRibbon(THREE, group, offsetPoints(points, lane), rope, ROPE_HEIGHT - half, ROPE_HEIGHT + half);
+  }
+  let total = 0;
+  for (let i = 1; i < points.length; i++) total += points[i].distanceTo(points[i - 1]);
+  let dist = 0;
+  let next = 28;
+  const w = 0.045;
+  for (let i = 1; i < points.length; i++) {
+    const a = points[i - 1];
+    const b = points[i];
+    const seg = a.distanceTo(b);
+    if (seg < 1e-4) continue;
+    while (dist + seg >= next && next < total - 14) {
+      const t = (next - dist) / seg;
+      const p = { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t, z: a.z + (b.z - a.z) * t };
+      const tx = b.x - a.x;
+      const tz = b.z - a.z;
+      const len = Math.hypot(tx, tz) || 1;
+      const rx = tz / len;
+      const rz = -tx / len;
+      const fx = tx / len;
+      const fz = tz / len;
+      addRibbon(THREE, group, [
+        { x: p.x - rx * w, y: p.y, z: p.z - rz * w },
+        { x: p.x + rx * w, y: p.y, z: p.z + rz * w },
+      ], post, 0, ROPE_HEIGHT);
+      addRibbon(THREE, group, [
+        { x: p.x - fx * w, y: p.y, z: p.z - fz * w },
+        { x: p.x + fx * w, y: p.y, z: p.z + fz * w },
+      ], post, 0, ROPE_HEIGHT);
+      addRibbon(THREE, group, [
+        { x: p.x - rx * ROPE_LANE, y: p.y, z: p.z - rz * ROPE_LANE },
+        { x: p.x + rx * ROPE_LANE, y: p.y, z: p.z + rz * ROPE_LANE },
+      ], post, ROPE_HEIGHT - 0.02, ROPE_HEIGHT + 0.04);
+      next += 32;
+    }
+    dist += seg;
+  }
+  return group;
+}
+
 export function makeLiftCarrier(THREE, type, steel) {
   if (type === "cable_car") {
     const car = new THREE.Mesh(new THREE.BoxGeometry(2.1, 1.15, 1.3), steel);
@@ -281,12 +396,7 @@ export function makeLiftCarrier(THREE, type, steel) {
   if (type === "mixed_lift") return makeGondola(THREE, steel, true);
   if (type === "chair_lift") return makeChair(THREE, steel);
   if (type === "magic_carpet") return new THREE.Group();
-  if (type === "rope_tow") {
-    const rope = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 1.8, 8), new THREE.MeshLambertMaterial({ color: 0xd28b2d }));
-    rope.rotation.z = Math.PI / 2;
-    rope.position.y = -0.3;
-    return rope;
-  }
+  if (type === "rope_tow") return new THREE.Group();
   const tow = new THREE.Group();
   const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.75, 5), steel);
   pole.position.y = -0.38;
