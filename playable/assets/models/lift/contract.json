@@ -1,0 +1,54 @@
+{
+  "asset": "fixed-grip quad chair",
+  "purpose": "shared game mesh for chair_lift carriers in playable/lift-graphics.js",
+  "required_parts": [
+    "cable grip at the origin",
+    "curved steel hanger",
+    "top crossbar",
+    "seat and back for four riders",
+    "front restraint bar",
+    "footrest"
+  ],
+  "relations": [
+    "grip is the origin and sits on the cable",
+    "hanger runs down from the grip to the crossbar",
+    "seat surface is 2.55 m below the grip",
+    "outer width is about 2.2 m",
+    "riders face Blender -Y, which is glTF +Z after Y-up export",
+    "restraint and footrest are in front of the seat, toward travel"
+  ],
+  "style": ["painted steel", "charcoal vinyl cushions", "original, not a copied chairlift model"],
+  "finish": {
+    "profile": "game-ready smooth within a hard triangle ceiling",
+    "low_poly_explicitly_requested": false,
+    "surface_targets": [
+      "round tubes read as steel from the slope",
+      "cushions read darker than the frame against snow",
+      "metal and seat share one albedo",
+      "metalness stays 0"
+    ]
+  },
+  "limits": {
+    "triangle_ceiling": 2500,
+    "width_m": 2.2,
+    "seat_below_grip_m": 2.55,
+    "metal_srgb": "6b7785"
+  },
+  "stages": [
+    "contract_and_references",
+    "graybox",
+    "primary_secondary_forms",
+    "structural_refinement",
+    "materials_textures",
+    "surface_polish",
+    "export_validation"
+  ],
+  "approval_gates": [],
+  "animation": { "required": false },
+  "excluded": ["cable", "tower", "ground", "riders", "shadows"],
+  "review_questions": [
+    "Does the silhouette read as a quad chair from the front, side, and three-quarter?",
+    "Does the hanger clearly connect the grip to the crossbar?",
+    "Does the gray steel stay visible against snow?"
+  ]
+}

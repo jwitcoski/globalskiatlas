@@ -5,7 +5,7 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { styleForPisteFeature, classifyDifficulty } from "./trail-map.js?v=scheme1";
 import { addOsmTraffic } from "./traffic.js?v=vis16";
 import { alongPolyline, polylineLen } from "./gates.js?v=vis17";
-import { liftType, liftCableHeight, makeLiftTerminal, makeLiftCarrier, makeLiftSkier } from "./lift-graphics.js?v=s3";
+import { liftType, liftCableHeight, makeLiftTerminal, makeLiftCarrier, makeLiftSkier } from "./lift-graphics.js?v=s4";
 import { createLiftMotion } from "./lift-motion.js?v=2";
 import { snowTerrainMaterial } from "./ground.js?v=g5";
 import { PALETTE } from "/scripts/clay/config.js";

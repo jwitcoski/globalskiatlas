@@ -1,4 +1,4 @@
-import { isAerialLift, liftCableHeight } from "./lift-graphics.js?v=s3";
+import { isAerialLift, liftCableHeight } from "./lift-graphics.js?v=s4";
 
 function pathLength(points) {
   let total = 0;
