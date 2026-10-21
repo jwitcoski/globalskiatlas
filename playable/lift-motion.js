@@ -1,4 +1,4 @@
-import { isAerialLift, liftCableHeight } from "./lift-graphics.js?v=s4";
+import { isAerialLift, liftCableHeight, LIFT_LANE } from "./lift-graphics.js?v=s5";
 
 function pathLength(points) {
   let total = 0;
@@ -64,7 +64,13 @@ export function updateLiftMotion(THREE, motion, dt) {
     }
     const sample = pointAt(motion.points, distance);
     const height = liftCableHeight(motion.type);
-    item.carrier.position.set(sample.point.x, sample.point.y + height, sample.point.z);
+    const lane = motion.type === "magic_carpet" ? 0 : LIFT_LANE * (height / 10.5) * item.direction;
+    const span = Math.hypot(sample.tangent.x, sample.tangent.z) || 1;
+    item.carrier.position.set(
+      sample.point.x + (sample.tangent.z / span) * lane,
+      sample.point.y + height,
+      sample.point.z - (sample.tangent.x / span) * lane,
+    );
     /* Chairs and cabins face the way they travel, so the return line isn't riding backwards. */
     const face = isAerialLift(motion.type) && motion.type !== "cable_car" ? item.direction : 1;
     item.carrier.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), new THREE.Vector3(sample.tangent.x * face, 0, sample.tangent.z * face).normalize());

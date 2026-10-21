@@ -5,6 +5,8 @@ const AERIAL_TYPES = new Set(["cable_car", "gondola", "chair_lift", "mixed_lift"
 const TREE_HEIGHT = 9;
 const AERIAL_HEIGHT = 10.5;
 const GONDOLA_HEIGHT = 12.5;
+/* Sheave centers on tower.glb. The world offset is this times cableHeight / 10.5. */
+export const LIFT_LANE = 2.35;
 
 export function liftType(feature) {
   const tags = feature?.properties?.tags || {};

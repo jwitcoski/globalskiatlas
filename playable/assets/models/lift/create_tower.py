@@ -1,7 +1,7 @@
 """Chairlift tower. Durable source for playable/assets/models/lift/.
 
-Blender Z-up. The cable runs along Y. Sheave tops sit at CABLE_Z so the
-game cable (radius 0.07, centered on the lift height) rests on the wheels.
+Blender Z-up. Cables run along Y, one on each arm at x = ±SHEAVE_X.
+Sheave tops sit at CABLE_Z so each game cable (radius 0.07) rests on its wheels.
 Ground is Z=0. Export glTF Y-up: cable becomes +Z, height becomes Y.
 Run: blender --background --factory-startup --python create_tower.py
 """
@@ -22,10 +22,11 @@ GLB_PATH = ROOT / "tower.glb"
 ALBEDO_PATH = ROOT / "tower_albedo.png"
 SHOT_DIR = ROOT / "evidence" / "tower"
 
-# Matches AERIAL_HEIGHT in lift-graphics.js. Other lifts scale this mesh.
+# Matches AERIAL_HEIGHT and LIFT_LANE in lift-graphics.js. Other lifts scale this mesh.
 CABLE_Z = 10.5
 CABLE_R = 0.07
 WHEEL_R = 0.22
+SHEAVE_X = 2.35
 STEEL = (107 / 255, 119 / 255, 133 / 255)
 RUBBER = (28 / 255, 30 / 255, 34 / 255)
 CONCRETE = (138 / 255, 140 / 255, 136 / 255)
@@ -252,18 +253,19 @@ def build_mesh():
         for y in (-0.48, 0.48):
             add_cone(bm, uv, 0.05, 0.05, 0.06, (x, y, 0.30), "plate", segments=6)
 
-    # Crossarm across the line. The cable runs along Y, through the center.
+    # Crossarm across the line. A sheave sits on each arm, clear of the mast.
     arm_z = 9.82
     add_tube(bm, uv, [(-3.15, 0.0, arm_z), (3.15, 0.0, arm_z)], 0.10, "steel", sides=8)
-    add_tube(bm, uv, [(0.0, 0.0, 8.05), (-2.35, 0.0, arm_z - 0.06)], 0.055, "steel", sides=6)
-    add_tube(bm, uv, [(0.0, 0.0, 8.05), (2.35, 0.0, arm_z - 0.06)], 0.055, "steel", sides=6)
+    add_tube(bm, uv, [(0.0, 0.0, 8.05), (-2.05, 0.0, arm_z - 0.06)], 0.055, "steel", sides=6)
+    add_tube(bm, uv, [(0.0, 0.0, 8.05), (2.05, 0.0, arm_z - 0.06)], 0.055, "steel", sides=6)
 
     # Cheek plates stop at the axle so the rubber crowns clear the frame.
-    for x in (-0.32, 0.32):
-        add_box(bm, uv, (0.04, 1.46, 0.52), (x, 0.0, 9.96), "steel", bevel=0.006)
-    for y in (-0.62, -0.2, 0.2, 0.62):
-        add_tube(bm, uv, [(-0.34, y, wheel_z), (0.34, y, wheel_z)], 0.026, "steel", sides=6)
-        add_wheel(bm, uv, (0.0, y, wheel_z))
+    for sheave_x in (-SHEAVE_X, SHEAVE_X):
+        for x in (-0.32, 0.32):
+            add_box(bm, uv, (0.04, 1.46, 0.52), (sheave_x + x, 0.0, 9.96), "steel", bevel=0.006)
+        for y in (-0.62, -0.2, 0.2, 0.62):
+            add_tube(bm, uv, [(sheave_x - 0.34, y, wheel_z), (sheave_x + 0.34, y, wheel_z)], 0.026, "steel", sides=6)
+            add_wheel(bm, uv, (sheave_x, y, wheel_z))
 
     # Ladder climbs the off-line face and meets a grate under the arm.
     add_box(bm, uv, (0.04, 0.04, 9.5), (-0.20, 0.46, 4.85), "steel")
@@ -358,14 +360,15 @@ def staging():
     cable_bsdf.inputs["Base Color"].default_value = (0.16, 0.17, 0.19, 1)
     cable_bsdf.inputs["Metallic"].default_value = 0.0
     cable_bsdf.inputs["Roughness"].default_value = 0.55
-    bpy.ops.mesh.primitive_cylinder_add(
-        radius=CABLE_R, depth=8.0, location=(0, 0, CABLE_Z), vertices=8, rotation=(math.radians(90), 0, 0)
-    )
-    cable = bpy.context.active_object
-    cable.name = "Cable"
-    cable.data.materials.append(cable_mat)
+    for x in (-SHEAVE_X, SHEAVE_X):
+        bpy.ops.mesh.primitive_cylinder_add(
+            radius=CABLE_R, depth=8.0, location=(x, 0, CABLE_Z), vertices=8, rotation=(math.radians(90), 0, 0)
+        )
+        cable = bpy.context.active_object
+        cable.name = "Cable"
+        cable.data.materials.append(cable_mat)
+        park(cable)
     park(snow)
-    park(cable)
     return stage
 
 
@@ -389,8 +392,12 @@ def assert_tower(obj):
     if max(xs) - min(xs) < 5.5:
         problems.append("crossarm short")
     wheel_top = CABLE_Z - CABLE_R
-    near = [vert.co.z for vert in mesh.vertices if abs(vert.co.z - wheel_top) < 0.05 and abs(vert.co.x) < 0.3]
-    if len(near) < 8:
+    near = [
+        vert.co.z
+        for vert in mesh.vertices
+        if abs(vert.co.z - wheel_top) < 0.05 and abs(abs(vert.co.x) - SHEAVE_X) < 0.25
+    ]
+    if len(near) < 16:
         problems.append(f"sheave tops {len(near)}")
     if bsdf.inputs["Metallic"].default_value > 0.001:
         problems.append("metallic")

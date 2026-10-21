@@ -5,8 +5,8 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { styleForPisteFeature, classifyDifficulty } from "./trail-map.js?v=scheme1";
 import { addOsmTraffic } from "./traffic.js?v=vis16";
 import { alongPolyline, polylineLen } from "./gates.js?v=vis17";
-import { liftType, liftCableHeight, makeLiftTerminal, makeLiftCarrier, makeLiftSkier } from "./lift-graphics.js?v=s4";
-import { createLiftMotion } from "./lift-motion.js?v=2";
+import { liftType, liftCableHeight, LIFT_LANE, makeLiftTerminal, makeLiftCarrier, makeLiftSkier } from "./lift-graphics.js?v=s5";
+import { createLiftMotion } from "./lift-motion.js?v=3";
 import { snowTerrainMaterial } from "./ground.js?v=g5";
 import { PALETTE } from "/scripts/clay/config.js";
 import { addClayBuilding } from "/scripts/clay/buildings.js";
@@ -868,6 +868,30 @@ function straightLiftPath(points) {
   return out;
 }
 
+function offsetLiftPath(points, lane) {
+  return points.map((p, i) => {
+    const a = points[Math.max(0, i - 1)];
+    const b = points[Math.min(points.length - 1, i + 1)];
+    const tx = b.x - a.x;
+    const tz = b.z - a.z;
+    const len = Math.hypot(tx, tz) || 1;
+    return new THREE.Vector3(p.x + (tz / len) * lane, p.y, p.z - (tx / len) * lane);
+  });
+}
+
+function tangentOn(pts, p) {
+  let bestI = 1;
+  let best = Infinity;
+  for (let i = 1; i < pts.length; i++) {
+    const extra = p.distanceTo(pts[i - 1]) + p.distanceTo(pts[i]) - pts[i - 1].distanceTo(pts[i]);
+    if (extra < best) {
+      best = extra;
+      bestI = i;
+    }
+  }
+  return pts[bestI].clone().sub(pts[bestI - 1]);
+}
+
 function placeAlongLift(obj, origin, tangent) {
   const want = new THREE.Vector3(tangent.x, 0, tangent.z);
   if (want.lengthSq() < 1e-8) want.set(0, 0, 1);
@@ -893,7 +917,7 @@ function makeClayPylon(h, steel, dark) {
   return g;
 }
 
-const TOWER_URL = new URL("./assets/models/lift/tower.glb?v=1", import.meta.url).href;
+const TOWER_URL = new URL("./assets/models/lift/tower.glb?v=2", import.meta.url).href;
 const TOWER_CABLE = 10.5;
 let towerProto = null;
 
@@ -940,16 +964,17 @@ async function addLiftKit(fc, elevFn, scene, counts, kit) {
       const cableHeight = liftCableHeight(type);
       const liftPath = type === "gondola" ? straightLiftPath(ground) : ground;
       if (type !== "magic_carpet") {
-        const cable = liftPath.map((p) => new THREE.Vector3(p.x, p.y + cableHeight, p.z));
-        const curve = new THREE.CatmullRomCurve3(cable);
-        const segs = Math.min(96, Math.max(12, cable.length * 3));
-        scene.add(new THREE.Mesh(new THREE.TubeGeometry(curve, segs, 0.07, 5, false), cableMat));
+        const lane = LIFT_LANE * (cableHeight / TOWER_CABLE);
+        for (const side of [-1, 1]) {
+          const cable = offsetLiftPath(liftPath, lane * side).map((p) => new THREE.Vector3(p.x, p.y + cableHeight, p.z));
+          const curve = new THREE.CatmullRomCurve3(cable);
+          const segs = Math.min(96, Math.max(12, cable.length * 3));
+          scene.add(new THREE.Mesh(new THREE.TubeGeometry(curve, segs, 0.07, 5, false), cableMat));
+        }
         cables += 1;
       }
       const a = ground[0];
       const b = ground[ground.length - 1];
-      const tanA = ground[Math.min(1, ground.length - 1)].clone().sub(a);
-      const tanB = b.clone().sub(ground[Math.max(0, ground.length - 2)]);
       const lineTan = new THREE.Vector3().subVectors(b, a);
       const skip = 18;
       terminals.push({ origin: a, tangent: lineTan.clone(), type }, { origin: b, tangent: lineTan.clone().negate(), type });
@@ -973,7 +998,7 @@ async function addLiftKit(fc, elevFn, scene, counts, kit) {
       if (motion) liftMotions.push(motion);
       for (const p of sampleAlong(ground, TOWER_STEP)) {
         if (p.distanceTo(a) < skip || p.distanceTo(b) < skip) continue;
-        towerPts.push({ p, tangent: tanA.lengthSq() > tanB.lengthSq() ? tanA : lineTan, type });
+        towerPts.push({ p, tangent: tangentOn(liftPath, p), type });
       }
     }
   }
