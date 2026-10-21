@@ -1,8 +1,7 @@
 /** Other skiers on and across the chevron ribbon. Hit like trees. */
 
-import { makeSkier, orientSkier, beginFall } from "./physics.js?v=ready3";
+import { makeSkier, orientSkier, beginFall, tickFallPose } from "./physics.js?v=pose3";
 import { alongPolyline, polylineLen, alongTrack } from "./gates.js?v=vis18";
-import { tickFallPose } from "./physics.js?v=feel13";
 
 const SUITS = [0x2a6fdb, 0x1f8a4c, 0x7b3fa0, 0xe07a14, 0xc45a18, 0xd8342e, 0xf2c02e];
 const SKIS = [0xf2c02e, 0x3a8fd4, 0xd8342e, 0x1f8a4c];
@@ -45,12 +44,14 @@ export function createNpcSkiers(THREE, scene, lines, elevFn, _spawn, activePts) 
   function add(pts, along, kind, home) {
     const len = polylineLen(pts);
     if (len < 40) return;
+    const suit = SUITS[(Math.random() * SUITS.length) | 0];
     const mesh = makeSkier(THREE, scene, {
       add: false,
       name: "npc",
-      suit: SUITS[slot % SUITS.length],
+      suit,
       ski: SKIS[slot % SKIS.length],
     });
+    mesh.userData.suit = suit;
     slot += 1;
     mesh.scale.setScalar(1.04);
     root.add(mesh);

@@ -70,11 +70,48 @@ async function loadPinePack() {
       side: THREE.DoubleSide,
       fog: true,
     });
+    const pineNow = { value: 0 };
+    mat.userData.pineNow = pineNow;
+    mat.customProgramCacheKey = () => "pine-hit-v2";
+    mat.onBeforeCompile = (shader) => {
+      shader.uniforms.pineNow = pineNow;
+      shader.vertexShader =
+        "uniform float pineNow;\nattribute float hitTime;\nattribute vec2 hitDir;\nattribute float hitAmp;\n" +
+        shader.vertexShader.replace(
+        "#include <begin_vertex>",
+        `#include <begin_vertex>
+        float pineAge = pineNow - hitTime;
+        if (hitAmp > 0.001 && pineAge > 0.0 && pineAge < 1.6) {
+          float radial = length(position.xz);
+          vec2 outward = position.xz / max(radial, 0.001);
+          float struck = mix(0.1, 1.0, smoothstep(-0.15, 0.7, dot(outward, hitDir)));
+          float tip = smoothstep(0.25, 2.8, radial);
+          float swing = cos(pineAge * 22.0) * exp(-pineAge * 3.0);
+          float amp = hitAmp * struck * tip * (0.35 + position.y * 0.06) * swing;
+          transformed.x -= hitDir.x * amp;
+          transformed.z -= hitDir.y * amp;
+          transformed.y -= abs(amp) * 0.16;
+        }`,
+      );
+    };
     const height = geos.reduce((h, g) => Math.max(h, g.boundingBox?.max.y || 0), 1);
-    pinePack = { geos, mat, unit: PINE_HEIGHT / height };
+    pinePack = { geos, mat, unit: PINE_HEIGHT / height, radii: geos.map(foliageRadius) };
     return pinePack;
   })();
   return pinePackPromise;
+}
+
+/** Horizontal reach of the boughs at skier height. The trunk is much thinner, so a trunk cylinder lets the skier pass into the cards and vanish. */
+function foliageRadius(geo) {
+  const p = geo.attributes.position;
+  let r = 0.35;
+  for (let i = 0; i < p.count; i++) {
+    const y = p.getY(i);
+    if (y < 0.2 || y > 3.2) continue;
+    const d = Math.hypot(p.getX(i), p.getZ(i));
+    if (d > r) r = d;
+  }
+  return r;
 }
 
 function stampPine(dummy, mesh, slot, i, x, y, z, unit) {
@@ -87,29 +124,81 @@ function stampPine(dummy, mesh, slot, i, x, y, z, unit) {
   return s;
 }
 
+function armPine(geo, count) {
+  const time = new THREE.InstancedBufferAttribute(new Float32Array(count), 1);
+  const dir = new THREE.InstancedBufferAttribute(new Float32Array(count * 2), 2);
+  const amp = new THREE.InstancedBufferAttribute(new Float32Array(count), 1);
+  time.setUsage(THREE.DynamicDrawUsage);
+  dir.setUsage(THREE.DynamicDrawUsage);
+  amp.setUsage(THREE.DynamicDrawUsage);
+  geo.setAttribute("hitTime", time);
+  geo.setAttribute("hitDir", dir);
+  geo.setAttribute("hitAmp", amp);
+  return { time, dir, amp };
+}
+
 function plantPines(scene, pack, spots) {
   const dummy = new THREE.Object3D();
   const bins = pack.geos.map(() => []);
   for (let i = 0; i < spots.length; i++) bins[i % bins.length].push(i);
   const xzr = [];
+  const owners = [];
   const insts = [];
+  scene.userData.pineNow = pack.mat.userData.pineNow;
   for (let v = 0; v < pack.geos.length; v++) {
     const idx = bins[v];
     if (!idx.length) continue;
-    const mesh = new THREE.InstancedMesh(pack.geos[v], pack.mat, idx.length);
+    const geo = pack.geos[v].clone();
+    const hit = armPine(geo, idx.length);
+    const mesh = new THREE.InstancedMesh(geo, pack.mat, idx.length);
+    mesh.userData.hit = hit;
     mesh.frustumCulled = false;
     mesh.castShadow = v === 0;
     for (let s = 0; s < idx.length; s++) {
       const i = idx[s];
       const p = spots[i];
       const sc = stampPine(dummy, mesh, s, i, p.x, p.y, p.z, pack.unit);
-      xzr.push(p.x, p.z, 0.55 * sc);
+      xzr.push(p.x, p.z, pack.radii[v] * sc);
+      owners.push({ mesh, slot: s });
     }
     mesh.instanceMatrix.needsUpdate = true;
     scene.add(mesh);
     insts.push(mesh);
   }
-  return { n: spots.length, xzr, insts };
+  return { n: spots.length, xzr, insts, owners };
+}
+
+function localHitDir(mesh, slot, nx, nz) {
+  const e = mesh.instanceMatrix.array;
+  const o = slot * 16;
+  let lx = nx * e[o] + nz * e[o + 2];
+  let lz = nx * e[o + 8] + nz * e[o + 10];
+  const len = Math.hypot(lx, lz) || 1;
+  return [lx / len, lz / len];
+}
+
+/** Strike the boughs facing the skier. The shader springs that side and lets it shake out. */
+export function bendPine(scene, hit, now) {
+  if (!hit?.hit || hit.idx == null || hit.idx < 0) return;
+  const owner = scene.userData.pineOwners?.[hit.idx / 3];
+  if (!owner) return;
+  const h = owner.mesh.userData.hit;
+  const t = now * 0.001;
+  const age = t - h.time.getX(owner.slot);
+  const amp = Math.min(1.15, 0.42 + (hit.impact || 0) * 0.05);
+  if (age >= 0 && age < 0.22 && h.amp.getX(owner.slot) >= amp) return;
+  const [lx, lz] = localHitDir(owner.mesh, owner.slot, hit.nx || 0, hit.nz || 1);
+  h.time.setX(owner.slot, t);
+  h.dir.setXY(owner.slot, lx, lz);
+  h.amp.setX(owner.slot, amp);
+  h.time.needsUpdate = true;
+  h.dir.needsUpdate = true;
+  h.amp.needsUpdate = true;
+}
+
+export function tickPines(scene, now) {
+  const u = scene?.userData?.pineNow;
+  if (u) u.value = now * 0.001;
 }
 
 const RESORT_GLB = new URL("./assets/models/ski-resort4.glb", import.meta.url).href;
@@ -736,7 +825,7 @@ function drapeLine(coords, elevFn, lift, material) {
 const TOWER_H = 12;
 const TOWER_STEP = 44;
 const MAX_TOWERS = 180;
-/* Collision radius of a lift tower footing (trees use 0.55 × scale). */
+/* Collision radius of a lift tower footing. Trees use the foliage radius at skier height. */
 const LIFT_POLE_R = 0.5;
 /** ponytail: keep the 80 largest OSM footprints; cluster if a resort needs more. */
 const MAX_CLAY_BUILDINGS = 80;
@@ -873,7 +962,12 @@ function addLiftKit(fc, elevFn, scene, counts, kit) {
   /* Towers join the tree hash (trees are planted first), so physics bounces, crashes, and near-misses on them like trunks. */
   const poleXzr = [];
   for (const t of towers) if (t.type !== "magic_carpet") poleXzr.push(t.p.x, t.p.z, LIFT_POLE_R);
-  if (poleXzr.length) scene.userData.treeHash = buildTreeHash([...(scene.userData.treeHash?.xzr || []), ...poleXzr]);
+  if (poleXzr.length) {
+    const owners = scene.userData.pineOwners || [];
+    for (let i = 0; i < poleXzr.length; i += 3) owners.push(null);
+    scene.userData.pineOwners = owners;
+    scene.userData.treeHash = buildTreeHash([...(scene.userData.treeHash?.xzr || []), ...poleXzr]);
+  }
   if (kit?.tower && towers.length) {
     const spots = towers.map((t) => {
       const want = new THREE.Vector3(t.tangent.x, 0, t.tangent.z);
@@ -1260,6 +1354,7 @@ export async function addOsmWorld(THREE, scene, sceneRoot, manifest, elevFn) {
         }
         const planted = plantPines(scene, pack, spots);
         counts.trees = planted.n;
+        scene.userData.pineOwners = planted.owners;
         scene.userData.treeHash = buildTreeHash(planted.xzr);
       } catch (err) {
         console.warn("pine pack", err);
@@ -1511,6 +1606,7 @@ export function addPisteEdgeScenery(THREE, scene, pistePolys, elevFn) {
   const planted = plantPines(scene, pack, spots);
   const xzr = hash?.xzr ? hash.xzr.slice() : [];
   xzr.push(...planted.xzr);
+  scene.userData.pineOwners = [...(scene.userData.pineOwners || []), ...planted.owners];
   scene.userData.treeHash = buildTreeHash(xzr);
   return planted.n + ri;
 }

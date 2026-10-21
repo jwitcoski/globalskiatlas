@@ -1,0 +1,75 @@
+{
+  "schema_version": 2,
+  "evidence_settings_version": 2,
+  "studio": {
+    "presentation": "light",
+    "floor_color": [
+      0.32,
+      0.34,
+      0.36,
+      1.0
+    ],
+    "light_powers": [
+      4008022.8176490404,
+      1603209.1270596161,
+      6012034.226473561
+    ],
+    "camera_distance": 230.23054046630858,
+    "ortho_scale": 145.14534072875975,
+    "floor_size": 20020.046997070312,
+    "floor_offset": 0.6006014099121094,
+    "clip_start": 0.10010023498535156,
+    "clip_end": 100100.23498535156
+  },
+  "requested_presentation": "light",
+  "subject_luminance_hint": null,
+  "render_engine": "BLENDER_EEVEE",
+  "view_transform": "AgX",
+  "exposure": 0.0,
+  "input": "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\trees\\snowy-pine-pack.glb",
+  "blender_version": "5.2.2 LTS",
+  "resolution": 384,
+  "requested_views": [
+    "perspective",
+    "front",
+    "back",
+    "left",
+    "right",
+    "top"
+  ],
+  "evidence_scope": "full_multiview",
+  "focus_objects": [],
+  "geometry_hidden_for_focus": false,
+  "underside_floor_hidden": false,
+  "material_mode": "source",
+  "hidden_objects": [],
+  "head_texture": null,
+  "bounds": {
+    "min": [
+      -2.37987,
+      -4.907907,
+      0.0
+    ],
+    "max": [
+      97.720367,
+      4.907907,
+      11.0
+    ],
+    "dimensions": [
+      100.100235,
+      9.815815,
+      11.0
+    ]
+  },
+  "views": [
+    "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\trees\\evidence\\glb-views\\perspective.png",
+    "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\trees\\evidence\\glb-views\\front.png",
+    "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\trees\\evidence\\glb-views\\back.png",
+    "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\trees\\evidence\\glb-views\\left.png",
+    "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\trees\\evidence\\glb-views\\right.png",
+    "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\trees\\evidence\\glb-views\\top.png"
+  ],
+  "contact_sheet": "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\trees\\evidence\\glb-views\\contact_sheet.png",
+  "animation_frames": [],
+  "animation_contact_sheet": null
+}

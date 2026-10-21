@@ -1,0 +1,176 @@
+{
+  "schema_version": 1,
+  "scope": "projected_geometry_reference_comparison",
+  "source": "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\skier\\skier.blend",
+  "source_sha256": "f152ec73170f5c3aac6d91935fffb51debeb96efe6b1dfde8cbf5b2132f76bfd",
+  "reference": "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\concepts\\skier-tpose.png",
+  "reference_sha256": "71cbd76ffd9b33f3231433c4751d60898f56a0d1f2a01e8a16273f41a1b33b97",
+  "mask": null,
+  "mask_sha256": null,
+  "resolution": [
+    512,
+    512
+  ],
+  "frame": 1,
+  "camera": {
+    "name": "REF_Front",
+    "type": "PERSP",
+    "lens": 62.0,
+    "ortho_scale": 6.0,
+    "shift_x": 0.0,
+    "shift_y": 0.0,
+    "sensor_fit": "AUTO",
+    "sensor_width": 36.0,
+    "sensor_height": 24.0,
+    "matrix_world": [
+      [
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.02173391357064247,
+        -0.9997637867927551,
+        -4.599999904632568
+      ],
+      [
+        0.0,
+        0.9997637867927551,
+        0.02173391357064247,
+        1.0499999523162842
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    ]
+  },
+  "metrics": null,
+  "landmarks": [
+    {
+      "name": "crown",
+      "object": "HelmetCrown",
+      "reference_uv": [
+        0.504,
+        0.045
+      ],
+      "model_uv": [
+        0.5,
+        0.18251758813858032
+      ],
+      "delta_pixels": [
+        -2.048000000000002,
+        70.40900512695313
+      ],
+      "error_pixels": 70.43878411051196,
+      "in_front_of_camera": true,
+      "in_frame": true,
+      "visibility": "not_tested_for_occlusion"
+    },
+    {
+      "name": "hand_l",
+      "object": "HandL",
+      "reference_uv": [
+        0.859,
+        0.24
+      ],
+      "model_uv": [
+        0.7944076061248779,
+        0.35685068368911743
+      ],
+      "delta_pixels": [
+        -33.07130566406249,
+        59.82755004882813
+      ],
+      "error_pixels": 68.35968843675991,
+      "in_front_of_camera": true,
+      "in_frame": true,
+      "visibility": "not_tested_for_occlusion"
+    },
+    {
+      "name": "hand_r",
+      "object": "HandR",
+      "reference_uv": [
+        0.166,
+        0.24
+      ],
+      "model_uv": [
+        0.20559237897396088,
+        0.35685068368911743
+      ],
+      "delta_pixels": [
+        20.271298034667964,
+        59.82755004882813
+      ],
+      "error_pixels": 63.16851485396319,
+      "in_front_of_camera": true,
+      "in_frame": true,
+      "visibility": "not_tested_for_occlusion"
+    },
+    {
+      "name": "ski_tip_l",
+      "object": "SkiTipL",
+      "reference_uv": [
+        0.42,
+        0.94
+      ],
+      "model_uv": [
+        0.5707935690879822,
+        0.9314393624663353
+      ],
+      "delta_pixels": [
+        77.20630737304688,
+        -4.383046417236301
+      ],
+      "error_pixels": 77.33062132219708,
+      "in_front_of_camera": true,
+      "in_frame": true,
+      "visibility": "not_tested_for_occlusion"
+    },
+    {
+      "name": "ski_tip_r",
+      "object": "SkiTipR",
+      "reference_uv": [
+        0.24,
+        0.94
+      ],
+      "model_uv": [
+        0.4292064309120178,
+        0.9314393624663353
+      ],
+      "delta_pixels": [
+        96.87369262695313,
+        -4.383046417236301
+      ],
+      "error_pixels": 96.97279731490188,
+      "in_front_of_camera": true,
+      "in_frame": true,
+      "visibility": "not_tested_for_occlusion"
+    }
+  ],
+  "model_touches_image_border": false,
+  "legend": {
+    "panel_order": [
+      "reference",
+      "projected_geometry",
+      "overlay"
+    ],
+    "yellow_cross": "reference landmark",
+    "blue_cross": "projected model landmark",
+    "green": "overlap",
+    "pink": "missing model coverage",
+    "cyan": "model coverage; no reference mask"
+  },
+  "limitations": [
+    "Camera, crop and pose must match before interpreting geometry differences.",
+    "No camera estimation, segmentation, image registration or automatic geometry repair is performed.",
+    "Silhouette treats transparent surfaces as opaque; hidden and excluded geometry follows authored visibility.",
+    "One projection cannot establish depth, surface quality, hidden structure or overall similarity."
+  ],
+  "comparison": "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\skier\\evidence\\reference-compare\\comparison.png",
+  "overlay": "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\skier\\evidence\\reference-compare\\overlay.png"
+}

@@ -1,0 +1,57 @@
+{
+  "asset": "alpine skier",
+  "purpose": "game-ready static character for Three.js",
+  "required_parts": [
+    "helmet",
+    "blue goggles",
+    "blue jacket with charcoal yoke and shoulders",
+    "black pants",
+    "black gloves gripping poles",
+    "black ski boots",
+    "bindings",
+    "black skis with teal edges and upturned tips",
+    "poles with baskets"
+  ],
+  "relations": [
+    "T-pose with a slight downward arm slope matching the reference",
+    "poles hang from the hands to just above the ground",
+    "boots stand in the bindings on the skis",
+    "pants overlap the boot cuffs",
+    "goggles sit under the helmet brim",
+    "model faces -Y in Blender, origin on the ground between the skis"
+  ],
+  "style": ["realistic alpine clothing", "low-to-mid poly game mesh"],
+  "finish": {
+    "profile": "low_to_mid_poly_finished",
+    "low_poly_explicitly_requested": true,
+    "surface_targets": [
+      "fitted torso, limbs, boots, and gloves rather than a block mannequin",
+      "quads in the authored mesh",
+      "one PBR material",
+      "non-overlapping UVs",
+      "albedo, roughness, metallic, and normal maps"
+    ]
+  },
+  "limits": {
+    "triangle_maximum": 15000,
+    "height_m": 1.8,
+    "blender": "5.2.2 LTS",
+    "axes": "Blender Z up, face -Y; glTF export Y up for Three.js"
+  },
+  "stages": [
+    "contract_and_references",
+    "graybox",
+    "primary_secondary_forms",
+    "structural_refinement",
+    "materials_textures",
+    "surface_polish",
+    "export_validation"
+  ],
+  "approval_gates": [],
+  "animation": { "required": false },
+  "review_questions": [
+    "Does the front view match the reference yoke, jacket, poles, and skis?",
+    "Do the side and three-quarter views read as a clothed skier rather than boxes?",
+    "Does the fresh glTF import keep scale, materials, and Y-up orientation?"
+  ]
+}

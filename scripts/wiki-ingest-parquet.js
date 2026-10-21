@@ -71,7 +71,7 @@ function resortSizeCategory(row) {
 function countryToBook(c) {
   if (!c || typeof c !== 'string') return 'Other';
   const s = c.toLowerCase().trim().replace(/\s+/g, ' ');
-  if (/^(united states|usa|u\.?s\.?a\.?|us|canada|mexico|guatemala|belize|honduras|el salvador|nicaragua|costa rica|panama)$/i.test(s)) return 'Americas';
+  if (/^(united states( of america)?|usa|u\.?s\.?a\.?|us|canada|mexico|guatemala|belize|honduras|el salvador|nicaragua|costa rica|panama)$/i.test(s)) return 'Americas';
   if (/^(argentina|bolivia|brazil|chile|colombia|ecuador|peru|venezuela|uruguay|paraguay)$/i.test(s)) return 'Americas';
   if (/^(japan|china|south korea|north korea|taiwan|mongolia)$/i.test(s)) return 'Asia/Africa/Oceania';
   if (/^(australia|new zealand)$/i.test(s)) return 'Asia/Africa/Oceania';

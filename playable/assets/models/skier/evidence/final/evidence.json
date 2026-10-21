@@ -1,0 +1,75 @@
+{
+  "schema_version": 2,
+  "evidence_settings_version": 2,
+  "studio": {
+    "presentation": "light",
+    "floor_color": [
+      0.32,
+      0.34,
+      0.36,
+      1.0
+    ],
+    "light_powers": [
+      1293.121568449402,
+      517.2486273797608,
+      1939.6823526741032
+    ],
+    "camera_distance": 4.135399949550628,
+    "ortho_scale": 2.6070999681949614,
+    "floor_size": 359.59999561309814,
+    "floor_offset": 0.010787999868392944,
+    "clip_start": 0.0017979999780654908,
+    "clip_end": 1797.9999780654907
+  },
+  "requested_presentation": "light",
+  "subject_luminance_hint": null,
+  "render_engine": "BLENDER_EEVEE",
+  "view_transform": "AgX",
+  "exposure": 0.0,
+  "input": "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\skier\\skier.blend",
+  "blender_version": "5.2.2 LTS",
+  "resolution": 768,
+  "requested_views": [
+    "perspective",
+    "front",
+    "back",
+    "left",
+    "right",
+    "top"
+  ],
+  "evidence_scope": "full_multiview",
+  "focus_objects": [],
+  "geometry_hidden_for_focus": false,
+  "underside_floor_hidden": false,
+  "material_mode": "source",
+  "hidden_objects": [],
+  "head_texture": null,
+  "bounds": {
+    "min": [
+      -0.82924,
+      -1.02,
+      0.0
+    ],
+    "max": [
+      0.82924,
+      0.62,
+      1.798
+    ],
+    "dimensions": [
+      1.658481,
+      1.64,
+      1.798
+    ]
+  },
+  "views": [
+    "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\skier\\evidence\\final\\perspective.png",
+    "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\skier\\evidence\\final\\front.png",
+    "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\skier\\evidence\\final\\back.png",
+    "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\skier\\evidence\\final\\left.png",
+    "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\skier\\evidence\\final\\right.png",
+    "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\skier\\evidence\\final\\top.png"
+  ],
+  "contact_sheet": "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\skier\\evidence\\final\\contact_sheet.png",
+  "animation_frames": [],
+  "animation_contact_sheet": null
+}

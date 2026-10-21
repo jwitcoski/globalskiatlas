@@ -500,6 +500,7 @@ function mergeHits(a, b) {
     npc: npcHit?.npc || null,
     nx: npcHit?.nx || b?.nx || a?.nx || 0,
     nz: npcHit?.nz || b?.nz || a?.nz || 0,
+    idx: a?.hit ? a.idx : -1,
   };
 }
 
@@ -651,7 +652,7 @@ function popAir(air, pos, vy) {
   air.height = 0.28;
 }
 
-const SHOVE_S = 0.4;
+const SHOVE_S = 0.62;
 const SHOVE_HIT_AT = 0.1;
 
 export function startShove(skier, side = 1) {
@@ -672,16 +673,23 @@ export function markShoveHit(skier) {
 }
 
 function shoveStroke(u) {
-  if (u < 0.28) {
-    const t = smooth01(u / 0.28);
-    return { poleX: lerp(1.24, 0.15, t), poleZ: lerp(0.14, 1.05, t), armX: lerp(0, -1.25, t), armZ: lerp(0, -0.55, t) };
+  if (u < 0.34) {
+    const t = smooth01(u / 0.34);
+    return { poleX: lerp(1.24, 0.35, t), poleZ: lerp(0.14, 0.95, t), armX: lerp(0, -0.75, t), armZ: lerp(0, -0.5, t), elbow: lerp(0, 0.5, t) };
   }
-  if (u < 0.48) {
-    const t = smooth01((u - 0.28) / 0.2);
-    return { poleX: lerp(0.15, 0.85, t), poleZ: lerp(1.05, -0.95, t), armX: lerp(-1.25, 0.2, t), armZ: lerp(-0.55, 0.35, t) };
+  if (u < 0.68) {
+    const t = smooth01((u - 0.34) / 0.34);
+    return { poleX: lerp(0.35, 1.15, t), poleZ: lerp(0.95, -0.7, t), armX: lerp(-0.75, 0.2, t), armZ: lerp(-0.5, 0.45, t), elbow: lerp(0.5, -0.3, t) };
   }
-  const t = smooth01((u - 0.48) / 0.52);
-  return { poleX: lerp(0.85, 1.24, t), poleZ: lerp(-0.95, 0.14, t), armX: lerp(0.2, 0, t), armZ: lerp(0.35, 0, t) };
+  const t = smooth01((u - 0.68) / 0.32);
+  return { poleX: lerp(1.15, 1.24, t), poleZ: lerp(-0.7, 0.14, t), armX: lerp(0.2, 0, t), armZ: lerp(0.45, 0, t), elbow: lerp(-0.3, 0, t) };
+}
+{
+  const reach = shoveStroke(0.2);
+  const back = shoveStroke(1);
+  if (reach.armX > -0.3 || reach.armZ > -0.2 || Math.abs(back.armX) > 0.02) {
+    throw new Error("shove stroke does not leave and return");
+  }
 }
 
 /** Split velocity into along-ski and sideways, then bleed only the sideways part. */
@@ -918,11 +926,12 @@ function posture(skier, steer, lean, opts) {
   const shoving = (skier.userData.shoveT || 0) > 0;
   const poling = !!opts.pole && !shoving;
 
-  let stroke = { poleX: 1.24, fold: 0.18, plant: 0 };
+  let stroke = { poleX: 1.24, fold: 0.18, plant: 0, armX: 0, armZ: 0, elbow: 0 };
+  let shoveU = 0;
   if (shoving) {
-    const u = 1 - skier.userData.shoveT / SHOVE_S;
+    shoveU = Math.min(1, Math.max(0, 1 - skier.userData.shoveT / SHOVE_S));
     skier.userData.shoveT = Math.max(0, skier.userData.shoveT - dt);
-    stroke = shoveStroke(Math.min(1, Math.max(0, u)));
+    stroke = shoveStroke(shoveU);
   } else if (poling) {
     skier.userData.poleT = (skier.userData.poleT || 0) + dt;
     stroke = poleStroke(((skier.userData.poleT % POLE_CYCLE) + POLE_CYCLE) % POLE_CYCLE / POLE_CYCLE);
@@ -962,7 +971,12 @@ function posture(skier, steer, lean, opts) {
 
   const drop = pose.crouch * CROUCH_M;
   const edge = Math.max(-ARM_SWAY, Math.min(ARM_SWAY, lean * 0.35));
+  const shoveSide = skier.userData.shoveSide || 1;
+  const leftHit = shoving && shoveSide < 0;
+  const rightHit = shoving && shoveSide > 0;
+  const shoveEnv = shoving ? Math.sin(shoveU * Math.PI) : 0;
   torso.rotation.x = pitch * DEG;
+  torso.rotation.y = leftHit ? shoveEnv * 0.34 : rightHit ? -shoveEnv * 0.34 : 0;
   torso.rotation.z = -edge;
   torso.position.y = -drop;
   torso.position.z = tuckAmt * 0.04;
@@ -1015,28 +1029,38 @@ function posture(skier, steer, lean, opts) {
     joints.shoulderR.rotation.z = abduct * DEG;
     joints.elbowL.rotation.x = -elbowBend * DEG;
     joints.elbowR.rotation.x = -elbowBend * DEG;
+    if (leftHit) {
+      joints.shoulderL.rotation.x += stroke.armX;
+      joints.shoulderL.rotation.z += stroke.armZ;
+      joints.elbowL.rotation.x += stroke.elbow;
+    } else if (rightHit) {
+      joints.shoulderR.rotation.x += stroke.armX;
+      joints.shoulderR.rotation.z -= stroke.armZ;
+      joints.elbowR.rotation.x += stroke.elbow;
+    }
   }
 
   const poleL = skier.userData.poleL;
   const poleR = skier.userData.poleR;
-  const k = shoving ? 0.38 : poling ? 0.22 : 0.14;
+  const k = shoving ? 1 : poling ? 0.22 : 0.14;
   if (poleL && poleR) {
     const restXL = poleL.userData.restX || 1.24;
     const restXR = poleR.userData.restX || 1.24;
     const restZL = poleL.userData.restZ || -0.14;
     const restZR = poleR.userData.restZ || 0.14;
-    const leftHit = shoving && (skier.userData.shoveSide || 1) < 0;
-    const rightHit = shoving && !leftHit;
     const cap = (v) => Math.max(-ARM_SWAY, Math.min(ARM_SWAY, v));
-    const wantXL = restXL + cap(leftHit || poling ? stroke.poleX - restXL : 0);
-    const wantXR = restXR + cap(rightHit || poling ? stroke.poleX - restXR : 0);
-    const wantZL = restZL + cap(leftHit ? -stroke.poleZ : 0);
-    const wantZR = restZR + cap(rightHit ? stroke.poleZ : 0);
+    const shoveDx = stroke.poleX - 1.24;
+    const shoveDz = stroke.poleZ - 0.14;
+    const wantXL = restXL + (leftHit ? shoveDx : poling ? cap(stroke.poleX - restXL) : 0);
+    const wantXR = restXR + (rightHit ? shoveDx : poling ? cap(stroke.poleX - restXR) : 0);
+    const wantZL = restZL + (leftHit ? -shoveDz : 0);
+    const wantZR = restZR + (rightHit ? shoveDz : 0);
     poleL.rotation.x += (wantXL - poleL.rotation.x) * k;
     poleR.rotation.x += (wantXR - poleR.rotation.x) * k;
     poleL.rotation.z += (wantZL - poleL.rotation.z) * k;
     poleR.rotation.z += (wantZR - poleR.rotation.z) * k;
   }
+  if (skier.userData.syncHero) skier.userData.syncHero();
 }
 
 export function orientSkier(THREE, skier, pos, heading, vel, hf, steer = 0, opts = {}) {

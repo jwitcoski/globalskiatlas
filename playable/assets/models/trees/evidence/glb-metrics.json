@@ -1,0 +1,315 @@
+{
+  "actions": [],
+  "blender": {
+    "background": true,
+    "build_hash": "d13f752e3b9c",
+    "version": "5.2.2 LTS",
+    "version_tuple": [
+      5,
+      2,
+      2
+    ]
+  },
+  "hard_gate_pass": true,
+  "input": "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\trees\\snowy-pine-pack.glb",
+  "issues": [],
+  "material_details": [
+    {
+      "image_texture_nodes": 1,
+      "images": [
+        "pine_albedo"
+      ],
+      "name": "pine_albedo",
+      "node_count": 3,
+      "use_nodes": true
+    }
+  ],
+  "materials": [
+    "pine_albedo"
+  ],
+  "meshes": [
+    {
+      "boundary_edges": 1336,
+      "connected_components": 288,
+      "data_name": "pine_broad",
+      "degenerate_faces": 0,
+      "edges": 1712,
+      "flat_polygons": 462,
+      "invalid_vertices": 0,
+      "isolated_vertices": 0,
+      "material_slots": [
+        "pine_albedo"
+      ],
+      "missing_material_faces": 0,
+      "modifiers": [],
+      "name": "pine_broad",
+      "non_manifold_edges": 1336,
+      "polygons": 696,
+      "refinement_modifiers": [],
+      "shape_keys": 0,
+      "smooth_polygon_ratio": 0.336207,
+      "smooth_polygons": 234,
+      "source_polygons": 696,
+      "source_vertices": 1304,
+      "triangles": 696,
+      "uv_layers": 1,
+      "vertex_groups": 0,
+      "vertices": 1304,
+      "weighted_vertices": 0,
+      "wire_edges": 0,
+      "world_bounds": [
+        [
+          43.424107,
+          -4.907907,
+          0.0
+        ],
+        [
+          52.575893,
+          4.907907,
+          11.0
+        ]
+      ],
+      "zero_length_edges": 0
+    },
+    {
+      "boundary_edges": 1448,
+      "connected_components": 316,
+      "data_name": "pine_spire",
+      "degenerate_faces": 0,
+      "edges": 1840,
+      "flat_polygons": 538,
+      "invalid_vertices": 0,
+      "isolated_vertices": 0,
+      "material_slots": [
+        "pine_albedo"
+      ],
+      "missing_material_faces": 0,
+      "modifiers": [],
+      "name": "pine_spire",
+      "non_manifold_edges": 1448,
+      "polygons": 744,
+      "refinement_modifiers": [],
+      "shape_keys": 0,
+      "smooth_polygon_ratio": 0.276882,
+      "smooth_polygons": 206,
+      "source_polygons": 744,
+      "source_vertices": 1412,
+      "triangles": 744,
+      "uv_layers": 1,
+      "vertex_groups": 0,
+      "vertices": 1412,
+      "weighted_vertices": 0,
+      "wire_edges": 0,
+      "world_bounds": [
+        [
+          -2.37987,
+          -2.540532,
+          0.0
+        ],
+        [
+          2.37987,
+          2.540532,
+          11.0
+        ]
+      ],
+      "zero_length_edges": 0
+    },
+    {
+      "boundary_edges": 864,
+      "connected_components": 186,
+      "data_name": "pine_young",
+      "degenerate_faces": 0,
+      "edges": 1170,
+      "flat_polygons": 334,
+      "invalid_vertices": 0,
+      "isolated_vertices": 0,
+      "material_slots": [
+        "pine_albedo"
+      ],
+      "missing_material_faces": 0,
+      "modifiers": [],
+      "name": "pine_young",
+      "non_manifold_edges": 864,
+      "polygons": 492,
+      "refinement_modifiers": [],
+      "shape_keys": 0,
+      "smooth_polygon_ratio": 0.321138,
+      "smooth_polygons": 158,
+      "source_polygons": 492,
+      "source_vertices": 864,
+      "triangles": 492,
+      "uv_layers": 1,
+      "vertex_groups": 0,
+      "vertices": 864,
+      "weighted_vertices": 0,
+      "wire_edges": 0,
+      "world_bounds": [
+        [
+          94.279633,
+          -2.29319,
+          0.0
+        ],
+        [
+          97.720367,
+          2.29319,
+          11.0
+        ]
+      ],
+      "zero_length_edges": 0
+    }
+  ],
+  "objects": [
+    {
+      "action": null,
+      "collections": [
+        "Scene Collection"
+      ],
+      "dimensions": [
+        9.151785,
+        9.815815,
+        11.0
+      ],
+      "hidden_render": false,
+      "location": [
+        48.0,
+        0.0,
+        0.0
+      ],
+      "name": "pine_broad",
+      "parent": null,
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "transform_is_finite": true,
+      "type": "MESH"
+    },
+    {
+      "action": null,
+      "collections": [
+        "Scene Collection"
+      ],
+      "dimensions": [
+        4.759741,
+        5.081063,
+        11.0
+      ],
+      "hidden_render": false,
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "name": "pine_spire",
+      "parent": null,
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "transform_is_finite": true,
+      "type": "MESH"
+    },
+    {
+      "action": null,
+      "collections": [
+        "Scene Collection"
+      ],
+      "dimensions": [
+        3.440734,
+        4.58638,
+        11.0
+      ],
+      "hidden_render": false,
+      "location": [
+        96.0,
+        0.0,
+        0.0
+      ],
+      "name": "pine_young",
+      "parent": null,
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "transform_is_finite": true,
+      "type": "MESH"
+    }
+  ],
+  "scene": {
+    "bounds": {
+      "dimensions": [
+        100.100237,
+        9.815814,
+        11.0
+      ],
+      "max": [
+        97.720367,
+        4.907907,
+        11.0
+      ],
+      "min": [
+        -2.37987,
+        -4.907907,
+        0.0
+      ]
+    },
+    "fps": 24.0,
+    "frame_end": 250,
+    "frame_start": 1,
+    "name": "Scene"
+  },
+  "schema_version": 3,
+  "totals": {
+    "actions": 0,
+    "armatures": 0,
+    "bones": 0,
+    "boundary_edges": 3648,
+    "cameras": 0,
+    "constraints": 0,
+    "degenerate_faces": 0,
+    "edges": 4722,
+    "flat_polygons": 1334,
+    "geometry_nodes_modifiers": 0,
+    "images": 1,
+    "invalid_vertices": 0,
+    "isolated_vertices": 0,
+    "lights": 0,
+    "materials": 1,
+    "mesh_objects": 3,
+    "missing_material_faces": 0,
+    "node_materials": 1,
+    "non_manifold_edges": 3648,
+    "objects": 3,
+    "polygons": 1932,
+    "refinement_modifiers": 0,
+    "rigid_body_objects": 0,
+    "shape_keys": 0,
+    "simulation_modifiers": 0,
+    "smooth_polygons": 598,
+    "textured_materials": 1,
+    "triangles": 1932,
+    "uv_mapped_meshes": 3,
+    "vertices": 3580,
+    "weighted_meshes": 0,
+    "wire_edges": 0,
+    "zero_length_edges": 0
+  }
+}

@@ -1,0 +1,169 @@
+{
+  "actions": [],
+  "blender": {
+    "background": true,
+    "build_hash": "d13f752e3b9c",
+    "version": "5.2.2 LTS",
+    "version_tuple": [
+      5,
+      2,
+      2
+    ]
+  },
+  "hard_gate_pass": true,
+  "input": "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\skier\\skier.glb",
+  "issues": [],
+  "material_details": [
+    {
+      "image_texture_nodes": 3,
+      "images": [
+        "skier_albedo",
+        "skier_metallic-skier_roughness",
+        "skier_normal"
+      ],
+      "name": "SkierPBR",
+      "node_count": 7,
+      "use_nodes": true
+    }
+  ],
+  "materials": [
+    "SkierPBR"
+  ],
+  "meshes": [
+    {
+      "boundary_edges": 2604,
+      "connected_components": 202,
+      "data_name": "Skier",
+      "degenerate_faces": 0,
+      "edges": 8787,
+      "flat_polygons": 1200,
+      "invalid_vertices": 0,
+      "isolated_vertices": 0,
+      "material_slots": [
+        "SkierPBR"
+      ],
+      "missing_material_faces": 0,
+      "modifiers": [],
+      "name": "Skier",
+      "non_manifold_edges": 2604,
+      "polygons": 4990,
+      "refinement_modifiers": [],
+      "shape_keys": 0,
+      "smooth_polygon_ratio": 0.759519,
+      "smooth_polygons": 3790,
+      "source_polygons": 4990,
+      "source_vertices": 3992,
+      "triangles": 4990,
+      "uv_layers": 1,
+      "vertex_groups": 0,
+      "vertices": 3992,
+      "weighted_vertices": 0,
+      "wire_edges": 0,
+      "world_bounds": [
+        [
+          -0.82924,
+          -1.02,
+          0.0
+        ],
+        [
+          0.82924,
+          0.62,
+          1.798
+        ]
+      ],
+      "zero_length_edges": 0
+    }
+  ],
+  "objects": [
+    {
+      "action": null,
+      "collections": [
+        "Scene Collection"
+      ],
+      "dimensions": [
+        1.658481,
+        1.64,
+        1.798
+      ],
+      "hidden_render": false,
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "name": "Skier",
+      "parent": null,
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "transform_is_finite": true,
+      "type": "MESH"
+    }
+  ],
+  "scene": {
+    "bounds": {
+      "dimensions": [
+        1.65848,
+        1.64,
+        1.798
+      ],
+      "max": [
+        0.82924,
+        0.62,
+        1.798
+      ],
+      "min": [
+        -0.82924,
+        -1.02,
+        0.0
+      ]
+    },
+    "fps": 24.0,
+    "frame_end": 250,
+    "frame_start": 1,
+    "name": "Scene"
+  },
+  "schema_version": 3,
+  "totals": {
+    "actions": 0,
+    "armatures": 0,
+    "bones": 0,
+    "boundary_edges": 2604,
+    "cameras": 0,
+    "constraints": 0,
+    "degenerate_faces": 0,
+    "edges": 8787,
+    "flat_polygons": 1200,
+    "geometry_nodes_modifiers": 0,
+    "images": 3,
+    "invalid_vertices": 0,
+    "isolated_vertices": 0,
+    "lights": 0,
+    "materials": 1,
+    "mesh_objects": 1,
+    "missing_material_faces": 0,
+    "node_materials": 1,
+    "non_manifold_edges": 2604,
+    "objects": 1,
+    "polygons": 4990,
+    "refinement_modifiers": 0,
+    "rigid_body_objects": 0,
+    "shape_keys": 0,
+    "simulation_modifiers": 0,
+    "smooth_polygons": 3790,
+    "textured_materials": 1,
+    "triangles": 4990,
+    "uv_mapped_meshes": 1,
+    "vertices": 3992,
+    "weighted_meshes": 0,
+    "wire_edges": 0,
+    "zero_length_edges": 0
+  }
+}

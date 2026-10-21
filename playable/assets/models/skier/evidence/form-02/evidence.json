@@ -1,0 +1,69 @@
+{
+  "schema_version": 2,
+  "evidence_settings_version": 2,
+  "studio": {
+    "presentation": "light",
+    "floor_color": [
+      0.32,
+      0.34,
+      0.36,
+      1.0
+    ],
+    "light_powers": [
+      1288.8099383735664,
+      515.5239753494266,
+      1933.2149075603497
+    ],
+    "camera_distance": 4.128499901294708,
+    "ortho_scale": 2.6027499377727508,
+    "floor_size": 358.99999141693115,
+    "floor_offset": 0.010769999742507934,
+    "clip_start": 0.0017949999570846557,
+    "clip_end": 1794.9999570846558
+  },
+  "requested_presentation": "light",
+  "subject_luminance_hint": null,
+  "render_engine": "BLENDER_EEVEE",
+  "view_transform": "AgX",
+  "exposure": 0.0,
+  "input": "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\skier\\skier.blend",
+  "blender_version": "5.2.2 LTS",
+  "resolution": 768,
+  "requested_views": [
+    "perspective",
+    "front",
+    "left"
+  ],
+  "evidence_scope": "partial_preview",
+  "focus_objects": [],
+  "geometry_hidden_for_focus": false,
+  "underside_floor_hidden": false,
+  "material_mode": "source",
+  "hidden_objects": [],
+  "head_texture": null,
+  "bounds": {
+    "min": [
+      -0.82924,
+      -1.02,
+      0.0
+    ],
+    "max": [
+      0.82924,
+      0.62,
+      1.795
+    ],
+    "dimensions": [
+      1.658481,
+      1.64,
+      1.795
+    ]
+  },
+  "views": [
+    "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\skier\\evidence\\form-02\\perspective.png",
+    "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\skier\\evidence\\form-02\\front.png",
+    "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\skier\\evidence\\form-02\\left.png"
+  ],
+  "contact_sheet": "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\skier\\evidence\\form-02\\contact_sheet.png",
+  "animation_frames": [],
+  "animation_contact_sheet": null
+}

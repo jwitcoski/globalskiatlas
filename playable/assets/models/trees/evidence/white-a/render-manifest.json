@@ -1,0 +1,249 @@
+{
+  "schemaVersion": 1,
+  "status": "complete",
+  "source": "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\trees\\snowy-pines.blend",
+  "sourceSha256": "cf19aa164b2650664650862d61559fea98455ab8cd675f32ddbb7a8db14e0270",
+  "blenderVersion": "5.2.2 LTS",
+  "blenderBuildHash": "d13f752e3b9c",
+  "preflight": {
+    "scene": "Scene",
+    "engine": "CYCLES",
+    "activeCamera": "pine_broad_threequarter",
+    "cameras": [
+      {
+        "name": "pine_spire_front",
+        "lens": 50.0,
+        "type": "PERSP",
+        "location": [
+          0.0,
+          -26.0,
+          5.199999809265137
+        ],
+        "clipStart": 0.10000000149011612,
+        "clipEnd": 200.0
+      },
+      {
+        "name": "pine_spire_side",
+        "lens": 50.0,
+        "type": "PERSP",
+        "location": [
+          26.0,
+          0.0,
+          5.199999809265137
+        ],
+        "clipStart": 0.10000000149011612,
+        "clipEnd": 200.0
+      },
+      {
+        "name": "pine_spire_threequarter",
+        "lens": 50.0,
+        "type": "PERSP",
+        "location": [
+          18.5,
+          -18.5,
+          6.199999809265137
+        ],
+        "clipStart": 0.10000000149011612,
+        "clipEnd": 200.0
+      },
+      {
+        "name": "pine_broad_front",
+        "lens": 50.0,
+        "type": "PERSP",
+        "location": [
+          18.0,
+          -26.0,
+          5.199999809265137
+        ],
+        "clipStart": 0.10000000149011612,
+        "clipEnd": 200.0
+      },
+      {
+        "name": "pine_broad_side",
+        "lens": 50.0,
+        "type": "PERSP",
+        "location": [
+          44.0,
+          0.0,
+          5.199999809265137
+        ],
+        "clipStart": 0.10000000149011612,
+        "clipEnd": 200.0
+      },
+      {
+        "name": "pine_broad_threequarter",
+        "lens": 50.0,
+        "type": "PERSP",
+        "location": [
+          36.5,
+          -18.5,
+          6.199999809265137
+        ],
+        "clipStart": 0.10000000149011612,
+        "clipEnd": 200.0
+      },
+      {
+        "name": "pine_young_front",
+        "lens": 50.0,
+        "type": "PERSP",
+        "location": [
+          36.0,
+          -26.0,
+          5.199999809265137
+        ],
+        "clipStart": 0.10000000149011612,
+        "clipEnd": 200.0
+      },
+      {
+        "name": "pine_young_side",
+        "lens": 50.0,
+        "type": "PERSP",
+        "location": [
+          62.0,
+          0.0,
+          5.199999809265137
+        ],
+        "clipStart": 0.10000000149011612,
+        "clipEnd": 200.0
+      },
+      {
+        "name": "pine_young_threequarter",
+        "lens": 50.0,
+        "type": "PERSP",
+        "location": [
+          54.5,
+          -18.5,
+          6.199999809265137
+        ],
+        "clipStart": 0.10000000149011612,
+        "clipEnd": 200.0
+      }
+    ],
+    "lights": [
+      {
+        "name": "key",
+        "type": "SUN",
+        "energy": 2.4000000953674316,
+        "color": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "hidden": false
+      },
+      {
+        "name": "fill",
+        "type": "AREA",
+        "energy": 180.0,
+        "color": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "hidden": false
+      }
+    ],
+    "volumeMaterials": [],
+    "world": "SnowWhite",
+    "colorManagement": {
+      "viewTransform": "Standard",
+      "look": "None",
+      "exposure": 0.0,
+      "gamma": 1.0
+    },
+    "resolution": [
+      1200,
+      1600,
+      100
+    ],
+    "frame": 1,
+    "images": [
+      {
+        "name": "pine_albedo",
+        "size": [
+          4096,
+          4096
+        ],
+        "colorSpace": "sRGB",
+        "packed": true,
+        "source": "FILE"
+      }
+    ],
+    "missingDependencies": [],
+    "warnings": []
+  },
+  "renders": [
+    {
+      "camera": "pine_spire_front",
+      "frame": 1,
+      "path": "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\trees\\evidence\\white-a\\camera-01_frame-000001.png",
+      "durationSeconds": 33.615,
+      "sha256": "20af28b7505211ab01e9d6da99c972f6ae15774ec930df58bbe207f2362889ec"
+    },
+    {
+      "camera": "pine_spire_side",
+      "frame": 1,
+      "path": "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\trees\\evidence\\white-a\\camera-02_frame-000001.png",
+      "durationSeconds": 90.628,
+      "sha256": "5115917a515ee75ccf0ec06b8a9ec3ce1469feceab6b36a8436eda6f9f4de212"
+    },
+    {
+      "camera": "pine_spire_threequarter",
+      "frame": 1,
+      "path": "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\trees\\evidence\\white-a\\camera-03_frame-000001.png",
+      "durationSeconds": 35.613,
+      "sha256": "476ea0a2ee203dd66b84a7795b7598cd59c2419a15442b3478cc449a22d9bf10"
+    },
+    {
+      "camera": "pine_broad_front",
+      "frame": 1,
+      "path": "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\trees\\evidence\\white-a\\camera-04_frame-000001.png",
+      "durationSeconds": 40.243,
+      "sha256": "0fab15454ebece50aca099b4fdb8534fec6bbe512f3bc825eb6494beaaf2726a"
+    },
+    {
+      "camera": "pine_broad_side",
+      "frame": 1,
+      "path": "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\trees\\evidence\\white-a\\camera-05_frame-000001.png",
+      "durationSeconds": 43.253,
+      "sha256": "126b262223b0e7b587c46bc058f1cdebf9c0d7f8be167e554273ee7ed9b38009"
+    },
+    {
+      "camera": "pine_broad_threequarter",
+      "frame": 1,
+      "path": "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\trees\\evidence\\white-a\\camera-06_frame-000001.png",
+      "durationSeconds": 42.334,
+      "sha256": "3d1698b08b14369e47b747760d7a83da7b0131d94fce31bb3e5293509fc0c5ae"
+    }
+  ],
+  "device": {
+    "requested": "cpu",
+    "effective": "CPU",
+    "devices": []
+  },
+  "denoise": {
+    "requestedPolicy": "preview",
+    "effectivePolicy": "preview",
+    "denoiser": "OPENIMAGEDENOISE",
+    "quality": "FAST",
+    "prefilter": "FAST",
+    "gpu": false,
+    "inputPasses": "RGB_ALBEDO_NORMAL",
+    "renderDenoisingEnabled": true,
+    "decisionReason": "No supported OIDN GPU was discovered; using CPU OIDN.",
+    "compositorDenoiseNodes": []
+  },
+  "mutedFileOutputs": [],
+  "effective": {
+    "resolution": [
+      825,
+      1100
+    ],
+    "samples": 32,
+    "timeLimitSeconds": 120,
+    "denoise": true,
+    "compositing": true,
+    "sequencer": true,
+    "border": false
+  }
+}

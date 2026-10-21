@@ -23,11 +23,12 @@ import {
   startShove,
   shoveShouldHit,
   markShoveHit,
-} from "./physics.js?v=s5";
+} from "./physics.js?v=pose3";
+import { loadSkierModel, mountSkierModel } from "./skier-model.js?v=6";
 import { featuredCourses, attachPisteDifficulty, courseFinish, createRun, tickRun, formatTime } from "./run.js?v=map4";
 import { coordsToXz, attachPiste, resetScore, tickScore, commitBestScore, formatScore, applyWipeout } from "./score.js?v=snow1";
 import { orientPiste, alongTrack, alongPolyline, placeGates, addGateMeshes, clearGateMeshes, resetGates, tickGates } from "./gates.js?v=vis18";
-import { addOsmWorld, applyPisteDecorDifficultyScheme, applySnowLevel } from "./osm-world.js?v=snow3";
+import { addOsmWorld, applyPisteDecorDifficultyScheme, applySnowLevel, bendPine, tickPines } from "./osm-world.js?v=pines4";
 import { snowTerrainMaterial, makeGroundScatter, updateGroundScatter } from "./ground.js?v=g5";
 import {
   addSkyAndLights,
@@ -78,7 +79,7 @@ import {
   pisteLineForCourse,
 } from "./trail-map.js?v=mapall2";
 import { makeMinimap } from "./minimap.js?v=mapall1";
-import { createNpcSkiers, clearNpcSkiers, tickNpcSkiers, tryShoveNpc } from "./npc-skiers.js?v=s9";
+import { createNpcSkiers, clearNpcSkiers, tickNpcSkiers, tryShoveNpc } from "./npc-skiers.js?v=s11";
 import { SNOW, addCoverLines, cycleSnowLevel, getSnowLevel, loadSnowLevel, onPisteAt, setSnowLevel } from "./snow.js?v=snow18";
 import { updateTraffic } from "./traffic.js?v=vis16";
 import {
@@ -841,6 +842,13 @@ function fitRenderer() {
 }
 
 const skier = makeSkier(THREE, scene);
+
+function dressSkiers() {
+  mountSkierModel(skier);
+  if (npcPack?.list) for (const n of npcPack.list) mountSkierModel(n.mesh, n.mesh.userData.suit);
+}
+
+loadSkierModel().then(dressSkiers).catch((err) => console.warn("skier model", err));
 const yeti = makeYeti(THREE, scene);
 const blob = addContactBlob(THREE, scene);
 const spray = makeSpray(THREE, scene);
@@ -959,6 +967,7 @@ function applyCourse(course) {
   resetGates(run);
   clearNpcSkiers(npcPack);
   npcPack = TRAILER || !hf ? null : createNpcSkiers(THREE, scene, pisteLines, (x, z) => hf.sample(x, z), spawnXZ, pistePts);
+  dressSkiers();
 }
 
 function resetRun(opts = {}) {
@@ -1529,6 +1538,7 @@ document.addEventListener("visibilitychange", () => {
 
 function tick(now) {
   requestAnimationFrame(tick);
+  tickPines(scene, now);
   if (clayHold || document.body.classList.contains("picker")) {
     last = now;
     return;
@@ -1565,7 +1575,7 @@ function tick(now) {
       while (acc >= STEP && steps < 5) {
         const extras = TRAILER ? [] : tickNpcSkiers(THREE, npcPack, STEP, skier.position, hf, alongTrack(run.pistePts, skier.position.x, skier.position.z).along);
         if (!shoveHeld && (keys.has("KeyQ") || keys.has("KeyE"))) {
-          startShove(skier, keys.has("KeyQ") ? 1 : -1);
+          startShove(skier, keys.has("KeyQ") ? -1 : 1);
           shoveHeld = true;
         }
         if (shoveShouldHit(skier)) {
@@ -1591,6 +1601,7 @@ function tick(now) {
         skier.userData.air = st.air;
         skier.userData.skid = st.skid || 0;
         skier.userData.pole = !!st.pole;
+        if (st.treeHit?.hit) bendPine(scene, st.treeHit, now);
         if (st.treeHit?.impact > 1) addTrauma(shake, Math.min(0.7, st.treeHit.impact * 0.05));
         if (st.landed > 4) addTrauma(shake, Math.min(0.55, (st.landed - 4) * 0.05));
         const iframed = (skier.userData.fallIframes || 0) > 0;
