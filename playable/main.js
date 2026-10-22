@@ -24,7 +24,8 @@ import {
   shoveShouldHit,
   markShoveHit,
 } from "./physics.js?v=pose3";
-import { loadSkierModel, mountSkierModel } from "./skier-model.js?v=6";
+import { loadSkierModel, mountSkierModel } from "./skier-model.js?v=7";
+import { loadSnowboarder, mountSnowboarder } from "./snowboarder-model.js?v=2";
 import { featuredCourses, attachPisteDifficulty, courseFinish, createRun, tickRun, formatTime } from "./run.js?v=map4";
 import { coordsToXz, attachPiste, resetScore, tickScore, commitBestScore, formatScore, applyWipeout } from "./score.js?v=snow1";
 import { orientPiste, alongTrack, alongPolyline, placeGates, addGateMeshes, clearGateMeshes, resetGates, tickGates } from "./gates.js?v=vis20";
@@ -46,7 +47,7 @@ import {
   fitComposer,
 } from "./look.js?v=s6";
 import { addResortIsland, updateIslandDust, updateIslandLod, setIslandOpacity, resetIslandLod } from "./island.js?v=lod3b";
-import { bindUi, setHud, openPanel, closePanel, updateLoading, clayLoadHtml, setOsmMapNote, setResortTitle, compactUi, setFlybyChrome, setHelpTips, paintSnowBtn } from "./ui.js?v=claypick7";
+import { bindUi, setHud, openPanel, closePanel, updateLoading, clayLoadHtml, setOsmMapNote, setResortTitle, compactUi, setFlybyChrome, setHelpTips, paintSnowBtn, getRide, setRide } from "./ui.js?v=ride2";
 import { atlasStatsHtml, prefetchWikiIndex } from "./atlas-stats.js?v=stats1";
 import { bindFinishChartScope, finishChartsHtml, prefetchFinishCharts } from "./finish-charts.js?v=1";
 import { bindOsmFix, osmFixHtml, osmFixContext } from "./osm-fix.js?v=1";
@@ -801,6 +802,16 @@ function onUiAct(act, courseId) {
     resetRun({ lobby: false });
     return;
   }
+  if (act === "ride" && courseId) {
+    setRide(courseId);
+    dressPlayer();
+    ui.panel?.querySelectorAll('[data-act="ride"]').forEach((b) => {
+      const on = b.dataset.scheme === getRide();
+      b.classList.toggle("on", on);
+      b.setAttribute("aria-pressed", on ? "true" : "false");
+    });
+    return;
+  }
   if (act === "snow-level" && courseId) {
     setSnowLevel(courseId);
     applySnowLevel(scene);
@@ -858,12 +869,65 @@ function fitRenderer() {
 
 const skier = makeSkier(THREE, scene);
 
-function dressSkiers() {
-  mountSkierModel(skier);
-  if (npcPack?.list) for (const n of npcPack.list) mountSkierModel(n.mesh, n.mesh.userData.suit);
+function clearHero(who) {
+  const rig = who.userData.heroRig;
+  if (rig?.torso) {
+    rig.torso.removeFromParent();
+    disposeHero(rig.torso);
+  }
+  if (rig?.legs) {
+    rig.legs.removeFromParent();
+    disposeHero(rig.legs);
+  }
+  for (const ski of [who.userData.skiL, who.userData.skiR]) {
+    if (!ski) continue;
+    for (const child of [...ski.children]) {
+      if (child.name !== "skiL" && child.name !== "skiR") continue;
+      child.removeFromParent();
+      disposeHero(child);
+    }
+  }
+  const mesh = who.userData.heroMesh;
+  if (mesh?.name === "snowboarder") {
+    mesh.removeFromParent();
+    disposeHero(mesh);
+  }
+  who.userData.heroMesh = null;
+  who.userData.heroRig = null;
+  who.userData.syncHero = null;
+  who.userData.boarder = false;
+  who.traverse((o) => {
+    if (o.isMesh) o.visible = true;
+  });
 }
 
-loadSkierModel().then(dressSkiers).catch((err) => console.warn("skier model", err));
+function disposeHero(root) {
+  root.traverse((o) => {
+    o.geometry?.dispose?.();
+    const mats = Array.isArray(o.material) ? o.material : [o.material];
+    for (const m of mats) m?.dispose?.();
+  });
+}
+
+function dressPlayer() {
+  clearHero(skier);
+  if (getRide() === "board") mountSnowboarder(skier);
+  else mountSkierModel(skier);
+}
+
+function dressSkiers() {
+  dressPlayer();
+  if (npcPack?.list) {
+    npcPack.list.forEach((n, i) => {
+      if (n.mesh.userData.heroMesh) return;
+      const suit = n.mesh.userData.suit;
+      if (i % 2 === 0) mountSnowboarder(n.mesh, suit);
+      else mountSkierModel(n.mesh, suit);
+    });
+  }
+}
+
+Promise.allSettled([loadSkierModel(), loadSnowboarder()]).then(dressSkiers);
 const yeti = makeYeti(THREE, scene);
 const blob = addContactBlob(THREE, scene);
 const spray = makeSpray(THREE, scene);

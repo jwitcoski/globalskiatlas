@@ -165,7 +165,31 @@ export function compactUi() {
   return matchMedia("(pointer: coarse)").matches || innerWidth < 720 || innerHeight < 520;
 }
 
-let lobbyDetailsUser = null;
+let ride = "ski";
+
+export function getRide() {
+  return ride;
+}
+
+export function setRide(next) {
+  ride = next === "board" ? "board" : "ski";
+}
+
+function rideHtml() {
+  const btns = [
+    ["ski", "Skis"],
+    ["board", "Snowboard"],
+  ]
+    .map(([id, label]) => {
+      const on = id === ride;
+      return `<button type="button" class="scheme-btn${on ? " on" : ""}" data-act="ride" data-scheme="${id}" aria-pressed="${on ? "true" : "false"}">${label}</button>`;
+    })
+    .join("");
+  return `<div class="diff-scheme" role="group" aria-label="Skis or snowboard">
+      <span class="diff-scheme-label">Ride</span>
+      <div class="diff-scheme-btns">${btns}</div>
+    </div>`;
+}
 
 function snowLevelHtml() {
   const cur = getSnowLevel();
@@ -186,6 +210,8 @@ function trailMeta(data) {
   const label = data.diffLabel || "Unrated";
   return `<p class="trail-meta">${data.marker || ""}<span>${label} · ${drop} m drop · ${len} m</span></p>`;
 }
+
+let lobbyDetailsUser = null;
 
 function lobbyDetailsHtml(data) {
   const open = (lobbyDetailsUser ?? !compactUi()) ? " open" : "";
@@ -279,6 +305,7 @@ export function openPanel(ui, kind, data) {
           <p class="kicker">Trail</p>
           <h2>${trail}</h2>
           ${snowLevelHtml()}
+          ${rideHtml()}
           ${actions([["ski-trail", data.ready ? "Play" : "Getting the mountain ready…", "primary"]])}
         </div>`
       : "";
@@ -309,17 +336,18 @@ export function openPanel(ui, kind, data) {
       <h2>${data.course}</h2>
       ${trailMeta(data)}
       ${snowLevelHtml()}
+      ${rideHtml()}
       ${lobbyDetailsHtml(data)}
       ${osmFixDetailsHtml(data)}
       ${actions(
         data.changeMountain
           ? [
-              ["start", "Ski", "primary"],
+              ["start", "Start", "primary"],
               ["flyby", "Fly-by", "ghost"],
               ["mountains", "Change mountain", "ghost"],
             ]
           : [
-              ["start", "Ski", "primary"],
+              ["start", "Start", "primary"],
               ["flyby", "Fly-by", "ghost"],
             ],
       )}`;
@@ -347,7 +375,7 @@ export function openPanel(ui, kind, data) {
       <div class="sf-finish-slot">${data.chartsHtml || ""}</div>
       ${actions(
         [
-          ["restart", "Ski again", "primary"],
+          ["restart", "Run again", "primary"],
           ["lobby", "Other trail", "ghost"],
         ],
         stayLinkHtml(data.stayHref),

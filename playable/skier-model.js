@@ -4,8 +4,10 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
 const SRC = new URL("./assets/models/skier/skier.glb", import.meta.url).href;
-/** physics.js RIDE: the group origin sits this far above the snow. */
+/** physics.js RIDE: the group origin sits this far above the DEM. */
 const RIDE = 0.92;
+/** Piste snow is draped 0.08 above the DEM. Keep the ski base on that surface. */
+const SNOW = 0.12;
 
 const DOWN = new THREE.Vector3(0, -1, 0);
 const ALIGN_L = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(1, 0, 0), DOWN);
@@ -140,7 +142,7 @@ function limbAlign(name) {
 function bindLimb(bucket, joint, origin, align) {
   const q = align || new THREE.Quaternion();
   addPart(joint, bucket, bucket.material, (v) => {
-    v.y -= RIDE;
+    v.y -= RIDE - SNOW;
     v.sub(origin).applyQuaternion(q);
   }, (n) => {
     n.applyQuaternion(q);
@@ -148,7 +150,7 @@ function bindLimb(bucket, joint, origin, align) {
 }
 
 function mountRig(skier, buckets, material) {
-  const y0 = RIDE;
+  const y0 = RIDE - SNOW;
   const torso = new THREE.Group();
   torso.name = "heroTorso";
   const legs = new THREE.Group();
@@ -253,7 +255,7 @@ function glueSki(skier, buckets, material, proc, name) {
   if (!bucket || !proc) return null;
   skier.updateWorldMatrix(true, true);
   proc.updateWorldMatrix(true, true);
-  const into = new THREE.Matrix4().makeTranslation(0, -RIDE, 0);
+  const into = new THREE.Matrix4().makeTranslation(0, -(RIDE - SNOW), 0);
   into.premultiply(skier.matrixWorld);
   into.premultiply(new THREE.Matrix4().copy(proc.matrixWorld).invert());
   const nmat = new THREE.Matrix3().getNormalMatrix(into);
