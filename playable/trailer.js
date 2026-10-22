@@ -1,6 +1,6 @@
 /** Cinematic auto-run + canvas capture. Armed with ?trailer=1 */
 
-import { alongTrack } from "./gates.js?v=vis16";
+import { alongTrack } from "./gates.js?v=vis20";
 
 export const TRAILER = new URLSearchParams(location.search).has("trailer");
 

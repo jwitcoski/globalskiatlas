@@ -1,4 +1,8 @@
-/** Circular checkpoint pads on the exported OSM centerline. Not an official course. */
+/** Checkpoint gates on the exported OSM centerline. Not an official course.
+
+The marker is a slalom pair (gate.glb): two poles 8 m apart, flags toward the skier.
+The hit test is still the 10 m circle around the centerline point. */
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
 export const GATE_HALF_M = 10;
 export const GATE_RADIUS_M = 10;
@@ -156,38 +160,135 @@ export function tickGates(run, pos) {
   return run;
 }
 
-function tint(mat, hex, opacity, emissive, emi) {
-  if (!mat) return;
-  mat.color.setHex(hex);
-  if (opacity != null && mat.opacity != null) mat.opacity = opacity;
-  if (mat.emissive) {
-    mat.emissive.setHex(emissive ?? hex);
-    mat.emissiveIntensity = emi ?? 0.35;
-  }
-}
+const GATE_LOOK = {
+  hit: [0x2ee66a, 0.22],
+  miss: [0xff3b3b, 0.28],
+  next: [0x1f78d1, 0.16],
+  wait: [0x93a8b6, 0.03],
+};
 
 function paintGate(g) {
-  const m = g.mesh;
-  if (!m) return;
-  const ring = m.userData.ring;
-  const disc = m.userData.disc;
-  if (g.state === "hit") {
-    tint(ring?.material, 0x2ee66a, 1, 0x145c32, 0.85);
-    tint(disc?.material, 0x3dff7a, 0.42, 0x1a8a40, 0.4);
-  } else if (g.state === "miss") {
-    tint(ring?.material, 0xff3b3b, 1, 0x8a1010, 0.9);
-    tint(disc?.material, 0xff5555, 0.4, 0x8a1010, 0.45);
-  } else if (g.state === "next") {
-    tint(ring?.material, 0xc8f4ff, 1, 0x3aa8c8, 0.55);
-    tint(disc?.material, 0x9ee8ff, 0.28, 0x2a88a8, 0.25);
-  } else {
-    tint(ring?.material, 0x8eb8c8, 0.55, 0x1a3844, 0.12);
-    tint(disc?.material, 0x7aa8b8, 0.1, 0x1a3844, 0.05);
+  const mat = g.mesh?.userData.tint;
+  if (!mat) return;
+  const [hex, emi] = GATE_LOOK[g.state] || GATE_LOOK.wait;
+  mat.color.setHex(hex);
+  mat.emissive.setHex(hex);
+  mat.emissiveIntensity = emi;
+}
+
+const GATE_URL = new URL("./assets/models/gate/gate.glb?v=2", import.meta.url).href;
+const POLE_SPAN = 4;
+let _poleWorld = null;
+let gateTemplate = null;
+let gateLoad = null;
+const gateWaiters = [];
+
+function hardwareLambert(THREE, source) {
+  const map = source?.map || null;
+  if (map) map.colorSpace = THREE.SRGBColorSpace;
+  return new THREE.MeshLambertMaterial({ map, color: 0xffffff });
+}
+
+function dressPole(THREE, pole, tint) {
+  pole.traverse((o) => {
+    if (!o.isMesh) return;
+    o.geometry = o.geometry.clone();
+    const prev = o.material;
+    o.castShadow = true;
+    o.receiveShadow = false;
+    if (o.name === "GateTint") o.material = tint;
+    else {
+      const src = Array.isArray(prev) ? prev[0] : prev;
+      o.material = hardwareLambert(THREE, src);
+    }
+    if (prev && prev !== o.material) {
+      const list = Array.isArray(prev) ? prev : [prev];
+      for (const m of list) m.dispose?.();
+    }
+  });
+}
+
+/* Local Y is world up (the gate only yaws). Drop the pole origin onto the snow under it. */
+function dropPole(THREE, grp, pole, elevFn) {
+  _poleWorld = _poleWorld || new THREE.Vector3();
+  const base = pole.userData.baseY || 0;
+  pole.position.y = base;
+  pole.updateWorldMatrix(true, false);
+  pole.getWorldPosition(_poleWorld);
+  pole.position.y = base + elevFn(_poleWorld.x, _poleWorld.z) - grp.position.y;
+}
+
+function stickGate(THREE, grp) {
+  const tint = new THREE.MeshLambertMaterial({ color: 0xffffff, emissive: 0x000000 });
+  const elevFn = grp.userData.elev;
+  for (const side of [1, -1]) {
+    const pole = gateTemplate.clone(true);
+    pole.position.set(side * POLE_SPAN, 0, 0);
+    if (side < 0) pole.rotation.y = Math.PI;
+    dressPole(THREE, pole, tint);
+    grp.add(pole);
+    dropPole(THREE, grp, pole, elevFn);
   }
+  grp.userData.tint = tint;
+  paintGate(grp.userData.gate);
+}
+
+function fallbackGate(THREE, grp) {
+  const tint = new THREE.MeshLambertMaterial({ color: 0x1f78d1, emissive: 0x1f78d1, emissiveIntensity: 0.16 });
+  const geo = new THREE.CylinderGeometry(0.036, 0.036, 1.8, 12);
+  const elevFn = grp.userData.elev;
+  for (const side of [1, -1]) {
+    const pole = new THREE.Mesh(geo, tint);
+    pole.position.set(side * POLE_SPAN, 0, 0);
+    pole.userData.baseY = 0.9;
+    pole.castShadow = true;
+    grp.add(pole);
+    dropPole(THREE, grp, pole, elevFn);
+  }
+  grp.userData.tint = tint;
+  paintGate(grp.userData.gate);
+}
+
+function mountGates(THREE, root) {
+  if (gateTemplate) {
+    for (const grp of root.children) stickGate(THREE, grp);
+    return;
+  }
+  gateWaiters.push(root);
+  if (gateLoad) return;
+  gateLoad = new GLTFLoader()
+    .loadAsync(GATE_URL)
+    .then((gltf) => {
+      const found = {};
+      gltf.scene.traverse((o) => {
+        if (o.name === "GateTint" || o.name === "GateHardware") found[o.name] = o;
+      });
+      const template = new THREE.Group();
+      for (const mesh of Object.values(found)) {
+        mesh.parent?.remove(mesh);
+        mesh.position.set(0, 0, 0);
+        mesh.rotation.set(0, 0, 0);
+        mesh.scale.set(1, 1, 1);
+        template.add(mesh);
+      }
+      gateTemplate = template;
+      for (const pending of gateWaiters.splice(0)) {
+        for (const grp of pending.children) stickGate(THREE, grp);
+      }
+    })
+    .catch((err) => {
+      console.warn("gate glb", err);
+      gateLoad = null;
+      for (const pending of gateWaiters.splice(0)) {
+        for (const grp of pending.children) fallbackGate(THREE, grp);
+      }
+    });
 }
 
 export function clearGateMeshes(root) {
   if (!root) return;
+  const waiting = gateWaiters.indexOf(root);
+  if (waiting >= 0) gateWaiters.splice(waiting, 1);
   root.removeFromParent();
   root.traverse((o) => {
     o.geometry?.dispose?.();
@@ -198,49 +299,17 @@ export function clearGateMeshes(root) {
 
 export function addGateMeshes(THREE, scene, gates, elevFn) {
   const root = new THREE.Group();
-  const ringG = new THREE.TorusGeometry(GATE_RADIUS_M, 0.32, 8, 40);
-  const discG = new THREE.CircleGeometry(GATE_RADIUS_M - 0.4, 32);
+  root.name = "gates";
   for (const g of gates) {
-    const y = elevFn(g.x, g.z);
     const grp = new THREE.Group();
-    const ring = new THREE.Mesh(
-      ringG,
-      new THREE.MeshStandardMaterial({
-        color: 0x8eb8c8,
-        roughness: 0.42,
-        metalness: 0.12,
-        transparent: true,
-        opacity: 0.55,
-        depthWrite: false,
-        emissive: 0x1a3844,
-        emissiveIntensity: 0.12,
-        envMap: scene.userData.envMap || null,
-        envMapIntensity: 0.4,
-      }),
-    );
-    ring.rotation.x = Math.PI / 2;
-    ring.position.y = 0.55;
-    const disc = new THREE.Mesh(
-      discG,
-      new THREE.MeshBasicMaterial({
-        color: 0x7aa8b8,
-        transparent: true,
-        opacity: 0.1,
-        depthWrite: false,
-        side: THREE.DoubleSide,
-      }),
-    );
-    disc.rotation.x = -Math.PI / 2;
-    disc.position.y = 0.12;
-    disc.renderOrder = 2;
-    grp.add(disc, ring);
-    grp.position.set(g.x, y, g.z);
-    grp.userData.ring = ring;
-    grp.userData.disc = disc;
+    grp.position.set(g.x, elevFn(g.x, g.z), g.z);
+    grp.rotation.y = Math.atan2(g.tx || 0, g.tz || 1);
+    grp.userData.gate = g;
+    grp.userData.elev = elevFn;
     g.mesh = grp;
-    paintGate(g);
     root.add(grp);
   }
   scene.add(root);
+  mountGates(THREE, root);
   return root;
 }

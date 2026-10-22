@@ -1,0 +1,75 @@
+{
+  "schema_version": 2,
+  "evidence_settings_version": 2,
+  "studio": {
+    "presentation": "light",
+    "floor_color": [
+      0.32,
+      0.34,
+      0.36,
+      1.0
+    ],
+    "light_powers": [
+      26347.783539331067,
+      10539.113415732427,
+      39521.6753089966
+    ],
+    "camera_distance": 18.66680040359497,
+    "ortho_scale": 11.768200254440307,
+    "floor_size": 1623.2000350952148,
+    "floor_offset": 0.048696001052856444,
+    "clip_start": 0.008116000175476075,
+    "clip_end": 8116.000175476074
+  },
+  "requested_presentation": "light",
+  "subject_luminance_hint": 1.0,
+  "render_engine": "BLENDER_EEVEE",
+  "view_transform": "AgX",
+  "exposure": 0.0,
+  "input": "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\gate\\gate.glb",
+  "blender_version": "5.2.2 LTS",
+  "resolution": 512,
+  "requested_views": [
+    "perspective",
+    "front",
+    "back",
+    "left",
+    "right",
+    "top"
+  ],
+  "evidence_scope": "full_multiview",
+  "focus_objects": [],
+  "geometry_hidden_for_focus": false,
+  "underside_floor_hidden": false,
+  "material_mode": "source",
+  "hidden_objects": [],
+  "head_texture": null,
+  "bounds": {
+    "min": [
+      -4.058,
+      -0.058,
+      -0.230213
+    ],
+    "max": [
+      4.058,
+      0.077245,
+      1.8
+    ],
+    "dimensions": [
+      8.116,
+      0.135245,
+      2.030213
+    ]
+  },
+  "views": [
+    "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\gate\\evidence\\multiview\\perspective.png",
+    "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\gate\\evidence\\multiview\\front.png",
+    "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\gate\\evidence\\multiview\\back.png",
+    "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\gate\\evidence\\multiview\\left.png",
+    "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\gate\\evidence\\multiview\\right.png",
+    "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\gate\\evidence\\multiview\\top.png"
+  ],
+  "contact_sheet": "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\gate\\evidence\\multiview\\contact_sheet.png",
+  "animation_frames": [],
+  "animation_contact_sheet": null
+}

@@ -1,0 +1,53 @@
+{
+  "asset": "slalom checkpoint gate",
+  "purpose": "Replace the flat checkpoint ring in playable/gates.js. One GLB cloned along the piste.",
+  "required_parts": [
+    "two upright poles",
+    "rounded sealed cap",
+    "spring hinge above a screw base",
+    "small flag panel on the inner side of each pole"
+  ],
+  "relations": [
+    "origin is the snow point halfway between the poles",
+    "pole centers are 8 m apart on local X",
+    "shafts stand on local Z in Blender, which is up after glTF Y-up export",
+    "flags face Blender +Y, which becomes glTF -Z, toward the skier",
+    "screw base extends below the snow origin so the hinge sits on the surface",
+    "GateTint is white so the game can color the next, hit, miss, and waiting states",
+    "GateHardware keeps the green hinge and metal collar"
+  ],
+  "style": ["stylized game prop", "smooth plastic", "readable from a chase camera"],
+  "finish": {
+    "profile": "polished_smooth",
+    "low_poly_explicitly_requested": false,
+    "surface_targets": [
+      "smooth shaft and cap",
+      "visible spring and screw",
+      "flag with a hem and a slight billow",
+      "no floating pole"
+    ]
+  },
+  "limits": {
+    "triangle_range": [1500, 8000],
+    "pole_height_above_snow_m": 1.8,
+    "pole_spacing_m": 8
+  },
+  "stages": [
+    "contract_and_references",
+    "primary_secondary_forms",
+    "materials",
+    "export_validation"
+  ],
+  "approval_gates": [],
+  "animation": { "required": false },
+  "review_questions": [
+    "Do the two poles read as a gate you ski between, rather than a halo?",
+    "Does the hinge explain how the pole meets the snow?",
+    "Does the flag read from the front without spanning the gap?"
+  ],
+  "assumptions": [
+    "Real FIS Type A shaft is 30 mm and has no flag. Game shaft is 72 mm so it survives the chase camera. The flag is a game marker, not a giant-slalom banner.",
+    "Hit test stays the existing 10 m circle. The visual gap is 8 m, inside that circle.",
+    "No logos."
+  ]
+}

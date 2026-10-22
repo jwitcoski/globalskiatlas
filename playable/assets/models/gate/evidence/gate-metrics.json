@@ -1,0 +1,249 @@
+{
+  "actions": [],
+  "blender": {
+    "background": true,
+    "build_hash": "d13f752e3b9c",
+    "version": "5.2.2 LTS",
+    "version_tuple": [
+      5,
+      2,
+      2
+    ]
+  },
+  "hard_gate_pass": true,
+  "input": "C:\\Users\\jwitc\\Documents\\GitHub\\GlobalSkiAtlas_2\\playable\\assets\\models\\gate\\gate.glb",
+  "issues": [],
+  "material_details": [
+    {
+      "image_texture_nodes": 1,
+      "images": [
+        "gate_albedo"
+      ],
+      "name": "GateHardware",
+      "node_count": 3,
+      "use_nodes": true
+    },
+    {
+      "image_texture_nodes": 0,
+      "images": [],
+      "name": "GateTint",
+      "node_count": 2,
+      "use_nodes": true
+    }
+  ],
+  "materials": [
+    "GateHardware",
+    "GateTint"
+  ],
+  "meshes": [
+    {
+      "boundary_edges": 384,
+      "connected_components": 12,
+      "data_name": "GateHardware",
+      "degenerate_faces": 0,
+      "edges": 4260,
+      "flat_polygons": 0,
+      "invalid_vertices": 0,
+      "isolated_vertices": 0,
+      "material_slots": [
+        "GateHardware"
+      ],
+      "missing_material_faces": 0,
+      "modifiers": [],
+      "name": "GateHardware",
+      "non_manifold_edges": 384,
+      "polygons": 2712,
+      "refinement_modifiers": [],
+      "shape_keys": 0,
+      "smooth_polygon_ratio": 1.0,
+      "smooth_polygons": 2712,
+      "source_polygons": 2712,
+      "source_vertices": 1556,
+      "triangles": 2712,
+      "uv_layers": 1,
+      "vertex_groups": 0,
+      "vertices": 1556,
+      "weighted_vertices": 0,
+      "wire_edges": 0,
+      "world_bounds": [
+        [
+          -4.058,
+          -0.058,
+          -0.230213
+        ],
+        [
+          4.058,
+          0.058,
+          0.214
+        ]
+      ],
+      "zero_length_edges": 0
+    },
+    {
+      "boundary_edges": 48,
+      "connected_components": 6,
+      "data_name": "GateTint",
+      "degenerate_faces": 0,
+      "edges": 3048,
+      "flat_polygons": 0,
+      "invalid_vertices": 0,
+      "isolated_vertices": 0,
+      "material_slots": [
+        "GateTint"
+      ],
+      "missing_material_faces": 0,
+      "modifiers": [],
+      "name": "GateTint",
+      "non_manifold_edges": 48,
+      "polygons": 2016,
+      "refinement_modifiers": [],
+      "shape_keys": 0,
+      "smooth_polygon_ratio": 1.0,
+      "smooth_polygons": 2016,
+      "source_polygons": 2016,
+      "source_vertices": 1042,
+      "triangles": 2016,
+      "uv_layers": 1,
+      "vertex_groups": 0,
+      "vertices": 1042,
+      "weighted_vertices": 0,
+      "wire_edges": 0,
+      "world_bounds": [
+        [
+          -4.036,
+          -0.055,
+          0.205
+        ],
+        [
+          4.036,
+          0.077245,
+          1.8
+        ]
+      ],
+      "zero_length_edges": 0
+    }
+  ],
+  "objects": [
+    {
+      "action": null,
+      "collections": [
+        "Scene Collection"
+      ],
+      "dimensions": [
+        8.116,
+        0.116,
+        0.444213
+      ],
+      "hidden_render": false,
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "name": "GateHardware",
+      "parent": null,
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "transform_is_finite": true,
+      "type": "MESH"
+    },
+    {
+      "action": null,
+      "collections": [
+        "Scene Collection"
+      ],
+      "dimensions": [
+        8.072,
+        0.132245,
+        1.595
+      ],
+      "hidden_render": false,
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "name": "GateTint",
+      "parent": null,
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "transform_is_finite": true,
+      "type": "MESH"
+    }
+  ],
+  "scene": {
+    "bounds": {
+      "dimensions": [
+        8.116,
+        0.135245,
+        2.030213
+      ],
+      "max": [
+        4.058,
+        0.077245,
+        1.8
+      ],
+      "min": [
+        -4.058,
+        -0.058,
+        -0.230213
+      ]
+    },
+    "fps": 24.0,
+    "frame_end": 250,
+    "frame_start": 1,
+    "name": "Scene"
+  },
+  "schema_version": 3,
+  "totals": {
+    "actions": 0,
+    "armatures": 0,
+    "bones": 0,
+    "boundary_edges": 432,
+    "cameras": 0,
+    "constraints": 0,
+    "degenerate_faces": 0,
+    "edges": 7308,
+    "flat_polygons": 0,
+    "geometry_nodes_modifiers": 0,
+    "images": 1,
+    "invalid_vertices": 0,
+    "isolated_vertices": 0,
+    "lights": 0,
+    "materials": 2,
+    "mesh_objects": 2,
+    "missing_material_faces": 0,
+    "node_materials": 2,
+    "non_manifold_edges": 432,
+    "objects": 2,
+    "polygons": 4728,
+    "refinement_modifiers": 0,
+    "rigid_body_objects": 0,
+    "shape_keys": 0,
+    "simulation_modifiers": 0,
+    "smooth_polygons": 4728,
+    "textured_materials": 1,
+    "triangles": 4728,
+    "uv_mapped_meshes": 2,
+    "vertices": 2598,
+    "weighted_meshes": 0,
+    "wire_edges": 0,
+    "zero_length_edges": 0
+  }
+}

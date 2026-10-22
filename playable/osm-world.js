@@ -4,7 +4,7 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { styleForPisteFeature, classifyDifficulty } from "./trail-map.js?v=scheme1";
 import { addOsmTraffic } from "./traffic.js?v=vis16";
-import { alongPolyline, polylineLen } from "./gates.js?v=vis17";
+import { alongPolyline, polylineLen } from "./gates.js?v=vis20";
 import { liftType, liftCableHeight, LIFT_LANE, isDragLift, makeLiftTerminal, makeLiftCarrier, makeLiftSkier, makeMagicCarpet, makeRopeTow, makeDragLift } from "./lift-graphics.js?v=s12";
 import { createLiftMotion } from "./lift-motion.js?v=9";
 import { snowTerrainMaterial } from "./ground.js?v=g5";
