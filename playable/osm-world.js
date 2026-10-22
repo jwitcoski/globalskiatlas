@@ -1008,7 +1008,9 @@ async function addLiftKit(fc, elevFn, scene, counts, kit) {
       }
       if (ground.length < 2) continue;
       const cableHeight = liftCableHeight(type);
-      const liftPath = type === "gondola" ? straightLiftPath(ground) : ground;
+      /* Gondolas and cable cars span the two stations. A chord between the ends, no line towers. */
+      const span = type === "gondola" || type === "cable_car";
+      const liftPath = span ? straightLiftPath(ground) : ground;
       let motionPath = liftPath;
       if (type === "magic_carpet") {
         motionPath = sampleAlong(liftPath, 2);
@@ -1059,7 +1061,7 @@ async function addLiftKit(fc, elevFn, scene, counts, kit) {
         },
       );
       if (motion) liftMotions.push(motion);
-      if (type !== "magic_carpet" && type !== "rope_tow" && !isDragLift(type)) {
+      if (!span && type !== "magic_carpet" && type !== "rope_tow" && !isDragLift(type)) {
         for (const p of sampleAlong(ground, TOWER_STEP)) {
           if (p.distanceTo(a) < skip || p.distanceTo(b) < skip) continue;
           towerPts.push({ p, tangent: tangentOn(liftPath, p), type });
