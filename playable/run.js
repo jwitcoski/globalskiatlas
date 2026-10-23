@@ -8,15 +8,39 @@ function keepBetter(prev, route) {
   return false;
 }
 
-export function listCourses(graph) {
+function hasFinish(route) {
+  const end = route?.end_local || {};
+  return end.east_m != null && end.north_m != null;
+}
+
+function collectCourses(routes) {
   const byKey = new Map();
-  for (const r of graph.routes || []) {
-    if (r.status !== "approved") continue;
-    if ((r.vertical_drop_m || 0) < 40) continue;
+  for (const r of routes) {
     const key = r.name || r.id;
     if (keepBetter(byKey.get(key), r)) byKey.set(key, r);
   }
   return [...byKey.values()].sort((a, b) => (b.vertical_drop_m || 0) - (a.vertical_drop_m || 0));
+}
+
+export function listCourses(graph) {
+  const routes = graph?.routes || [];
+  const approved = collectCourses(
+    routes.filter((r) => r.status === "approved" && (r.vertical_drop_m || 0) >= 40 && hasFinish(r)),
+  );
+  if (approved.length) return approved;
+  // ponytail: published graphs can flag the only real descent review_needed (DEM uphill noise)
+  // or approve only sub-40 m fragments. Ski those instead of failing the mountain.
+  // Upgrade path: loosen uphill_fraction in the route builder.
+  const fallback = collectCourses(
+    routes.filter(
+      (r) =>
+        r.status !== "rejected" &&
+        hasFinish(r) &&
+        ((r.vertical_drop_m || 0) >= 40 || r.status === "approved"),
+    ),
+  );
+  if (fallback.length) return fallback;
+  return collectCourses(routes.filter((r) => r.status !== "rejected" && hasFinish(r)));
 }
 
 export function pickCourse(graph) {
@@ -205,4 +229,32 @@ export function tickRun(run, pos, spawnXZ, dt, moving, along = 0) {
     }
   }
   return run;
+}
+
+function assertListCourses() {
+  const finish = { east_m: 1, north_m: 2 };
+  const names = (routes) => listCourses({ routes }).map((r) => r.name).join(",");
+  const tavascan = names([
+    { id: "b", name: "Bosc", status: "review_needed", vertical_drop_m: 143.41, end_local: finish },
+    { id: "t", name: "Tubo Negre", status: "approved", vertical_drop_m: 32.14, end_local: finish },
+    { id: "d", name: "Debutants", status: "review_needed", vertical_drop_m: 6.55, end_local: finish },
+    { id: "m", name: "Mascarida", status: "approved", vertical_drop_m: 38.59, end_local: finish },
+    { id: "j", name: "Junk", status: "rejected", vertical_drop_m: 400, end_local: finish },
+  ]);
+  if (tavascan !== "Bosc,Mascarida,Tubo Negre") throw new Error("tavascan " + tavascan);
+  const strict = names([
+    { id: "a", name: "Boomer", status: "approved", vertical_drop_m: 200, end_local: finish },
+    { id: "c", name: "Tiny", status: "approved", vertical_drop_m: 10, end_local: finish },
+    { id: "e", name: "Held", status: "review_needed", vertical_drop_m: 300, end_local: finish },
+  ]);
+  if (strict !== "Boomer") throw new Error("strict " + strict);
+  const onlyShort = names([
+    { id: "s", name: "Bunny", status: "review_needed", vertical_drop_m: 8, end_local: finish },
+  ]);
+  if (onlyShort !== "Bunny") throw new Error("short " + onlyShort);
+}
+
+if (typeof process !== "undefined" && process.argv[1]?.endsWith("run.js")) {
+  assertListCourses();
+  console.log("listCourses ok");
 }
