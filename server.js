@@ -854,6 +854,59 @@ app.get(/^\/homepage_scene\/.*/, (req, res) => {
   proxyS3Prefix('clay_scenes', req, res);
 });
 
+// Pipeline sweep writes this on the homeserver. Do not read Docker logs.
+// The public site serves the copy in s3://globalskiatlas.com/resort-jobs/status.json.
+const RESORT_JOBS_STATUS =
+  process.env.RESORT_JOBS_STATUS || '/home/lola/globalskiatlas/output/resort-jobs/status.json';
+const RESORT_JOBS_STATUS_URL =
+  process.env.RESORT_JOBS_STATUS_URL || 'https://globalskiatlas.com/resort-jobs/status.json';
+
+function sendResortStatus(res, statusCode, body, contentType) {
+  if (res.headersSent) return;
+  res.status(statusCode);
+  res.set('Cache-Control', 'no-store');
+  if (contentType) res.set('Content-Type', contentType);
+  res.send(body);
+}
+
+function proxyPublishedStatus(res) {
+  const req = https.get(RESORT_JOBS_STATUS_URL, { headers: { 'Accept-Encoding': 'identity' } }, (up) => {
+    const chunks = [];
+    up.on('data', (chunk) => chunks.push(chunk));
+    up.on('end', () => {
+      const body = Buffer.concat(chunks);
+      const code = up.statusCode || 502;
+      if (code >= 400) {
+        sendResortStatus(res, code, JSON.stringify({
+          error: code === 404 ? 'Not Found' : 'Failed to read status',
+          path: '/resort-jobs/status.json',
+        }), 'application/json; charset=utf-8');
+        return;
+      }
+      sendResortStatus(res, 200, body, up.headers['content-type'] || 'application/json');
+    });
+  });
+  req.setTimeout(8000, () => req.destroy(new Error('status fetch timed out')));
+  req.on('error', (err) => {
+    sendResortStatus(res, 502, JSON.stringify({
+      error: err.message,
+      path: '/resort-jobs/status.json',
+    }), 'application/json; charset=utf-8');
+  });
+}
+
+app.get('/resort-jobs/status.json', (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  if (!fs.existsSync(RESORT_JOBS_STATUS)) {
+    proxyPublishedStatus(res);
+    return;
+  }
+  res.sendFile(RESORT_JOBS_STATUS, (err) => {
+    if (!err || res.headersSent) return;
+    proxyPublishedStatus(res);
+  });
+});
+
 // --- Root static files (existing GlobalSkiAtlas_2 HTML/CSS/JS) --------------
 express.static.mime.define({
   'model/gltf-binary': ['glb'],

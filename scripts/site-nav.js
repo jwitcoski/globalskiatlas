@@ -49,7 +49,8 @@
       "</div></div>" +
       '<a class="header-links" href="' + href("blog/index.html") + '">Blog</a>' +
       '<a class="header-links" href="' + href("coffee-table-book.html") + '">Book</a>' +
-      '<a class="header-links" href="' + href("about.html") + '">About</a>';
+      '<a class="header-links" href="' + href("about.html") + '">About</a>' +
+      '<a class="header-links" href="' + href("status.html") + '">Status</a>';
   }
 
   document.querySelectorAll('a.footer-link[href$="bookpitch.html"], a.header-links[href$="bookpitch.html"]').forEach(function (a) {

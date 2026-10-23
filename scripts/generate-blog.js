@@ -167,6 +167,7 @@ function siteFooter() {
       <div class="tw-flex tw-flex-col tw-gap-3 max-md:tw-text-sm">
         <a href="index.html" class="footer-link">Blog</a>
         <a href="../about.html" class="footer-link">About</a>
+        <a href="../status.html" class="footer-link">Status</a>
         <a href="../faq.html" class="footer-link">FAQ</a>
         <a href="../contact.html" class="footer-link">Contact</a>
         <a href="../privacy-policy.html" class="footer-link">Privacy Policy</a>
@@ -267,7 +268,7 @@ function generatePostHtml(post, bodyHtml, bySlug) {
   </main>
   ${siteFooter()}
   <script src="../index.js"></script>${mapScripts}
-  <script src="../scripts/site-nav.js?v=6" defer></script>
+  <script src="../scripts/site-nav.js?v=7" defer></script>
 </body>
 </html>
 `;
@@ -326,7 +327,7 @@ function generateIndexHtml(posts) {
   </main>
   ${siteFooter()}
   <script src="../index.js"></script>
-  <script src="../scripts/site-nav.js?v=6" defer></script>
+  <script src="../scripts/site-nav.js?v=7" defer></script>
 </body>
 </html>
 `;

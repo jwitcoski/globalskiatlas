@@ -53,7 +53,8 @@ jobs:
             --exclude "package*.json" \
             --exclude "tailwind.config.js" \
             --exclude "docs/*" \
-            --exclude "cloudfront-functions/*"
+            --exclude "cloudfront-functions/*" \
+            --exclude "resort-jobs/status.json"
 
       - name: Publish CloudFront directory-index function
         run: |
