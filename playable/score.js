@@ -1,6 +1,6 @@
 /** Arcade piste score: stay on the snow corridor, carve, catch air. */
 
-import { onPisteAt, snowHalfM } from "./snow.js?v=snow18";
+import { onPisteAt, snowHalfM } from "./snow.js?v=snow21";
 
 function scoreStore(run) {
   return `montage_best_score:${run.finish?.name || "course"}`;

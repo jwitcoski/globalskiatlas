@@ -8,9 +8,9 @@ export const SNOW = {
   wonderland: { inset: 1, offPiste: true, patches: false, terrain: 0xfbfaf6 },
 };
 export const SNOW_LABEL = {
-  spring: "Spring skiing",
-  midWinter: "Mid-winter",
-  wonderland: "Winter wonderland",
+  spring: "White Ribbons of Death",
+  midWinter: "The Winter Coat",
+  wonderland: "Winter Wonderland",
 };
 export const SNOW_KEYS = Object.keys(SNOW);
 

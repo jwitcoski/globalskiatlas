@@ -27,9 +27,9 @@ import {
 import { loadSkierModel, mountSkierModel } from "./skier-model.js?v=7";
 import { loadSnowboarder, mountSnowboarder } from "./snowboarder-model.js?v=2";
 import { featuredCourses, attachPisteDifficulty, courseFinish, createRun, tickRun, formatTime } from "./run.js?v=map5";
-import { coordsToXz, attachPiste, resetScore, tickScore, commitBestScore, formatScore, applyWipeout } from "./score.js?v=snow1";
+import { coordsToXz, attachPiste, resetScore, tickScore, commitBestScore, formatScore, applyWipeout } from "./score.js?v=snow21";
 import { orientPiste, alongTrack, alongPolyline, placeGates, addGateMeshes, clearGateMeshes, resetGates, tickGates } from "./gates.js?v=vis20";
-import { addOsmWorld, applyPisteDecorDifficultyScheme, applySnowLevel, bendPine, seatMagicCarpets, tickPines } from "./osm-world.js?v=warm3";
+import { addOsmWorld, applyPisteDecorDifficultyScheme, applySnowLevel, bendPine, seatMagicCarpets, tickPines } from "./osm-world.js?v=snow21";
 import { snowTerrainMaterial, makeGroundScatter, updateGroundScatter } from "./ground.js?v=g5";
 import {
   addSkyAndLights,
@@ -47,7 +47,7 @@ import {
   fitComposer,
 } from "./look.js?v=s6";
 import { addResortIsland, updateIslandDust, updateIslandLod, setIslandOpacity, resetIslandLod } from "./island.js?v=lod3b";
-import { bindUi, setHud, openPanel, closePanel, updateLoading, clayLoadHtml, setOsmMapNote, setResortTitle, compactUi, setFlybyChrome, setHelpTips, paintSnowBtn, getRide, setRide } from "./ui.js?v=crowd4";
+import { bindUi, setHud, openPanel, closePanel, updateLoading, clayLoadHtml, setOsmMapNote, setResortTitle, compactUi, setFlybyChrome, setHelpTips, paintSnowBtn, getRide, setRide } from "./ui.js?v=snow21";
 import { atlasStatsHtml, prefetchWikiIndex } from "./atlas-stats.js?v=stats1";
 import { bindFinishChartScope, finishChartsHtml, prefetchFinishCharts } from "./finish-charts.js?v=1";
 import { bindOsmFix, osmFixHtml, osmFixContext } from "./osm-fix.js?v=1";
@@ -58,7 +58,7 @@ import { capDpr, attachDebug } from "./debug.js?v=mob1";
 import { intentsFrom, isTurning, analogAxes } from "./input.js?v=s5";
 import { bindMobileChrome, bindPads } from "./mobile.js?v=s5";
 import { bakePisteSculpt, drapeSculptOnMesh } from "./piste-sculpt.js?v=feel3";
-import { addTrailMarks, clearTrailMarks, repairFences, updateTrailMarks } from "./trail-marks.js?v=gate2";
+import { addTrailMarks, clearTrailMarks, repairFences, updateTrailMarks } from "./trail-marks.js?v=snow21";
 import { makeYeti, resetYeti, parkYetiAtStart, tickYeti } from "./yeti.js?v=vis19";
 import { createSkiWake, clearSkiWake, pushSkiWake, updateSkiWake } from "./ski-wake.js?v=powder1";
 import {
@@ -81,7 +81,7 @@ import {
 } from "./trail-map.js?v=mapall2";
 import { makeMinimap } from "./minimap.js?v=mapall1";
 import { createNpcSkiers, clearNpcSkiers, tickNpcSkiers, tryShoveNpc, loadCrowd, setCrowd, getCrowd } from "./npc-skiers.js?v=crowd4";
-import { SNOW, addCoverLines, cycleSnowLevel, getSnowLevel, loadSnowLevel, onPisteAt, setSnowLevel } from "./snow.js?v=snow18";
+import { SNOW, addCoverLines, cycleSnowLevel, getSnowLevel, loadSnowLevel, onPisteAt, setSnowLevel } from "./snow.js?v=snow21";
 import { updateTraffic } from "./traffic.js?v=vis16";
 import {
   TRAILER,
