@@ -625,20 +625,6 @@ const snowCoverFill = snowTerrainMaterial(THREE, {
 });
 /* Every piste-snow mesh carries a snowEdge attribute (see drapePisteFill); without it the fringe discards everything. */
 snowCoverFill.defines.SNOW_EDGE = "";
-/* The sheet follows the heightfield. Up close the Draco mesh is higher, so dirt covers the snow.
-   ponytail: lift only near the camera (far away the depth offset already wins). Ceiling ~0.4m; raise the 0.42 if dirt still shows under the skier. */
-{
-  const drapeSnow = snowCoverFill.onBeforeCompile;
-  snowCoverFill.onBeforeCompile = (shader, renderer) => {
-    drapeSnow(shader, renderer);
-    shader.vertexShader = shader.vertexShader.replace(
-      "#include <project_vertex>",
-      `float gCam = length(cameraPosition.xz - (modelMatrix * vec4(transformed, 1.0)).xz);
-       transformed.y += (1.0 - smoothstep(22.0, 64.0, gCam)) * 0.42;
-       #include <project_vertex>`,
-    );
-  };
-}
 
 function clearGroup(g) {
   if (!g) return;
@@ -655,7 +641,8 @@ function snowPolyEn(ringXz, holesXz) {
 }
 
 function drapePisteSnow(poly, cover, elevFn) {
-  const mesh = drapePisteFill(poly.outer, poly.holes, elevFn, 0.28, snowCoverFill, (pos) => snowEdgeFade(pos, poly, cover));
+  /* Ski bases sit at DEM + 0.12 (skier-model SNOW). The sheet stays under that. */
+  const mesh = drapePisteFill(poly.outer, poly.holes, elevFn, 0.08, snowCoverFill, (pos) => snowEdgeFade(pos, poly, cover));
   if (mesh) {
     mesh.name = "piste-snow";
     mesh.userData.pisteKind = "snow";
