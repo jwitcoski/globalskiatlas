@@ -1,6 +1,7 @@
 /** HUD and overlay helpers. UI reads game state; it does not own piste/DNF rules. */
 
 import { SNOW_KEYS, SNOW_LABEL, getSnowLevel } from "./snow.js?v=snow18";
+import { CROWD_KEYS, CROWD_LABEL, getCrowd } from "./npc-skiers.js?v=crowd4";
 
 export function bindUi() {
   return {
@@ -191,6 +192,18 @@ function rideHtml() {
     </div>`;
 }
 
+function crowdHtml() {
+  const cur = getCrowd();
+  const btns = CROWD_KEYS.map((id) => {
+    const on = id === cur;
+    return `<button type="button" class="scheme-btn${on ? " on" : ""}" data-act="crowd" data-scheme="${id}" aria-pressed="${on ? "true" : "false"}">${CROWD_LABEL[id]}</button>`;
+  }).join("");
+  return `<div class="diff-scheme" role="group" aria-label="Crowd">
+      <span class="diff-scheme-label">Crowd</span>
+      <div class="diff-scheme-btns">${btns}</div>
+    </div>`;
+}
+
 function snowLevelHtml() {
   const cur = getSnowLevel();
   const btns = SNOW_KEYS.map((id) => {
@@ -306,6 +319,7 @@ export function openPanel(ui, kind, data) {
           <h2>${trail}</h2>
           ${snowLevelHtml()}
           ${rideHtml()}
+          ${crowdHtml()}
           ${actions([["ski-trail", data.ready ? "Play" : "Getting the mountain ready…", "primary"]])}
         </div>`
       : "";
@@ -337,6 +351,7 @@ export function openPanel(ui, kind, data) {
       ${trailMeta(data)}
       ${snowLevelHtml()}
       ${rideHtml()}
+      ${crowdHtml()}
       ${lobbyDetailsHtml(data)}
       ${osmFixDetailsHtml(data)}
       ${actions(
@@ -358,6 +373,7 @@ export function openPanel(ui, kind, data) {
     ui.panel.innerHTML = `<p class="kicker">Paused</p>
       <h2>Hold</h2>
       <p>The clock is stopped.</p>
+      ${crowdHtml()}
       ${actions([
         ["resume", "Resume", "primary"],
         ["restart", "Restart", "ghost"],

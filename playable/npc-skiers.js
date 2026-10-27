@@ -7,10 +7,50 @@ const SUITS = [0x2a6fdb, 0x1f8a4c, 0x7b3fa0, 0xe07a14, 0xc45a18, 0xd8342e, 0xf2c
 const SKIS = [0xf2c02e, 0x3a8fd4, 0xd8342e, 0x1f8a4c];
 const NPC_R = 0.55;
 const SEE = 280;
-const TRAIL_N = 16;
 const TRAIL_NEAR = 190;
 const TRAIL_WIDE = 480;
 const PER_TRAIL = 2;
+
+export const CROWD_KEYS = ["empty", "normal", "jerry"];
+export const CROWD_LABEL = {
+  empty: "First Tracks",
+  normal: "Midweek",
+  jerry: "Jerry City",
+};
+const CROWD_SPEC = {
+  empty: { home: 0, trails: 0, per: 0 },
+  normal: { home: 10, trails: 16, per: 2 },
+  jerry: { home: 42, trails: 84, per: 12 },
+};
+const CROWD_STORE = "gsa-crowd";
+let crowd = "normal";
+
+export function getCrowd() {
+  return crowd;
+}
+
+export function getCrowdSpec() {
+  return CROWD_SPEC[crowd] || CROWD_SPEC.normal;
+}
+
+export function loadCrowd() {
+  try {
+    const s = localStorage.getItem(CROWD_STORE);
+    if (CROWD_SPEC[s]) crowd = s;
+  } catch {
+    /* ignore */
+  }
+}
+
+export function setCrowd(next) {
+  if (!CROWD_SPEC[next]) return;
+  crowd = next;
+  try {
+    localStorage.setItem(CROWD_STORE, next);
+  } catch {
+    /* ignore */
+  }
+}
 
 /** Lateral offset (m) = bias + amp * sin(along / wave + phase). |amp| > |bias| so they cut the >>>> line. */
 const KINDS = [
@@ -110,7 +150,8 @@ function pickTrail(pack, x, z, wide) {
     const n = nearestOn(route, x, z);
     if (n.dist * n.dist > r2) continue;
     const used = trailLoad(pack, route);
-    if (used >= PER_TRAIL) continue;
+    const cap = pack.perTrail ?? PER_TRAIL;
+    if (cap < 1 || used >= cap) continue;
     hits.push({ route, n, used });
   }
   if (!hits.length) return null;
@@ -176,15 +217,17 @@ export function createNpcSkiers(THREE, scene, lines, elevFn, _spawn, activePts) 
     pack.list.push(rec);
   }
 
+  const crowdSpec = getCrowdSpec();
+  pack.perTrail = crowdSpec.per;
   const gaps = [18, 32, 46, 62, 80, 102, 28, 70, 54, 90];
-  for (let i = 0; i < KINDS.length; i++) {
-    add(course, gaps[i] % Math.max(30, courseLen - 22), KINDS[i], true);
+  for (let i = 0; i < crowdSpec.home; i++) {
+    add(course, gaps[i % gaps.length] % Math.max(30, courseLen - 22), KINDS[i % KINDS.length], true);
   }
 
   pack.routes = indexRoutes(routes, elevFn, course);
   const ox = _spawn?.x ?? course[0].x;
   const oz = _spawn?.z ?? course[0].z;
-  for (let i = 0; i < TRAIL_N; i++) {
+  for (let i = 0; i < crowdSpec.trails; i++) {
     const before = pack.list.length;
     add(course, 24, KINDS[i % KINDS.length], false);
     if (pack.list.length === before) continue;
@@ -330,6 +373,12 @@ function selfCheckTrails() {
   seatOnTrail(npc, hit);
   if (npc.home !== false) throw new Error("home");
   if (!(npc.along < hit.n.along)) throw new Error("should start uphill of the player");
+  if (getCrowdSpec().home !== 10 || getCrowdSpec().trails !== 16) throw new Error("normal crowd");
+  setCrowd("empty");
+  if (getCrowdSpec().home !== 0 || getCrowdSpec().per !== 0) throw new Error("empty resort");
+  setCrowd("jerry");
+  if (getCrowdSpec().trails !== 84 || getCrowdSpec().per !== 12) throw new Error("jerry city");
+  setCrowd("normal");
   console.log("npc trails ok");
 }
 

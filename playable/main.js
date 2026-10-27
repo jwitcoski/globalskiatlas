@@ -47,7 +47,7 @@ import {
   fitComposer,
 } from "./look.js?v=s6";
 import { addResortIsland, updateIslandDust, updateIslandLod, setIslandOpacity, resetIslandLod } from "./island.js?v=lod3b";
-import { bindUi, setHud, openPanel, closePanel, updateLoading, clayLoadHtml, setOsmMapNote, setResortTitle, compactUi, setFlybyChrome, setHelpTips, paintSnowBtn, getRide, setRide } from "./ui.js?v=ride2";
+import { bindUi, setHud, openPanel, closePanel, updateLoading, clayLoadHtml, setOsmMapNote, setResortTitle, compactUi, setFlybyChrome, setHelpTips, paintSnowBtn, getRide, setRide } from "./ui.js?v=crowd4";
 import { atlasStatsHtml, prefetchWikiIndex } from "./atlas-stats.js?v=stats1";
 import { bindFinishChartScope, finishChartsHtml, prefetchFinishCharts } from "./finish-charts.js?v=1";
 import { bindOsmFix, osmFixHtml, osmFixContext } from "./osm-fix.js?v=1";
@@ -80,7 +80,7 @@ import {
   pisteLineForCourse,
 } from "./trail-map.js?v=mapall2";
 import { makeMinimap } from "./minimap.js?v=mapall1";
-import { createNpcSkiers, clearNpcSkiers, tickNpcSkiers, tryShoveNpc } from "./npc-skiers.js?v=trails1";
+import { createNpcSkiers, clearNpcSkiers, tickNpcSkiers, tryShoveNpc, loadCrowd, setCrowd, getCrowd } from "./npc-skiers.js?v=crowd4";
 import { SNOW, addCoverLines, cycleSnowLevel, getSnowLevel, loadSnowLevel, onPisteAt, setSnowLevel } from "./snow.js?v=snow18";
 import { updateTraffic } from "./traffic.js?v=vis16";
 import {
@@ -143,6 +143,7 @@ const STEP = 1 / 60;
 
 const ui = bindUi();
 loadSnowLevel();
+loadCrowd();
 paintSnowBtn(ui, getSnowLevel());
 bindFinishChartScope();
 bindOsmFix();
@@ -748,6 +749,16 @@ function onUiAct(act, courseId) {
     });
     return;
   }
+  if (act === "crowd" && courseId) {
+    setCrowd(courseId);
+    refreshCrowd();
+    ui.panel?.querySelectorAll('[data-act="crowd"]').forEach((b) => {
+      const on = b.dataset.scheme === getCrowd();
+      b.classList.toggle("on", on);
+      b.setAttribute("aria-pressed", on ? "true" : "false");
+    });
+    return;
+  }
   if (act === "snow-level" && courseId) {
     setSnowLevel(courseId);
     applySnowLevel(scene);
@@ -980,9 +991,13 @@ function applyCourse(course) {
   gateRoot = hf ? addGateMeshes(THREE, scene, run.gates, (x, z) => hf.sample(x, z)) : null;
   if (gateRoot) gateRoot.visible = false;
   resetGates(run);
+  refreshCrowd(pistePts);
+}
+
+function refreshCrowd(pistePts = run?.pistePts) {
   clearNpcSkiers(npcPack);
-  npcPack = TRAILER || !hf ? null : createNpcSkiers(THREE, scene, pisteLines, (x, z) => hf.sample(x, z), spawnXZ, pistePts);
-  dressSkiers();
+  npcPack = TRAILER || !hf || !pistePts ? null : createNpcSkiers(THREE, scene, pisteLines, (x, z) => hf.sample(x, z), spawnXZ, pistePts);
+  if (npcPack) dressSkiers();
 }
 
 function resetRun(opts = {}) {
