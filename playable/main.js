@@ -29,7 +29,7 @@ import { loadSnowboarder, mountSnowboarder } from "./snowboarder-model.js?v=2";
 import { featuredCourses, attachPisteDifficulty, courseFinish, createRun, tickRun, formatTime } from "./run.js?v=map5";
 import { coordsToXz, attachPiste, resetScore, tickScore, commitBestScore, formatScore, applyWipeout } from "./score.js?v=snow1";
 import { orientPiste, alongTrack, alongPolyline, placeGates, addGateMeshes, clearGateMeshes, resetGates, tickGates } from "./gates.js?v=vis20";
-import { addOsmWorld, applyPisteDecorDifficultyScheme, applySnowLevel, bendPine, seatMagicCarpets, tickPines } from "./osm-world.js?v=gate2";
+import { addOsmWorld, applyPisteDecorDifficultyScheme, applySnowLevel, bendPine, seatMagicCarpets, tickPines } from "./osm-world.js?v=warm3";
 import { snowTerrainMaterial, makeGroundScatter, updateGroundScatter } from "./ground.js?v=g5";
 import {
   addSkyAndLights,
@@ -80,7 +80,7 @@ import {
   pisteLineForCourse,
 } from "./trail-map.js?v=mapall2";
 import { makeMinimap } from "./minimap.js?v=mapall1";
-import { createNpcSkiers, clearNpcSkiers, tickNpcSkiers, tryShoveNpc } from "./npc-skiers.js?v=gate2";
+import { createNpcSkiers, clearNpcSkiers, tickNpcSkiers, tryShoveNpc } from "./npc-skiers.js?v=trails1";
 import { SNOW, addCoverLines, cycleSnowLevel, getSnowLevel, loadSnowLevel, onPisteAt, setSnowLevel } from "./snow.js?v=snow18";
 import { updateTraffic } from "./traffic.js?v=vis16";
 import {
@@ -571,27 +571,6 @@ function lobbySpan() {
   return trailMap?.bounds?.span || scene.userData.island?.span || 4000;
 }
 
-const HANDOFF_SEC = 0.65;
-let lobbyHandoff = null; // { t, duration }
-
-function setRootOpacity(root, opacity) {
-  if (!root) return;
-  root.traverse((o) => {
-    if (!o.isMesh) return;
-    const mats = Array.isArray(o.material) ? o.material : [o.material];
-    for (const m of mats) {
-      if (!m) continue;
-      // Snow materials are authored fully opaque; never latch a mid-fade value.
-      if (m.userData.baseOpacity == null) m.userData.baseOpacity = 1;
-      const op = Math.max(0, Math.min(1, opacity)) * m.userData.baseOpacity;
-      m.opacity = op;
-      m.transparent = op < 0.995;
-      m.depthWrite = op > 0.55;
-      m.needsUpdate = true;
-    }
-  });
-}
-
 function finalizeTerrainOpaque(root) {
   if (!root) return;
   root.traverse((o) => {
@@ -607,9 +586,9 @@ function finalizeTerrainOpaque(root) {
   });
 }
 
-/** Lobby shows the coarse island; play shows the full Draco terrain mesh. */
+/** Lobby shows the coarse island; play shows the full Draco terrain mesh.
+ * Hiding a mesh must not flip its material to transparent — that compiles a second snow shader on the first play frame. */
 function setTerrainLobbyMode(lobby) {
-  lobbyHandoff = null;
   const terrain = scene.userData.terrainRoot;
   const island = scene.userData.island;
   const islandPlay = !!(island?.root && !terrain);
@@ -618,11 +597,9 @@ function setTerrainLobbyMode(lobby) {
     if (terrain) {
       terrain.visible = !lobby;
       if (!lobby) finalizeTerrainOpaque(terrain);
-      else setRootOpacity(terrain, 0);
     }
     if (lobby) resetIslandLod(island, camera);
     else if (islandPlay) setIslandOpacity(island, 1);
-    else setIslandOpacity(island, 0);
   } else if (terrain) {
     terrain.visible = true;
     finalizeTerrainOpaque(terrain);
@@ -641,46 +618,6 @@ function seatShownCarpets(lobby) {
   }
   scene.userData.carpetLod = null;
   seatMagicCarpets(scene, scene.userData.terrainRoot);
-}
-
-function beginLobbyHandoff() {
-  const terrain = scene.userData.terrainRoot;
-  const island = scene.userData.island;
-  // Only crossfade when leaving the lobby island view — avoid a flash on restart.
-  const fromLobby = !!(island?.root?.visible);
-  if (!terrain || !island?.root || !fromLobby) {
-    setTerrainLobbyMode(false);
-    return false;
-  }
-  island.root.visible = true;
-  terrain.visible = true;
-  setIslandOpacity(island, 1, { capture: true });
-  setRootOpacity(terrain, 0);
-  lobbyHandoff = { t: 0, duration: HANDOFF_SEC };
-  return true;
-}
-
-function tickLobbyHandoff(dt) {
-  if (!lobbyHandoff) return false;
-  lobbyHandoff.t += dt;
-  const u = Math.min(1, lobbyHandoff.t / lobbyHandoff.duration);
-  // ease-in-out
-  const e = u * u * (3 - 2 * u);
-  const island = scene.userData.island;
-  const terrain = scene.userData.terrainRoot;
-  setIslandOpacity(island, 1 - e);
-  setRootOpacity(terrain, e);
-  if (u >= 1) {
-    lobbyHandoff = null;
-    if (island?.root) island.root.visible = false;
-    if (terrain) {
-      terrain.visible = true;
-      finalizeTerrainOpaque(terrain);
-    }
-    seatShownCarpets(false);
-    return false;
-  }
-  return true;
 }
 
 function setPistePlayMode(playing) {
@@ -711,7 +648,6 @@ function enterLobby(reframe) {
   if (!run) return;
   run.phase = "ready";
   acc = 0;
-  lobbyHandoff = null;
   setInspectAtmosphere(scene, look, true, lobbySpan());
   setIslandLobby(true);
   setTerrainLobbyMode(true);
@@ -738,7 +674,7 @@ function exitLobby() {
   fitPlayClip(camera);
   setInspectAtmosphere(scene, look, false);
   setIslandLobby(false);
-  beginLobbyHandoff();
+  setTerrainLobbyMode(false);
   if (trailMap) trailMap.root.visible = false;
   setPlayableVisible(true);
   document.body.style.cursor = "";
@@ -1443,7 +1379,40 @@ async function loadMountain() {
 
   trailMap = addTrailMap(THREE, scene, trailChoices, pisteLines, drap, skiArea);
   mini = makeMinimap(ui.minimap, trailMap);
+  await warmPlayGpu();
   resetRun({ lobby: true, reframe: true });
+}
+
+/** Compile and draw the play camera once while the load card is up.
+ * Shadows and the Draco mesh stay hidden until Start, so the first play frame used to stall 30s on shader compile. */
+async function warmPlayGpu() {
+  if (!run || !hf) return;
+  pushLoad({ message: "Preparing the slope…", pct: 0.99 });
+  await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  const canvas = renderer.domElement;
+  const prevDisplay = canvas.style.display;
+  const prevHidden = canvas.hidden;
+  canvas.hidden = false;
+  canvas.style.display = "block";
+  try {
+    fitRenderer();
+    fitPlayClip(camera);
+    setInspectAtmosphere(scene, look, false);
+    setIslandLobby(false);
+    setTerrainLobbyMode(false);
+    if (trailMap) trailMap.root.visible = false;
+    setPlayableVisible(true);
+    placeSkier();
+    followSun(look.sun, skier.position);
+    followSky(look.sky, camera);
+    if (typeof renderer.compileAsync === "function") await renderer.compileAsync(scene, camera);
+    composer.render();
+  } catch (err) {
+    console.warn("gpu warmup", err);
+  } finally {
+    canvas.hidden = prevHidden;
+    canvas.style.display = prevDisplay;
+  }
 }
 
 async function bootScene() {
@@ -1811,7 +1780,6 @@ function tick(now) {
     const pick = scene.userData.island?.lodPick;
     if (pick != null && pick !== scene.userData.carpetLod) seatShownCarpets(true);
   }
-  if (lobbyHandoff) tickLobbyHandoff(frameDt);
   if (run?.phase === "ready") updateIslandDust(scene.userData.island, frameDt);
   for (const lift of scene.userData.liftMotions || []) updateLiftMotion(THREE, lift, frameDt);
   if (scene.userData.traffic && hf) updateTraffic(scene.userData.traffic, frameDt, (x, z) => hf.sample(x, z));

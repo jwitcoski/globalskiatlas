@@ -941,14 +941,17 @@ async function loadTowerProto() {
   return towerProto;
 }
 
-/** Drop magic-carpet belts onto the snow mesh that is actually showing. */
+/** Drop magic-carpet belts onto the snow. The heightfield is the surface the skier stands on.
+ * Raycasting the Draco mesh (~1M tris, no spatial index) took ~126s for 1552 rays. */
 export function seatMagicCarpets(scene, ground) {
   if (!scene || !ground) return;
-  ground.updateMatrixWorld(true);
-  const raycaster = new THREE.Raycaster();
-  const down = new THREE.Vector3(0, -1, 0);
-  const origin = new THREE.Vector3();
+  const elev = scene.userData?.drapeElev;
+  const raycaster = elev ? null : new THREE.Raycaster();
+  const down = elev ? null : new THREE.Vector3(0, -1, 0);
+  const origin = elev ? null : new THREE.Vector3();
+  if (!elev) ground.updateMatrixWorld(true);
   function hitY(x, y, z) {
+    if (elev) return elev(x, z);
     origin.set(x, y + 80, z);
     raycaster.set(origin, down);
     raycaster.far = 160;

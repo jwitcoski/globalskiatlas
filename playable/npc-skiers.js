@@ -7,6 +7,10 @@ const SUITS = [0x2a6fdb, 0x1f8a4c, 0x7b3fa0, 0xe07a14, 0xc45a18, 0xd8342e, 0xf2c
 const SKIS = [0xf2c02e, 0x3a8fd4, 0xd8342e, 0x1f8a4c];
 const NPC_R = 0.55;
 const SEE = 280;
+const TRAIL_N = 16;
+const TRAIL_NEAR = 190;
+const TRAIL_WIDE = 480;
+const PER_TRAIL = 2;
 
 /** Lateral offset (m) = bias + amp * sin(along / wave + phase). |amp| > |bias| so they cut the >>>> line. */
 const KINDS = [
@@ -28,6 +32,110 @@ function sideAt(kind, along) {
 
 function sideSlope(kind, along) {
   return (kind.amp / kind.wave) * Math.cos(along / kind.wave + kind.phase);
+}
+
+function sameCorridor(a, b) {
+  if (!a?.length || !b?.length) return false;
+  const a0 = a[0];
+  const a1 = a[a.length - 1];
+  const b0 = b[0];
+  const b1 = b[b.length - 1];
+  const d = (p, q) => (p.x - q.x) * (p.x - q.x) + (p.z - q.z) * (p.z - q.z);
+  return (d(a0, b0) < 64 && d(a1, b1) < 64) || (d(a0, b1) < 64 && d(a1, b0) < 64);
+}
+
+/** Point 0 is uphill so `along` increases as they ski down. */
+function downhillPts(pts, elevFn) {
+  const a = pts[0];
+  const b = pts[pts.length - 1];
+  if (elevFn(a.x, a.z) + 1 < elevFn(b.x, b.z)) return pts.slice().reverse();
+  return pts;
+}
+
+function indexRoutes(lines, elevFn, course) {
+  const routes = [];
+  for (const line of lines || []) {
+    if (!line.pts || line.pts.length < 2 || sameCorridor(line.pts, course)) continue;
+    const pts = downhillPts(line.pts, elevFn);
+    const samples = [];
+    let walked = 0;
+    let next = 0;
+    for (let i = 1; i < pts.length; i++) {
+      const ax = pts[i - 1].x;
+      const az = pts[i - 1].z;
+      const bx = pts[i].x;
+      const bz = pts[i].z;
+      const seg = Math.hypot(bx - ax, bz - az);
+      while (walked + seg >= next) {
+        const t = seg > 0 ? (next - walked) / seg : 0;
+        samples.push({ x: ax + (bx - ax) * t, z: az + (bz - az) * t, along: next });
+        next += 32;
+        if (samples.length > 80) break;
+      }
+      walked += seg;
+      if (samples.length > 80) break;
+    }
+    if (walked < 50) continue;
+    const last = pts[pts.length - 1];
+    samples.push({ x: last.x, z: last.z, along: walked });
+    routes.push({ pts, len: walked, samples });
+  }
+  return routes;
+}
+
+function nearestOn(route, x, z) {
+  let best = Infinity;
+  let along = 0;
+  for (const s of route.samples) {
+    const d = (s.x - x) * (s.x - x) + (s.z - z) * (s.z - z);
+    if (d < best) {
+      best = d;
+      along = s.along;
+    }
+  }
+  return { dist: Math.sqrt(best), along };
+}
+
+function trailLoad(pack, route) {
+  let n = 0;
+  for (const npc of pack.list) if (npc.route === route) n += 1;
+  return n;
+}
+
+function pickTrail(pack, x, z, wide) {
+  const radius = wide ? TRAIL_WIDE : TRAIL_NEAR;
+  const r2 = radius * radius;
+  const hits = [];
+  for (const route of pack.routes) {
+    const n = nearestOn(route, x, z);
+    if (n.dist * n.dist > r2) continue;
+    const used = trailLoad(pack, route);
+    if (used >= PER_TRAIL) continue;
+    hits.push({ route, n, used });
+  }
+  if (!hits.length) return null;
+  hits.sort((a, b) => a.used - b.used || a.n.dist - b.n.dist);
+  const band = hits[0].used;
+  const tied = [];
+  for (const h of hits) {
+    if (h.used !== band) break;
+    tied.push(h);
+    if (tied.length === 5) break;
+  }
+  return tied[(Math.random() * tied.length) | 0];
+}
+
+function seatOnTrail(npc, hit) {
+  const route = hit.route;
+  let along = hit.n.along - (36 + Math.random() * 110);
+  if (along < 14) along = 14 + Math.random() * 40;
+  if (along > route.len - 16) along = Math.max(14, Math.min(route.len - 16, hit.n.along * 0.5));
+  npc.route = route;
+  npc.pts = route.pts;
+  npc.len = route.len;
+  npc.along = along;
+  npc.home = false;
+  npc.hold = 0.6;
 }
 
 export function createNpcSkiers(THREE, scene, lines, elevFn, _spawn, activePts) {
@@ -73,6 +181,19 @@ export function createNpcSkiers(THREE, scene, lines, elevFn, _spawn, activePts) 
     add(course, gaps[i] % Math.max(30, courseLen - 22), KINDS[i], true);
   }
 
+  pack.routes = indexRoutes(routes, elevFn, course);
+  const ox = _spawn?.x ?? course[0].x;
+  const oz = _spawn?.z ?? course[0].z;
+  for (let i = 0; i < TRAIL_N; i++) {
+    const before = pack.list.length;
+    add(course, 24, KINDS[i % KINDS.length], false);
+    if (pack.list.length === before) continue;
+    const rec = pack.list[pack.list.length - 1];
+    rec.hold = 0;
+    const hit = pickTrail(pack, ox, oz, true);
+    if (hit) seatOnTrail(rec, hit);
+  }
+
   return pack;
 }
 
@@ -100,7 +221,19 @@ export function tickNpcSkiers(THREE, pack, dt, player, hf, playerAlong = 0) {
       if (npc.along < playerAlong - 22) npc.along = playerAlong + 28 + (npc.speed % 11);
       if (npc.along > playerAlong + 160) npc.along = playerAlong + 22 + (npc.along % 13);
     }
-    if (npc.along > npc.len - 8) npc.along = 16 + (npc.along % 19);
+    if (!npc.home && npc.route) {
+      if (npc.hold > 0) npc.hold -= dt;
+      const done = npc.along > npc.len - 8;
+      const stray = nearestOn(npc.route, px, pz).dist > TRAIL_NEAR;
+      if ((done || stray) && npc.hold <= 0) {
+        const hit = pickTrail(pack, px, pz, false);
+        if (hit) seatOnTrail(npc, hit);
+        else if (done) npc.along = 16;
+        else npc.hold = 0.5;
+      }
+    } else if (npc.along > npc.len - 8) {
+      npc.along = 16 + (npc.along % 19);
+    }
     const p = alongPolyline(npc.pts, npc.along);
     const nx = -p.tz;
     const nz = p.tx;
@@ -174,3 +307,31 @@ export function tryShoveNpc(THREE, extras, pos, heading, hf, side = 1, pack) {
   beginFall(THREE, best, hf, s);
   return true;
 }
+
+function selfCheckTrails() {
+  const elev = (_x, z) => -z;
+  const course = [
+    { x: 0, z: 0 },
+    { x: 0, z: 400 },
+  ];
+  const lines = [
+    { pts: course },
+    { pts: [{ x: 80, z: 0 }, { x: 80, z: 500 }] },
+    { pts: [{ x: 40, z: 500 }, { x: 40, z: 0 }] },
+  ];
+  const routes = indexRoutes(lines, elev, course);
+  if (routes.length !== 2) throw new Error("course excluded, got " + routes.length);
+  const flipped = routes.find((r) => Math.abs(r.pts[0].x - 40) < 1);
+  if (!flipped || flipped.pts[0].z > flipped.pts[flipped.pts.length - 1].z) throw new Error("not downhill");
+  const pack = { list: [], routes };
+  const hit = pickTrail(pack, 0, 100, false);
+  if (!hit) throw new Error("no nearby trail");
+  const npc = {};
+  seatOnTrail(npc, hit);
+  if (npc.home !== false) throw new Error("home");
+  if (!(npc.along < hit.n.along)) throw new Error("should start uphill of the player");
+  console.log("npc trails ok");
+}
+
+const argv1 = typeof process !== "undefined" ? String(process.argv?.[1] || "").replace(/\\/g, "/") : "";
+if (argv1.endsWith("/npc-skiers.js") || argv1.endsWith("playable/npc-skiers.js")) selfCheckTrails();
