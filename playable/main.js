@@ -23,13 +23,13 @@ import {
   startShove,
   shoveShouldHit,
   markShoveHit,
-} from "./physics.js?v=pose3";
+} from "./physics.js?v=surf1";
 import { loadSkierModel, mountSkierModel } from "./skier-model.js?v=7";
 import { loadSnowboarder, mountSnowboarder } from "./snowboarder-model.js?v=2";
 import { featuredCourses, attachPisteDifficulty, courseFinish, createRun, tickRun, formatTime } from "./run.js?v=map5";
-import { coordsToXz, attachPiste, resetScore, tickScore, commitBestScore, formatScore, applyWipeout } from "./score.js?v=snow21";
+import { coordsToXz, attachPiste, resetScore, tickScore, commitBestScore, formatScore, applyWipeout } from "./score.js?v=surf1";
 import { orientPiste, alongTrack, alongPolyline, placeGates, addGateMeshes, clearGateMeshes, resetGates, tickGates } from "./gates.js?v=vis20";
-import { addOsmWorld, applyPisteDecorDifficultyScheme, applySnowLevel, bendPine, seatMagicCarpets, tickPines } from "./osm-world.js?v=snow24";
+import { addOsmWorld, applyPisteDecorDifficultyScheme, applySnowLevel, bendPine, seatMagicCarpets, tickPines } from "./osm-world.js?v=surf1";
 import { snowTerrainMaterial, makeGroundScatter, updateGroundScatter } from "./ground.js?v=g5";
 import {
   addSkyAndLights,
@@ -47,7 +47,7 @@ import {
   fitComposer,
 } from "./look.js?v=s6";
 import { addResortIsland, updateIslandDust, updateIslandLod, setIslandOpacity, resetIslandLod } from "./island.js?v=lod3b";
-import { bindUi, setHud, openPanel, closePanel, updateLoading, clayLoadHtml, setOsmMapNote, setResortTitle, compactUi, setFlybyChrome, setHelpTips, paintSnowBtn, getRide, setRide } from "./ui.js?v=snow21";
+import { bindUi, setHud, openPanel, closePanel, updateLoading, clayLoadHtml, setOsmMapNote, setResortTitle, compactUi, setFlybyChrome, setHelpTips, paintSnowBtn, getRide, setRide } from "./ui.js?v=surf1";
 import { atlasStatsHtml, prefetchWikiIndex } from "./atlas-stats.js?v=stats1";
 import { bindFinishChartScope, finishChartsHtml, prefetchFinishCharts } from "./finish-charts.js?v=1";
 import { bindOsmFix, osmFixHtml, osmFixContext } from "./osm-fix.js?v=1";
@@ -58,7 +58,7 @@ import { capDpr, attachDebug } from "./debug.js?v=mob1";
 import { intentsFrom, isTurning, analogAxes } from "./input.js?v=s5";
 import { bindMobileChrome, bindPads } from "./mobile.js?v=s5";
 import { bakePisteSculpt, drapeSculptOnMesh } from "./piste-sculpt.js?v=feel3";
-import { addTrailMarks, clearTrailMarks, repairFences, updateTrailMarks } from "./trail-marks.js?v=snow21";
+import { addTrailMarks, clearTrailMarks, repairFences, updateTrailMarks } from "./trail-marks.js?v=surf1";
 import { makeYeti, resetYeti, parkYetiAtStart, tickYeti } from "./yeti.js?v=vis19";
 import { createSkiWake, clearSkiWake, pushSkiWake, updateSkiWake } from "./ski-wake.js?v=powder1";
 import {
@@ -81,7 +81,7 @@ import {
 } from "./trail-map.js?v=mapall2";
 import { makeMinimap } from "./minimap.js?v=mapall1";
 import { createNpcSkiers, clearNpcSkiers, tickNpcSkiers, tryShoveNpc, loadCrowd, setCrowd, getCrowd } from "./npc-skiers.js?v=crowd4";
-import { SNOW, addCoverLines, cycleSnowLevel, getSnowLevel, loadSnowLevel, onPisteAt, setSnowLevel } from "./snow.js?v=snow21";
+import { SNOW, addCoverLines, cycleSnowLevel, getSnowLevel, loadSnowLevel, onPisteAt, setSnowLevel, loadSurface, setSurface, getSurface } from "./snow.js?v=surf1";
 import { updateTraffic } from "./traffic.js?v=vis16";
 import {
   TRAILER,
@@ -143,6 +143,7 @@ const STEP = 1 / 60;
 
 const ui = bindUi();
 loadSnowLevel();
+loadSurface();
 loadCrowd();
 paintSnowBtn(ui, getSnowLevel());
 bindFinishChartScope();
@@ -754,6 +755,15 @@ function onUiAct(act, courseId) {
     refreshCrowd();
     ui.panel?.querySelectorAll('[data-act="crowd"]').forEach((b) => {
       const on = b.dataset.scheme === getCrowd();
+      b.classList.toggle("on", on);
+      b.setAttribute("aria-pressed", on ? "true" : "false");
+    });
+    return;
+  }
+  if (act === "surface" && courseId) {
+    setSurface(courseId);
+    ui.panel?.querySelectorAll('[data-act="surface"]').forEach((b) => {
+      const on = b.dataset.scheme === getSurface();
       b.classList.toggle("on", on);
       b.setAttribute("aria-pressed", on ? "true" : "false");
     });
@@ -1773,7 +1783,7 @@ function tick(now) {
       pushSkiWake(wake, hf, skier.position.x, skier.position.z, heading, vel.length(), frameDt, !air.on);
       updateSkiWake(wake, hf, frameDt);
       updateSpray(spray, skier, heading, vel.length(), frameDt, keys, hf, {
-        powder: run.onPiste === false,
+        powder: run.onPiste === false || getSurface() === "powder",
         skid: skier.userData.skid || 0,
         air: air.on,
       });

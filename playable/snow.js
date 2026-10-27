@@ -14,6 +14,39 @@ export const SNOW_LABEL = {
 };
 export const SNOW_KEYS = Object.keys(SNOW);
 
+/** How the snow skis. Corduroy is the current groomed feel. */
+export const SURFACE_KEYS = ["ice", "corduroy", "powder"];
+export const SURFACE_LABEL = {
+  ice: "Ice",
+  corduroy: "Corduroy",
+  powder: "Powder",
+};
+const SURFACE_STORE = "gsa-surface";
+let surface = "corduroy";
+
+export function getSurface() {
+  return surface;
+}
+
+export function loadSurface() {
+  try {
+    const s = localStorage.getItem(SURFACE_STORE);
+    if (SURFACE_LABEL[s]) surface = s;
+  } catch {
+    /* ignore */
+  }
+}
+
+export function setSurface(next) {
+  if (!SURFACE_LABEL[next]) return;
+  surface = next;
+  try {
+    localStorage.setItem(SURFACE_STORE, next);
+  } catch {
+    /* ignore */
+  }
+}
+
 const STORE = "gsa-snow-level";
 let snowLevel = SNOW_DEFAULT;
 

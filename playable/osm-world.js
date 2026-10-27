@@ -19,7 +19,7 @@ import {
   getSnowLevel,
   loadSnowLevel,
   snowEdgeFade,
-} from "./snow.js?v=snow21";
+} from "./snow.js?v=surf1";
 
 const GRID = 12;
 const MAX_FILL_SPAN = 700;

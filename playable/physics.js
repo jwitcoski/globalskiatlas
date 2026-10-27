@@ -1,6 +1,18 @@
 /** Arcade ski on DEM. Gravity is fall-line only (none on flats). Custom, not Rapier. */
 
 import { analogAxes } from "./input.js?v=s5";
+import { getSurface } from "./snow.js?v=surf1";
+
+/** Multipliers on the groomed step. Ice barely yaws and holds speed. Powder is slow and mushy. */
+const SURFACE = {
+  ice: { turn: 0.04, drag: 0.22, max: 1.4, skid: 0.25, tuck: 1.35 },
+  corduroy: { turn: 1, drag: 1, max: 1, skid: 1, tuck: 1 },
+  powder: { turn: 0.62, drag: 2.6, max: 0.6, skid: 1.7, tuck: 0.4 },
+};
+
+export function surfaceFeel(id = getSurface()) {
+  return SURFACE[id] || SURFACE.corduroy;
+}
 
 const G_FALL = 32;
 const TURN = 0.98;
@@ -693,12 +705,12 @@ function shoveStroke(u) {
 }
 
 /** Split velocity into along-ski and sideways, then bleed only the sideways part. */
-function carve(THREE, vel, fwd, edged, powder, dt) {
+function carve(THREE, vel, fwd, edged, powder, dt, skidMul = 1) {
   const along = vel.dot(fwd);
   const lat = v3(THREE, _lat).copy(vel).addScaledVector(fwd, -along);
   const skidLen = lat.length();
   if (skidLen < 1e-6) return 0;
-  const rate = (edged ? SKID_EDGE : SKID_BASE) + (powder ? POWDER_SKID : 0);
+  const rate = ((edged ? SKID_EDGE : SKID_BASE) + (powder ? POWDER_SKID : 0)) * skidMul;
   lat.multiplyScalar(Math.exp(-rate * dt));
   vel.copy(fwd).multiplyScalar(along).add(lat);
   return skidLen;
@@ -775,7 +787,8 @@ export function stepSki(THREE, { pos, vel, heading, keys, hf, dt, trees, air, on
 
   const turn = readTurn(keys);
   const speed = vel.length();
-  const yawRate = TURN / (1 + speed * TURN_DAMP);
+  const feel = onPiste ? surfaceFeel() : null;
+  const yawRate = (TURN * (feel?.turn ?? 1)) / (1 + speed * TURN_DAMP);
   if (Math.abs(turn) > 0.04) {
     const yaw = turn * yawRate * dt;
     heading += yaw;
@@ -791,8 +804,8 @@ export function stepSki(THREE, { pos, vel, heading, keys, hf, dt, trees, air, on
   if (fwd.lengthSq() < 1e-8) fwd.copy(fall);
   fwd.normalize();
 
-  const powder = !onPiste;
-  const skid = carve(THREE, vel, fwd, Math.abs(turn) > 0.12 && speed > 0.8, powder, dt);
+  const bare = !onPiste;
+  const skid = carve(THREE, vel, fwd, Math.abs(turn) > 0.12 && speed > 0.8, bare, dt, feel?.skid ?? 1);
 
   const autoTuck = speed > 11 && grade > 0.05;
   const wantFwd = wantTuck(keys) || autoTuck;
@@ -813,14 +826,15 @@ export function stepSki(THREE, { pos, vel, heading, keys, hf, dt, trees, air, on
       if (next > POLE_MAX) vel.addScaledVector(fwd, POLE_MAX - next);
     }
   } else if (onPiste && wantFwd && !braking) {
-    vel.addScaledVector(fwd, TUCK * dt);
+    vel.addScaledVector(fwd, TUCK * (feel?.tuck ?? 1) * dt);
   }
   if (braking) vel.multiplyScalar(Math.max(0, 1 - BRAKE * dt));
   const across = 1 - Math.max(0, fwd.dot(fall));
-  const drag = DRAG + TRAVERSE_DRAG * across * across + (powder ? BARE_DRAG : 0);
+  const drag = DRAG * (feel?.drag ?? 1) + TRAVERSE_DRAG * across * across + (bare ? BARE_DRAG : 0);
   vel.multiplyScalar(Math.max(0, 1 - drag * dt));
   vel.addScaledVector(n, -vel.dot(n));
-  if (vel.length() > MAX_SPD) vel.setLength(MAX_SPD);
+  const cap = MAX_SPD * (feel?.max ?? 1);
+  if (vel.length() > cap) vel.setLength(cap);
 
   const y0 = pos.y - RIDE;
   const vy0 = vel.y;
@@ -1176,3 +1190,18 @@ export function applyCamShake(camera, shake, dt) {
   camera.rotateY(Math.sin(t * 2.3 + 1.1) * s * SHAKE_YAW);
   camera.rotateZ(Math.sin(t * 1.31 + 2.7) * s * SHAKE_ROLL);
 }
+
+function selfCheckSurface() {
+  const ice = surfaceFeel("ice");
+  const groomed = surfaceFeel("corduroy");
+  const pow = surfaceFeel("powder");
+  if (!(ice.turn < 0.1 && ice.drag < groomed.drag && ice.max > groomed.max)) throw new Error("ice");
+  if (groomed.turn !== 1 || groomed.drag !== 1) throw new Error("corduroy");
+  if (!(pow.drag > groomed.drag && pow.max < groomed.max && pow.turn > ice.turn && pow.turn < groomed.turn)) {
+    throw new Error("powder");
+  }
+  console.log("surface ok");
+}
+
+const argv1 = typeof process !== "undefined" ? String(process.argv?.[1] || "").replace(/\\/g, "/") : "";
+if (argv1.endsWith("/physics.js") || argv1.endsWith("playable/physics.js")) selfCheckSurface();

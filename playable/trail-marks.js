@@ -1,7 +1,7 @@
 /** Ice-blue path decals on the OSM centerline, plus low boundary fences on both piste edges. */
 
 import { alongPolyline, polylineLen } from "./gates.js?v=vis20";
-import { snowHalfM } from "./snow.js?v=snow21";
+import { snowHalfM } from "./snow.js?v=surf1";
 
 const CHEV_STEP = 7.6;
 const SHOW_BACK = 10;
