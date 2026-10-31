@@ -23,14 +23,15 @@ import {
   startShove,
   shoveShouldHit,
   markShoveHit,
-} from "./physics.js?v=surf1";
-import { loadSkierModel, mountSkierModel } from "./skier-model.js?v=7";
-import { loadSnowboarder, mountSnowboarder } from "./snowboarder-model.js?v=2";
+} from "./physics.js?v=surf3";
+import { loadSkierModel, mountSkierModel } from "./skier-model.js?v=8";
+import { loadSnowboarder, mountSnowboarder } from "./snowboarder-model.js?v=3";
 import { featuredCourses, attachPisteDifficulty, courseFinish, createRun, tickRun, formatTime } from "./run.js?v=map5";
-import { coordsToXz, attachPiste, resetScore, tickScore, commitBestScore, formatScore, applyWipeout } from "./score.js?v=surf1";
+import { coordsToXz, attachPiste, resetScore, tickScore, commitBestScore, formatScore, applyWipeout } from "./score.js?v=surf2";
 import { orientPiste, alongTrack, alongPolyline, placeGates, addGateMeshes, clearGateMeshes, resetGates, tickGates } from "./gates.js?v=vis20";
-import { addOsmWorld, applyPisteDecorDifficultyScheme, applySnowLevel, bendPine, seatMagicCarpets, tickPines } from "./osm-world.js?v=snow1";
-import { snowTerrainMaterial, makeGroundScatter, updateGroundScatter } from "./ground.js?v=g5";
+import { addOsmWorld, applyPisteDecorDifficultyScheme, applySnowLevel, applySurfaceLook, bendPine, seatMagicCarpets, tickPines } from "./osm-world.js?v=snow17";
+import { snowTerrainMaterial, makeGroundScatter, updateGroundScatter, setGroundDetail, displaceSnowMesh } from "./ground.js?v=g20";
+import { setSnowDetail } from "./snow-field.js?v=sf1";
 import {
   addSkyAndLights,
   followSky,
@@ -42,12 +43,13 @@ import {
   updateSpray,
   makeFallingSnow,
   updateFallingSnow,
+  setFallingSnow,
   setInspectAtmosphere,
   makeComposer,
   fitComposer,
-} from "./look.js?v=s6";
-import { addResortIsland, updateIslandDust, updateIslandLod, setIslandOpacity, resetIslandLod } from "./island.js?v=lod3b";
-import { bindUi, setHud, openPanel, closePanel, updateLoading, clayLoadHtml, setOsmMapNote, setResortTitle, compactUi, setFlybyChrome, setHelpTips, paintSnowBtn, getRide, setRide } from "./ui.js?v=surf1";
+} from "./look.js?v=s12";
+import { addResortIsland, updateIslandDust, updateIslandLod, setIslandOpacity, resetIslandLod } from "./island.js?v=lod3c";
+import { bindUi, setHud, openPanel, closePanel, updateLoading, clayLoadHtml, setOsmMapNote, setResortTitle, compactUi, setFlybyChrome, setHelpTips, paintSnowBtn, getRide, setRide } from "./ui.js?v=surf2";
 import { atlasStatsHtml, prefetchWikiIndex } from "./atlas-stats.js?v=stats1";
 import { bindFinishChartScope, finishChartsHtml, prefetchFinishCharts } from "./finish-charts.js?v=1";
 import { bindOsmFix, osmFixHtml, osmFixContext } from "./osm-fix.js?v=1";
@@ -58,7 +60,7 @@ import { capDpr, attachDebug } from "./debug.js?v=mob1";
 import { intentsFrom, isTurning, analogAxes } from "./input.js?v=s5";
 import { bindMobileChrome, bindPads } from "./mobile.js?v=s5";
 import { bakePisteSculpt, drapeSculptOnMesh } from "./piste-sculpt.js?v=feel3";
-import { addTrailMarks, clearTrailMarks, repairFences, updateTrailMarks } from "./trail-marks.js?v=surf1";
+import { addTrailMarks, clearTrailMarks, repairFences, updateTrailMarks } from "./trail-marks.js?v=surf2";
 import { makeYeti, resetYeti, parkYetiAtStart, tickYeti } from "./yeti.js?v=vis19";
 import { createSkiWake, clearSkiWake, pushSkiWake, updateSkiWake } from "./ski-wake.js?v=powder1";
 import {
@@ -81,7 +83,7 @@ import {
 } from "./trail-map.js?v=mapall2";
 import { makeMinimap } from "./minimap.js?v=mapall1";
 import { createNpcSkiers, clearNpcSkiers, tickNpcSkiers, tryShoveNpc, loadCrowd, setCrowd, getCrowd } from "./npc-skiers.js?v=crowd4";
-import { SNOW, addCoverLines, cycleSnowLevel, getSnowLevel, loadSnowLevel, onPisteAt, setSnowLevel, loadSurface, setSurface, getSurface } from "./snow.js?v=surf1";
+import { SNOW, addCoverLines, cycleSnowLevel, getSnowLevel, loadSnowLevel, onPisteAt, setSnowLevel, loadSurface, setSurface, getSurface } from "./snow.js?v=surf3";
 import { updateTraffic } from "./traffic.js?v=vis16";
 import {
   TRAILER,
@@ -116,6 +118,8 @@ function isLocalDev() {
 }
 
 function sceneAssetsBase() {
+  const scenes = new URLSearchParams(location.search).get("scenes");
+  if (scenes) return new URL(scenes.endsWith("/") ? scenes : `${scenes}/`);
   if (isLocalDev()) return new URL("/game_scenes/", location.origin);
   return new URL(PUBLIC_SCENES);
 }
@@ -160,6 +164,9 @@ addEventListener("keyup", (e) => keys.delete(e.code));
 addEventListener("blur", () => keys.clear());
 bindPads(keys);
 const mobile = bindMobileChrome(keys);
+const snowHi = !matchMedia("(pointer: coarse)").matches;
+setSnowDetail(snowHi);
+setGroundDetail(snowHi);
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.5, 24000);
@@ -635,7 +642,10 @@ function setPlayableVisible(on) {
   skier.visible = on;
   blob.visible = on;
   spray.visible = on;
-  if (flakes?.pts) flakes.pts.visible = on;
+  if (flakes) {
+    flakes.playing = on;
+    setFallingSnow(flakes);
+  }
   if (wake) wake.mesh.visible = on && wake.samples.length > 1;
   if (marksRoot) marksRoot.visible = on;
   if (gateRoot) gateRoot.visible = on;
@@ -762,6 +772,7 @@ function onUiAct(act, courseId) {
   }
   if (act === "surface" && courseId) {
     setSurface(courseId);
+    applySurfaceLook(scene);
     ui.panel?.querySelectorAll('[data-act="surface"]').forEach((b) => {
       const on = b.dataset.scheme === getSurface();
       b.classList.toggle("on", on);
@@ -1303,12 +1314,13 @@ async function loadMountain() {
     pistePolys.push(coordsToXz(f.geometry.coordinates));
   }
   bakePisteSculpt(hf, pistePolys);
-  drapeSculptOnMesh(terrainRoot, hf);
 
   const drap = (x, z) => hf.sample(x, z);
   pushLoad({ message: "Draping OSM on the mountain…", pct: 0.92 });
   await breathe();
-  const osmCounts = await addOsmWorld(THREE, scene, SCENE_ROOT, manifest, drap);
+  const osmCounts = await addOsmWorld(THREE, scene, SCENE_ROOT, manifest, drap, hf);
+  drapeSculptOnMesh(terrainRoot, hf);
+  displaceSnowMesh(THREE, terrainRoot);
   console.info("OSM world", osmCounts);
   pushLoad({ message: "Readying the run…", pct: 0.98 });
 
@@ -1617,7 +1629,7 @@ document.addEventListener("visibilitychange", () => {
 
 function tick(now) {
   requestAnimationFrame(tick);
-  tickPines(scene, now);
+  tickPines(scene, now, camera);
   if (clayHold || document.body.classList.contains("picker")) {
     last = now;
     return;
@@ -1674,6 +1686,7 @@ function tick(now) {
           air,
           onPiste: run.onPiste !== false,
           extras,
+          shake,
         });
         heading = st.heading;
         skier.userData.steer = st.steer;
@@ -1776,11 +1789,12 @@ function tick(now) {
     });
     if (!freeze) {
       const blobY = hf.sample(skier.position.x, skier.position.z);
-      blob.position.set(skier.position.x, blobY + 0.03, skier.position.z);
+      blob.position.set(skier.position.x, blobY + 0.1, skier.position.z);
       const lift = Math.min(1, (air.height || 0) / 5);
       blob.scale.setScalar(1 + lift * 0.9);
       blob.material.opacity = 0.22 * (1 - lift * 0.55);
-      pushSkiWake(wake, hf, skier.position.x, skier.position.z, heading, vel.length(), frameDt, !air.on);
+      /* Ice takes no track: the frozen ribs stay unmarked. */
+      pushSkiWake(wake, hf, skier.position.x, skier.position.z, heading, vel.length(), frameDt, !air.on && getSurface() !== "ice");
       updateSkiWake(wake, hf, frameDt);
       updateSpray(spray, skier, heading, vel.length(), frameDt, keys, hf, {
         powder: run.onPiste === false || getSurface() === "powder",
@@ -1837,9 +1851,87 @@ function tick(now) {
       : skier.position;
   followSun(look.sun, sunFocus);
   composer.render();
+  if (run?.phase === "running") {
+    window.__skiFrameN = (window.__skiFrameN || 0) + 1;
+    if (window.__skiFrameN === 20) {
+      const c = renderer.domElement;
+      const gl = renderer.getContext();
+      const vp = gl.getParameter(gl.VIEWPORT);
+      const r = c.getBoundingClientRect();
+      const grab = document.createElement("canvas").getContext("2d", { willReadFrequently: true });
+      const row = [];
+      for (let i = 0; i < 8; i++) {
+        const x = Math.floor((c.width - 1) * i / 7);
+        const y = Math.floor(c.height * 0.55);
+        grab.canvas.width = 1;
+        grab.canvas.height = 1;
+        grab.drawImage(c, x, y, 1, 1, 0, 0, 1, 1);
+        const d = grab.getImageData(0, 0, 1, 1).data;
+        row.push([x, d[0], d[1], d[2]]);
+      }
+      const hit = document.elementFromPoint(40, Math.floor(innerHeight * 0.55));
+      console.warn("[ski-frame] screen " + JSON.stringify({
+        buf: [c.width, c.height],
+        css: [Math.round(r.width), Math.round(r.height), Math.round(r.left), Math.round(r.top)],
+        dpr: renderer.getPixelRatio(),
+        vp: [vp[0], vp[1], vp[2], vp[3]],
+        hit: hit ? (hit.id || hit.tagName) : null,
+        row,
+      }));
+    }
+  }
+  blackBoxProbe();
   if (trailerNeedsPaint()) paintTrailerFrame(renderer.domElement);
   dbg.tick(frameDt);
 }
+
+// Samples the canvas every 10 frames; logs once per transition when the right half goes black.
+let probeN = 0;
+let probeBlack = false;
+let probeGrab = null;
+function blackBoxProbe() {
+  if (++probeN % 10) return;
+  const c = renderer.domElement;
+  probeGrab ||= document.createElement("canvas").getContext("2d", { willReadFrequently: true });
+  probeGrab.canvas.width = probeGrab.canvas.height = 1;
+  const sample = (fx, fy) => {
+    probeGrab.drawImage(c, Math.floor((c.width - 1) * fx), Math.floor((c.height - 1) * fy), 1, 1, 0, 0, 1, 1);
+    const d = probeGrab.getImageData(0, 0, 1, 1).data;
+    return [d[0], d[1], d[2], d[3]];
+  };
+  const pts = [0.1, 0.3, 0.5, 0.7, 0.9].map((fx) => [fx, sample(fx, 0.5)]);
+  const black = pts.slice(2).every(([, p]) => p[0] + p[1] + p[2] === 0);
+  if (black === probeBlack) return;
+  probeBlack = black;
+  if (black) window.skiTrace?.(2);
+  const gl = renderer.getContext();
+  const r = c.getBoundingClientRect();
+  const hit = document.elementFromPoint(innerWidth * 0.7, innerHeight * 0.5);
+  console.warn("[ski-black] " + (black ? "BLACK START" : "recovered"), JSON.stringify({
+    t: run?.t ?? null,
+    phase: run?.phase,
+    frame: probeN,
+    pts,
+    buf: [c.width, c.height],
+    drawBuf: [gl.drawingBufferWidth, gl.drawingBufferHeight],
+    css: [Math.round(r.left), Math.round(r.top), Math.round(r.width), Math.round(r.height)],
+    inner: [innerWidth, innerHeight],
+    vv: window.visualViewport ? [Math.round(visualViewport.width), Math.round(visualViewport.height), visualViewport.scale] : null,
+    dpr: renderer.getPixelRatio(),
+    vp: Array.from(gl.getParameter(gl.VIEWPORT)),
+    scissorOn: gl.isEnabled(gl.SCISSOR_TEST),
+    scissor: Array.from(gl.getParameter(gl.SCISSOR_BOX)),
+    glError: gl.getError(),
+    lost: gl.isContextLost(),
+    composerRT: [composer.renderTarget1.width, composer.renderTarget1.height],
+    hit: hit ? (hit.id || hit.tagName) + "." + hit.className : null,
+    camAspect: camera.aspect,
+    camPos: camera.position.toArray().map((v) => +v.toFixed(1)),
+    info: { calls: renderer.info.render.calls, tris: renderer.info.render.triangles },
+  }));
+}
+renderer.domElement.addEventListener("webglcontextlost", (e) => console.error("[ski-black] webglcontextlost", e.statusMessage));
+renderer.domElement.addEventListener("webglcontextrestored", () => console.warn("[ski-black] webglcontextrestored"));
 requestAnimationFrame(tick);
 addEventListener("resize", fitRenderer);
 addEventListener("orientationchange", fitRenderer);
@@ -1864,7 +1956,16 @@ armTrailer({
   displayName: () => lastManifest?.display_name || courseName,
 });
 
-window.__ski = { scene, camera, orbit, renderer };
+window.__ski = {
+  scene,
+  camera,
+  orbit,
+  renderer,
+  start: () => {
+    endClayPick();
+    resetRun({ lobby: false });
+  },
+};
 window.__THREE_GAME_DIAGNOSTICS__ = {
   renderer: renderer.info,
   physics: { engine: "custom-dem", timestep: STEP, gravity: "fall-line * grade", gFall: 32, turn: 0.98 },

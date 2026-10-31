@@ -1,4 +1,4 @@
-/** Overcast winter look. Exported terrain only. Original materials — not Slow Roads assets. */
+/** Bright ski-day light. Sunlit snow stays warm; shade stays blue-white. */
 
 import * as THREE from "three";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
@@ -9,7 +9,7 @@ import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { intentsFrom } from "./input.js?v=s5";
 
 const SUN_DIR = { x: 0.42, y: 0.88, z: 0.22 };
-const FOG = 0xc5dff0;
+const FOG = 0xd4e8f6;
 const SKI_FOG_DENSITY = 0.00048;
 
 function flakeTexture(THREE) {
@@ -29,7 +29,7 @@ function flakeTexture(THREE) {
 
 export function addSkyAndLights(THREE, scene, renderer) {
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.32;
+  renderer.toneMappingExposure = 1.16;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -54,8 +54,8 @@ export function addSkyAndLights(THREE, scene, renderer) {
       depthWrite: false,
       fog: false,
       uniforms: {
-        uTop: { value: new THREE.Color(0x4ea6e0) },
-        uHorizon: { value: new THREE.Color(0xd7ebf7) },
+        uTop: { value: new THREE.Color(0x5aaff0) },
+        uHorizon: { value: new THREE.Color(0xe7f3fb) },
       },
       vertexShader: `varying vec3 vDir;
         void main(){ vDir = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
@@ -72,8 +72,8 @@ export function addSkyAndLights(THREE, scene, renderer) {
   sky.renderOrder = -10;
   scene.add(sky);
 
-  scene.add(new THREE.HemisphereLight(0xd8e8f6, 0xe6eef4, 1.38));
-  const sun = new THREE.DirectionalLight(0xfff4dc, 1.78);
+  scene.add(new THREE.HemisphereLight(0xc5def6, 0xd7e8f8, 0.95));
+  const sun = new THREE.DirectionalLight(0xffe4b8, 2.05);
   sun.position.set(SUN_DIR.x * 900, SUN_DIR.y * 900, SUN_DIR.z * 900);
   sun.castShadow = true;
   sun.shadow.mapSize.set(1024, 1024);
@@ -89,19 +89,153 @@ export function addSkyAndLights(THREE, scene, renderer) {
   sc.updateProjectionMatrix();
   scene.add(sun);
   scene.add(sun.target);
-  const fill = new THREE.DirectionalLight(0x9ec0dc, 0.38);
+  const fill = new THREE.DirectionalLight(0x8eb6dc, 0.46);
   fill.position.set(-500, 180, 320);
   scene.add(fill);
   return { sky, sun };
+}
+
+/**
+ * Shadow rendering sets the GL viewport to the 1024² map. If that restore is
+ * skipped, the composer target (already cleared black) keeps an unpainted strip.
+ * That strip is screen-fixed while the mountain slides under it.
+ */
+function frameSnap(renderer, gl) {
+  const vp = gl.getParameter(gl.VIEWPORT);
+  const sc = gl.getParameter(gl.SCISSOR_BOX);
+  const rt = renderer.getRenderTarget();
+  return {
+    vp: [vp[0], vp[1], vp[2], vp[3]],
+    scissor: gl.isEnabled(gl.SCISSOR_TEST),
+    sc: [sc[0], sc[1], sc[2], sc[3]],
+    rt: rt ? [rt.width, rt.height, rt.viewport.z, rt.viewport.w] : null,
+    buf: [gl.drawingBufferWidth, gl.drawingBufferHeight],
+  };
+}
+
+function viewportMiss(snap) {
+  const w = snap.rt ? snap.rt[0] : snap.buf[0];
+  const h = snap.rt ? snap.rt[1] : snap.buf[1];
+  const vp = snap.vp;
+  return vp[0] !== 0 || vp[1] !== 0 || vp[2] !== w || vp[3] !== h || snap.scissor;
+}
+
+function keepFullFrame(renderer) {
+  const gl = renderer.getContext();
+  const drawShadows = renderer.shadowMap.render.bind(renderer.shadowMap);
+  let shadowLogs = 0;
+  renderer.shadowMap.render = function (lights, scene, camera) {
+    const rt = renderer.getRenderTarget();
+    const before = frameSnap(renderer, gl);
+    try {
+      drawShadows(lights, scene, camera);
+    } finally {
+      const afterShadow = frameSnap(renderer, gl);
+      if (rt) {
+        rt.viewport.set(0, 0, rt.width, rt.height);
+        rt.scissor.set(0, 0, rt.width, rt.height);
+        rt.scissorTest = false;
+      }
+      renderer.setRenderTarget(rt);
+      renderer.setScissorTest(false);
+      const w = rt ? rt.width : gl.drawingBufferWidth;
+      const h = rt ? rt.height : gl.drawingBufferHeight;
+      gl.disable(gl.SCISSOR_TEST);
+      gl.viewport(0, 0, w, h);
+      const afterRestore = frameSnap(renderer, gl);
+      const bad = viewportMiss(afterShadow) || viewportMiss(afterRestore);
+      if ((bad || (lights.length > 0 && shadowLogs === 0)) && shadowLogs < 8) {
+        shadowLogs++;
+        console.warn("[ski-frame] shadow viewport " + JSON.stringify({
+          bad,
+          lights: lights.length,
+          expect: [w, h],
+          before,
+          afterShadow,
+          afterRestore,
+        }));
+      }
+    }
+  };
+
+  const renderScene = renderer.render.bind(renderer);
+  let drawLogs = 0;
+  renderer.render = function (scene, camera) {
+    renderScene(scene, camera);
+    const snap = frameSnap(renderer, gl);
+    if (!viewportMiss(snap) || drawLogs >= 8) return;
+    drawLogs++;
+    console.warn("[ski-frame] scene draw viewport " + JSON.stringify(snap));
+  };
+}
+
+/** Set frames > 0 (or call window.skiTrace()) to log per-pass state for that many frames. */
+export const skiTrace = { frames: 0 };
+window.skiTrace = (n = 2) => (skiTrace.frames = n);
+
+function sampleRT(renderer, rt, fx) {
+  if (!rt) return null;
+  const half = rt.texture.type === THREE.HalfFloatType;
+  const px = half ? new Uint16Array(4) : new Uint8Array(4);
+  try {
+    renderer.readRenderTargetPixels(rt, Math.floor((rt.width - 1) * fx), Math.floor(rt.height / 2), 1, 1, px);
+  } catch (e) {
+    return "err:" + e.message;
+  }
+  return Array.from(px.slice(0, 3), (v) => (half ? +THREE.DataUtils.fromHalfFloat(v).toFixed(3) : v));
+}
+
+/** Logs viewport/scissor and the pixels each composer pass leaves behind, only while tracing. */
+function tracePasses(composer, renderer) {
+  const gl = renderer.getContext();
+  for (const name of ["viewport", "scissor"]) {
+    const orig = gl[name].bind(gl);
+    gl[name] = (x, y, w, h) => {
+      const rt = renderer.getRenderTarget();
+      const fw = rt ? rt.width : gl.drawingBufferWidth;
+      const fh = rt ? rt.height : gl.drawingBufferHeight;
+      if (skiTrace.frames > 0 && (x !== 0 || y !== 0 || w !== fw || h !== fh)) {
+        console.warn("[ski-trace] gl." + name, JSON.stringify([x, y, w, h]), "full:", [fw, fh], new Error().stack.split("\n").slice(2, 5).join(" | "));
+      }
+      return orig(x, y, w, h);
+    };
+  }
+  for (const pass of composer.passes) {
+    const orig = pass.render.bind(pass);
+    const label = pass.constructor.name;
+    pass.render = function (r, write, read, ...rest) {
+      orig(r, write, read, ...rest);
+      if (skiTrace.frames <= 0) return;
+      if (pass === composer.passes[composer.passes.length - 1]) skiTrace.frames--;
+      const vp = gl.getParameter(gl.VIEWPORT);
+      console.warn("[ski-trace] after " + label, JSON.stringify({
+        toScreen: !!pass.renderToScreen,
+        vp: Array.from(vp),
+        scissor: gl.isEnabled(gl.SCISSOR_TEST),
+        write: write ? [write.width, write.height, sampleRT(r, write, 0.1), sampleRT(r, write, 0.7)] : null,
+        read: read ? [read.width, read.height, sampleRT(r, read, 0.1), sampleRT(r, read, 0.7)] : null,
+      }));
+    };
+  }
 }
 
 /** Subtle bloom; ACES + exposure stay on the renderer, OutputPass applies them. */
 export function makeComposer(renderer, scene, camera) {
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
-  composer.addPass(new UnrealBloomPass(new THREE.Vector2(1, 1), 0.35, 0.45, 0.82));
+  const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.12, 0.4, 0.92);
+  composer.addPass(bloom);
+  /* A single Inf/NaN pixel (skier/spray/snow materials) would blur into a black block; drop it before bloom. */
+  const hp = bloom.materialHighPassFilter;
+  hp.fragmentShader = hp.fragmentShader.replace(
+    "vec4 texel = texture2D( tDiffuse, vUv );",
+    "vec4 texel = texture2D( tDiffuse, vUv ); if ( any( isnan( texel ) ) || any( isinf( texel ) ) ) texel = vec4( 0.0 ); texel = min( texel, vec4( 64.0 ) );",
+  );
   composer.addPass(new OutputPass());
+  window.skiBloom = (on) => (bloom.enabled = !!on);
   fitComposer(composer, renderer, innerWidth, innerHeight);
+  keepFullFrame(renderer);
+  tracePasses(composer, renderer);
   return composer;
 }
 
@@ -137,8 +271,8 @@ export function followSky(sky, camera) {
 const INSPECT_TOP = 0x2f90d6;
 const INSPECT_HORIZON = 0xd2eafc;
 const INSPECT_BG = 0x7eb8e4;
-const SKI_TOP = 0x4ea6e0;
-const SKI_HORIZON = 0xd7ebf7;
+const SKI_TOP = 0x5aaff0;
+const SKI_HORIZON = 0xe7f3fb;
 
 /** Lobby: light haze so distant ridges fade. Ski run keeps winter haze. */
 export function setInspectAtmosphere(scene, look, inspect, span = 4000) {
@@ -362,6 +496,21 @@ export function updateSpray(spray, skier, heading, speed, dt, keys, hf, opts = {
 const FLAKE_SPAN = 48;
 const FLAKE_H = 28;
 
+/** Storm level for the flake field. This does not touch snowTerrainMaterial. */
+export function setFallingSnow(snow, level) {
+  if (!snow?.pts) return;
+  if (level === "off" || level === "light" || level === "heavy") snow.level = level;
+  const mode = snow.level || "off";
+  const heavy = mode === "heavy";
+  snow.fall = heavy ? 4.6 : 1.7;
+  snow.drift = heavy ? 1.15 : 0.35;
+  snow.pts.material.opacity = heavy ? 0.68 : 0.34;
+  snow.pts.material.size = heavy ? 0.52 : 0.26;
+  const shown = mode === "light" ? Math.max(1, (snow.n * 0.38) | 0) : snow.n;
+  snow.pts.geometry.setDrawRange(0, shown);
+  snow.pts.visible = mode !== "off" && snow.playing !== false;
+}
+
 export function makeFallingSnow(THREE, scene) {
   const n = matchMedia("(pointer: coarse)").matches ? 90 : 280;
   const pos = new Float32Array(n * 3);
@@ -389,21 +538,25 @@ export function makeFallingSnow(THREE, scene) {
   pts.renderOrder = 8;
   pts.visible = false;
   scene.add(pts);
-  return { pts, pos, n };
+  const snow = { pts, pos, n, level: "off", playing: true, fall: 1.7, drift: 0.35 };
+  setFallingSnow(snow, "off");
+  return snow;
 }
 
 export function updateFallingSnow(snow, camera, dt) {
-  if (!snow?.pts.visible) return;
+  if (!snow?.pts.visible || snow.level === "off") return;
   const pos = snow.pos;
   const n = snow.n;
   const cx = camera.position.x;
   const cy = camera.position.y;
   const cz = camera.position.z;
   const half = FLAKE_SPAN * 0.5;
+  const fall = snow.fall || 1.7;
+  const drift = snow.drift || 0.35;
   for (let i = 0; i < n; i++) {
     const i3 = i * 3;
-    pos[i3 + 1] -= (1.6 + (i % 5) * 0.35) * dt;
-    pos[i3] += 0.35 * dt;
+    pos[i3 + 1] -= (fall + (i % 5) * fall * 0.18) * dt;
+    pos[i3] += drift * dt;
     if (pos[i3 + 1] < cy - 4) pos[i3 + 1] += FLAKE_H;
     if (pos[i3] > cx + half) pos[i3] -= FLAKE_SPAN;
     if (pos[i3] < cx - half) pos[i3] += FLAKE_SPAN;
