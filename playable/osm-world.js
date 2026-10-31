@@ -5,9 +5,10 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { styleForPisteFeature, classifyDifficulty } from "./trail-map.js?v=scheme1";
 import { addOsmTraffic } from "./traffic.js?v=vis16";
 import { alongPolyline, polylineLen } from "./gates.js?v=vis20";
-import { liftType, liftCableHeight, LIFT_LANE, isDragLift, makeLiftTerminal, makeLiftCarrier, makeLiftSkier, makeMagicCarpet, makeRopeTow, makeDragLift } from "./lift-graphics.js?v=s12";
+import { liftType, liftCableHeight, LIFT_LANE, isDragLift, makeLiftTerminal, makeLiftCarrier, makeLiftSkier, makeMagicCarpet, makeRopeTow, makeDragLift, makeLiftSteel } from "./lift-graphics.js?v=s13";
 import { createLiftMotion } from "./lift-motion.js?v=9";
-import { snowTerrainMaterial } from "./ground.js?v=g5";
+import { snowTerrainMaterial, SURFACE_UNIFORM } from "./ground.js?v=g24";
+import { bindSnowField, getSnowCondition, sampleSnow, shapeHeightfield, snowSeed } from "./snow-field.js?v=sf1";
 import { PALETTE } from "/scripts/clay/config.js";
 import { addClayBuilding } from "/scripts/clay/buildings.js";
 import {
@@ -17,9 +18,10 @@ import {
   ensureMidPatches,
   forestRingsFromFC,
   getSnowLevel,
+  getSurface,
   loadSnowLevel,
   snowEdgeFade,
-} from "./snow.js?v=surf1";
+} from "./snow.js?v=surf3";
 
 const GRID = 12;
 const MAX_FILL_SPAN = 700;
@@ -28,6 +30,18 @@ const TREE_STEP_WOOD = 6;
 const MAX_TREES = 8000;
 const PINE_GLB = new URL("./assets/models/trees/snowy-pine-pack.glb", import.meta.url).href;
 const PINE_HEIGHT = 11;
+
+function addViewRim(shader) {
+  shader.fragmentShader = shader.fragmentShader.replace(
+    "#include <opaque_fragment>",
+    `#include <opaque_fragment>
+    {
+      float facing = abs(dot(normalize(normal), normalize(vViewPosition)));
+      float rim = smoothstep(0.66, 0.08, facing);
+      gl_FragColor.rgb += diffuseColor.rgb * rim * 0.22;
+    }`,
+  );
+}
 
 function u01(i, salt) {
   return ((Math.imul(i + 1, 747796405) ^ salt) >>> 0) / 4294967296;
@@ -65,16 +79,18 @@ async function loadPinePack() {
     }
     const mat = new THREE.MeshLambertMaterial({
       map,
-      color: 0xf2f6f4,
+      color: 0xffffff,
       alphaTest: 0.38,
       side: THREE.DoubleSide,
       fog: true,
     });
+    mat.color.multiplyScalar(1.38);
     const pineNow = { value: 0 };
     mat.userData.pineNow = pineNow;
-    mat.customProgramCacheKey = () => "pine-hit-v2";
+    mat.customProgramCacheKey = () => "pine-hit-v3";
     mat.onBeforeCompile = (shader) => {
       shader.uniforms.pineNow = pineNow;
+      addViewRim(shader);
       shader.vertexShader =
         "uniform float pineNow;\nattribute float hitTime;\nattribute vec2 hitDir;\nattribute float hitAmp;\n" +
         shader.vertexShader.replace(
@@ -196,9 +212,52 @@ export function bendPine(scene, hit, now) {
   h.amp.needsUpdate = true;
 }
 
-export function tickPines(scene, now) {
+const LIFT_SHADOW_REACH = 42;
+const LIFT_SHADOW_MAX = 8;
+
+/** Nearby towers only. A color-write-off copy, because one InstancedMesh cannot cast per instance. */
+function armLiftShadows(scene, geo, mat, spots) {
+  if (!geo || !spots?.length) return;
+  const shadowMat = mat.clone();
+  shadowMat.colorWrite = false;
+  shadowMat.depthWrite = false;
+  const mesh = new THREE.InstancedMesh(geo, shadowMat, LIFT_SHADOW_MAX);
+  mesh.name = "lift-shadow-band";
+  mesh.castShadow = true;
+  mesh.receiveShadow = false;
+  mesh.frustumCulled = false;
+  mesh.count = 0;
+  scene.add(mesh);
+  scene.userData.liftShadow = { mesh, spots, dummy: new THREE.Object3D() };
+}
+
+function tickLiftShadows(scene, camera) {
+  const band = scene?.userData?.liftShadow;
+  if (!band || !camera) return;
+  const cx = camera.position.x;
+  const cz = camera.position.z;
+  const reach2 = LIFT_SHADOW_REACH * LIFT_SHADOW_REACH;
+  const dummy = band.dummy;
+  let n = 0;
+  for (let i = 0; i < band.spots.length && n < LIFT_SHADOW_MAX; i++) {
+    const s = band.spots[i];
+    const dx = s.x - cx;
+    const dz = s.z - cz;
+    if (dx * dx + dz * dz > reach2) continue;
+    dummy.position.set(s.x, s.y, s.z);
+    dummy.rotation.set(s.rx || 0, s.ry || 0, s.rz || 0);
+    dummy.scale.set(s.sx ?? s.s ?? 1, s.sy ?? s.s ?? 1, s.sz ?? s.s ?? 1);
+    dummy.updateMatrix();
+    band.mesh.setMatrixAt(n++, dummy.matrix);
+  }
+  band.mesh.count = n;
+  band.mesh.instanceMatrix.needsUpdate = true;
+}
+
+export function tickPines(scene, now, camera) {
   const u = scene?.userData?.pineNow;
   if (u) u.value = now * 0.001;
+  tickLiftShadows(scene, camera);
 }
 
 const RESORT_GLB = new URL("./assets/models/ski-resort4.glb", import.meta.url).href;
@@ -635,14 +694,46 @@ function clearGroup(g) {
   }
 }
 
-function snowPolyEn(ringXz, holesXz) {
-  const outer = xzRingToEn(ringXz);
-  return { outer, holes: (holesXz || []).map(xzRingToEn), bb: ringBBox(outer) };
+/* Moving average over ±k points (~±40 m at the 8 m densify step). The corduroy follows the distance to
+   this line, and every bend in the line folds that field 30-50 m out, so the groomer wants a smooth path. */
+function smoothLine(pts, k = 5) {
+  const n = pts.length;
+  return pts.map((_, i) => {
+    const lo = Math.max(0, i - k);
+    const hi = Math.min(n - 1, i + k);
+    let x = 0;
+    let z = 0;
+    for (let j = lo; j <= hi; j++) {
+      x += pts[j][0];
+      z += pts[j][1];
+    }
+    return [x / (hi - lo + 1), z / (hi - lo + 1)];
+  });
 }
 
-function drapePisteSnow(poly, cover, elevFn) {
-  /* Ski bases sit at DEM + 0.12 (skier-model SNOW). The sheet stays under that. */
-  const mesh = drapePisteFill(poly.outer, poly.holes, elevFn, 0.08, snowCoverFill, (pos) => snowEdgeFade(pos, poly, cover));
+function snowPolyEn(ringXz, holesXz, lineEn) {
+  const outer = xzRingToEn(ringXz);
+  /* Centerline in world xz (x = east, z = -north) so the corduroy can follow the run. */
+  const line = lineEn?.length >= 2 ? smoothLine(lineEn.map(([e, n]) => [e, -n])) : null;
+  return { outer, holes: (holesXz || []).map(xzRingToEn), bb: ringBBox(outer), line };
+}
+
+/** Drawn terrain height lookup, set once the mesh is final; snow sheets ride on it instead of the coarser heightfield. */
+let meshSurface = null;
+export function setMeshSurface(fn) {
+  meshSurface = fn;
+}
+
+function drapePisteSnow(poly, cover, elevFn, excludeFn, k = 0) {
+  /* Ski bases sit at DEM + 0.12 (skier-model SNOW). The sheet stays under that. Later sheets sit a few
+     mm lower so the overlap band shows the earlier sheet, not a z-fight.
+     ponytail: mod 16 so the stack stays within 5 cm; two overlapping sheets 16 apart in cover order fight. */
+  const mesh = drapePisteFill(poly.outer, poly.holes, elevFn, 0.08 - 0.003 * (k % 16), snowCoverFill, {
+    edgeFn: (pos) => snowEdgeFade(pos, poly, cover),
+    line: poly.line,
+    excludeFn,
+    surfaceY: meshSurface,
+  });
   if (mesh) {
     mesh.name = "piste-snow";
     mesh.userData.pisteKind = "snow";
@@ -663,16 +754,67 @@ function paintTrailCover(root, cover, elevFn) {
   const polys = [];
   for (const it of cover.items || []) {
     const ring = it.snow || it.bare;
-    if (ring && ring.length >= 3) polys.push(snowPolyEn(ring, it.holes));
+    if (ring && ring.length >= 3) polys.push(snowPolyEn(ring, it.holes, it.coordsEN));
   }
   if (getSnowLevel() === "midWinter") {
     for (const ring of cover.patches || []) polys.push(snowPolyEn(ring, []));
   }
   // ponytail: edge probes test every snow polygon (bbox-culled); fine for ~100s of pistes, grid-hash them if a mega resort stalls.
-  for (const poly of polys) {
-    const mesh = drapePisteSnow(poly, polys, elevFn);
+  const cov = coverageRaster(polys);
+  polys.forEach((poly, k) => {
+    const mesh = drapePisteSnow(poly, polys, elevFn, k ? cov.covered : null, k);
     if (mesh) snowG.add(mesh);
+    cov.add(poly);
+  });
+}
+
+/**
+ * Which ground earlier sheets already cover. Sheets tile the snow instead of overlapping, so two runs
+ * with different corduroy never z-fight at a confluence. A point counts as covered only when its cell
+ * and the 8 around it are: that margin keeps a thin overlap band, because the later sheet is cut along
+ * chords of its 3.5 m grid, which would clip the earlier outline's convex corners and leave dirt
+ * slivers. drapePisteSnow lowers later sheets a few mm so the band has one winner.
+ * ponytail: cell centres only, so a notch narrower than COV_CELL in an earlier sheet reads as covered.
+ */
+const COV_CELL = 3;
+function coverageRaster(polys) {
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  for (const q of polys) {
+    minX = Math.min(minX, q.bb.minX);
+    minY = Math.min(minY, q.bb.minY);
+    maxX = Math.max(maxX, q.bb.maxX);
+    maxY = Math.max(maxY, q.bb.maxY);
   }
+  const w = Math.max(1, Math.ceil((maxX - minX) / COV_CELL) + 2);
+  const h = Math.max(1, Math.ceil((maxY - minY) / COV_CELL) + 2);
+  const cells = new Uint8Array(w * h);
+  const ix = (e) => Math.floor((e - minX) / COV_CELL) + 1;
+  const iy = (n) => Math.floor((n - minY) / COV_CELL) + 1;
+  return {
+    covered(e, n) {
+      const x = ix(e);
+      const y = iy(n);
+      if (x < 1 || y < 1 || x >= w - 1 || y >= h - 1) return false;
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (!cells[(y + dy) * w + x + dx]) return false;
+      return true;
+    },
+    add(q) {
+      const x0 = ix(q.bb.minX);
+      const x1 = ix(q.bb.maxX);
+      const y0 = iy(q.bb.minY);
+      const y1 = iy(q.bb.maxY);
+      for (let y = y0; y <= y1; y++) {
+        const n = minY + (y - 0.5) * COV_CELL;
+        for (let x = x0; x <= x1; x++) {
+          if (cells[y * w + x]) continue;
+          if (inPolygon(minX + (x - 0.5) * COV_CELL, n, q.outer, q.holes)) cells[y * w + x] = 1;
+        }
+      }
+    },
+  };
 }
 
 export function applySnowLevel(scene) {
@@ -686,13 +828,31 @@ export function applySnowLevel(scene) {
     paintTrailCover(root, cover, elevFn);
   }
   const mat = scene?.userData?.snowMat;
-  if (mat?.color) mat.color.setHex(p.terrain);
-  if (mat?.userData.ground) mat.userData.ground.uDirt.value = p.offPiste ? 0 : 1;
+  const g = mat?.userData.ground;
+  if (g) {
+    /* Winter Coat: snow-white base with dirt patches on half the off-piste ground. */
+    const partial = getSnowLevel() === "midWinter" ? 0.5 : 0;
+    g.uDirtFrac.value = partial;
+    g.uDirtColor.value.setHex(p.terrain);
+    mat.color.setHex(partial ? 0xfbfaf6 : p.terrain);
+    g.uDirt.value = p.offPiste || partial ? 0 : 1;
+  }
   /* Snow under snow in wonderland: no melt fringe. */
   snowCoverFill.userData.ground.uEdge.value = p.offPiste ? 0 : 1;
   for (const mesh of scene?.userData?.island?.tops || []) {
     if (mesh.material?.color) mesh.material.color.setHex(p.terrain);
   }
+  applySurfaceLook(scene);
+}
+
+/** Piste sheet takes the chosen surface. Off-piste only joins in for powder on an all-snow mountain. */
+export function applySurfaceLook(scene) {
+  const surface = getSurface();
+  snowCoverFill.userData.ground.uSurface.value = SURFACE_UNIFORM[surface] ?? SURFACE_UNIFORM.plain;
+  const terrain = scene?.userData?.snowMat?.userData?.ground;
+  if (!terrain) return;
+  const allSnow = (SNOW[getSnowLevel()] || SNOW.spring).offPiste;
+  terrain.uSurface.value = allSnow && surface === "powder" ? SURFACE_UNIFORM.powder : SURFACE_UNIFORM.plain;
 }
 
 function drapeSmoothFill(outer, holes, elevFn, lift, material) {
@@ -936,6 +1096,9 @@ async function loadTowerProto() {
     const map = src?.map || null;
     if (map) map.colorSpace = THREE.SRGBColorSpace;
     mat = new THREE.MeshLambertMaterial({ map, color: 0xffffff });
+    mat.color.multiplyScalar(1.7);
+    mat.customProgramCacheKey = () => "tower-steel-rim";
+    mat.onBeforeCompile = (shader) => addViewRim(shader);
   });
   if (!geo || !mat) return null;
   towerProto = { pieces: [{ geo, mat }] };
@@ -993,7 +1156,7 @@ export function seatMagicCarpets(scene, ground) {
 async function addLiftKit(fc, elevFn, scene, counts, kit) {
   if (!fc) return;
   const cableMat = new THREE.MeshBasicMaterial({ color: PALETTE.cable });
-  const steel = new THREE.MeshLambertMaterial({ color: PALETTE.lift, flatShading: true });
+  const steel = makeLiftSteel(THREE);
   const dark = new THREE.MeshLambertMaterial({ color: 0x374151, flatShading: true });
   const towerPts = [];
   const terminals = [];
@@ -1108,7 +1271,8 @@ async function addLiftKit(fc, elevFn, scene, counts, kit) {
         s: (liftCableHeight(t.type) || TOWER_CABLE) / TOWER_CABLE,
       };
     });
-    plantProtoPieces(scene, towerMesh, spots, true);
+    plantProtoPieces(scene, towerMesh, spots, false);
+    armLiftShadows(scene, towerMesh.pieces[0].geo, towerMesh.pieces[0].mat, spots);
   } else {
     for (const t of towers) {
       const h = liftCableHeight(t.type) || TOWER_H;
@@ -1185,25 +1349,87 @@ function drapeFill(outer, holes, elevFn, lift, material, maxSpan = MAX_FILL_SPAN
   return mesh;
 }
 
+/**
+ * Corduroy coordinate per vertex: (s, gradX, gradZ). Ribs are stripes of constant s, so s must be
+ * continuous across every triangle. With a centerline, s is the distance to it and grad points away
+ * from it: every stripe runs parallel to the run, bends included. Only the sheet's OWN line counts;
+ * the distance to a set of lines folds wherever two are equidistant, and a base area between trails
+ * turns to herringbone. Unsigned, so the crease at the centerline is just a ridge (cos is even). Area
+ * pistes have no centerline and stripe across the mean downhill gradient instead.
+ * ponytail: O(verts × segments) scan per sheet; grid-hash the segments if a mega trail stalls.
+ */
+function ribAcross(positions, line, elevFn) {
+  const n = positions.length / 3;
+  const rib = new Float32Array(n * 3);
+  if (line?.length >= 2) {
+    for (let v = 0, p = 0; v < n; v++, p += 3) {
+      const x = positions[p];
+      const z = positions[p + 2];
+      let best = Infinity;
+      for (let i = 0; i + 1 < line.length; i++) {
+        const [ax, az] = line[i];
+        const [bx, bz] = line[i + 1];
+        const dx = bx - ax;
+        const dz = bz - az;
+        const len2 = dx * dx + dz * dz;
+        if (len2 < 1e-6) continue;
+        const t = Math.max(0, Math.min(1, ((x - ax) * dx + (z - az) * dz) / len2));
+        const d = Math.hypot(x - ax - dx * t, z - az - dz * t);
+        if (d >= best) continue;
+        best = d;
+        const len = Math.sqrt(len2);
+        const side = dx * (z - az) - dz * (x - ax) < 0 ? -1 : 1;
+        rib[v * 3] = d;
+        rib[v * 3 + 1] = (side * -dz) / len;
+        rib[v * 3 + 2] = (side * dx) / len;
+      }
+    }
+    return rib;
+  }
+  const R = 16;
+  let fx = 0;
+  let fz = 0;
+  for (let p = 0; p < positions.length; p += 3) {
+    fx += elevFn(positions[p] - R, positions[p + 2]) - elevFn(positions[p] + R, positions[p + 2]);
+    fz += elevFn(positions[p], positions[p + 2] - R) - elevFn(positions[p], positions[p + 2] + R);
+  }
+  const flen = Math.hypot(fx, fz);
+  const px = flen > 1e-6 ? -fz / flen : 1;
+  const pz = flen > 1e-6 ? fx / flen : 0;
+  for (let v = 0, p = 0; v < n; v++, p += 3) {
+    rib[v * 3] = positions[p] * px + positions[p + 2] * pz;
+    rib[v * 3 + 1] = px;
+    rib[v * 3 + 2] = pz;
+  }
+  return rib;
+}
+
 /** Piste snow: finer DEM grid + edge lerp so the border follows the OSM ring, not stair-steps. */
-function drapePisteFill(outer, holes, elevFn, lift, material, edgeFn) {
+function drapePisteFill(outer, holes, elevFn, lift, material, { edgeFn, line, excludeFn, surfaceY } = {}) {
   const bb = ringBBox(outer);
   if (!Number.isFinite(bb.span) || bb.span < 1) return null;
-  const step = 3.5;
+  const step = getSnowCondition() === "fresh" ? 3.5 : 1.6;
   const maxAxis = 220;
   const nx = Math.max(1, Math.min(maxAxis, Math.ceil((bb.maxX - bb.minX) / step)));
   const ny = Math.max(1, Math.min(maxAxis, Math.ceil((bb.maxY - bb.minY) / step)));
   const sx = (bb.maxX - bb.minX) / nx;
   const sy = (bb.maxY - bb.minY) / ny;
   const positions = [];
+  const rough = [];
+  const worn = [];
   const index = [];
 
   function pushVert(east, north) {
     const z = -north;
-    positions.push(east, elevFn(east, z) + lift, z);
+    const s = sampleSnow(east, z);
+    const onMesh = surfaceY?.(east, z);
+    positions.push(east, onMesh == null ? elevFn(east, z) + lift : onMesh + lift, z);
+    rough.push(s.rough);
+    worn.push(s.worn);
     return positions.length / 3 - 1;
   }
 
+  const inSheet = (e, n) => inPolygon(e, n, outer, holes) && !excludeFn?.(e, n);
   const inside = [];
   const vid = [];
   for (let j = 0; j <= ny; j++) {
@@ -1212,7 +1438,7 @@ function drapePisteFill(outer, holes, elevFn, lift, material, edgeFn) {
     const north = bb.minY + j * sy;
     for (let i = 0; i <= nx; i++) {
       const east = bb.minX + i * sx;
-      inside[j][i] = inPolygon(east, north, outer, holes);
+      inside[j][i] = inSheet(east, north);
       vid[j][i] = -1;
     }
   }
@@ -1233,7 +1459,7 @@ function drapePisteFill(outer, holes, elevFn, lift, material, edgeFn) {
     const aIn = inside[j0][i0];
     for (let k = 0; k < 6; k++) {
       const t = (lo + hi) * 0.5;
-      const hit = inPolygon(e0 + (e1 - e0) * t, n0 + (n1 - n0) * t, outer, holes);
+      const hit = inSheet(e0 + (e1 - e0) * t, n0 + (n1 - n0) * t);
       if (hit === aIn) lo = t;
       else hi = t;
     }
@@ -1314,7 +1540,12 @@ function drapePisteFill(outer, holes, elevFn, lift, material, edgeFn) {
   if (!index.length) return null;
   const geo = new THREE.BufferGeometry();
   geo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
-  if (edgeFn) geo.setAttribute("snowEdge", new THREE.Float32BufferAttribute(edgeFn(positions), 1));
+  geo.setAttribute("snowRough", new THREE.Float32BufferAttribute(rough, 1));
+  geo.setAttribute("snowWorn", new THREE.Float32BufferAttribute(worn, 1));
+  if (edgeFn) {
+    geo.setAttribute("snowEdge", new THREE.Float32BufferAttribute(edgeFn(positions), 1));
+    geo.setAttribute("rib", new THREE.BufferAttribute(ribAcross(positions, line, elevFn), 3));
+  }
   geo.setIndex(index);
   geo.computeVertexNormals();
   return new THREE.Mesh(geo, material);
@@ -1346,7 +1577,7 @@ function buildTreeHash(xzr, cell = 12) {
   return { cell, buckets, xzr };
 }
 
-export async function addOsmWorld(THREE, scene, sceneRoot, manifest, elevFn) {
+export async function addOsmWorld(THREE, scene, sceneRoot, manifest, elevFn, hf) {
   const v = manifest.vectors || {};
   const mats = {
     grass: fillMat(0xe6e9ec, 0.22),
@@ -1437,6 +1668,22 @@ export async function addOsmWorld(THREE, scene, sceneRoot, manifest, elevFn) {
     counts[countKey] = (counts[countKey] || 0) + n;
   }
 
+  // Shape the heightfield before any drape so piste sheets, trees, and lifts sit on the same snow.
+  let forest = null;
+  let forestRings = [];
+  let pistes = null;
+  if (hf) {
+    forest = await loadLayer("forest");
+    forestRings = forestRingsFromFC(forest);
+    pistes = await loadLayer("pistes");
+    loadSnowLevel();
+    const cover = buildTrailCover(pistes, forestRings);
+    scene.userData.trailCover = cover;
+    scene.userData.drapeElev = elevFn;
+    bindSnowField(cover, snowSeed(cover), (e, z) => elevFn(e, z));
+    shapeHeightfield(hf);
+  }
+
   // Island rim = mapped OSM vertices (pistes, lifts, buildings, forest, …).
   // Do not hull the winter_sports AOI — that is ski-area bounds, not the OSM hull.
   const ski = await loadLayer("ski_area", { hull: false });
@@ -1444,8 +1691,10 @@ export async function addOsmWorld(THREE, scene, sceneRoot, manifest, elevFn) {
 
   addFills(await loadLayer("grassland"), mats.grass, 0.35, "grassland");
 
-  const forest = await loadLayer("forest");
-  const forestRings = forestRingsFromFC(forest);
+  if (!forest) {
+    forest = await loadLayer("forest");
+    forestRings = forestRingsFromFC(forest);
+  }
   if (forest) {
     const woodPts = [];
     const otherPts = [];
@@ -1497,9 +1746,11 @@ export async function addOsmWorld(THREE, scene, sceneRoot, manifest, elevFn) {
   addFills(water, mats.water, 0.3, "water");
   addLines(water, new THREE.LineBasicMaterial({ color: 0xa8b4bc }), 0.6, "water_line");
 
-  const pistes = await loadLayer("pistes");
-  loadSnowLevel();
-  const cover = buildTrailCover(pistes, forestRings);
+  if (!pistes) {
+    pistes = await loadLayer("pistes");
+    loadSnowLevel();
+  }
+  const cover = scene.userData.trailCover || buildTrailCover(pistes, forestRings);
   scene.userData.trailCover = cover;
   scene.userData.drapeElev = elevFn;
   const pisteRoot = new THREE.Group();

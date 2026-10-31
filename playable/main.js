@@ -23,14 +23,14 @@ import {
   startShove,
   shoveShouldHit,
   markShoveHit,
-} from "./physics.js?v=surf3";
+} from "./physics.js?v=surf4";
 import { loadSkierModel, mountSkierModel } from "./skier-model.js?v=8";
 import { loadSnowboarder, mountSnowboarder } from "./snowboarder-model.js?v=3";
 import { featuredCourses, attachPisteDifficulty, courseFinish, createRun, tickRun, formatTime } from "./run.js?v=map5";
-import { coordsToXz, attachPiste, resetScore, tickScore, commitBestScore, formatScore, applyWipeout } from "./score.js?v=surf2";
+import { coordsToXz, attachPiste, resetScore, tickScore, commitBestScore, formatScore, applyWipeout } from "./score.js?v=surf3";
 import { orientPiste, alongTrack, alongPolyline, placeGates, addGateMeshes, clearGateMeshes, resetGates, tickGates } from "./gates.js?v=vis20";
-import { addOsmWorld, applyPisteDecorDifficultyScheme, applySnowLevel, applySurfaceLook, bendPine, seatMagicCarpets, tickPines } from "./osm-world.js?v=snow17";
-import { snowTerrainMaterial, makeGroundScatter, updateGroundScatter, setGroundDetail, displaceSnowMesh } from "./ground.js?v=g20";
+import { addOsmWorld, applyPisteDecorDifficultyScheme, applySnowLevel, applySurfaceLook, bendPine, seatMagicCarpets, setMeshSurface, tickPines } from "./osm-world.js?v=snow20";
+import { snowTerrainMaterial, makeGroundScatter, updateGroundScatter, setGroundDetail, terrainSurface } from "./ground.js?v=g24";
 import { setSnowDetail } from "./snow-field.js?v=sf1";
 import {
   addSkyAndLights,
@@ -49,7 +49,7 @@ import {
   fitComposer,
 } from "./look.js?v=s12";
 import { addResortIsland, updateIslandDust, updateIslandLod, setIslandOpacity, resetIslandLod } from "./island.js?v=lod3c";
-import { bindUi, setHud, openPanel, closePanel, updateLoading, clayLoadHtml, setOsmMapNote, setResortTitle, compactUi, setFlybyChrome, setHelpTips, paintSnowBtn, getRide, setRide } from "./ui.js?v=surf2";
+import { bindUi, setHud, openPanel, closePanel, updateLoading, clayLoadHtml, setOsmMapNote, setResortTitle, compactUi, setFlybyChrome, setHelpTips, paintSnowBtn, getRide, setRide } from "./ui.js?v=surf3";
 import { atlasStatsHtml, prefetchWikiIndex } from "./atlas-stats.js?v=stats1";
 import { bindFinishChartScope, finishChartsHtml, prefetchFinishCharts } from "./finish-charts.js?v=1";
 import { bindOsmFix, osmFixHtml, osmFixContext } from "./osm-fix.js?v=1";
@@ -60,7 +60,7 @@ import { capDpr, attachDebug } from "./debug.js?v=mob1";
 import { intentsFrom, isTurning, analogAxes } from "./input.js?v=s5";
 import { bindMobileChrome, bindPads } from "./mobile.js?v=s5";
 import { bakePisteSculpt, drapeSculptOnMesh } from "./piste-sculpt.js?v=feel3";
-import { addTrailMarks, clearTrailMarks, repairFences, updateTrailMarks } from "./trail-marks.js?v=surf2";
+import { addTrailMarks, clearTrailMarks, repairFences, updateTrailMarks } from "./trail-marks.js?v=surf3";
 import { makeYeti, resetYeti, parkYetiAtStart, tickYeti } from "./yeti.js?v=vis19";
 import { createSkiWake, clearSkiWake, pushSkiWake, updateSkiWake } from "./ski-wake.js?v=powder1";
 import {
@@ -1320,7 +1320,10 @@ async function loadMountain() {
   await breathe();
   const osmCounts = await addOsmWorld(THREE, scene, SCENE_ROOT, manifest, drap, hf);
   drapeSculptOnMesh(terrainRoot, hf);
-  displaceSnowMesh(THREE, terrainRoot);
+  if (terrainRoot) {
+    setMeshSurface(terrainSurface(terrainRoot));
+    applySnowLevel(scene);
+  }
   console.info("OSM world", osmCounts);
   pushLoad({ message: "Readying the run…", pct: 0.98 });
 

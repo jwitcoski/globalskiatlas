@@ -169,6 +169,8 @@ export function snowEdgeFade(pos, poly, cover, fringe = SNOW_FRINGE_M) {
     const nn = -pos[i * 3 + 2];
     const segs = buckets.get(key(Math.floor(e / cell), Math.floor(nn / cell)));
     if (!segs) continue;
+    /* Under another sheet there is snow either way: no hollows, so the sheets can tile instead of overlap. */
+    if (cover.some((p) => p !== poly && inPolyEn(e, nn, p))) continue;
     let best = fringe;
     for (const [ae, an, dx, dy, l2] of segs) {
       const t = Math.max(0, Math.min(1, ((e - ae) * dx + (nn - an) * dy) / l2));
@@ -336,7 +338,10 @@ export function buildTrailCover(pistesFC, forestRings) {
   const items = [];
   for (const f of pistesFC?.features || []) {
     const g = f.geometry;
-    const half = pisteWidthCap(f.properties || {}) * 0.5;
+    const props = f.properties || {};
+    const tags = props.tags || {};
+    const half = pisteWidthCap(props) * 0.5;
+    const difficulty = props.piste_difficulty || props["piste:difficulty"] || tags["piste:difficulty"] || tags.difficulty || "";
     const polys = polygonParts(g);
     if (polys.length) {
       for (const poly of polys) {
@@ -346,6 +351,7 @@ export function buildTrailCover(pistesFC, forestRings) {
             bare,
             snow: bare,
             half,
+            difficulty,
             holes: (poly.slice(1) || []).map((h) => closeXz(enToXz(h))),
           });
         }
@@ -354,7 +360,7 @@ export function buildTrailCover(pistesFC, forestRings) {
     }
     for (const coords of lineParts(g)) {
       if (!coords || coords.length < 2) continue;
-      items.push({ coordsEN: densifyLine(coords), half, bare: [], snow: [] });
+      items.push({ coordsEN: densifyLine(coords), half, difficulty, bare: [], snow: [] });
     }
   }
   const cover = { items, skiRings: [], forestRings: forestRings || [] };

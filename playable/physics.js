@@ -1,7 +1,8 @@
 /** Arcade ski on DEM. Gravity is fall-line only (none on flats). Custom, not Rapier. */
 
 import { analogAxes } from "./input.js?v=s5";
-import { getSurface } from "./snow.js?v=surf1";
+import { getSurface } from "./snow.js?v=surf3";
+import { powderDepth, snowAt } from "./snow-field.js?v=sf1";
 
 /** Multipliers on the groomed step. Ice barely yaws and holds speed. Powder is slow and mushy. */
 const SURFACE = {
@@ -716,6 +717,22 @@ function carve(THREE, vel, fwd, edged, powder, dt, skidMul = 1) {
   return skidLen;
 }
 
+function snowDem(THREE, hf) {
+  return {
+    bounds: hf.bounds,
+    playBounds: hf.playBounds,
+    sample(x, z) {
+      return hf.sample(x, z) + snowAt(x, z).d;
+    },
+    normal(T, x, z, out) {
+      const n = out || new T.Vector3();
+      const eps = 1.4;
+      n.set(this.sample(x - eps, z) - this.sample(x + eps, z), 2 * eps, this.sample(x, z - eps) - this.sample(x, z + eps));
+      return n.normalize();
+    },
+  };
+}
+
 function stepAir(THREE, { pos, vel, heading, keys, hf, dt, trees, air, extras }) {
   const turn = readTurn(keys);
   if (Math.abs(turn) > 0.04) heading += turn * AIR_TURN * dt;
@@ -776,7 +793,8 @@ function stepAir(THREE, { pos, vel, heading, keys, hf, dt, trees, air, extras })
   return { heading, ground, speed: vel.length(), steer: turn, treeHit, air: false, landed: impact, airTime, airDist };
 }
 
-export function stepSki(THREE, { pos, vel, heading, keys, hf, dt, trees, air, onPiste = true, extras }) {
+export function stepSki(THREE, { pos, vel, heading, keys, hf, dt, trees, air, onPiste = true, extras, shake }) {
+  hf = snowDem(THREE, hf);
   if (air?.cool > 0) air.cool = Math.max(0, air.cool - dt);
   if (air?.on) return stepAir(THREE, { pos, vel, heading, keys, hf, dt, trees, air, extras });
 
@@ -830,8 +848,14 @@ export function stepSki(THREE, { pos, vel, heading, keys, hf, dt, trees, air, on
   }
   if (braking) vel.multiplyScalar(Math.max(0, 1 - BRAKE * dt));
   const across = 1 - Math.max(0, fwd.dot(fall));
-  const drag = DRAG * (feel?.drag ?? 1) + TRAVERSE_DRAG * across * across + (bare ? BARE_DRAG : 0);
+  const snow = snowAt(pos.x, pos.z);
+  const powder = powderDepth(pos.x, pos.z);
+  const drag =
+    (DRAG * (feel?.drag ?? 1) + TRAVERSE_DRAG * across * across + (bare ? BARE_DRAG : 0)) * (1 + 0.18 * snow.worn) +
+    0.42 * snow.rough +
+    0.85 * powder;
   vel.multiplyScalar(Math.max(0, 1 - drag * dt));
+  if (shake && snow.rough > 0.12 && vel.length() > 8) addTrauma(shake, snow.rough * Math.min(1.2, vel.length() / 18) * 0.006);
   vel.addScaledVector(n, -vel.dot(n));
   const cap = MAX_SPD * (feel?.max ?? 1);
   if (vel.length() > cap) vel.setLength(cap);
