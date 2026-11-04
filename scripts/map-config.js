@@ -17,8 +17,8 @@ export const config = {
   // Main-map dots. Written by the one-resort job from combined ski_areas_analyzed.
   SKI_AREAS_MAPTILER_URL: `${S3_OUTPUT}/combined/ski_areas_analyzed.geojson`,
 
-  // ── Playable 3D ski scenes (S3 catalog; client loads heightfield/GLB from same prefix)
-  GAME_SCENES_CATALOG_URL: `${S3_OUTPUT}/game_scenes/catalog.json`,
+  // ── Playable 3D ski game (worlds list; per-resort data lives under the same prefix)
+  GAME_PLAY_WORLDS_URL: `${S3_OUTPUT}/game_play/worlds.json`,
 
   // ── GeoParquet (D3 comparison/tier tools — full geometries, not map tiles) ─
   PARQUET_SKI_AREAS_ANALYZED_URL: `${S3_OUTPUT}/combined/ski_areas_analyzed.parquet`,

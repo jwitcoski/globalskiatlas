@@ -43,55 +43,44 @@ export function matchPlayableResort(lon, lat, name, properties, playableResorts)
 
 let playableCatalogPromise;
 
+// Each world gets `path` = its id so callers that dedupe/route by path keep working.
 export async function fetchPlayableCatalog() {
   if (!playableCatalogPromise) {
     playableCatalogPromise = (async () => {
-      const urls = ["/game_scenes/catalog.json", config.GAME_SCENES_CATALOG_URL];
-      for (const url of urls) {
-        try {
-          const r = await fetch(url);
-          if (!r.ok) continue;
-          const data = await r.json();
-          const list = Array.isArray(data?.resorts) ? data.resorts : [];
-          if (list.length) return list;
-        } catch {
-          /* try next */
-        }
-      }
-      throw new Error("Playable catalog fetch failed");
+      const r = await fetch(config.GAME_PLAY_WORLDS_URL);
+      if (!r.ok) throw new Error(`Playable catalog fetch failed (${r.status})`);
+      const data = await r.json();
+      const list = (Array.isArray(data?.resorts) ? data.resorts : []).map((w) => ({ ...w, path: w.id }));
+      if (!list.length) throw new Error("Playable catalog is empty");
+      return list;
     })();
+    playableCatalogPromise.catch(() => {
+      playableCatalogPromise = null;
+    });
   }
   return playableCatalogPromise;
+}
+
+export function playableHrefForWorld(id) {
+  const world = String(id || "").trim();
+  return world ? `/playable/diorama.html?world=${encodeURIComponent(world)}` : "";
 }
 
 export function playableHrefFromClayResort(clay, playableResorts) {
   if (!clay) return "";
   const ws = String(clay.winter_sports_id || "");
   const id = String(clay.id || "");
-  const list = playableResorts || [];
-  const hit = list.find((r) => {
+  const hit = (playableResorts || []).find((r) => {
     if (ws && String(r.winter_sports_id || "") === ws) return true;
-    if (id && String(r.id || "") === id) return true;
-    const path = String(r.path || "").replace(/\/+$/, "");
-    return Boolean(id) && (path === id || path.startsWith(`${id}/`));
+    return Boolean(id) && String(r.id || "") === id;
   });
-  if (hit?.path) return playableHrefFromPath(hit.path);
-  const ver = hit?.scene_version || hit?.playable_ver || clay.playable_ver;
-  const rid = hit?.id || clay.id;
-  if (rid && ver) {
-    return `/playable/?resort=${encodeURIComponent(rid)}&ver=${encodeURIComponent(ver)}`;
-  }
-  return "";
+  return hit ? playableHrefForWorld(hit.id) : "";
 }
 
+// Accepts a world id; legacy "id/ver" paths are reduced to the id.
 export function playableHrefFromPath(path) {
   const rel = String(path || "").replace(/^\/+|\/+$/g, "");
-  if (!rel) return "";
-  const slash = rel.indexOf("/");
-  const q = new URLSearchParams();
-  q.set("resort", slash < 0 ? rel : rel.slice(0, slash));
-  if (slash >= 0) q.set("ver", rel.slice(slash + 1));
-  return `/playable/?${q.toString()}`;
+  return playableHrefForWorld(rel.split("/")[0]);
 }
 
 export function playableHrefForResort(entity, properties, playableResorts) {
@@ -104,13 +93,7 @@ export function playableHrefForResort(entity, properties, playableResorts) {
     winter_sports_id: entity?.winterSportsId || props.winter_sports_id,
     osm_id: props.osm_id || entity?.winterSportsId || props.winter_sports_id,
   }, playableResorts);
-  if (!hit) return "";
-  if (hit.path) return playableHrefFromPath(hit.path);
-  const ver = hit.scene_version || hit.playable_ver;
-  if (hit.id && ver) {
-    return `/playable/?resort=${encodeURIComponent(hit.id)}&ver=${encodeURIComponent(ver)}`;
-  }
-  return "";
+  return hit ? playableHrefForWorld(hit.id) : "";
 }
 
 let clayCatalogPromise;

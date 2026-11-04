@@ -10,6 +10,13 @@
       gtag('js', new Date());
       gtag('config', 'G-KJGNL3KJL0');
     </script>
+    <script>
+      (function () {
+        var p = new URLSearchParams(location.search);
+        var legacy = p.get("resort");
+        if (legacy && !p.get("world")) location.replace("./diorama.html?world=" + encodeURIComponent(legacy));
+      })();
+    </script>
     <title>Ski Game – Global Ski Atlas</title>
     <meta name="description" content="Pick a mapped ski resort, fly over its 3D diorama, then ski a trail in the browser." />
     <link rel="shortcut icon" href="/assets/logo.png?v=2" type="image/x-icon" />

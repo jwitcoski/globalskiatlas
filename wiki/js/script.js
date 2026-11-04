@@ -110,7 +110,7 @@ function loadPlayableCatalogPack() {
 function playHrefFromClayRow(row) {
   if (!row || !row.id) return '';
   if (row.playable_ver) {
-    return '/playable/?resort=' + encodeURIComponent(row.id) + '&ver=' + encodeURIComponent(row.playable_ver);
+    return '/playable/diorama.html?world=' + encodeURIComponent(row.id);
   }
   return '';
 }

@@ -92,7 +92,7 @@ export function gameSceneBase(resort) {
 
 export function playableHref(resort) {
   if (!resort?.id || !resort?.playable_ver) return null;
-  return `/playable/?resort=${encodeURIComponent(resort.id)}&ver=${encodeURIComponent(resort.playable_ver)}`;
+  return `/playable/diorama.html?world=${encodeURIComponent(resort.id)}`;
 }
 
 export function capDpr() {
