@@ -39,6 +39,7 @@
         two.parentNode.insertBefore(twenty, two);
       })(window, document, "script", "https://scripts.stay22.com/letmeallez.js");
     </script>
+    <script src="./stay.js" defer></script>
     <title>Ski Game – Global Ski Atlas</title>
     <meta name="description" content="Pick a mapped ski resort, fly over its 3D diorama, then ski a trail in the browser." />
     <link rel="shortcut icon" href="/assets/logo.png?v=2" type="image/x-icon" />
@@ -97,6 +98,7 @@
       <div class="acts">
         <a class="go" id="go-ride" href="#">Ride it ▸</a>
         <a id="go-dio" href="#">Diorama</a>
+        <a id="go-stay" href="#" target="_blank" rel="noopener noreferrer sponsored">Hotels</a>
       </div>
     </section>
 
@@ -147,6 +149,7 @@
           $("pick-stats").textContent = `${w.runs} runs \u00b7 ${w.lifts} lifts \u00b7 ${w.min.toLocaleString()}\u2013${w.max.toLocaleString()} m`;
           $("go-ride").href = `./play.html?world=${encodeURIComponent(w.id)}`;
           $("go-dio").href = `./diorama.html?world=${encodeURIComponent(w.id)}`;
+          $("go-stay").href = playableStayHref(w, "playable-map");
           $("pick").classList.add("show");
           if (fly) map.flyTo({ center: [w.lon, w.lat], zoom: Math.max(map.getZoom(), 9), speed: 1.4 });
         }
