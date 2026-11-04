@@ -1,790 +1,216 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <!-- Travelpayouts affiliate -->
-  <script data-cmp-ab="2">
-    (function () {
-        var script = document.createElement("script");
-        script.async = 1;
-        script.setAttribute("data-cmp-ab","2");
-        script.src = 'https://emrldtp.cc/NTgwMDc3.js?t=580077';
-        document.head.appendChild(script);
-    })();
-  </script>
-  <!-- Stay22 affiliate -->
-  <script>
-    (function (s, t, a, y, twenty, two) {
-      s.Stay22 = s.Stay22 || {};
-      s.Stay22.params = { lmaID: '6abe4ecf20efb8597f4c40dc' };
-      twenty = t.createElement(a);
-      two = t.getElementsByTagName(a)[0];
-      twenty.async = 1;
-      twenty.src = y;
-      two.parentNode.insertBefore(twenty, two);
-    })(window, document, 'script', 'https://scripts.stay22.com/letmeallez.js');
-  </script>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="screen-orientation" content="landscape" />
-  <title>Ski Game – Global Ski Atlas</title>
-  <meta name="description" content="Ski a mapped resort in the browser. The course uses Global Ski Atlas terrain. Resort counts and trail stats stay on the map." />
-  <link rel="canonical" href="https://globalskiatlas.com/playable/" />
-  <meta property="og:title" content="Ski Game – Global Ski Atlas" />
-  <meta property="og:description" content="Ski a mapped resort in the browser. Resort counts and trail stats stay on the map." />
-  <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://globalskiatlas.com/playable/" />
-  <meta property="og:image" content="https://globalskiatlas.com/assets/og-banner.png" />
-  <meta property="og:site_name" content="Global Ski Atlas" />
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "WebApplication",
-        "name": "Global Ski Atlas ski game",
-        "url": "https://globalskiatlas.com/playable/",
-        "applicationCategory": "GameApplication",
-        "operatingSystem": "Web",
-        "browserRequirements": "Requires JavaScript",
-        "isAccessibleForFree": true,
-        "description": "Browser ski game on a mapped resort. Resort counts and trail stats stay on the Global Ski Atlas map.",
-        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
-        "provider": {
-          "@type": "Organization",
-          "name": "Global Ski Atlas",
-          "url": "https://globalskiatlas.com/"
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-KJGNL3KJL0"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){ dataLayer.push(arguments); }
+      gtag('js', new Date());
+      gtag('config', 'G-KJGNL3KJL0');
+    </script>
+    <title>Ski Game – Global Ski Atlas</title>
+    <meta name="description" content="Pick a mapped ski resort, fly over its 3D diorama, then ski a trail in the browser." />
+    <link rel="shortcut icon" href="/assets/logo.png?v=2" type="image/x-icon" />
+    <link rel="canonical" href="https://globalskiatlas.com/playable/" />
+    <meta property="og:title" content="Ski Game – Global Ski Atlas" />
+    <meta property="og:description" content="Pick a mapped ski resort, fly over its 3D diorama, then ski a trail in the browser." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://globalskiatlas.com/playable/" />
+    <meta property="og:image" content="https://globalskiatlas.com/assets/og-banner.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand+SC&family=Patrick+Hand&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" />
+    <style>
+      :root { --ink: #23303a; --paper: #fbfaf5; --tab: #7fb0e3; --accent: #f0c24a; }
+      * { box-sizing: border-box; }
+      html, body { height: 100%; margin: 0; background: #8ccac4; color: var(--ink); font-family: "Patrick Hand", "Comic Sans MS", cursive; }
+      #map { position: absolute; inset: 0; }
+      .card { position: absolute; z-index: 2; background: var(--paper); border: 3px solid var(--ink); border-radius: 10px; box-shadow: 4px 4px 0 rgba(35, 48, 58, 0.35); }
+      .card .tab { position: absolute; left: -3px; top: -16px; background: var(--tab); border: 3px solid var(--ink); border-radius: 8px; padding: 2px 12px; font: 22px "Patrick Hand SC", cursive; letter-spacing: 0.5px; }
+      #head { top: 28px; left: 16px; width: min(340px, calc(100% - 32px)); padding: 22px 14px 12px; }
+      #head p { margin: 0 0 8px; font-size: 18px; }
+      #search { width: 100%; padding: 6px 10px; border: 2px solid var(--ink); border-radius: 8px; font: 18px "Patrick Hand", cursive; background: #fff; }
+      #list { margin: 8px 0 0; padding: 0; list-style: none; max-height: 40vh; overflow: auto; }
+      #list li button { display: block; width: 100%; text-align: left; border: 0; background: none; padding: 5px 6px; border-radius: 6px; font: 18px "Patrick Hand", cursive; color: var(--ink); cursor: pointer; }
+      #list li button:hover, #list li button.on { background: #e8f1fb; }
+      #list small { display: block; opacity: 0.65; font-size: 15px; }
+      #pick { left: 50%; bottom: 28px; transform: translateX(-50%); width: min(380px, calc(100% - 32px)); padding: 22px 16px 14px; display: none; }
+      #pick.show { display: block; }
+      #pick h2 { margin: 0; font: 26px "Patrick Hand SC", cursive; }
+      #pick p { margin: 2px 0 8px; font-size: 18px; }
+      #pick .acts { display: flex; gap: 8px; }
+      #pick a { flex: 1; text-align: center; text-decoration: none; color: var(--ink); background: #fff; border: 3px solid var(--ink); border-radius: 8px; padding: 5px 8px; font: 20px "Patrick Hand SC", cursive; box-shadow: 2px 2px 0 rgba(35, 48, 58, 0.35); }
+      #pick a.go { background: var(--accent); }
+      #pick a:hover { transform: translate(-1px, -1px); }
+      .pin { width: 22px; height: 22px; border-radius: 50%; background: var(--accent); border: 3px solid var(--ink); box-shadow: 2px 2px 0 rgba(35, 48, 58, 0.4); cursor: pointer; }
+      .pin.on { background: #d9534a; transform: scale(1.25); }
+      #credit { position: absolute; z-index: 1; right: 8px; bottom: 4px; font-size: 13px; opacity: 0.7; }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+
+    <section class="card" id="head" aria-label="Resorts">
+      <div class="tab">Choose a mountain</div>
+      <p id="count"></p>
+      <input id="search" type="search" placeholder="Search resorts…" autocomplete="off" aria-label="Search resorts" />
+      <ul id="list"></ul>
+    </section>
+
+    <section class="card" id="pick" aria-live="polite">
+      <div class="tab" id="pick-tab">Resort</div>
+      <h2 id="pick-name"></h2>
+      <p id="pick-sub"></p>
+      <p id="pick-stats"></p>
+      <div class="acts">
+        <a class="go" id="go-ride" href="#">Ride it ▸</a>
+        <a id="go-dio" href="#">Diorama</a>
+      </div>
+    </section>
+
+    <p id="credit"></p>
+
+    <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+    <script>
+      const $ = (id) => document.getElementById(id);
+      const params = new URLSearchParams(location.search);
+
+      const GP = params.get("data") || "https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/game_play/";
+
+      Promise.all([
+        fetch("./data/worlds.json").then((r) => r.json()).catch(() => []),
+        fetch(GP + "worlds.json").then((r) => r.json()).then((j) => j.resorts || []).catch(() => []),
+      ]).then(([local, remote]) => {
+        const byId = new Map();
+        for (const w of [...remote, ...local.filter((w) => w.id === "hemu")]) byId.set(w.id, w);
+        init([...byId.values()]);
+      });
+
+      function init(worlds) {
+        $("count").textContent = `${worlds.length.toLocaleString()} playable resort${worlds.length === 1 ? "" : "s"}`;
+        const map = new maplibregl.Map({
+          container: "map",
+          style: "https://tiles.openfreemap.org/styles/liberty",
+          center: [0, 25],
+          zoom: 1.6,
+          minZoom: 1,
+          attributionControl: { compact: true },
+        });
+        map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
+
+        const byKey = new Map(worlds.map((w) => [w.id, w]));
+        let selected = null;
+        let marker = null;
+
+        function select(w, fly = true) {
+          selected = w;
+          marker?.remove();
+          const el = document.createElement("div");
+          el.className = "pin on";
+          marker = new maplibregl.Marker({ element: el }).setLngLat([w.lon, w.lat]).addTo(map);
+          for (const b of $("list").querySelectorAll("button")) b.classList.toggle("on", b.dataset.id === w.id);
+          $("pick-tab").textContent = "Resort";
+          $("pick-name").textContent = w.name;
+          $("pick-sub").textContent = w.subtitle || "";
+          $("pick-stats").textContent = `${w.runs} runs \u00b7 ${w.lifts} lifts \u00b7 ${w.min.toLocaleString()}\u2013${w.max.toLocaleString()} m`;
+          $("go-ride").href = `./play.html?world=${encodeURIComponent(w.id)}`;
+          $("go-dio").href = `./diorama.html?world=${encodeURIComponent(w.id)}`;
+          $("pick").classList.add("show");
+          if (fly) map.flyTo({ center: [w.lon, w.lat], zoom: Math.max(map.getZoom(), 9), speed: 1.4 });
         }
-      },
-      {
-        "@type": "BreadcrumbList",
-        "itemListElement": [
-          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://globalskiatlas.com/" },
-          { "@type": "ListItem", "position": 2, "name": "Ski game", "item": "https://globalskiatlas.com/playable/" }
-        ]
+
+        map.on("load", () => {
+          map.addSource("resorts", {
+            type: "geojson",
+            cluster: true,
+            clusterRadius: 38,
+            clusterMaxZoom: 9,
+            data: {
+              type: "FeatureCollection",
+              features: worlds.map((w) => ({
+                type: "Feature",
+                properties: { id: w.id },
+                geometry: { type: "Point", coordinates: [w.lon, w.lat] },
+              })),
+            },
+          });
+          const ring = { "circle-color": "#f2c14e", "circle-stroke-color": "#23303a", "circle-stroke-width": 2.5 };
+          map.addLayer({
+            id: "clusters",
+            type: "circle",
+            source: "resorts",
+            filter: ["has", "point_count"],
+            paint: { ...ring, "circle-radius": ["step", ["get", "point_count"], 14, 10, 18, 50, 23, 200, 29] },
+          });
+          map.addLayer({
+            id: "cluster-count",
+            type: "symbol",
+            source: "resorts",
+            filter: ["has", "point_count"],
+            layout: { "text-field": ["get", "point_count_abbreviated"], "text-size": 13, "text-font": ["Noto Sans Bold"] },
+            paint: { "text-color": "#23303a" },
+          });
+          map.addLayer({
+            id: "points",
+            type: "circle",
+            source: "resorts",
+            filter: ["!", ["has", "point_count"]],
+            paint: { ...ring, "circle-radius": 8 },
+          });
+          map.on("click", "clusters", async (e) => {
+            const f = map.queryRenderedFeatures(e.point, { layers: ["clusters"] })[0];
+            const zoom = await map.getSource("resorts").getClusterExpansionZoom(f.properties.cluster_id);
+            map.easeTo({ center: f.geometry.coordinates, zoom: zoom + 0.5 });
+          });
+          map.on("click", "points", (e) => {
+            const w = byKey.get(e.features[0].properties.id);
+            if (w) select(w);
+          });
+          for (const l of ["clusters", "points"]) {
+            map.on("mouseenter", l, () => (map.getCanvas().style.cursor = "pointer"));
+            map.on("mouseleave", l, () => (map.getCanvas().style.cursor = ""));
+          }
+        });
+        map.on("click", (e) => {
+          if (map.getLayer("points") && map.queryRenderedFeatures(e.point, { layers: ["points", "clusters"] }).length) return;
+          selected = null;
+          marker?.remove();
+          $("pick").classList.remove("show");
+          for (const b of $("list").querySelectorAll("button")) b.classList.remove("on");
+        });
+
+        const renderList = (q = "") => {
+          const needle = q.trim().toLowerCase();
+          const hits = worlds
+            .filter((w) => !needle || `${w.name} ${w.subtitle}`.toLowerCase().includes(needle))
+            .sort((a, b) => b.lifts + b.runs - (a.lifts + a.runs));
+          $("list").replaceChildren(
+            ...hits.slice(0, 80).map((w) => {
+              const li = document.createElement("li");
+              const b = document.createElement("button");
+              b.dataset.id = w.id;
+              b.className = selected?.id === w.id ? "on" : "";
+              b.textContent = w.name;
+              const s = document.createElement("small");
+              s.textContent = w.subtitle || "";
+              b.append(s);
+              b.addEventListener("click", () => select(w));
+              li.append(b);
+              return li;
+            })
+          );
+        };
+        renderList();
+        $("search").addEventListener("input", (e) => renderList(e.target.value));
+
+        const bounds = new maplibregl.LngLatBounds();
+        worlds.forEach((w) => bounds.extend([w.lon, w.lat]));
+        if (worlds.length > 1) map.fitBounds(bounds, { padding: { top: 80, bottom: 120, left: 380, right: 80 }, maxZoom: 5, animate: false });
+        else if (worlds[0]) map.jumpTo({ center: [worlds[0].lon, worlds[0].lat], zoom: 5 });
       }
-    ]
-  }
-  </script>
-  <link rel="shortcut icon" href="../assets/logo.png?v=2" type="image/x-icon" />
-  <link rel="preconnect" href="https://api.maptiler.com" crossorigin />
-  <link href="https://cdn.maptiler.com/maptiler-sdk-js/v3.10.2/maptiler-sdk.css" rel="stylesheet" />
-  <link rel="stylesheet" href="../css/map-popups.css" />
-  <style>
-    :root {
-      --hud: transparent;
-      --line: rgba(255,255,255,.22);
-      --ok: #2a4a38;
-      --bad: #6a3030;
-      --pad: max(14px, env(safe-area-inset-top));
-      --pad-l: max(16px, env(safe-area-inset-left));
-      --pad-r: max(16px, env(safe-area-inset-right));
-      --pad-b: max(16px, env(safe-area-inset-bottom));
-      --type: rgba(255,255,255,.92);
-    }
-    html, body { margin: 0; height: 100%; height: 100dvh; height: 100svh; overflow: hidden; background: #7eb8e4; color: var(--type); font-family: "Segoe UI", system-ui, sans-serif; touch-action: none; }
-    body.picker { touch-action: auto; }
-    canvas { display: block; touch-action: none; }
-    #obj, #clock, #score-box, #piste, #speed-box, #dist-read, #pause-btn, #pov-btn, #snow-btn, #load-note, #mini-wrap, #nav-arrow, #resort-title {
-      position: absolute; z-index: 2; pointer-events: none;
-      text-shadow: 0 1px 8px rgba(40,50,60,.35);
-      font-weight: 600; letter-spacing: .04em;
-    }
-    #resort-title {
-      top: var(--pad); left: 50%; transform: translateX(-50%);
-      z-index: 4; max-width: min(72vw, 560px); padding: 0 12px;
-      text-align: center; font-size: clamp(18px, 3.2vw, 28px);
-      font-weight: 700; letter-spacing: .06em; line-height: 1.15;
-      color: #f4f8fb;
-      text-shadow:
-        0 1px 2px rgba(20, 28, 36, .55),
-        0 2px 18px rgba(20, 28, 36, .45);
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-    #resort-title[hidden] { display: none !important; }
-    body:not(.lobby) #resort-title { display: none !important; }
-    #clock {
-      top: var(--pad); left: 50%; transform: translateX(-50%);
-      min-width: 8ch; text-align: center; font-size: clamp(16px, 2.4vw, 22px);
-      font-variant-numeric: tabular-nums; font-weight: 500; opacity: .92;
-    }
-    #nav-arrow {
-      top: calc(var(--pad) + 30px); left: 50%; width: 40px; height: 40px;
-      transform: translateX(-50%);
-      filter: drop-shadow(0 1px 6px rgba(40,50,60,.45));
-    }
-    #nav-arrow svg { display: block; width: 40px; height: 40px; }
-    #nav-arrow[hidden] { display: none !important; }
-    #mini-wrap {
-      top: var(--pad); right: var(--pad-r);
-      display: flex; flex-direction: column; align-items: flex-end; gap: 6px;
-    }
-    #minimap {
-      width: clamp(132px, 18vw, 196px); height: clamp(132px, 18vw, 196px);
-      display: block; touch-action: none;
-    }
-    #score-box {
-      position: static; min-width: 5ch; text-align: right; font-variant-numeric: tabular-nums; font-weight: 500;
-      font-size: 14px; opacity: .88;
-    }
-    #combo-read {
-      position: static; font-size: 16px; font-variant-numeric: tabular-nums;
-      transform-origin: right center; transition: transform .12s ease;
-    }
-    #combo-read.pop { transform: scale(1.2); }
-    #combo-read[hidden] { display: none !important; }
-    #air-shout {
-      position: absolute; z-index: 4; pointer-events: none;
-      left: 50%; top: 34%; transform: translate(-50%, -50%);
-      text-align: center; text-shadow: 0 2px 14px rgba(20,30,40,.45);
-      font-weight: 800; letter-spacing: .06em; color: #fff;
-    }
-    #air-shout .air-line {
-      display: block; font-size: clamp(26px, 5.2vw, 48px);
-      font-variant-numeric: tabular-nums;
-    }
-    #air-shout .air-pts {
-      display: block; margin-top: 4px; font-size: clamp(16px, 2.8vw, 26px);
-      font-weight: 700; letter-spacing: .12em; color: #e8f6c8;
-    }
-    #air-shout[hidden] { display: none !important; }
-    @keyframes air-pop {
-      from { transform: translate(-50%, -50%) scale(.72); opacity: 0; }
-      to { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-    }
-    #air-shout:not([hidden]) { animation: air-pop .22s ease-out; }
-    #obj {
-      bottom: calc(var(--pad-b) + 8px); left: 50%; transform: translateX(-50%);
-      max-width: min(70vw, 420px); text-align: center; font-size: 13px; font-weight: 500;
-      letter-spacing: .12em; text-transform: uppercase; white-space: nowrap;
-      overflow: hidden; text-overflow: ellipsis;
-    }
-    #dist-read {
-      bottom: var(--pad-b); left: var(--pad-l);
-      font-size: 12px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase;
-      font-variant-numeric: tabular-nums;
-    }
-    #remain { display: none; }
-    #piste {
-      bottom: calc(var(--pad-b) + 28px); left: var(--pad-l);
-      font-size: 10px; letter-spacing: .14em; text-transform: uppercase; opacity: .7;
-    }
-    #piste.ok, #piste.bad { background: none; }
-    #speed-box {
-      bottom: var(--pad-b); right: var(--pad-r); text-align: right;
-      font-size: 12px; letter-spacing: .1em; text-transform: uppercase;
-    }
-    #speed-box label { display: none; }
-    #speed { display: none; }
-    #speed-read { font-variant-numeric: tabular-nums; font-size: 12px; font-weight: 500; }
-    #help-btn {
-      pointer-events: auto; z-index: 10; position: absolute;
-      top: var(--pad); left: calc(var(--pad-l) + 48px);
-      min-width: 44px; min-height: 44px; border-radius: 10px;
-      border: 1px solid rgba(255,255,255,.35); background: rgba(255,255,255,.18);
-      color: inherit; font: 700 16px/1 system-ui, sans-serif; cursor: pointer;
-    }
-    #help-scrim {
-      display: none; position: fixed; inset: 0; z-index: 7;
-      background: rgba(16, 24, 32, .35);
-    }
-    body.help-on #help-scrim { display: block; }
-    #help-tips { display: none; position: fixed; inset: 0; z-index: 9; pointer-events: none; }
-    body.help-on #help-tips { display: block; }
-    body.help-on #pads { display: flex !important; }
-    .help-bubble {
-      position: absolute; max-width: 160px;
-      padding: 8px 10px; border-radius: 10px;
-      background: rgba(255,255,255,.94); color: #243038;
-      font: 700 12px/1.3 system-ui, sans-serif;
-      box-shadow: 0 6px 18px rgba(16,24,32,.28);
-    }
-    #tip-steer { left: var(--pad-l); bottom: calc(var(--pad-b) + 128px); }
-    #tip-jump { right: var(--pad-r); bottom: calc(var(--pad-b) + 148px); }
-    #tip-shove { right: calc(var(--pad-r) + 148px); bottom: calc(var(--pad-b) + 10px); }
-    #tip-cam { left: var(--pad-l); top: calc(var(--pad) + 78px); }
-    #pause-btn {
-      pointer-events: auto; top: var(--pad); left: var(--pad-l);
-      min-width: 40px; min-height: 40px; border: 0; background: transparent;
-      color: inherit; font-weight: 600; letter-spacing: .08em; cursor: pointer; opacity: .75;
-    }
-    #pause-btn:hover, #pov-btn:hover, #snow-btn:hover { opacity: 1; }
-    #pov-btn {
-      pointer-events: auto; top: calc(var(--pad) + 42px); left: var(--pad-l);
-      min-width: 40px; min-height: 32px; border: 0; background: transparent;
-      color: inherit; font-weight: 700; letter-spacing: .08em; cursor: pointer; opacity: .75;
-      font-size: 11px;
-    }
-    #snow-btn {
-      pointer-events: auto; top: var(--pad); left: calc(var(--pad-l) + 100px);
-      min-width: 44px; min-height: 44px; max-width: 168px; border: 0; background: transparent;
-      color: inherit; font-weight: 700; letter-spacing: .04em; cursor: pointer; opacity: .75;
-      font-size: 10px; text-align: left; line-height: 1.2;
-    }
-    #load-note { display: none; }
-    #dbg {
-      position: absolute; z-index: 3; left: var(--pad-l); bottom: calc(var(--pad-b) + 56px);
-      padding: 8px 10px; border-radius: 8px; background: rgba(255,255,255,.45); color: #243038;
-      font: 11px/1.35 ui-monospace, Consolas, monospace; white-space: pre; pointer-events: none;
-      max-width: min(92vw, 420px);
-    }
-    #pads {
-      display: flex; position: fixed; z-index: 8; inset: auto var(--pad-r) var(--pad-b) var(--pad-l);
-      justify-content: space-between; align-items: flex-end; pointer-events: none;
-    }
-    #pads button {
-      min-width: 64px; min-height: 56px; border-radius: 14px; border: 1px solid rgba(255,255,255,.7);
-      background: rgba(22, 32, 42, .55); color: #f4f8fb; font-size: 10px; font-weight: 700;
-      letter-spacing: .06em; text-transform: uppercase; touch-action: none;
-      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
-      text-shadow: 0 1px 4px rgba(12,18,24,.75);
-    }
-    #pads button svg { width: 22px; height: 22px; display: block; }
-    #pads button.down { background: rgba(22, 32, 42, .82); }
-    #pads .col { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; pointer-events: auto; }
-    #pads .shove-row { display: flex; gap: 8px; }
-    .stick-wrap { pointer-events: none; display: flex; flex-direction: column; align-items: center; gap: 6px; }
-    .stick-well {
-      pointer-events: auto; touch-action: none;
-      width: 108px; height: 108px; border-radius: 50%;
-      border: 2px solid rgba(255,255,255,.75); background: rgba(22, 32, 42, .4);
-      position: relative; display: grid; place-items: center;
-    }
-    .stick-well.down { background: rgba(22, 32, 42, .58); }
-    .stick-knob {
-      width: 44px; height: 44px; border-radius: 50%;
-      background: #f4f8fb; border: 2px solid rgba(26, 50, 80, .45);
-      box-shadow: 0 2px 10px rgba(12,18,24,.4);
-      pointer-events: none;
-    }
-    .pad-label {
-      font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
-      color: #f4f8fb; text-shadow: 0 1px 5px rgba(12,18,24,.85);
-      pointer-events: none;
-    }
-    @media (pointer: coarse), (max-width: 720px), (max-height: 520px) {
-      #pads { display: flex; }
-      #obj { display: none !important; }
-      #minimap { width: 96px; height: 96px; }
-      #mini-wrap { top: var(--pad); }
-      #speed-box {
-        bottom: auto; top: var(--pad); right: calc(var(--pad-r) + 108px);
-      }
-      #dist-read {
-        bottom: auto; top: calc(var(--pad) + 22px); left: auto; right: calc(var(--pad-r) + 108px);
-      }
-      #piste {
-        bottom: auto; top: calc(var(--pad) + 78px); left: var(--pad-l);
-      }
-      #overlay.lobby #panel {
-        width: min(300px, 48vw);
-        max-height: min(36vh, 240px);
-        overflow: hidden;
-      }
-      #overlay.lobby #panel h2 { font-size: 18px; margin: 0 0 4px; }
-      .lobby-details-body { max-height: min(18vh, 140px); }
-      #osm-map-note {
-        left: var(--pad-l); right: auto; bottom: auto; top: calc(var(--pad) + 8px);
-        width: min(280px, 42vw); font-size: 11px;
-      }
-    }
-    @media (pointer: coarse) and (orientation: landscape) {
-      #overlay.lobby { align-items: flex-end; justify-content: flex-start; }
-      #overlay.lobby #panel { width: min(280px, 42vw); max-height: min(34vh, 220px); }
-    }
-    .load-bar {
-      height: 8px; margin: 12px 0; border-radius: 4px; background: rgba(42,50,56,.12); overflow: hidden;
-    }
-    .load-bar span {
-      display: block; height: 100%; width: 8%; background: #2a3238; border-radius: 4px;
-    }
-    .load-bar.indet span {
-      width: 32%; animation: load-slide 1.1s ease-in-out infinite;
-    }
-    @media (prefers-reduced-motion: reduce) {
-      .load-bar.indet span, #air-shout:not([hidden]), #combo-read { animation: none; transition: none; }
-    }
-    @keyframes load-slide {
-      0% { transform: translateX(-120%); }
-      100% { transform: translateX(320%); }
-    }
-    #rotate-lock {
-      position: absolute; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center;
-      background: rgba(20, 28, 36, .88); color: #f4f6f8; text-align: center; padding: 24px;
-      font-size: 20px; font-weight: 650;
-    }
-    #rotate-lock[hidden] { display: none !important; }
-    body.must-landscape #pads { pointer-events: none; }
-    #overlay {
-      position: absolute; inset: 0; z-index: 4; display: flex; align-items: center; justify-content: center;
-      background: transparent; padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
-    }
-    #overlay[hidden] { display: none !important; }
-    .sr-only {
-      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
-      overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
-    }
-    #panel {
-      width: min(420px, 92vw); background: rgba(255,255,255,.78); color: #2a3238; padding: 22px 24px; border-radius: 4px;
-      border: 1px solid rgba(255,255,255,.9);
-    }
-    #overlay.finish #panel {
-      width: min(720px, 94vw);
-      max-height: min(86vh, 920px);
-      overflow: auto;
-    }
-    #panel .sf-finish-slot { margin-top: 12px; }
-    #overlay.finish .sf-chart-block { background: rgba(255,255,255,.55); }
-    #panel h2 { margin: 0 0 10px; font-size: 22px; font-weight: 600; }
-    #panel .kicker { margin: 0 0 6px; color: #6a5a28; font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
-    #panel .big { font-size: clamp(28px, 6vw, 36px); font-variant-numeric: tabular-nums; }
-    #panel .fine, #panel .hint { opacity: .72; font-size: 12px; }
-    #panel .trails { display: grid; gap: 8px; margin: 12px 0 4px; max-height: min(42vh, 360px); overflow-y: auto; }
-    #panel .trail {
-      min-height: 48px; text-align: left; padding: 8px 12px; border-radius: 4px;
-      border: 1px solid rgba(40,50,60,.18); background: transparent; color: inherit;
-      font-weight: 700; cursor: pointer;
-    }
-    #panel .trail .diff {
-      display: inline-block; margin-left: 8px; font-size: 11px; font-weight: 700;
-      letter-spacing: .06em; text-transform: uppercase; opacity: .9;
-    }
-    #panel .trail .diff.novice, #panel .trail .diff.easy { color: #1f7a38; }
-    #panel .trail .diff.intermediate { color: #1d5fb8; }
-    #panel .trail .diff.advanced, #panel .trail .diff.expert, #panel .trail .diff.extreme { color: #1a1a1c; }
-    #panel .trail .diff.unrated { color: #6a7076; }
-    #panel .trail .meta { display: block; font-size: 12px; font-weight: 600; opacity: .7; }
-    #panel .trail.on { background: rgba(40,50,60,.08); outline: 1px solid #2a3238; }
-    #panel .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
-    .btn {
-      display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box;
-      min-height: 44px; min-width: 120px; padding: 0 16px; border-radius: 4px; border: 1px solid transparent;
-      font: 700 16px/1 system-ui, sans-serif; cursor: pointer; color: #101418;
-    }
-    .btn.primary { background: #2a3238; color: #f4f6f8; }
-    .actions a.stay-link {
-      display: inline-flex; align-items: center; text-decoration: none;
-      background: #0f766e; color: #f4f8fb; border-color: transparent;
-    }
-    .btn.ghost { background: transparent; color: #2a3238; border-color: rgba(42,50,56,.28); }
-    .btn:hover { filter: brightness(1.08); }
-    .btn:active { transform: scale(.98); }
-    .btn:focus-visible { outline: 2px solid #2a3238; outline-offset: 2px; }
-    #overlay.lobby {
-      align-items: flex-end; justify-content: flex-start;
-      background: linear-gradient(90deg, rgba(40,70,95,.18) 0, rgba(40,70,95,.04) 260px, transparent 38%);
-      pointer-events: none;
-    }
-    #overlay.lobby #panel {
-      pointer-events: auto;
-      display: flex;
-      flex-direction: column;
-      width: min(360px, 92vw);
-      max-height: min(78vh, 720px);
-      overflow: hidden;
-      margin: 0 0 var(--pad-b) var(--pad-l);
-      background: rgba(255,255,255,.72);
-    }
-    #overlay.lobby #panel .actions { flex-shrink: 0; margin-top: 10px; }
-    .lobby-details {
-      flex: 1 1 auto;
-      min-height: 0;
-      margin: 0;
-      border-top: 1px solid rgba(42,50,56,.14);
-    }
-    .lobby-details summary {
-      cursor: pointer;
-      list-style: none;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      padding: 8px 0;
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: .04em;
-      color: #2a3238;
-    }
-    .lobby-details summary::-webkit-details-marker { display: none; }
-    .lobby-details summary::after {
-      content: "▸";
-      font-size: 11px;
-      opacity: .7;
-    }
-    .lobby-details[open] summary::after { content: "▾"; }
-    .lobby-details-body {
-      max-height: min(42vh, 380px);
-      overflow-y: auto;
-      padding: 0 0 6px;
-    }
-    .osm-fix-details { flex: 0 0 auto; }
-    .osm-fix-details .lobby-details-body { max-height: none; overflow: visible; }
-    .osm-fix-details .osm-fix { margin: 0 0 4px; }
-    .atlas-stats { margin: 0 0 10px; }
-    .atlas-stats-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 6px 12px;
-    }
-    .atlas-stat { font-size: 12px; line-height: 1.25; }
-    .atlas-stat .stat-label, .atlas-breakdown .stat-label {
-      display: block;
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: .04em;
-      color: #4a5a68;
-    }
-    .atlas-breakdown, .atlas-meta {
-      margin: 8px 0 0;
-      font-size: 11px;
-      line-height: 1.35;
-    }
-    .atlas-wiki {
-      display: inline-block;
-      margin-top: 8px;
-      font-size: 12px;
-      font-weight: 650;
-      color: #1a5f7a;
-    }
-    #overlay.lobby .trails { display: none; }
-    .trail-meta { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 13px; font-weight: 600; }
-    .diff-svg { flex: 0 0 auto; display: block; }
-    .legend {
-      list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 6px;
-      font-size: 12px; font-weight: 650;
-    }
-    .legend li { display: flex; align-items: center; gap: 8px; }
-    .legend .diff-svg { flex: 0 0 auto; }
-    .diff-scheme {
-      display: grid; gap: 6px; margin: 0 0 10px;
-    }
-    .diff-scheme-label {
-      font-size: 11px; font-weight: 700; letter-spacing: .04em;
-      text-transform: uppercase; color: #4a5660;
-    }
-    .diff-scheme-btns { display: flex; flex-wrap: wrap; gap: 6px; }
-    .scheme-btn {
-      appearance: none; border: 1px solid rgba(42,50,56,.22);
-      background: rgba(255,255,255,.55); color: #2a3238;
-      font: inherit; font-size: 11px; font-weight: 700;
-      padding: 5px 9px; border-radius: 4px; cursor: pointer;
-    }
-    .scheme-btn:hover { background: #fff; }
-    .scheme-btn.on, .scheme-btn[aria-pressed="true"] {
-      background: #2a3238; color: #f4f6f8; border-color: #2a3238;
-    }
-    body.lobby #clock, body.lobby #score-box, body.lobby #dist-read, body.lobby #piste,
-    body.lobby #speed-box, body.lobby #obj, body.lobby #pause-btn, body.lobby #pov-btn, body.lobby #snow-btn,
-    body.lobby #pads, body.lobby #nav-arrow, body.lobby #combo-read, body.lobby #air-shout,
-    body.lobby #mini-wrap { display: none !important; }
-    body.lobby #resort-title { display: block; }
-    body.flyby #overlay { display: none !important; }
-    body.flyby #resort-title, body.flyby #osm-map-note { display: none !important; }
-    #flyby-bar {
-      position: absolute; z-index: 6; pointer-events: auto;
-      left: 50%; bottom: calc(var(--pad-b) + 14px); transform: translateX(-50%);
-      display: flex; gap: 8px; align-items: center;
-      padding: 8px 10px; border-radius: 6px;
-      background: rgba(244, 248, 250, .78);
-      border: 1px solid rgba(255, 255, 255, .88);
-      box-shadow: 0 8px 28px rgba(30, 42, 52, .16);
-      backdrop-filter: blur(8px);
-    }
-    #flyby-bar[hidden] { display: none !important; }
-    #flyby-bar .flyby-hint {
-      margin: 0 4px 0 2px; font-size: 12px; font-weight: 600; color: #3a4650;
-      white-space: nowrap; opacity: .85;
-    }
-    #flyby-bar .btn {
-      appearance: none; border: 1px solid rgba(42, 50, 56, .18);
-      background: rgba(255, 255, 255, .72); color: #243038;
-      font: inherit; font-size: 13px; font-weight: 700;
-      padding: 8px 14px; border-radius: 4px; cursor: pointer;
-    }
-    #flyby-bar .btn:hover { background: #fff; }
-    #flyby-bar .btn[aria-pressed="true"] {
-      background: #243038; color: #f4f8fb; border-color: #243038;
-    }
-    #flyby-bar .btn.ghost { background: transparent; }
-    @media (max-width: 640px) {
-      #flyby-bar { gap: 6px; padding: 7px 8px; }
-      #flyby-bar .flyby-hint { display: none; }
-      #flyby-bar .btn { padding: 8px 12px; font-size: 12px; }
-    }
-    #osm-map-note {
-      position: absolute; z-index: 5; pointer-events: auto;
-      right: var(--pad-r); bottom: var(--pad-b);
-      width: min(380px, 42vw);
-      padding: 10px 12px; border-radius: 4px;
-      background: rgba(255,255,255,.78); color: #2a3238;
-      border: 1px solid rgba(255,255,255,.9);
-      font-size: 12px; line-height: 1.35;
-    }
-    #osm-map-note[hidden] { display: none !important; }
-    .osm-fix { margin: 10px 0 4px; }
-    .osm-fix-copy { margin: 0 0 8px; font-size: 12px; line-height: 1.4; opacity: .88; }
-    .osm-fix-acts { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-    .osm-fix-link, .osm-fix-notify {
-      font-size: 12px; font-weight: 700; color: #0f766e; background: none; border: 0;
-      padding: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 2px;
-    }
-    .osm-fix-form { margin-top: 8px; display: grid; gap: 6px; }
-    .osm-fix-form[hidden] { display: none !important; }
-    .osm-fix-form label { font-size: 11px; font-weight: 700; }
-    .osm-fix-form textarea {
-      width: 100%; min-height: 72px; resize: vertical; padding: 8px;
-      border: 1px solid rgba(42,50,56,.28); border-radius: 4px; font: inherit;
-    }
-    .osm-fix-hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
-    .osm-fix-status { margin: 0; font-size: 12px; color: #0f766e; }
-    .osm-fix-compact .osm-fix-copy { font-size: 11px; }
-    body.trailer #pause-btn, body.trailer #pov-btn, body.trailer #snow-btn, body.trailer #pads, body.trailer #dbg { display: none !important; }
-    #clay-pick[hidden] { display: none !important; }
-    #clay-pick {
-      position: fixed; inset: 0; z-index: 3;
-      background: radial-gradient(ellipse 70% 55% at 50% 58%, #fff 0%, #fff 62%, #eef3f8 100%);
-    }
-    #clay-pick-stage { position: absolute; inset: 0; }
-    #clay-pick-stage canvas { display: block; width: 100%; height: 100%; touch-action: none; }
-    #overlay.clay {
-      align-items: stretch; justify-content: stretch;
-      pointer-events: none; background: transparent;
-      padding: 0;
-    }
-    #overlay.clay #panel {
-      position: absolute; inset: 0; width: auto; max-width: none;
-      background: transparent; border: 0; padding: 0;
-      pointer-events: none;
-    }
-    #overlay.clay .clay-change,
-    #overlay.clay .clay-head,
-    #overlay.clay .clay-load,
-    #overlay.clay .clay-dock { pointer-events: auto; }
-    #overlay.clay .clay-change {
-      position: absolute; top: var(--pad); left: var(--pad-l); z-index: 2;
-    }
-    #overlay.clay .clay-head {
-      position: absolute; top: var(--pad); left: 50%; transform: translateX(-50%);
-      width: min(280px, 46vw); text-align: center; z-index: 1;
-      background: rgba(255,255,255,.78); border: 1px solid rgba(255,255,255,.9);
-      border-radius: 4px; padding: 10px 12px;
-    }
-    #overlay.clay .clay-head h2 { font-size: 18px; }
-    #overlay.clay .clay-head p { margin: 4px 0 0; }
-    #overlay.clay .clay-load {
-      position: absolute; top: var(--pad); right: var(--pad-r); z-index: 2;
-      width: min(240px, 42vw);
-      background: rgba(255,255,255,.78); border: 1px solid rgba(255,255,255,.9);
-      border-radius: 4px; padding: 10px 12px;
-    }
-    #overlay.clay .clay-load h2 { display: none; }
-    #overlay.clay .clay-dock {
-      position: absolute; left: var(--pad-l); top: calc(var(--pad) + 56px);
-      width: min(260px, 46vw); z-index: 2;
-      background: rgba(255,255,255,.78); border: 1px solid rgba(255,255,255,.9);
-      border-radius: 4px; padding: 12px 14px;
-    }
-    body.compact-ui #overlay.clay .clay-dock { width: min(200px, 48vw); }
-    body.compact-ui #overlay.clay .clay-head { width: min(220px, 46vw); }
-    body.compact-ui #overlay.clay .clay-head h2 { font-size: 15px; margin: 0; }
-    body.clay-pick:not(.compact-ui) #pads { display: none !important; }
-    body.clay-pick.compact-ui #pads { display: flex; }
-    #overlay.picker {
-      align-items: stretch; justify-content: stretch;
-      padding: max(12px, env(safe-area-inset-top)) 16px max(12px, env(safe-area-inset-bottom));
-      background: #7eb6d9;
-    }
-    #overlay.picker #panel {
-      width: 100%; max-width: none; height: 100%;
-      display: flex; flex-direction: column; gap: 8px;
-      background: transparent; border: 0; padding: 0; pointer-events: auto;
-    }
-    #overlay.picker h2 { margin: 0; color: #243038; }
-    .world-head { flex: 0 0 auto; }
-    .world-legal { margin: 0; text-align: center; color: #2a3238; }
-    .atlas-home { color: inherit; text-decoration: none; }
-    .atlas-home:hover { text-decoration: underline; }
-    .world-stage {
-      flex: 1 1 auto; min-height: 0;
-      position: relative; border-radius: 6px; overflow: hidden;
-      background: #9eb8c8;
-    }
-    #picker-map { position: absolute; inset: 0; width: 100%; height: 100%; }
-    #overlay.picker .search-box {
-      position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
-      z-index: 1000; width: 90%; max-width: 360px;
-    }
-    #overlay.picker .search-box input {
-      width: 100%; padding: 10px 14px; font-size: 15px; border: 1px solid #ccc;
-      border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,.15); outline: none; box-sizing: border-box;
-    }
-    #overlay.picker .search-dropdown {
-      position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px;
-      background: #fff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,.2);
-      max-height: 280px; overflow-y: auto; display: none;
-    }
-    #overlay.picker .search-dropdown.visible { display: block; }
-    #overlay.picker .search-item {
-      padding: 10px 14px; cursor: pointer; border-bottom: 1px solid #eee; font-size: 14px; color: #243038;
-    }
-    #overlay.picker .search-item:hover, #overlay.picker .search-item.active { background: #f0f4ff; }
-    #overlay.picker .map-legend-fold {
-      position: absolute; bottom: 24px; left: 12px; z-index: 1000;
-      background: #fff; padding: 8px 12px; border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0,0,0,.2); font-size: 12px; color: #243038;
-      max-width: min(280px, 46vw);
-    }
-    #overlay.picker .map-legend-fold summary {
-      cursor: pointer; font-weight: 700; list-style: none; display: flex;
-      align-items: center; justify-content: space-between; gap: 8px;
-    }
-    #overlay.picker .map-legend-fold summary::-webkit-details-marker { display: none; }
-    #overlay.picker .map-legend {
-      max-height: min(42vh, 280px); overflow-y: auto; margin-top: 6px;
-    }
-    #overlay.picker .map-legend h3 { margin: 0 0 8px; font-size: 13px; }
-    #overlay.picker .legend-row { display: flex; align-items: center; gap: 8px; margin: 4px 0; }
-    #overlay.picker .legend-swatch { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
-    #overlay.picker .legend-line { width: 18px; height: 4px; border-radius: 2px; flex-shrink: 0; display: inline-block; }
-    #overlay.picker .basemap-fold {
-      position: absolute; bottom: 24px; right: 12px; z-index: 1000;
-      background: #fff; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,.2);
-      padding: 8px 10px; font-size: 12px; color: #243038; min-width: 0;
-    }
-    #overlay.picker .basemap-fold summary {
-      cursor: pointer; font-weight: 700; list-style: none;
-    }
-    #overlay.picker .basemap-fold summary::-webkit-details-marker { display: none; }
-    #overlay.picker .basemap-control {
-      background: transparent; box-shadow: none; padding: 6px 0 0; min-width: 148px;
-      display: flex; flex-direction: column; gap: 4px;
-    }
-    @media (pointer: fine) and (min-width: 721px) and (min-height: 521px) {
-      #overlay.picker .map-legend-fold summary,
-      #overlay.picker .basemap-fold summary { display: none; }
-    }
-    @media (pointer: coarse), (max-width: 720px), (max-height: 520px) {
-      #overlay.picker .map-legend-fold { max-width: min(220px, 42vw); bottom: 16px; left: 10px; }
-      #overlay.picker .map-legend-fold:not([open]) { padding: 8px 12px; }
-      #overlay.picker .map-legend-fold[open] .map-legend { max-height: min(38vh, 200px); }
-      #overlay.picker .basemap-fold { bottom: 16px; right: 10px; }
-      #overlay.picker .basemap-fold:not([open]) { min-width: 0; }
-      #overlay.picker .search-box { width: min(90%, 280px); }
-      #overlay.picker .world-head h2 { font-size: 18px; }
-    }
-    #overlay.picker .maplibregl-ctrl-attrib, #overlay.picker .maptiler-ctrl-attrib { font-size: 10px; }
-    #overlay.picker .maplibregl-popup, #overlay.picker .maptiler-popup { z-index: 1100; }
-    body.picker #clock, body.picker #score-box, body.picker #dist-read, body.picker #piste,
-    body.picker #speed-box, body.picker #obj, body.picker #pause-btn, body.picker #pov-btn, body.picker #snow-btn,
-    body.picker #pads, body.picker #nav-arrow, body.picker #mini-wrap { display: none !important; }
-    @media (max-width: 640px) {
-      #overlay.lobby { align-items: flex-end; background: linear-gradient(180deg, transparent 42%, rgba(232,238,242,.62)); }
-    }
-    body.compact-ui #overlay.lobby #panel {
-      width: min(300px, 48vw);
-      max-height: min(36vh, 240px);
-      overflow: hidden;
-    }
-    body.compact-ui #overlay.lobby #panel h2 { font-size: 18px; margin: 0 0 4px; }
-    body.compact-ui .lobby-details-body { max-height: min(18vh, 140px); }
-    body.compact-ui #obj { display: none !important; }
-    body.compact-ui #minimap { width: 96px; height: 96px; }
-    body.compact-ui #speed-box {
-      bottom: auto; top: var(--pad); right: calc(var(--pad-r) + 108px);
-    }
-    body.compact-ui #dist-read {
-      bottom: auto; top: calc(var(--pad) + 22px); left: auto; right: calc(var(--pad-r) + 108px);
-    }
-    body.compact-ui #piste {
-      bottom: auto; top: calc(var(--pad) + 78px); left: var(--pad-l);
-    }
-    body.compact-ui.lobby #osm-map-note { display: none !important; }
-    body.compact-ui #resort-title {
-      max-width: min(78vw, 420px);
-      font-size: clamp(15px, 4.2vw, 22px);
-    }
-    body.compact-ui #overlay.picker .map-legend-fold { max-width: min(220px, 42vw); bottom: 16px; left: 10px; }
-    body.compact-ui #overlay.picker .map-legend-fold[open] .map-legend { max-height: min(38vh, 200px); }
-  </style>
-</head>
-<body>
-  <h1 class="sr-only">Ski a mapped resort</h1>
-  <div id="resort-title" hidden></div>
-  <div id="obj">Loading course…</div>
-  <div id="clock">0:00.00</div>
-  <div id="nav-arrow" hidden role="img" aria-label="Trail ahead">
-    <svg viewBox="0 0 40 40" aria-hidden="true">
-      <circle cx="20" cy="20" r="15.5" fill="rgba(22,30,38,.32)" stroke="rgba(255,255,255,.55)" stroke-width="1.3"/>
-      <path d="M20 2.8 L22.4 8.2 H17.6 Z" fill="rgba(255,255,255,.7)"/>
-      <g id="nav-needle">
-        <path d="M20 6.5 L25.2 26 L20 22.2 L14.8 26 Z" fill="#fff"/>
-      </g>
-    </svg>
-  </div>
-  <div id="mini-wrap">
-    <canvas id="minimap" width="196" height="196" aria-label="Trail map"></canvas>
-    <div id="score-box">00000</div>
-    <div id="combo-read" hidden>1.0×</div>
-  </div>
-  <div id="air-shout" hidden></div>
-  <div id="dist-read"></div>
-  <div id="remain"><div id="remain-fill"></div></div>
-  <button id="pause-btn" type="button" aria-label="Pause">II</button>
-  <button id="help-btn" type="button" aria-label="Controls">?</button>
-  <button id="pov-btn" type="button" aria-label="Toggle camera">CAM</button>
-  <button id="snow-btn" type="button" aria-label="Snow level">White Ribbons of Death</button>
-  <div id="piste" class="ok">ON PISTE</div>
-  <div id="speed-box">
-    <label>SPEED KM/H</label>
-    <div id="speed-read">  0</div>
-    <div id="speed"><div id="speed-fill"></div></div>
-  </div>
-  <div id="load-note"></div>
-  <pre id="dbg" hidden></pre>
-  <div id="pads">
-    <div class="stick-wrap">
-      <div class="stick-well" data-stick="steer" aria-label="Steer">
-        <div class="stick-knob"></div>
-      </div>
-      <span class="pad-label">Steer</span>
-    </div>
-    <div class="col">
-      <button type="button" data-pad="jump" aria-label="Jump">
-        <svg viewBox="0 0 32 32" aria-hidden="true"><path fill="currentColor" d="M16 4l10 12h-6v12h-8V16H6z"/></svg>
-        <span>Jump</span>
-      </button>
-      <div class="shove-row">
-        <button type="button" data-pad="shove-l" aria-label="Shove left">
-          <svg viewBox="0 0 32 32" aria-hidden="true"><path fill="currentColor" d="M26 14H14v-5L4 17l10 8v-5h12z"/></svg>
-          <span>Shove</span>
-        </button>
-        <button type="button" data-pad="shove-r" aria-label="Shove right">
-          <svg viewBox="0 0 32 32" aria-hidden="true"><path fill="currentColor" d="M6 14h12v-5l10 8-10 8v-5H6z"/></svg>
-          <span>Shove</span>
-        </button>
-      </div>
-    </div>
-  </div>
-  <div id="help-scrim" hidden></div>
-  <div id="help-tips" hidden>
-    <p class="help-bubble" id="tip-steer">Steer with this stick</p>
-    <p class="help-bubble" id="tip-jump">Jump</p>
-    <p class="help-bubble" id="tip-shove">Shove with that pole</p>
-    <p class="help-bubble" id="tip-cam">Switch camera</p>
-  </div>
-  <div id="osm-map-note" hidden></div>
-  <div id="flyby-bar" hidden role="toolbar" aria-label="Fly-by controls">
-    <p class="flyby-hint">Drag · scroll to explore</p>
-    <button type="button" class="btn" id="flyby-trails" data-flyby="trails" aria-pressed="false">Trails</button>
-    <button type="button" class="btn" id="flyby-auto" data-flyby="auto" aria-pressed="false">Auto</button>
-    <button type="button" class="btn ghost" id="flyby-exit" data-flyby="exit">Back</button>
-  </div>
-  <div id="clay-pick" hidden><div id="clay-pick-stage"></div></div>
-  <div id="overlay"><div id="panel"><p class="kicker">Loading</p><h2>Fetching the mountain</h2><p>DEM + OSM scene…</p></div></div>
-  <script defer src="https://cdn.maptiler.com/maptiler-sdk-js/v3.10.2/maptiler-sdk.umd.min.js"></script>
-  <script type="importmap">
-    { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-                   "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }
-  </script>
-  <script type="module" src="./main.js?v=snow22"></script>
-</body>
+    </script>
+  </body>
 </html>

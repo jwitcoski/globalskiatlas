@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-KJGNL3KJL0"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){ dataLayer.push(arguments); }
+      gtag('js', new Date());
+      gtag('config', 'G-KJGNL3KJL0');
+    </script>
+    <title>Ski Game – Global Ski Atlas</title>
+    <meta name="description" content="Ski a mapped resort in the browser. The course uses Global Ski Atlas terrain." />
+    <link rel="shortcut icon" href="/assets/logo.png?v=2" type="image/x-icon" />
+    <link rel="canonical" href="https://globalskiatlas.com/playable/" />
+    <meta name="robots" content="noindex" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand+SC&family=Patrick+Hand&display=swap" rel="stylesheet" />
+    <script type="module" crossorigin src="./assets/diorama-wzciB8893.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/GLTFLoader-ZQPYWCkq.js">
+    <link rel="modulepreload" crossorigin href="./assets/names-rQ4i12J3.js">
+    <link rel="stylesheet" crossorigin href="./assets/names-Dptv4clm.css">
+    <link rel="stylesheet" crossorigin href="./assets/diorama-Ba-ywn0B.css">
+  </head>
+  <body>
+    <canvas id="game"></canvas>
+    <div id="you-tag" class="dio-you hidden" aria-hidden="true">You</div>
+
+    <aside class="dio-card" id="legend">
+      <div class="tab">Hemu · 禾木</div>
+      <p class="sub">Jikepulin Ski Resort · Altay, Xinjiang</p>
+      <ul class="key">
+        <li><span class="badge easy"></span>Easy</li>
+        <li><span class="badge intermediate"></span>Intermediate</li>
+        <li><span class="badge advanced"></span>Advanced</li>
+        <li><span class="badge expert"></span>Expert</li>
+        <li><span class="badge lift"></span>Lift</li>
+        <li><span class="badge lodge"></span>Service centre</li>
+      </ul>
+      <p class="dim" id="stats"></p>
+      <p class="hint">Drag to spin · scroll to zoom · WASD to fly (Q/E down/up, Shift faster) · click a run, lift, station or lodge to go there</p>
+      <div class="btns">
+        <button id="spin" aria-pressed="true">Auto-spin</button>
+        <button id="home">Reset view</button>
+        <a href="./play.html">Ride it ▸</a>
+      </div>
+    </aside>
+
+    <div id="tip" class="dio-tip hidden" role="status">
+      <div class="head"><span class="badge"></span><span class="zh"></span></div>
+      <div class="en"></div>
+      <div class="rows"></div>
+    </div>
+
+    <!-- The picked place, and where it can send you in the game. -->
+    <section id="pick" class="dio-pick hidden" aria-label="Selected place" aria-live="polite">
+      <div class="tab"></div>
+      <button type="button" class="x" aria-label="Close">×</button>
+      <div class="head"><span class="badge"></span><span class="zh"></span></div>
+      <div class="en"></div>
+      <div class="rows"></div>
+      <p class="what"></p>
+      <div class="acts"></div>
+    </section>
+    <div id="cloud"></div>
+
+    <p class="dio-credit">Terrain: AWS Terrain Tiles · Runs &amp; lifts © OpenStreetMap contributors</p>
+
+    <div id="loading"><div class="env">⛰</div><div>Building the mountain</div></div>
+  </body>
+</html>

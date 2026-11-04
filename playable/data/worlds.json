@@ -1,0 +1,79 @@
+[
+ {
+  "id": "hemu",
+  "name": "Hemu · 禾木",
+  "subtitle": "Jikepulin Ski Resort, Altay, Xinjiang, China",
+  "lon": 87.5495985,
+  "lat": 48.62593385,
+  "runs": 87,
+  "lifts": 10,
+  "min": 1224,
+  "max": 2925
+ },
+ {
+  "id": "montage_mountain_pa",
+  "name": "Montage Mountain",
+  "subtitle": "Scranton, Pennsylvania, US",
+  "lon": -75.67286724750464,
+  "lat": 41.34310198157739,
+  "runs": 58,
+  "lifts": 12,
+  "min": 268,
+  "max": 602
+ },
+ {
+  "id": "kvitfjell_norway",
+  "name": "Kvitfjell",
+  "subtitle": "Oppland, Norway",
+  "lon": 10.073525373950057,
+  "lat": 61.42650397738067,
+  "runs": 89,
+  "lifts": 14,
+  "min": 200,
+  "max": 1028
+ },
+ {
+  "id": "pal_arinsal_andorra",
+  "name": "Pal-Arinsal",
+  "subtitle": "La Massana, Andorra",
+  "lon": 1.4365742973203217,
+  "lat": 42.51897460793677,
+  "runs": 73,
+  "lifts": 31,
+  "min": 1205,
+  "max": 2646
+ },
+ {
+  "id": "perisher_australia",
+  "name": "Perisher",
+  "subtitle": "New South Wales, Australia",
+  "lon": 148.3640791555451,
+  "lat": -36.42899266523744,
+  "runs": 214,
+  "lifts": 46,
+  "min": 1278,
+  "max": 2050
+ },
+ {
+  "id": "snow_king_mountain_united_states_of_america",
+  "name": "Snow King Mountain",
+  "subtitle": "Wyoming, United States of America",
+  "lon": -110.77767072736658,
+  "lat": 43.450704586166935,
+  "runs": 101,
+  "lifts": 22,
+  "min": 1879,
+  "max": 2569
+ },
+ {
+  "id": "vogel_slovenia",
+  "name": "Vogel",
+  "subtitle": "Bohinj, Slovenia",
+  "lon": 13.805340323807128,
+  "lat": 46.237599142715645,
+  "runs": 54,
+  "lifts": 10,
+  "min": 532,
+  "max": 1902
+ }
+]

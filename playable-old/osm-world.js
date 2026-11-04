@@ -1,0 +1,2005 @@
+/** Drape OSM vectors on the DEM. GeoJSON XY = local east, north. Game Z = -north. */
+
+import * as THREE from "three";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { styleForPisteFeature, classifyDifficulty } from "./trail-map.js?v=scheme1";
+import { addOsmTraffic } from "./traffic.js?v=vis16";
+import { alongPolyline, polylineLen } from "./gates.js?v=vis20";
+import { liftType, liftCableHeight, LIFT_LANE, isDragLift, makeLiftTerminal, makeLiftCarrier, makeLiftSkier, makeMagicCarpet, makeRopeTow, makeDragLift, makeLiftSteel } from "./lift-graphics.js?v=s13";
+import { createLiftMotion } from "./lift-motion.js?v=9";
+import { snowTerrainMaterial, SURFACE_UNIFORM } from "./ground.js?v=g24";
+import { bindSnowField, sampleSnow, shapeHeightfield, snowSeed } from "./snow-field.js?v=sf2";
+import { PALETTE } from "/scripts/clay/config.js";
+import { addClayBuilding } from "/scripts/clay/buildings.js";
+import {
+  SNOW,
+  applyInset,
+  buildTrailCover,
+  ensureMidPatches,
+  forestRingsFromFC,
+  getSnowLevel,
+  getSurface,
+  loadSnowLevel,
+  snowEdgeFade,
+} from "./snow.js?v=surf3";
+
+const GRID = 12;
+const MAX_FILL_SPAN = 700;
+const TREE_STEP = 10;
+const TREE_STEP_WOOD = 6;
+const MAX_TREES = 8000;
+const PINE_GLB = new URL("./assets/models/trees/snowy-pine-pack.glb", import.meta.url).href;
+const PINE_HEIGHT = 11;
+
+function addViewRim(shader) {
+  shader.fragmentShader = shader.fragmentShader.replace(
+    "#include <opaque_fragment>",
+    `#include <opaque_fragment>
+    {
+      float facing = abs(dot(normalize(normal), normalize(vViewPosition)));
+      float rim = smoothstep(0.66, 0.08, facing);
+      gl_FragColor.rgb += diffuseColor.rgb * rim * 0.22;
+    }`,
+  );
+}
+
+function u01(i, salt) {
+  return ((Math.imul(i + 1, 747796405) ^ salt) >>> 0) / 4294967296;
+}
+
+let pinePack = null;
+let pinePackPromise = null;
+
+/** Authored snowy pine pack, Y-up, origin at the trunk base. Shared Lambert map so 8k instances still light with the snow. */
+async function loadPinePack() {
+  if (pinePack) return pinePack;
+  if (pinePackPromise) return pinePackPromise;
+  pinePackPromise = (async () => {
+    const gltf = await new GLTFLoader().loadAsync(PINE_GLB);
+    gltf.scene.updateMatrixWorld(true);
+    const geos = [];
+    let srcMat = null;
+    gltf.scene.traverse((o) => {
+      if (!o.isMesh) return;
+      srcMat = srcMat || o.material;
+      const geo = o.geometry.clone();
+      geo.applyMatrix4(o.matrixWorld);
+      geo.computeBoundingBox();
+      const bb = geo.boundingBox;
+      geo.translate(-(bb.min.x + bb.max.x) * 0.5, -bb.min.y, -(bb.min.z + bb.max.z) * 0.5);
+      geo.computeBoundingBox();
+      geo.computeBoundingSphere();
+      geos.push(geo);
+    });
+    const map = srcMat?.map || null;
+    if (map) {
+      map.colorSpace = THREE.SRGBColorSpace;
+      map.wrapS = map.wrapT = THREE.RepeatWrapping;
+      map.needsUpdate = true;
+    }
+    const mat = new THREE.MeshLambertMaterial({
+      map,
+      color: 0xffffff,
+      alphaTest: 0.38,
+      side: THREE.DoubleSide,
+      fog: true,
+    });
+    mat.color.multiplyScalar(1.38);
+    const pineNow = { value: 0 };
+    mat.userData.pineNow = pineNow;
+    mat.customProgramCacheKey = () => "pine-hit-v3";
+    mat.onBeforeCompile = (shader) => {
+      shader.uniforms.pineNow = pineNow;
+      addViewRim(shader);
+      shader.vertexShader =
+        "uniform float pineNow;\nattribute float hitTime;\nattribute vec2 hitDir;\nattribute float hitAmp;\n" +
+        shader.vertexShader.replace(
+        "#include <begin_vertex>",
+        `#include <begin_vertex>
+        float pineAge = pineNow - hitTime;
+        if (hitAmp > 0.001 && pineAge > 0.0 && pineAge < 1.6) {
+          float radial = length(position.xz);
+          vec2 outward = position.xz / max(radial, 0.001);
+          float struck = mix(0.1, 1.0, smoothstep(-0.15, 0.7, dot(outward, hitDir)));
+          float tip = smoothstep(0.25, 2.8, radial);
+          float swing = cos(pineAge * 22.0) * exp(-pineAge * 3.0);
+          float amp = hitAmp * struck * tip * (0.35 + position.y * 0.06) * swing;
+          transformed.x -= hitDir.x * amp;
+          transformed.z -= hitDir.y * amp;
+          transformed.y -= abs(amp) * 0.16;
+        }`,
+      );
+    };
+    const height = geos.reduce((h, g) => Math.max(h, g.boundingBox?.max.y || 0), 1);
+    pinePack = { geos, mat, unit: PINE_HEIGHT / height, radii: geos.map(foliageRadius) };
+    return pinePack;
+  })();
+  return pinePackPromise;
+}
+
+/** Horizontal reach of the boughs at skier height. The trunk is much thinner, so a trunk cylinder lets the skier pass into the cards and vanish. */
+function foliageRadius(geo) {
+  const p = geo.attributes.position;
+  let r = 0.35;
+  for (let i = 0; i < p.count; i++) {
+    const y = p.getY(i);
+    if (y < 0.2 || y > 3.2) continue;
+    const d = Math.hypot(p.getX(i), p.getZ(i));
+    if (d > r) r = d;
+  }
+  return r;
+}
+
+function stampPine(dummy, mesh, slot, i, x, y, z, unit) {
+  const s = unit * (0.7 + u01(i, 9) * 0.75);
+  dummy.position.set(x, y, z);
+  dummy.rotation.set((u01(i, 2) - 0.5) * 0.1, u01(i, 1) * 6.2832, (u01(i, 3) - 0.5) * 0.1);
+  dummy.scale.set(s, s * (0.88 + u01(i, 4) * 0.35), s);
+  dummy.updateMatrix();
+  mesh.setMatrixAt(slot, dummy.matrix);
+  return s;
+}
+
+function armPine(geo, count) {
+  const time = new THREE.InstancedBufferAttribute(new Float32Array(count), 1);
+  const dir = new THREE.InstancedBufferAttribute(new Float32Array(count * 2), 2);
+  const amp = new THREE.InstancedBufferAttribute(new Float32Array(count), 1);
+  time.setUsage(THREE.DynamicDrawUsage);
+  dir.setUsage(THREE.DynamicDrawUsage);
+  amp.setUsage(THREE.DynamicDrawUsage);
+  geo.setAttribute("hitTime", time);
+  geo.setAttribute("hitDir", dir);
+  geo.setAttribute("hitAmp", amp);
+  return { time, dir, amp };
+}
+
+function plantPines(scene, pack, spots) {
+  const dummy = new THREE.Object3D();
+  const bins = pack.geos.map(() => []);
+  for (let i = 0; i < spots.length; i++) bins[i % bins.length].push(i);
+  const xzr = [];
+  const owners = [];
+  const insts = [];
+  scene.userData.pineNow = pack.mat.userData.pineNow;
+  for (let v = 0; v < pack.geos.length; v++) {
+    const idx = bins[v];
+    if (!idx.length) continue;
+    const geo = pack.geos[v].clone();
+    const hit = armPine(geo, idx.length);
+    const mesh = new THREE.InstancedMesh(geo, pack.mat, idx.length);
+    mesh.userData.hit = hit;
+    mesh.frustumCulled = false;
+    mesh.castShadow = v === 0;
+    for (let s = 0; s < idx.length; s++) {
+      const i = idx[s];
+      const p = spots[i];
+      const sc = stampPine(dummy, mesh, s, i, p.x, p.y, p.z, pack.unit);
+      xzr.push(p.x, p.z, pack.radii[v] * sc);
+      owners.push({ mesh, slot: s });
+    }
+    mesh.instanceMatrix.needsUpdate = true;
+    scene.add(mesh);
+    insts.push(mesh);
+  }
+  return { n: spots.length, xzr, insts, owners };
+}
+
+function localHitDir(mesh, slot, nx, nz) {
+  const e = mesh.instanceMatrix.array;
+  const o = slot * 16;
+  let lx = nx * e[o] + nz * e[o + 2];
+  let lz = nx * e[o + 8] + nz * e[o + 10];
+  const len = Math.hypot(lx, lz) || 1;
+  return [lx / len, lz / len];
+}
+
+/** Strike the boughs facing the skier. The shader springs that side and lets it shake out. */
+export function bendPine(scene, hit, now) {
+  if (!hit?.hit || hit.idx == null || hit.idx < 0) return;
+  const owner = scene.userData.pineOwners?.[hit.idx / 3];
+  if (!owner) return;
+  const h = owner.mesh.userData.hit;
+  const t = now * 0.001;
+  const age = t - h.time.getX(owner.slot);
+  const amp = Math.min(1.15, 0.42 + (hit.impact || 0) * 0.05);
+  if (age >= 0 && age < 0.22 && h.amp.getX(owner.slot) >= amp) return;
+  const [lx, lz] = localHitDir(owner.mesh, owner.slot, hit.nx || 0, hit.nz || 1);
+  h.time.setX(owner.slot, t);
+  h.dir.setXY(owner.slot, lx, lz);
+  h.amp.setX(owner.slot, amp);
+  h.time.needsUpdate = true;
+  h.dir.needsUpdate = true;
+  h.amp.needsUpdate = true;
+}
+
+const LIFT_SHADOW_REACH = 42;
+const LIFT_SHADOW_MAX = 8;
+
+/** Nearby towers only. A color-write-off copy, because one InstancedMesh cannot cast per instance. */
+function armLiftShadows(scene, geo, mat, spots) {
+  if (!geo || !spots?.length) return;
+  const shadowMat = mat.clone();
+  shadowMat.colorWrite = false;
+  shadowMat.depthWrite = false;
+  const mesh = new THREE.InstancedMesh(geo, shadowMat, LIFT_SHADOW_MAX);
+  mesh.name = "lift-shadow-band";
+  mesh.castShadow = true;
+  mesh.receiveShadow = false;
+  mesh.frustumCulled = false;
+  mesh.count = 0;
+  scene.add(mesh);
+  scene.userData.liftShadow = { mesh, spots, dummy: new THREE.Object3D() };
+}
+
+function tickLiftShadows(scene, camera) {
+  const band = scene?.userData?.liftShadow;
+  if (!band || !camera) return;
+  const cx = camera.position.x;
+  const cz = camera.position.z;
+  const reach2 = LIFT_SHADOW_REACH * LIFT_SHADOW_REACH;
+  const dummy = band.dummy;
+  let n = 0;
+  for (let i = 0; i < band.spots.length && n < LIFT_SHADOW_MAX; i++) {
+    const s = band.spots[i];
+    const dx = s.x - cx;
+    const dz = s.z - cz;
+    if (dx * dx + dz * dz > reach2) continue;
+    dummy.position.set(s.x, s.y, s.z);
+    dummy.rotation.set(s.rx || 0, s.ry || 0, s.rz || 0);
+    dummy.scale.set(s.sx ?? s.s ?? 1, s.sy ?? s.s ?? 1, s.sz ?? s.s ?? 1);
+    dummy.updateMatrix();
+    band.mesh.setMatrixAt(n++, dummy.matrix);
+  }
+  band.mesh.count = n;
+  band.mesh.instanceMatrix.needsUpdate = true;
+}
+
+export function tickPines(scene, now, camera) {
+  const u = scene?.userData?.pineNow;
+  if (u) u.value = now * 0.001;
+  tickLiftShadows(scene, camera);
+}
+
+const RESORT_GLB = new URL("./assets/models/ski-resort4.glb", import.meta.url).href;
+let resortKit = null;
+let resortKitPromise = null;
+
+function litMat(src) {
+  const map = src?.map || null;
+  if (map) {
+    map.colorSpace = THREE.SRGBColorSpace;
+    map.needsUpdate = true;
+  }
+  const color = src?.color?.clone?.() || new THREE.Color(0xffffff);
+  return new THREE.MeshLambertMaterial({
+    map,
+    color,
+    alphaTest: src?.transparent ? 0.35 : 0,
+    side: THREE.DoubleSide,
+    fog: true,
+  });
+}
+
+async function attachSpecGlossMaps(gltf) {
+  const parser = gltf.parser;
+  const defs = parser.json.materials || [];
+  const byName = new Map(defs.map((d) => [d.name, d]));
+  const seen = new Set();
+  const jobs = [];
+  gltf.scene.traverse((o) => {
+    if (!o.isMesh) return;
+    const mat = o.material;
+    if (!mat || seen.has(mat)) return;
+    seen.add(mat);
+    const ext = byName.get(mat.name)?.extensions?.KHR_materials_pbrSpecularGlossiness;
+    mat.metalness = 0;
+    if (!ext) {
+      mat.roughness = 0.8;
+      return;
+    }
+    const df = ext.diffuseFactor;
+    if (df) mat.color.setRGB(df[0], df[1], df[2]);
+    mat.roughness = 1 - (ext.glossinessFactor ?? 0.25);
+    const di = ext.diffuseTexture?.index;
+    if (di == null) return;
+    jobs.push(
+      parser.loadTexture(di).then((tex) => {
+        tex.colorSpace = THREE.SRGBColorSpace;
+        mat.map = tex;
+        mat.needsUpdate = true;
+      }),
+    );
+  });
+  await Promise.all(jobs);
+}
+
+function meshLineage(o) {
+  const parts = [];
+  for (let x = o; x; x = x.parent) if (x.name) parts.push(x.name);
+  return parts.join(" ").toLowerCase();
+}
+
+function bakeMeshToOrigin(mesh, origin) {
+  const geo = mesh.geometry.clone();
+  geo.applyMatrix4(mesh.matrixWorld);
+  geo.translate(-origin.x, -origin.y, -origin.z);
+  geo.computeBoundingBox();
+  geo.computeBoundingSphere();
+  const size = new THREE.Vector3();
+  geo.boundingBox.getSize(size);
+  return { geo, mat: litMat(mesh.material), size };
+}
+
+function originFromMeshes(meshes) {
+  const box = new THREE.Box3();
+  for (const m of meshes) box.expandByObject(m);
+  return { x: (box.min.x + box.max.x) * 0.5, y: box.min.y, z: (box.min.z + box.max.z) * 0.5, box };
+}
+
+/** House / tower / fence post / one skier. Skip Landscape + El/Elka trees. */
+async function loadResortKit() {
+  if (resortKit) return resortKit;
+  if (resortKitPromise) return resortKitPromise;
+  resortKitPromise = (async () => {
+    const gltf = await new GLTFLoader().loadAsync(RESORT_GLB);
+    gltf.scene.updateMatrixWorld(true);
+    await attachSpecGlossMaps(gltf);
+    const houses = [];
+    const towers = [];
+    const posts = [];
+    const skiers = [];
+    gltf.scene.traverse((o) => {
+      if (!o.isMesh) return;
+      const n = meshLineage(o);
+      if (n.includes("landscape")) return;
+      if (n.includes("house")) houses.push(o);
+      else if (n.includes("skiroll")) towers.push(o);
+      else if (n.includes("cylinder")) posts.push(o);
+      else if (/\bbody[. _]*002\b/.test(n) || n.includes("body.002")) skiers.push(o);
+    });
+    function proto(list, targetH) {
+      if (!list.length) return null;
+      const origin = originFromMeshes(list);
+      const pieces = list.map((m) => bakeMeshToOrigin(m, origin));
+      const size = new THREE.Vector3();
+      origin.box.min.set(origin.box.min.x - origin.x, 0, origin.box.min.z - origin.z);
+      origin.box.max.set(origin.box.max.x - origin.x, origin.box.max.y - origin.y, origin.box.max.z - origin.z);
+      origin.box.getSize(size);
+      const tall = Math.max(size.x, size.y, size.z, 0.01);
+      return { pieces, size, unit: targetH / tall };
+    }
+    resortKit = {
+      house: proto(houses, 8),
+      tower: proto(towers.slice(0, 1), 12),
+      fence: proto(posts.slice(0, 1), 2.3),
+      skier: proto(skiers.slice(0, 1), 1.8),
+    };
+    console.info("resort kit", {
+      house: houses.length,
+      tower: towers.length,
+      fence: posts.length,
+      skier: skiers.length,
+    });
+    return resortKit;
+  })();
+  return resortKitPromise;
+}
+
+function plantProtoPieces(scene, proto, spots, shadow) {
+  if (!proto?.pieces?.length || !spots.length) return 0;
+  const dummy = new THREE.Object3D();
+  for (const piece of proto.pieces) {
+    const mesh = new THREE.InstancedMesh(piece.geo, piece.mat, spots.length);
+    mesh.frustumCulled = false;
+    mesh.castShadow = !!shadow;
+    for (let i = 0; i < spots.length; i++) {
+      const p = spots[i];
+      dummy.position.set(p.x, p.y, p.z);
+      dummy.rotation.set(p.rx || 0, p.ry || 0, p.rz || 0);
+      dummy.scale.set(p.sx ?? p.s ?? 1, p.sy ?? p.s ?? 1, p.sz ?? p.s ?? 1);
+      dummy.updateMatrix();
+      mesh.setMatrixAt(i, dummy.matrix);
+    }
+    mesh.instanceMatrix.needsUpdate = true;
+    scene.add(mesh);
+  }
+  return spots.length;
+}
+
+function spotsAlongCoords(coords, elevFn, step, spots, max) {
+  const pts = [];
+  for (const c of coords || []) {
+    if (!c || c.length < 2) continue;
+    pts.push(new THREE.Vector3(c[0], elevFn(c[0], -c[1]), -c[1]));
+  }
+  if (pts.length < 2) return;
+  const samples = sampleAlong(pts, step);
+  for (let i = 0; i < samples.length && spots.length < max; i++) {
+    const p = samples[i];
+    const nxt = samples[Math.min(i + 1, samples.length - 1)];
+    const prev = samples[Math.max(0, i - 1)];
+    const tan = i === samples.length - 1 ? p.clone().sub(prev) : nxt.clone().sub(p);
+    spots.push({ x: p.x, y: p.y, z: p.z, ry: Math.atan2(tan.x, tan.z), s: 1 });
+  }
+}
+
+function spotsAlongFc(fc, elevFn, step, max) {
+  const spots = [];
+  if (!fc) return spots;
+  for (const f of fc.features || []) {
+    for (const coords of lineParts(f.geometry)) spotsAlongCoords(coords, elevFn, step, spots, max);
+    for (const poly of polygonParts(f.geometry)) spotsAlongCoords(poly[0], elevFn, step, spots, max);
+  }
+  return spots;
+}
+
+/** Every vertex of any GeoJSON geometry, including nested multi/collection parts. */
+function eachCoord(geom, fn) {
+  if (!geom) return;
+  const c = geom.coordinates;
+  switch (geom.type) {
+    case "Point":
+      fn(c);
+      break;
+    case "MultiPoint":
+    case "LineString":
+      for (const p of c || []) fn(p);
+      break;
+    case "MultiLineString":
+    case "Polygon":
+      for (const r of c || []) for (const p of r || []) fn(p);
+      break;
+    case "MultiPolygon":
+      for (const poly of c || []) for (const r of poly || []) for (const p of r || []) fn(p);
+      break;
+    case "GeometryCollection":
+      for (const g of geom.geometries || []) eachCoord(g, fn);
+      break;
+    default:
+      break;
+  }
+}
+
+function cross(ox, oz, ax, az, bx, bz) {
+  return (ax - ox) * (bz - oz) - (az - oz) * (bx - ox);
+}
+
+/** Monotone-chain hull over a flat [x,z,...] array. Returns CCW points in game XZ. */
+export function convexHullXZ(flat) {
+  const n = flat.length / 2;
+  if (n < 3) return [];
+  const idx = new Array(n);
+  for (let i = 0; i < n; i++) idx[i] = i;
+  idx.sort((a, b) => flat[a * 2] - flat[b * 2] || flat[a * 2 + 1] - flat[b * 2 + 1]);
+  const hull = [];
+  for (let pass = 0; pass < 2; pass++) {
+    const start = hull.length + 1;
+    const order = pass === 0 ? idx : idx.slice().reverse();
+    for (const i of order) {
+      const x = flat[i * 2];
+      const z = flat[i * 2 + 1];
+      while (
+        hull.length > start &&
+        cross(hull[hull.length - 2].x, hull[hull.length - 2].z, hull[hull.length - 1].x, hull[hull.length - 1].z, x, z) <= 0
+      ) {
+        hull.pop();
+      }
+      hull.push({ x, z });
+    }
+    hull.pop();
+  }
+  return hull.length >= 3 ? hull : [];
+}
+
+/**
+ * Nearby-extract GeoJSON is often clipped to a rectangle. Those four (or more)
+ * crop-edge vertices dominate a convex hull and turn the island into a slab.
+ * Drop points on the dataset AABB, then hull the remaining OSM nodes/ways.
+ */
+function convexHullDropClipFrame(flat) {
+  const n = flat.length / 2;
+  if (n < 3) return convexHullXZ(flat);
+  let minX = Infinity;
+  let maxX = -Infinity;
+  let minZ = Infinity;
+  let maxZ = -Infinity;
+  for (let i = 0; i < n; i++) {
+    const x = flat[i * 2];
+    const z = flat[i * 2 + 1];
+    minX = Math.min(minX, x);
+    maxX = Math.max(maxX, x);
+    minZ = Math.min(minZ, z);
+    maxZ = Math.max(maxZ, z);
+  }
+  const mx = Math.max(10, (maxX - minX) * 0.015);
+  const mz = Math.max(10, (maxZ - minZ) * 0.015);
+  const inner = [];
+  for (let i = 0; i < n; i++) {
+    const x = flat[i * 2];
+    const z = flat[i * 2 + 1];
+    if (x > minX + mx && x < maxX - mx && z > minZ + mz && z < maxZ - mz) {
+      inner.push(x, z);
+    }
+  }
+  const hull = convexHullXZ(inner.length >= 8 ? inner : flat);
+  return hull.length >= 3 ? hull : convexHullXZ(flat);
+}
+
+function polygonParts(geom) {
+  if (!geom) return [];
+  if (geom.type === "Polygon") return [geom.coordinates];
+  if (geom.type === "MultiPolygon") return geom.coordinates;
+  return [];
+}
+
+function lineParts(geom) {
+  if (!geom) return [];
+  if (geom.type === "LineString") return [geom.coordinates];
+  if (geom.type === "MultiLineString") return geom.coordinates;
+  if (geom.type === "Polygon") return [geom.coordinates[0] || []];
+  if (geom.type === "MultiPolygon") return (geom.coordinates || []).map((p) => p[0] || []);
+  return [];
+}
+
+function ringBBox(ring) {
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  for (const c of ring || []) {
+    if (!c || c.length < 2) continue;
+    minX = Math.min(minX, c[0]);
+    minY = Math.min(minY, c[1]);
+    maxX = Math.max(maxX, c[0]);
+    maxY = Math.max(maxY, c[1]);
+  }
+  return { minX, minY, maxX, maxY, span: Math.max(maxX - minX, maxY - minY) };
+}
+
+function pointInRing(x, y, ring) {
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const xi = ring[i][0];
+    const yi = ring[i][1];
+    const xj = ring[j][0];
+    const yj = ring[j][1];
+    const hit = yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi + 1e-12) + xi;
+    if (hit) inside = !inside;
+  }
+  return inside;
+}
+
+function inPolygon(x, y, outer, holes) {
+  if (!pointInRing(x, y, outer)) return false;
+  for (const h of holes || []) {
+    if (h.length >= 3 && pointInRing(x, y, h)) return false;
+  }
+  return true;
+}
+
+/** Jittered grid inside a wood polygon. OSM forest areas are stands, not a fill. */
+function sampleForest(outer, holes, step, out) {
+  const bb = ringBBox(outer);
+  if (!Number.isFinite(bb.span) || bb.span < 4) return;
+  const nx = Math.max(1, Math.ceil((bb.maxX - bb.minX) / step));
+  const ny = Math.max(1, Math.ceil((bb.maxY - bb.minY) / step));
+  let k = out.length;
+  for (let j = 0; j < ny; j++) {
+    for (let i = 0; i < nx; i++) {
+      const jx = ((k * 13) % 10) / 10 - 0.45;
+      const jy = ((k * 29) % 10) / 10 - 0.45;
+      const x = bb.minX + (i + 0.5 + jx) * step;
+      const y = bb.minY + (j + 0.5 + jy) * step;
+      k += 1;
+      if (inPolygon(x, y, outer, holes)) out.push([x, y]);
+    }
+  }
+}
+
+function fillMat(color, opacity) {
+  return new THREE.MeshLambertMaterial({
+    color,
+    transparent: true,
+    opacity,
+    side: THREE.DoubleSide,
+    depthWrite: false,
+    polygonOffset: true,
+    polygonOffsetFactor: -2,
+    polygonOffsetUnits: -2,
+  });
+}
+
+const pisteFillCache = new Map();
+const pisteLineCache = new Map();
+
+function pisteFillMat(color) {
+  let m = pisteFillCache.get(color);
+  if (!m) {
+    m = fillMat(color, 0.22);
+    pisteFillCache.set(color, m);
+  }
+  return m;
+}
+
+function pisteLineMat(color) {
+  let m = pisteLineCache.get(color);
+  if (!m) {
+    m = new THREE.LineBasicMaterial({ color });
+    pisteLineCache.set(color, m);
+  }
+  return m;
+}
+
+const WALL_H = 0.305;
+const WALL_T = 0.07;
+const STRIPE_M = 0.8;
+const wallBlack = new THREE.MeshLambertMaterial({ color: 0x141416 });
+const wallColorCache = new Map();
+
+function wallColorMat(color) {
+  let m = wallColorCache.get(color);
+  if (!m) {
+    m = new THREE.MeshLambertMaterial({ color });
+    wallColorCache.set(color, m);
+  }
+  return m;
+}
+
+function densifyXY(ring, maxStep, closed) {
+  const src = [];
+  for (const c of ring || []) {
+    if (c && c.length >= 2) src.push([c[0], c[1]]);
+  }
+  if (src.length < 2) return src;
+  const n = src.length;
+  const loop = closed && n >= 3;
+  const segs = loop ? n : n - 1;
+  const out = [];
+  for (let i = 0; i < segs; i++) {
+    const a = src[i];
+    const b = src[(i + 1) % n];
+    const dx = b[0] - a[0];
+    const dy = b[1] - a[1];
+    const len = Math.hypot(dx, dy);
+    if (len < 1e-4) continue;
+    const steps = Math.max(1, Math.ceil(len / maxStep));
+    for (let s = 0; s < steps; s++) {
+      const t = s / steps;
+      out.push([a[0] + dx * t, a[1] + dy * t]);
+    }
+  }
+  if (!loop) out.push(src[n - 1]);
+  return out;
+}
+
+function xzRingToEn(ring) {
+  return (ring || []).map((p) => [p.x, -p.z]);
+}
+
+const snowCoverFill = snowTerrainMaterial(THREE, {
+  color: 0xf7f4ee,
+  polygonOffset: true,
+  polygonOffsetFactor: -4,
+  polygonOffsetUnits: -8,
+});
+/* Every piste-snow mesh carries a snowEdge attribute (see drapePisteFill); without it the fringe discards everything. */
+snowCoverFill.defines.SNOW_EDGE = "";
+
+function clearGroup(g) {
+  if (!g) return;
+  const kids = g.children.slice();
+  for (const c of kids) {
+    g.remove(c);
+    c.geometry?.dispose?.();
+  }
+}
+
+/* Moving average over ±k points (~±40 m at the 8 m densify step). The corduroy follows the distance to
+   this line, and every bend in the line folds that field 30-50 m out, so the groomer wants a smooth path. */
+function smoothLine(pts, k = 5) {
+  const n = pts.length;
+  return pts.map((_, i) => {
+    const lo = Math.max(0, i - k);
+    const hi = Math.min(n - 1, i + k);
+    let x = 0;
+    let z = 0;
+    for (let j = lo; j <= hi; j++) {
+      x += pts[j][0];
+      z += pts[j][1];
+    }
+    return [x / (hi - lo + 1), z / (hi - lo + 1)];
+  });
+}
+
+function snowPolyEn(ringXz, holesXz, lineEn) {
+  const outer = xzRingToEn(ringXz);
+  /* Centerline in world xz (x = east, z = -north) so the corduroy can follow the run. */
+  const line = lineEn?.length >= 2 ? smoothLine(lineEn.map(([e, n]) => [e, -n])) : null;
+  return { outer, holes: (holesXz || []).map(xzRingToEn), bb: ringBBox(outer), line };
+}
+
+/** Drawn terrain height lookup, set once the mesh is final; snow sheets ride on it instead of the coarser heightfield. */
+let meshSurface = null;
+export function setMeshSurface(fn) {
+  meshSurface = fn;
+}
+
+function drapePisteSnow(poly, cover, elevFn, excludeFn, k = 0) {
+  /* Ski bases sit at DEM + 0.12 (skier-model SNOW). The sheet stays under that. Later sheets sit a few
+     mm lower so the overlap band shows the earlier sheet, not a z-fight.
+     ponytail: mod 16 so the stack stays within 5 cm; two overlapping sheets 16 apart in cover order fight. */
+  const mesh = drapePisteFill(poly.outer, poly.holes, elevFn, 0.08 - 0.003 * (k % 16), snowCoverFill, {
+    edgeFn: (pos) => snowEdgeFade(pos, poly, cover),
+    line: poly.line,
+    excludeFn,
+    surfaceY: meshSurface,
+  });
+  if (mesh) {
+    mesh.name = "piste-snow";
+    mesh.userData.pisteKind = "snow";
+    mesh.renderOrder = 5;
+  }
+  return mesh;
+}
+
+function paintTrailCover(root, cover, elevFn) {
+  if (!root || !cover) return;
+  let snowG = root.getObjectByName("snow-cover");
+  if (!snowG) {
+    snowG = new THREE.Group();
+    snowG.name = "snow-cover";
+    root.add(snowG);
+  }
+  clearGroup(snowG);
+  const polys = [];
+  for (const it of cover.items || []) {
+    const ring = it.snow || it.bare;
+    if (ring && ring.length >= 3) polys.push(snowPolyEn(ring, it.holes, it.coordsEN));
+  }
+  if (getSnowLevel() === "midWinter") {
+    for (const ring of cover.patches || []) polys.push(snowPolyEn(ring, []));
+  }
+  // ponytail: edge probes test every snow polygon (bbox-culled); fine for ~100s of pistes, grid-hash them if a mega resort stalls.
+  const cov = coverageRaster(polys);
+  polys.forEach((poly, k) => {
+    const mesh = drapePisteSnow(poly, polys, elevFn, k ? cov.covered : null, k);
+    if (mesh) snowG.add(mesh);
+    cov.add(poly);
+  });
+}
+
+/**
+ * Which ground earlier sheets already cover. Sheets tile the snow instead of overlapping, so two runs
+ * with different corduroy never z-fight at a confluence. A point counts as covered only when its cell
+ * and the 8 around it are: that margin keeps a thin overlap band, because the later sheet is cut along
+ * chords of its 3.5 m grid, which would clip the earlier outline's convex corners and leave dirt
+ * slivers. drapePisteSnow lowers later sheets a few mm so the band has one winner.
+ * ponytail: cell centres only, so a notch narrower than COV_CELL in an earlier sheet reads as covered.
+ */
+const COV_CELL = 3;
+function coverageRaster(polys) {
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  for (const q of polys) {
+    minX = Math.min(minX, q.bb.minX);
+    minY = Math.min(minY, q.bb.minY);
+    maxX = Math.max(maxX, q.bb.maxX);
+    maxY = Math.max(maxY, q.bb.maxY);
+  }
+  const w = Math.max(1, Math.ceil((maxX - minX) / COV_CELL) + 2);
+  const h = Math.max(1, Math.ceil((maxY - minY) / COV_CELL) + 2);
+  const cells = new Uint8Array(w * h);
+  const ix = (e) => Math.floor((e - minX) / COV_CELL) + 1;
+  const iy = (n) => Math.floor((n - minY) / COV_CELL) + 1;
+  return {
+    covered(e, n) {
+      const x = ix(e);
+      const y = iy(n);
+      if (x < 1 || y < 1 || x >= w - 1 || y >= h - 1) return false;
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (!cells[(y + dy) * w + x + dx]) return false;
+      return true;
+    },
+    add(q) {
+      const x0 = ix(q.bb.minX);
+      const x1 = ix(q.bb.maxX);
+      const y0 = iy(q.bb.minY);
+      const y1 = iy(q.bb.maxY);
+      for (let y = y0; y <= y1; y++) {
+        const n = minY + (y - 0.5) * COV_CELL;
+        for (let x = x0; x <= x1; x++) {
+          if (cells[y * w + x]) continue;
+          if (inPolygon(minX + (x - 0.5) * COV_CELL, n, q.outer, q.holes)) cells[y * w + x] = 1;
+        }
+      }
+    },
+  };
+}
+
+export function applySnowLevel(scene, repaint = true) {
+  const cover = scene?.userData?.trailCover;
+  const elevFn = scene?.userData?.drapeElev;
+  const root = scene?.userData?.pisteDecor;
+  const p = SNOW[getSnowLevel()] || SNOW.spring;
+  if (repaint && cover && elevFn && root) {
+    ensureMidPatches(cover);
+    applyInset(cover, p.inset);
+    paintTrailCover(root, cover, elevFn);
+  }
+  const mat = scene?.userData?.snowMat;
+  const g = mat?.userData.ground;
+  if (g) {
+    /* Winter Coat: snow-white base with dirt patches on half the off-piste ground. */
+    const partial = getSnowLevel() === "midWinter" ? 0.5 : 0;
+    g.uDirtFrac.value = partial;
+    g.uDirtColor.value.setHex(p.terrain);
+    mat.color.setHex(partial ? 0xfbfaf6 : p.terrain);
+    g.uDirt.value = p.offPiste || partial ? 0 : 1;
+  }
+  /* Snow under snow in wonderland: no melt fringe. */
+  snowCoverFill.userData.ground.uEdge.value = p.offPiste ? 0 : 1;
+  for (const mesh of scene?.userData?.island?.tops || []) {
+    if (mesh.material?.color) mesh.material.color.setHex(p.terrain);
+  }
+  applySurfaceLook(scene);
+}
+
+/** Piste sheet takes the chosen surface. Off-piste only joins in for powder on an all-snow mountain. */
+export function applySurfaceLook(scene) {
+  const surface = getSurface();
+  snowCoverFill.userData.ground.uSurface.value = SURFACE_UNIFORM[surface] ?? SURFACE_UNIFORM.plain;
+  const terrain = scene?.userData?.snowMat?.userData?.ground;
+  if (!terrain) return;
+  const allSnow = (SNOW[getSnowLevel()] || SNOW.spring).offPiste;
+  terrain.uSurface.value = allSnow && surface === "powder" ? SURFACE_UNIFORM.powder : SURFACE_UNIFORM.plain;
+}
+
+function drapeSmoothFill(outer, holes, elevFn, lift, material) {
+  const dens = densifyXY(outer, 8, true);
+  if (dens.length < 3) return null;
+  const shape = new THREE.Shape(dens.map((p) => new THREE.Vector2(p[0], p[1])));
+  for (const h of holes || []) {
+    const hd = densifyXY(h, 8, true);
+    if (hd.length >= 3) shape.holes.push(new THREE.Path(hd.map((p) => new THREE.Vector2(p[0], p[1]))));
+  }
+  let geo;
+  try {
+    geo = new THREE.ShapeGeometry(shape);
+  } catch {
+    return null;
+  }
+  const pos = geo.attributes.position;
+  if (!pos || pos.count < 3) {
+    geo.dispose();
+    return null;
+  }
+  for (let i = 0; i < pos.count; i++) {
+    const east = pos.getX(i);
+    const north = pos.getY(i);
+    pos.setXYZ(i, east, elevFn(east, -north) + lift, -north);
+  }
+  pos.needsUpdate = true;
+  geo.computeVertexNormals();
+  const mesh = new THREE.Mesh(geo, material);
+  mesh.renderOrder = 1;
+  return mesh;
+}
+
+function pushTri(arr, ax, ay, az, bx, by, bz, cx, cy, cz) {
+  arr.push(ax, ay, az, bx, by, bz, cx, cy, cz);
+}
+
+function emitWallSeg(arr, x0, y0, z0, x1, y1, z1, nx, nz) {
+  const t = WALL_T * 0.5;
+  const h = WALL_H;
+  const lx0 = x0 + nx * t;
+  const lz0 = z0 + nz * t;
+  const rx0 = x0 - nx * t;
+  const rz0 = z0 - nz * t;
+  const lx1 = x1 + nx * t;
+  const lz1 = z1 + nz * t;
+  const rx1 = x1 - nx * t;
+  const rz1 = z1 - nz * t;
+  pushTri(arr, lx0, y0, lz0, lx1, y1, lz1, lx1, y1 + h, lz1);
+  pushTri(arr, lx0, y0, lz0, lx1, y1 + h, lz1, lx0, y0 + h, lz0);
+  pushTri(arr, rx0, y0, rz0, rx0, y0 + h, rz0, rx1, y1 + h, rz1);
+  pushTri(arr, rx0, y0, rz0, rx1, y1 + h, rz1, rx1, y1, rz1);
+  pushTri(arr, lx0, y0 + h, lz0, lx1, y1 + h, lz1, rx1, y1 + h, rz1);
+  pushTri(arr, lx0, y0 + h, lz0, rx1, y1 + h, rz1, rx0, y0 + h, rz0);
+}
+
+function zebraWallMeshes(ring, elevFn, color, closed) {
+  const xy = densifyXY(ring, 4.5, closed);
+  if (xy.length < 2) return [];
+  const blackPos = [];
+  const colorPos = [];
+  let phase = 0;
+  let paintColor = true;
+  const n = xy.length;
+  const segs = closed ? n : n - 1;
+  for (let i = 0; i < segs; i++) {
+    let e0 = xy[i][0];
+    let n0 = xy[i][1];
+    const e1 = xy[(i + 1) % n][0];
+    const n1 = xy[(i + 1) % n][1];
+    const dx = e1 - e0;
+    const dy = n1 - n0;
+    let remain = Math.hypot(dx, dy);
+    if (remain < 0.04) continue;
+    const ux = dx / remain;
+    const uy = dy / remain;
+    const ax = ux;
+    const az = -uy;
+    const plen = Math.hypot(-az, ax) || 1;
+    const nx = -az / plen;
+    const nz = ax / plen;
+    while (remain > 0.04) {
+      const take = Math.min(remain, STRIPE_M - phase);
+      const e2 = e0 + ux * take;
+      const n2 = n0 + uy * take;
+      const z0 = -n0;
+      const z2 = -n2;
+      const y0 = elevFn(e0, z0);
+      const y2 = elevFn(e2, z2);
+      emitWallSeg(paintColor ? colorPos : blackPos, e0, y0, z0, e2, y2, z2, nx, nz);
+      e0 = e2;
+      n0 = n2;
+      remain -= take;
+      phase += take;
+      if (phase >= STRIPE_M - 1e-4) {
+        phase = 0;
+        paintColor = !paintColor;
+      }
+    }
+  }
+  const out = [];
+  if (colorPos.length) {
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute("position", new THREE.Float32BufferAttribute(colorPos, 3));
+    geo.computeVertexNormals();
+    out.push(new THREE.Mesh(geo, wallColorMat(color)));
+  }
+  if (blackPos.length) {
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute("position", new THREE.Float32BufferAttribute(blackPos, 3));
+    geo.computeVertexNormals();
+    out.push(new THREE.Mesh(geo, wallBlack));
+  }
+  return out;
+}
+
+function drapeLine(coords, elevFn, lift, material) {
+  const pts = [];
+  for (const c of coords) {
+    const x = c[0];
+    const z = -c[1];
+    pts.push(new THREE.Vector3(x, elevFn(x, z) + lift, z));
+  }
+  if (pts.length < 2) return null;
+  const geo = new THREE.BufferGeometry().setFromPoints(pts);
+  const line = new THREE.Line(geo, material);
+  if (material?.isLineDashedMaterial) line.computeLineDistances();
+  return line;
+}
+
+const TOWER_H = 12;
+const TOWER_STEP = 44;
+const MAX_TOWERS = 180;
+/* Collision radius of a lift tower footing. Trees use the foliage radius at skier height. */
+const LIFT_POLE_R = 0.5;
+/** ponytail: keep the 80 largest OSM footprints; cluster if a resort needs more. */
+const MAX_CLAY_BUILDINGS = 80;
+
+function sampleAlong(pts, step) {
+  if (!pts || pts.length < 2) return [];
+  const out = [pts[0].clone()];
+  let dist = 0;
+  let next = step;
+  for (let i = 1; i < pts.length; i++) {
+    const a = pts[i - 1];
+    const b = pts[i];
+    const seg = a.distanceTo(b);
+    if (seg < 1e-4) continue;
+    while (dist + seg >= next) {
+      const t = (next - dist) / seg;
+      out.push(new THREE.Vector3().lerpVectors(a, b, t));
+      next += step;
+    }
+    dist += seg;
+  }
+  out.push(pts[pts.length - 1].clone());
+  return out;
+}
+
+function straightLiftPath(points) {
+  if (points.length < 2) return points;
+  const start = points[0];
+  const end = points[points.length - 1];
+  const out = [];
+  let total = 0;
+  const distances = [0];
+  for (let i = 1; i < points.length; i++) {
+    total += points[i].distanceTo(points[i - 1]);
+    distances.push(total);
+  }
+  for (let i = 0; i < points.length; i++) {
+    out.push(new THREE.Vector3().lerpVectors(start, end, total ? distances[i] / total : 0));
+  }
+  return out;
+}
+
+function offsetLiftPath(points, lane) {
+  return points.map((p, i) => {
+    const a = points[Math.max(0, i - 1)];
+    const b = points[Math.min(points.length - 1, i + 1)];
+    const tx = b.x - a.x;
+    const tz = b.z - a.z;
+    const len = Math.hypot(tx, tz) || 1;
+    return new THREE.Vector3(p.x + (tz / len) * lane, p.y, p.z - (tx / len) * lane);
+  });
+}
+
+function tangentOn(pts, p) {
+  let bestI = 1;
+  let best = Infinity;
+  for (let i = 1; i < pts.length; i++) {
+    const extra = p.distanceTo(pts[i - 1]) + p.distanceTo(pts[i]) - pts[i - 1].distanceTo(pts[i]);
+    if (extra < best) {
+      best = extra;
+      bestI = i;
+    }
+  }
+  return pts[bestI].clone().sub(pts[bestI - 1]);
+}
+
+function placeAlongLift(obj, origin, tangent) {
+  const want = new THREE.Vector3(tangent.x, 0, tangent.z);
+  if (want.lengthSq() < 1e-8) want.set(0, 0, 1);
+  else want.normalize();
+  obj.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), want);
+  obj.position.copy(origin);
+}
+
+function sitOnDem(obj, originY) {
+  obj.updateMatrixWorld(true);
+  const box = new THREE.Box3().setFromObject(obj);
+  if (!Number.isFinite(box.min.y)) return;
+  obj.position.y += originY - box.min.y;
+}
+
+function makeClayPylon(h, steel, dark) {
+  const g = new THREE.Group();
+  const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.32, h, 6), steel);
+  mast.position.y = h / 2;
+  const arm = new THREE.Mesh(new THREE.BoxGeometry(3.4, 0.18, 0.18), dark);
+  arm.position.y = h * 0.9;
+  g.add(mast, arm);
+  return g;
+}
+
+const TOWER_URL = new URL("./assets/models/lift/tower.glb?v=2", import.meta.url).href;
+const TOWER_CABLE = 10.5;
+let towerProto = null;
+
+async function loadTowerProto() {
+  if (towerProto) return towerProto;
+  const gltf = await new GLTFLoader().loadAsync(TOWER_URL);
+  gltf.scene.updateMatrixWorld(true);
+  let geo = null;
+  let mat = null;
+  gltf.scene.traverse((o) => {
+    if (!o.isMesh || geo) return;
+    geo = o.geometry.clone();
+    geo.applyMatrix4(o.matrixWorld);
+    const src = Array.isArray(o.material) ? o.material[0] : o.material;
+    const map = src?.map || null;
+    if (map) map.colorSpace = THREE.SRGBColorSpace;
+    mat = new THREE.MeshLambertMaterial({ map, color: 0xffffff });
+    mat.color.multiplyScalar(1.7);
+    mat.customProgramCacheKey = () => "tower-steel-rim";
+    mat.onBeforeCompile = (shader) => addViewRim(shader);
+  });
+  if (!geo || !mat) return null;
+  towerProto = { pieces: [{ geo, mat }] };
+  return towerProto;
+}
+
+/** Drop magic-carpet belts onto the snow. The heightfield is the surface the skier stands on.
+ * Raycasting the Draco mesh (~1M tris, no spatial index) took ~126s for 1552 rays. */
+export function seatMagicCarpets(scene, ground) {
+  if (!scene || !ground) return;
+  const elev = scene.userData?.drapeElev;
+  const raycaster = elev ? null : new THREE.Raycaster();
+  const down = elev ? null : new THREE.Vector3(0, -1, 0);
+  const origin = elev ? null : new THREE.Vector3();
+  if (!elev) ground.updateMatrixWorld(true);
+  function hitY(x, y, z) {
+    if (elev) return elev(x, z);
+    origin.set(x, y + 80, z);
+    raycaster.set(origin, down);
+    raycaster.far = 160;
+    const hits = raycaster.intersectObject(ground, true);
+    return hits.length ? hits[0].point.y : null;
+  }
+  scene.traverse((o) => {
+    const extra = o.userData?.snowLift;
+    if (!o.isMesh || !extra) return;
+    const pos = o.geometry.attributes.position;
+    let moved = false;
+    for (let i = 0; i < pos.count; i++) {
+      const y = hitY(pos.getX(i), pos.getY(i), pos.getZ(i));
+      if (y == null) continue;
+      pos.setY(i, y + extra[i]);
+      moved = true;
+    }
+    if (!moved) return;
+    pos.needsUpdate = true;
+    o.geometry.computeVertexNormals();
+  });
+  for (const m of scene.userData.liftMotions || []) {
+    if (m.type !== "magic_carpet" && m.type !== "rope_tow" && !isDragLift(m.type)) continue;
+    for (const p of m.points) {
+      const y = hitY(p.x, p.y, p.z);
+      if (y != null) p.y = y;
+    }
+  }
+  for (const t of scene.userData.carpetTerminals || []) {
+    const y = hitY(t.position.x, t.position.y, t.position.z);
+    if (y == null) continue;
+    t.updateMatrixWorld(true);
+    const box = new THREE.Box3().setFromObject(t);
+    if (Number.isFinite(box.min.y)) t.position.y += y - box.min.y;
+  }
+}
+
+async function addLiftKit(fc, elevFn, scene, counts, kit) {
+  if (!fc) return;
+  const cableMat = new THREE.MeshBasicMaterial({ color: PALETTE.cable });
+  const steel = makeLiftSteel(THREE);
+  const dark = new THREE.MeshLambertMaterial({ color: 0x374151, flatShading: true });
+  const towerPts = [];
+  const terminals = [];
+  const liftMotions = [];
+  let cables = 0;
+  scene.userData.carpetTerminals = [];
+  for (const f of fc.features || []) {
+    const type = liftType(f);
+    for (const coords of lineParts(f.geometry)) {
+      const ground = [];
+      for (const c of coords) {
+        if (!c || c.length < 2) continue;
+        const x = c[0];
+        const z = -c[1];
+        ground.push(new THREE.Vector3(x, elevFn(x, z), z));
+      }
+      if (ground.length < 2) continue;
+      const cableHeight = liftCableHeight(type);
+      /* Gondolas and cable cars span the two stations. A chord between the ends, no line towers. */
+      const span = type === "gondola" || type === "cable_car";
+      const liftPath = span ? straightLiftPath(ground) : ground;
+      let motionPath = liftPath;
+      if (type === "magic_carpet") {
+        motionPath = sampleAlong(liftPath, 2);
+        for (const p of motionPath) p.y = elevFn(p.x, p.z);
+        scene.add(makeMagicCarpet(THREE, motionPath));
+      } else if (type === "rope_tow") {
+        motionPath = sampleAlong(liftPath, 2);
+        for (const p of motionPath) p.y = elevFn(p.x, p.z);
+        scene.add(makeRopeTow(THREE, motionPath));
+      } else if (isDragLift(type)) {
+        motionPath = sampleAlong(liftPath, 3);
+        for (const p of motionPath) p.y = elevFn(p.x, p.z);
+        scene.add(makeDragLift(THREE, motionPath));
+      } else {
+        const lane = LIFT_LANE * (cableHeight / TOWER_CABLE);
+        for (const side of [-1, 1]) {
+          const cable = offsetLiftPath(liftPath, lane * side).map((p) => new THREE.Vector3(p.x, p.y + cableHeight, p.z));
+          const curve = new THREE.CatmullRomCurve3(cable);
+          const segs = Math.min(96, Math.max(12, cable.length * 3));
+          scene.add(new THREE.Mesh(new THREE.TubeGeometry(curve, segs, 0.07, 5, false), cableMat));
+        }
+        cables += 1;
+      }
+      const a = motionPath[0];
+      const b = motionPath[motionPath.length - 1];
+      const outStart = motionPath[1].clone().sub(motionPath[0]);
+      const outEnd = motionPath[motionPath.length - 2].clone().sub(motionPath[motionPath.length - 1]);
+      const skip = 18;
+      terminals.push(
+        { origin: a, tangent: outStart, type, end: "drive" },
+        { origin: b, tangent: outEnd, type, end: "return" },
+      );
+      const motion = createLiftMotion(
+        THREE,
+        scene,
+        type,
+        motionPath,
+        elevFn,
+        () => makeLiftCarrier(THREE, type, steel),
+        (color) => {
+          if (kit?.skier?.pieces?.[0]) {
+            const proto = kit.skier.pieces[0];
+            const m = new THREE.Mesh(proto.geo, proto.mat);
+            m.scale.setScalar(kit.skier.unit);
+            return m;
+          }
+          return makeLiftSkier(THREE, color);
+        },
+      );
+      if (motion) liftMotions.push(motion);
+      if (!span && type !== "magic_carpet" && type !== "rope_tow" && !isDragLift(type)) {
+        for (const p of sampleAlong(ground, TOWER_STEP)) {
+          if (p.distanceTo(a) < skip || p.distanceTo(b) < skip) continue;
+          towerPts.push({ p, tangent: tangentOn(liftPath, p), type });
+        }
+      }
+    }
+  }
+  function stride(arr, max) {
+    if (arr.length <= max) return arr;
+    const step = Math.ceil(arr.length / max);
+    return arr.filter((_, i) => i % step === 0).slice(0, max);
+  }
+  const towers = stride(towerPts, MAX_TOWERS);
+  /* Towers join the tree hash (trees are planted first), so physics bounces, crashes, and near-misses on them like trunks. */
+  const poleXzr = [];
+  for (const t of towers) if (t.type !== "magic_carpet") poleXzr.push(t.p.x, t.p.z, LIFT_POLE_R);
+  if (poleXzr.length) {
+    const owners = scene.userData.pineOwners || [];
+    for (let i = 0; i < poleXzr.length; i += 3) owners.push(null);
+    scene.userData.pineOwners = owners;
+    scene.userData.treeHash = buildTreeHash([...(scene.userData.treeHash?.xzr || []), ...poleXzr]);
+  }
+  let towerMesh = null;
+  try {
+    towerMesh = await loadTowerProto();
+  } catch (err) {
+    console.warn("lift tower", err);
+  }
+  const poles = towers.filter((t) => t.type !== "magic_carpet");
+  if (towerMesh && poles.length) {
+    const spots = poles.map((t) => {
+      const want = new THREE.Vector3(t.tangent.x, 0, t.tangent.z);
+      if (want.lengthSq() < 1e-8) want.set(0, 0, 1);
+      else want.normalize();
+      return {
+        x: t.p.x,
+        y: t.p.y,
+        z: t.p.z,
+        ry: Math.atan2(want.x, want.z),
+        s: (liftCableHeight(t.type) || TOWER_CABLE) / TOWER_CABLE,
+      };
+    });
+    plantProtoPieces(scene, towerMesh, spots, false);
+    armLiftShadows(scene, towerMesh.pieces[0].geo, towerMesh.pieces[0].mat, spots);
+  } else {
+    for (const t of towers) {
+      const h = liftCableHeight(t.type) || TOWER_H;
+      const pylon = makeClayPylon(h, steel, dark);
+      placeAlongLift(pylon, t.p, t.tangent);
+      scene.add(pylon);
+    }
+  }
+  let stations = 0;
+  for (const t of terminals) {
+    const clone = makeLiftTerminal(THREE, t.type, steel, t.end);
+    placeAlongLift(clone, t.origin, t.tangent);
+    sitOnDem(clone, t.origin.y);
+    if (t.type === "magic_carpet" || t.type === "rope_tow" || isDragLift(t.type)) scene.userData.carpetTerminals.push(clone);
+    scene.add(clone);
+    stations += 1;
+  }
+  counts.lifts = cables;
+  counts.lift_towers = towers.length;
+  counts.lift_stations = stations;
+  counts.lift_source = towerMesh ? "tower" : "clay";
+  scene.userData.liftMotions = liftMotions;
+}
+
+
+
+/** Sample the polygon on a DEM grid so faces follow the slope instead of one giant plane. */
+function drapeFill(outer, holes, elevFn, lift, material, maxSpan = MAX_FILL_SPAN, step = GRID, maxAxis = 48) {
+  const bb = ringBBox(outer);
+  if (!Number.isFinite(bb.span) || bb.span < 1) return null;
+  if (bb.span > maxSpan) return null;
+
+  const nx = Math.max(1, Math.min(maxAxis, Math.ceil((bb.maxX - bb.minX) / step)));
+  const ny = Math.max(1, Math.min(maxAxis, Math.ceil((bb.maxY - bb.minY) / step)));
+  const sx = (bb.maxX - bb.minX) / nx;
+  const sy = (bb.maxY - bb.minY) / ny;
+  const positions = [];
+  const index = [];
+
+  function vert(i, j) {
+    const east = bb.minX + i * sx;
+    const north = bb.minY + j * sy;
+    const z = -north;
+    positions.push(east, elevFn(east, z) + lift, z);
+    return positions.length / 3 - 1;
+  }
+
+  const grid = [];
+  for (let j = 0; j <= ny; j++) {
+    grid[j] = [];
+    for (let i = 0; i <= nx; i++) grid[j][i] = vert(i, j);
+  }
+
+  for (let j = 0; j < ny; j++) {
+    for (let i = 0; i < nx; i++) {
+      const cx = bb.minX + (i + 0.5) * sx;
+      const cy = bb.minY + (j + 0.5) * sy;
+      if (!inPolygon(cx, cy, outer, holes)) continue;
+      const a = grid[j][i];
+      const b = grid[j][i + 1];
+      const c = grid[j + 1][i + 1];
+      const d = grid[j + 1][i];
+      index.push(a, b, c, a, c, d);
+    }
+  }
+  if (!index.length) return null;
+
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+  geo.setIndex(index);
+  geo.computeVertexNormals();
+  const mesh = new THREE.Mesh(geo, material);
+  mesh.renderOrder = 1;
+  return mesh;
+}
+
+/**
+ * Corduroy coordinate per vertex: (s, gradX, gradZ). Ribs are stripes of constant s, so s must be
+ * continuous across every triangle. With a centerline, s is the distance to it and grad points away
+ * from it: every stripe runs parallel to the run, bends included. Only the sheet's OWN line counts;
+ * the distance to a set of lines folds wherever two are equidistant, and a base area between trails
+ * turns to herringbone. Unsigned, so the crease at the centerline is just a ridge (cos is even). Area
+ * pistes have no centerline and stripe across the mean downhill gradient instead.
+ * ponytail: O(verts × segments) scan per sheet; grid-hash the segments if a mega trail stalls.
+ */
+function ribAcross(positions, line, elevFn) {
+  const n = positions.length / 3;
+  const rib = new Float32Array(n * 3);
+  if (line?.length >= 2) {
+    for (let v = 0, p = 0; v < n; v++, p += 3) {
+      const x = positions[p];
+      const z = positions[p + 2];
+      let best = Infinity;
+      for (let i = 0; i + 1 < line.length; i++) {
+        const [ax, az] = line[i];
+        const [bx, bz] = line[i + 1];
+        const dx = bx - ax;
+        const dz = bz - az;
+        const len2 = dx * dx + dz * dz;
+        if (len2 < 1e-6) continue;
+        const t = Math.max(0, Math.min(1, ((x - ax) * dx + (z - az) * dz) / len2));
+        const d = Math.hypot(x - ax - dx * t, z - az - dz * t);
+        if (d >= best) continue;
+        best = d;
+        const len = Math.sqrt(len2);
+        const side = dx * (z - az) - dz * (x - ax) < 0 ? -1 : 1;
+        rib[v * 3] = d;
+        rib[v * 3 + 1] = (side * -dz) / len;
+        rib[v * 3 + 2] = (side * dx) / len;
+      }
+    }
+    return rib;
+  }
+  const R = 16;
+  let fx = 0;
+  let fz = 0;
+  for (let p = 0; p < positions.length; p += 3) {
+    fx += elevFn(positions[p] - R, positions[p + 2]) - elevFn(positions[p] + R, positions[p + 2]);
+    fz += elevFn(positions[p], positions[p + 2] - R) - elevFn(positions[p], positions[p + 2] + R);
+  }
+  const flen = Math.hypot(fx, fz);
+  const px = flen > 1e-6 ? -fz / flen : 1;
+  const pz = flen > 1e-6 ? fx / flen : 0;
+  for (let v = 0, p = 0; v < n; v++, p += 3) {
+    rib[v * 3] = positions[p] * px + positions[p + 2] * pz;
+    rib[v * 3 + 1] = px;
+    rib[v * 3 + 2] = pz;
+  }
+  return rib;
+}
+
+/** Piste snow: finer DEM grid + edge lerp so the border follows the OSM ring, not stair-steps. */
+function drapePisteFill(outer, holes, elevFn, lift, material, { edgeFn, line, excludeFn, surfaceY } = {}) {
+  const bb = ringBBox(outer);
+  if (!Number.isFinite(bb.span) || bb.span < 1) return null;
+  const step = 3.5;
+  const maxAxis = 220;
+  const nx = Math.max(1, Math.min(maxAxis, Math.ceil((bb.maxX - bb.minX) / step)));
+  const ny = Math.max(1, Math.min(maxAxis, Math.ceil((bb.maxY - bb.minY) / step)));
+  const sx = (bb.maxX - bb.minX) / nx;
+  const sy = (bb.maxY - bb.minY) / ny;
+  const positions = [];
+  const rough = [];
+  const worn = [];
+  const index = [];
+
+  function pushVert(east, north) {
+    const z = -north;
+    const s = sampleSnow(east, z);
+    const onMesh = surfaceY?.(east, z);
+    positions.push(east, onMesh == null ? elevFn(east, z) + lift : onMesh + lift, z);
+    rough.push(s.rough);
+    worn.push(s.worn);
+    return positions.length / 3 - 1;
+  }
+
+  const inSheet = (e, n) => inPolygon(e, n, outer, holes) && !excludeFn?.(e, n);
+  const inside = [];
+  const vid = [];
+  for (let j = 0; j <= ny; j++) {
+    inside[j] = [];
+    vid[j] = [];
+    const north = bb.minY + j * sy;
+    for (let i = 0; i <= nx; i++) {
+      const east = bb.minX + i * sx;
+      inside[j][i] = inSheet(east, north);
+      vid[j][i] = -1;
+    }
+  }
+
+  function gridVert(i, j) {
+    if (vid[j][i] >= 0) return vid[j][i];
+    vid[j][i] = pushVert(bb.minX + i * sx, bb.minY + j * sy);
+    return vid[j][i];
+  }
+
+  function lerpVert(i0, j0, i1, j1) {
+    const e0 = bb.minX + i0 * sx;
+    const n0 = bb.minY + j0 * sy;
+    const e1 = bb.minX + i1 * sx;
+    const n1 = bb.minY + j1 * sy;
+    let lo = 0;
+    let hi = 1;
+    const aIn = inside[j0][i0];
+    for (let k = 0; k < 6; k++) {
+      const t = (lo + hi) * 0.5;
+      const hit = inSheet(e0 + (e1 - e0) * t, n0 + (n1 - n0) * t);
+      if (hit === aIn) lo = t;
+      else hi = t;
+    }
+    const t = (lo + hi) * 0.5;
+    return pushVert(e0 + (e1 - e0) * t, n0 + (n1 - n0) * t);
+  }
+
+  function tri(ia, ib, ic) {
+    index.push(ia, ib, ic);
+  }
+
+  for (let j = 0; j < ny; j++) {
+    for (let i = 0; i < nx; i++) {
+      const bits =
+        (inside[j][i] ? 1 : 0) |
+        (inside[j][i + 1] ? 2 : 0) |
+        (inside[j + 1][i + 1] ? 4 : 0) |
+        (inside[j + 1][i] ? 8 : 0);
+      if (!bits) continue;
+      const a = () => gridVert(i, j);
+      const b = () => gridVert(i + 1, j);
+      const c = () => gridVert(i + 1, j + 1);
+      const d = () => gridVert(i, j + 1);
+      const ab = () => lerpVert(i, j, i + 1, j);
+      const bc = () => lerpVert(i + 1, j, i + 1, j + 1);
+      const cd = () => lerpVert(i + 1, j + 1, i, j + 1);
+      const da = () => lerpVert(i, j + 1, i, j);
+      if (bits === 15) {
+        tri(a(), b(), c());
+        tri(a(), c(), d());
+        continue;
+      }
+      if (bits === 1) tri(a(), ab(), da());
+      else if (bits === 2) tri(b(), bc(), ab());
+      else if (bits === 3) {
+        tri(a(), b(), bc());
+        tri(a(), bc(), da());
+      } else if (bits === 4) tri(c(), cd(), bc());
+      else if (bits === 5) {
+        tri(a(), ab(), bc());
+        tri(a(), bc(), c());
+        tri(a(), c(), cd());
+        tri(a(), cd(), da());
+      } else if (bits === 6) {
+        tri(b(), c(), cd());
+        tri(b(), cd(), ab());
+      } else if (bits === 7) {
+        tri(a(), b(), c());
+        tri(a(), c(), cd());
+        tri(a(), cd(), da());
+      } else if (bits === 8) tri(d(), da(), cd());
+      else if (bits === 9) {
+        tri(a(), ab(), cd());
+        tri(a(), cd(), d());
+      } else if (bits === 10) {
+        tri(b(), bc(), cd());
+        tri(b(), cd(), d());
+        tri(b(), d(), da());
+        tri(b(), da(), ab());
+      } else if (bits === 11) {
+        tri(a(), b(), bc());
+        tri(a(), bc(), cd());
+        tri(a(), cd(), d());
+      } else if (bits === 12) {
+        tri(c(), d(), da());
+        tri(c(), da(), bc());
+      } else if (bits === 13) {
+        tri(a(), ab(), bc());
+        tri(a(), bc(), c());
+        tri(a(), c(), d());
+      } else if (bits === 14) {
+        tri(b(), c(), d());
+        tri(b(), d(), da());
+        tri(b(), da(), ab());
+      }
+    }
+  }
+  if (!index.length) return null;
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+  geo.setAttribute("snowRough", new THREE.Float32BufferAttribute(rough, 1));
+  geo.setAttribute("snowWorn", new THREE.Float32BufferAttribute(worn, 1));
+  if (edgeFn) {
+    geo.setAttribute("snowEdge", new THREE.Float32BufferAttribute(edgeFn(positions), 1));
+    geo.setAttribute("rib", new THREE.BufferAttribute(ribAcross(positions, line, elevFn), 3));
+  }
+  geo.setIndex(index);
+  geo.computeVertexNormals();
+  return new THREE.Mesh(geo, material);
+}
+
+async function loadFC(url) {
+  try {
+    const r = await fetch(url);
+    if (!r.ok) return null;
+    return r.json();
+  } catch {
+    return null;
+  }
+}
+
+function buildTreeHash(xzr, cell = 12) {
+  const buckets = new Map();
+  for (let i = 0; i < xzr.length; i += 3) {
+    const ix = Math.floor(xzr[i] / cell);
+    const iz = Math.floor(xzr[i + 1] / cell);
+    const key = `${ix},${iz}`;
+    let bin = buckets.get(key);
+    if (!bin) {
+      bin = [];
+      buckets.set(key, bin);
+    }
+    bin.push(i);
+  }
+  return { cell, buckets, xzr };
+}
+
+export async function addOsmWorld(THREE, scene, sceneRoot, manifest, elevFn, hf) {
+  const v = manifest.vectors || {};
+  const mats = {
+    grass: fillMat(0xe6e9ec, 0.22),
+    water: fillMat(0xb8c4cc, 0.4),
+    parking: fillMat(0x8a8e94, 0.5),
+    roadLine: new THREE.LineBasicMaterial({ color: 0x6a7076 }),
+    cliffLine: new THREE.LineBasicMaterial({ color: 0x8a8884 }),
+    skiEdge: new THREE.LineDashedMaterial({
+      color: 0x2a343c,
+      dashSize: 16,
+      gapSize: 14,
+      transparent: true,
+      opacity: 0.5,
+    }),
+    barrier: new THREE.LineBasicMaterial({ color: 0x222222 }),
+  };
+
+
+  const counts = {};
+  let kit = null;
+  try {
+    kit = await loadResortKit();
+  } catch (err) {
+    console.warn("resort kit", err);
+    resortKitPromise = null;
+  }
+  scene.userData.resortKit = kit;
+  const defaults = {
+    pistes: "vectors/pistes.geojson",
+    lifts: "vectors/lifts.geojson",
+    buildings: "vectors/buildings.geojson",
+    water: "vectors/water.geojson",
+    forest: "vectors/forest.geojson",
+    roads: "vectors/roads.geojson",
+    cliffs: "vectors/cliffs.geojson",
+    grassland: "vectors/grassland.geojson",
+    parking: "vectors/parking.geojson",
+    ski_area: "vectors/ski-area.geojson",
+    barriers: "vectors/barriers.geojson",
+  };
+
+  /** Island footprint comes from the real dataset extent, so log every vertex we load. */
+  const hullSrc = [];
+
+  async function loadLayer(key, { hull = true } = {}) {
+    const rel = v[key] || defaults[key];
+    if (!rel) return null;
+    const fc = await loadFC(new URL(rel, sceneRoot));
+    if (hull) {
+      for (const f of fc?.features || []) {
+        eachCoord(f.geometry, (c) => {
+          if (c && c.length >= 2 && Number.isFinite(c[0]) && Number.isFinite(c[1])) {
+            hullSrc.push(c[0], -c[1]);
+          }
+        });
+      }
+    }
+    return fc;
+  }
+
+  function addFills(fc, mat, lift, countKey) {
+    if (!fc) return;
+    let n = 0;
+    for (const f of fc.features || []) {
+      for (const poly of polygonParts(f.geometry)) {
+        const mesh = drapeFill(poly[0], poly.slice(1), elevFn, lift, mat);
+        if (mesh) {
+          scene.add(mesh);
+          n += 1;
+        }
+      }
+    }
+    counts[countKey] = (counts[countKey] || 0) + n;
+  }
+
+  function addLines(fc, mat, lift, countKey) {
+    if (!fc) return;
+    let n = 0;
+    for (const f of fc.features || []) {
+      for (const coords of lineParts(f.geometry)) {
+        const line = drapeLine(coords, elevFn, lift, mat);
+        if (line) {
+          scene.add(line);
+          n += 1;
+        }
+      }
+    }
+    counts[countKey] = (counts[countKey] || 0) + n;
+  }
+
+  // Shape the heightfield before any drape so piste sheets, trees, and lifts sit on the same snow.
+  let forest = null;
+  let forestRings = [];
+  let pistes = null;
+  if (hf) {
+    forest = await loadLayer("forest");
+    forestRings = forestRingsFromFC(forest);
+    pistes = await loadLayer("pistes");
+    loadSnowLevel();
+    const cover = buildTrailCover(pistes, forestRings);
+    scene.userData.trailCover = cover;
+    scene.userData.drapeElev = elevFn;
+    bindSnowField(cover, snowSeed(cover), (e, z) => elevFn(e, z));
+    shapeHeightfield(hf);
+  }
+
+  // Island rim = mapped OSM vertices (pistes, lifts, buildings, forest, …).
+  // Do not hull the winter_sports AOI — that is ski-area bounds, not the OSM hull.
+  const ski = await loadLayer("ski_area", { hull: false });
+  addLines(ski, mats.skiEdge, 1.6, "ski_edge");
+
+  addFills(await loadLayer("grassland"), mats.grass, 0.35, "grassland");
+
+  if (!forest) {
+    forest = await loadLayer("forest");
+    forestRings = forestRingsFromFC(forest);
+  }
+  if (forest) {
+    const woodPts = [];
+    const otherPts = [];
+    for (const f of forest.features || []) {
+      const g = f.geometry;
+      const tags = f.properties?.tags || {};
+      const natural = String(tags.natural || "").toLowerCase();
+      if (g?.type === "Point") {
+        otherPts.push(g.coordinates);
+        continue;
+      }
+      const step = natural === "wood" || tags.landuse === "forest" ? TREE_STEP_WOOD : TREE_STEP;
+      const bucket = natural === "wood" ? woodPts : otherPts;
+      for (const poly of polygonParts(g)) {
+        sampleForest(poly[0], poly.slice(1), step, bucket);
+      }
+    }
+    let treePts = woodPts.concat(otherPts);
+    if (treePts.length > MAX_TREES) {
+      const stride = Math.ceil(treePts.length / MAX_TREES);
+      treePts = treePts.filter((_, i) => i % stride === 0).slice(0, MAX_TREES);
+    }
+    counts.forest_pts = woodPts.length + otherPts.length;
+    counts.wood_pts = woodPts.length;
+    if (treePts.length) {
+      try {
+        const pack = await loadPinePack();
+        const spots = [];
+        for (let i = 0; i < treePts.length; i++) {
+          const c = treePts[i];
+          const x = c[0];
+          const z = -c[1];
+          spots.push({ x, y: elevFn(x, z), z });
+        }
+        const planted = plantPines(scene, pack, spots);
+        counts.trees = planted.n;
+        scene.userData.pineOwners = planted.owners;
+        scene.userData.treeHash = buildTreeHash(planted.xzr);
+      } catch (err) {
+        console.warn("pine pack", err);
+        pinePackPromise = null;
+      }
+    }
+  }
+
+  const parkingFc = await loadLayer("parking");
+  addFills(parkingFc, mats.parking, 0.45, "parking");
+  const water = await loadLayer("water");
+  addFills(water, mats.water, 0.3, "water");
+  addLines(water, new THREE.LineBasicMaterial({ color: 0xa8b4bc }), 0.6, "water_line");
+
+  if (!pistes) {
+    pistes = await loadLayer("pistes");
+    loadSnowLevel();
+  }
+  const cover = scene.userData.trailCover || buildTrailCover(pistes, forestRings);
+  scene.userData.trailCover = cover;
+  scene.userData.drapeElev = elevFn;
+  const pisteRoot = new THREE.Group();
+  pisteRoot.name = "piste-decor";
+  /* With hf, main.js repaints once the terrain mesh is final; painting here would be thrown away. */
+  if (!hf) paintTrailCover(pisteRoot, cover, elevFn);
+  if (pistes) {
+    for (const f of pistes.features || []) {
+      const g = f.geometry;
+      const style = styleForPisteFeature(f);
+      const tagPaint = (mesh, kind) => {
+        if (!mesh) return;
+        mesh.userData.pisteDifficulty = style.difficulty || "";
+        mesh.userData.pisteType = style.type || "";
+        mesh.userData.pisteKind = kind;
+      };
+      if (g?.type === "Polygon" || g?.type === "MultiPolygon") {
+        for (const poly of polygonParts(g)) {
+          for (const w of zebraWallMeshes(poly[0], elevFn, style.color, true)) {
+            if (w.material !== wallBlack) tagPaint(w, "wall");
+            pisteRoot.add(w);
+          }
+          for (const hole of poly.slice(1)) {
+            for (const w of zebraWallMeshes(hole, elevFn, style.color, true)) {
+              if (w.material !== wallBlack) tagPaint(w, "wall");
+              pisteRoot.add(w);
+            }
+          }
+        }
+        counts.piste_poly = (counts.piste_poly || 0) + 1;
+      } else {
+        for (const coords of lineParts(g)) {
+          const center = drapeLine(coords, elevFn, 0.85, pisteLineMat(style.color));
+          if (center) {
+            center.renderOrder = 2;
+            tagPaint(center, "line");
+            pisteRoot.add(center);
+          }
+          for (const w of zebraWallMeshes(coords, elevFn, style.color, false)) {
+            if (w.material !== wallBlack) tagPaint(w, "wall");
+            pisteRoot.add(w);
+          }
+        }
+        counts.piste_line = (counts.piste_line || 0) + 1;
+      }
+    }
+  }
+  scene.add(pisteRoot);
+  scene.userData.pisteDecor = pisteRoot;
+
+  await addLiftKit(await loadLayer("lifts"), elevFn, scene, counts, kit);
+  const roadsFc = await loadLayer("roads");
+  if (roadsFc) {
+    let n = 0;
+    for (const f of roadsFc.features || []) {
+      const hw = String(f.properties?.highway || f.properties?.tags?.highway || "").toLowerCase();
+      if (hw === "tertiary" || hw === "service" || hw === "unclassified" || hw === "residential" || hw === "secondary") {
+        continue;
+      }
+      for (const coords of lineParts(f.geometry)) {
+        const line = drapeLine(coords, elevFn, 0.7, mats.roadLine);
+        if (line) {
+          scene.add(line);
+          n += 1;
+        }
+      }
+    }
+    counts.paths = n;
+  }
+  const traffic = addOsmTraffic(THREE, scene, parkingFc, roadsFc, elevFn);
+  counts.parked_cars = traffic.parked;
+  counts.driving_cars = traffic.driving;
+  counts.road_strips = traffic.roads;
+  addLines(await loadLayer("cliffs"), mats.cliffLine, 1.0, "cliffs");
+  const barrierFc = await loadLayer("barriers");
+  addLines(barrierFc, mats.barrier, 1.1, "barriers");
+  if (kit?.fence) {
+    const fenceSpots = spotsAlongFc(barrierFc, elevFn, 5.5, 1400);
+    if (fenceSpots.length < 40) {
+      const extra = spotsAlongFc(ski, elevFn, 8, 1400 - fenceSpots.length);
+      fenceSpots.push(...extra);
+    }
+    for (const p of fenceSpots) p.s = kit.fence.unit;
+    counts.fences = plantProtoPieces(scene, kit.fence, fenceSpots, false);
+  }
+
+  const buildings = await loadLayer("buildings");
+  if (buildings) {
+    const group = new THREE.Group();
+    group.name = "clay-buildings";
+    const candidates = [];
+    for (const f of buildings.features || []) {
+      for (const poly of polygonParts(f.geometry)) {
+        const ring = poly[0];
+        if (!ring || ring.length < 3) continue;
+        let minX = Infinity;
+        let maxX = -Infinity;
+        let minZ = Infinity;
+        let maxZ = -Infinity;
+        for (const c of ring) {
+          if (!c || c.length < 2) continue;
+          const x = c[0];
+          const z = -c[1];
+          minX = Math.min(minX, x);
+          maxX = Math.max(maxX, x);
+          minZ = Math.min(minZ, z);
+          maxZ = Math.max(maxZ, z);
+        }
+        const footW = Math.max(4, maxX - minX);
+        const footD = Math.max(4, maxZ - minZ);
+        if (footW > 80 || footD > 80) continue;
+        candidates.push({
+          cx: (minX + maxX) * 0.5,
+          cz: (minZ + maxZ) * 0.5,
+          footW,
+          footD,
+          area: footW * footD,
+          yaw: footW >= footD ? 0 : Math.PI / 2,
+        });
+      }
+    }
+    candidates.sort((a, b) => b.area - a.area);
+    const houseOk = !!kit?.house;
+    if (houseOk) {
+      const spots = [];
+      for (const c of candidates) {
+        if (spots.length >= MAX_CLAY_BUILDINGS) break;
+        const s = kit.house.unit * Math.min(c.footW / 8, c.footD / 8, 1.8);
+        spots.push({ x: c.cx, y: elevFn(c.cx, c.cz), z: c.cz, ry: c.yaw, s: Math.max(kit.house.unit * 0.6, s) });
+      }
+      counts.buildings = plantProtoPieces(scene, kit.house, spots, true);
+      counts.building_source = "resort4";
+    } else {
+      let n = 0;
+      for (const c of candidates) {
+        if (n >= MAX_CLAY_BUILDINGS) break;
+        const sc = Math.min(1, 24 / c.footW, 24 / c.footD);
+        addClayBuilding(
+          group,
+          c.cx,
+          c.cz,
+          elevFn(c.cx, c.cz),
+          c.footW * sc,
+          c.footD * sc,
+          Math.max(3.5, Math.min(11, Math.sqrt(c.area) * 0.32)),
+          c.yaw,
+        );
+        n += 1;
+      }
+      scene.add(group);
+      counts.buildings = n;
+    }
+  }
+
+  scene.userData.osmHull = convexHullDropClipFrame(hullSrc);
+  counts.osm_vertices = hullSrc.length / 2;
+  counts.hull_points = scene.userData.osmHull.length;
+  counts.kit = {
+    house: !!kit?.house,
+    tower: !!kit?.tower,
+    fence: !!kit?.fence,
+    skier: !!kit?.skier,
+  };
+  return counts;
+}
+
+/** Fill empty piste edges when OSM forest is thin along the corridor. */
+export function addPisteEdgeScenery(THREE, scene, pistePolys, elevFn) {
+  const hash = scene.userData.treeHash;
+  const existing = hash?.xzr || [];
+  function nearTree(x, z) {
+    if (!existing.length) return false;
+    const cell = hash.cell || 12;
+    const ix = Math.floor(x / cell);
+    const iz = Math.floor(z / cell);
+    for (let dx = -1; dx <= 1; dx++) {
+      for (let dz = -1; dz <= 1; dz++) {
+        const bin = hash.buckets?.get(`${ix + dx},${iz + dz}`);
+        if (!bin) continue;
+        for (const i of bin) {
+          if (Math.hypot(x - existing[i], z - existing[i + 1]) < 7) return true;
+        }
+      }
+    }
+    return false;
+  }
+  const dummy = new THREE.Object3D();
+  const rockG = new THREE.DodecahedronGeometry(0.7, 0);
+  const snowRock = new THREE.MeshLambertMaterial({ color: PALETTE.snowShade, flatShading: true });
+  const pts = [];
+  for (const poly of pistePolys || []) {
+    const len = polylineLen(poly);
+    if (len < 30) continue;
+    for (let s = 12; s < len - 12; s += 16) {
+      const p = alongPolyline(poly, s);
+      const nx = -p.tz;
+      const nz = p.tx;
+      for (const side of [-1, 1]) {
+        const x = p.x + nx * (24 + (s % 5)) * side;
+        const z = p.z + nz * (24 + (s % 5)) * side;
+        if (nearTree(x, z)) continue;
+        pts.push(x, z, (s + side) % 3 === 0 ? 1 : 0);
+      }
+    }
+  }
+  if (pts.length < 6) return 0;
+  const n = Math.min(280, Math.floor(pts.length / 3));
+  const pack = pinePack;
+  if (!pack) return 0;
+  const rocks = new THREE.InstancedMesh(rockG, snowRock, Math.ceil(n * 0.25));
+  const spots = [];
+  let ri = 0;
+  for (let i = 0; i < n; i++) {
+    const x = pts[i * 3];
+    const z = pts[i * 3 + 1];
+    const rock = pts[i * 3 + 2];
+    const y = elevFn(x, z);
+    const s = 0.58 + u01(i, 11) * 0.7;
+    if (rock && ri < rocks.count) {
+      dummy.position.set(x, y + 0.35 * s, z);
+      dummy.scale.setScalar(1.4 * s);
+      dummy.rotation.set(0.2, i, 0.1);
+      dummy.updateMatrix();
+      rocks.setMatrixAt(ri, dummy.matrix);
+      ri += 1;
+      continue;
+    }
+    spots.push({ x, y, z });
+  }
+  rocks.count = ri;
+  rocks.instanceMatrix.needsUpdate = true;
+  scene.add(rocks);
+  const planted = plantPines(scene, pack, spots);
+  const xzr = hash?.xzr ? hash.xzr.slice() : [];
+  xzr.push(...planted.xzr);
+  scene.userData.pineOwners = [...(scene.userData.pineOwners || []), ...planted.owners];
+  scene.userData.treeHash = buildTreeHash(xzr);
+  return planted.n + ri;
+}
+
+/** Recolor draped piste fills + zebra walls after the regional marking scheme changes. */
+export function applyPisteDecorDifficultyScheme(scene) {
+  const root = scene?.userData?.pisteDecor;
+  if (!root) return;
+  root.traverse((obj) => {
+    const kind = obj.userData?.pisteKind;
+    if ((!obj.isMesh && !obj.isLine) || (kind !== "fill" && kind !== "wall" && kind !== "line")) return;
+    const style = classifyDifficulty(obj.userData.pisteDifficulty, obj.userData.pisteType);
+    obj.material =
+      kind === "fill" ? pisteFillMat(style.color) : kind === "line" ? pisteLineMat(style.color) : wallColorMat(style.color);
+  });
+}

@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-KJGNL3KJL0"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){ dataLayer.push(arguments); }
+      gtag('js', new Date());
+      gtag('config', 'G-KJGNL3KJL0');
+    </script>
+    <title>Ski Game – Global Ski Atlas</title>
+    <meta name="description" content="Ski a mapped resort in the browser. The course uses Global Ski Atlas terrain." />
+    <link rel="shortcut icon" href="/assets/logo.png?v=2" type="image/x-icon" />
+    <link rel="canonical" href="https://globalskiatlas.com/playable/" />
+    <meta property="og:title" content="Ski Game – Global Ski Atlas" />
+    <meta property="og:description" content="Ski a mapped resort in the browser." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://globalskiatlas.com/playable/" />
+    <meta property="og:image" content="https://globalskiatlas.com/assets/og-banner.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand+SC&family=Patrick+Hand&display=swap" rel="stylesheet" />
+    <script type="module" crossorigin src="./assets/main-BfWM9urv3.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/GLTFLoader-ZQPYWCkq.js">
+    <link rel="modulepreload" crossorigin href="./assets/names-rQ4i12J3.js">
+    <link rel="stylesheet" crossorigin href="./assets/names-Dptv4clm.css">
+  </head>
+  <body>
+    <canvas id="game"></canvas>
+
+    <div id="hud" class="hidden">
+      <div class="run-tag"><span class="badge" id="run-badge"></span><span id="run-name"></span></div>
+      <div class="stats">
+        <div><label>Speed</label><b id="speed">0</b><small>km/h</small></div>
+        <div><label>Time</label><b id="time">0:00.0</b></div>
+        <div><label>Alt</label><b id="alt">0</b><small>m</small></div>
+      </div>
+      <button type="button" id="minimap-open" data-tip="Map · M" aria-label="Open the map (M)" aria-controls="bigmap" aria-expanded="false">
+        <canvas id="minimap" width="200" height="200"></canvas>
+      </button>
+      <!-- GPS: what to do next on the way to the big map's destination. -->
+      <div id="gps" class="hidden" role="status" aria-live="polite">
+        <span class="badge"></span>
+        <div><p><b class="act"></b><span class="dist"></span></p><p class="then"></p></div>
+      </div>
+      <div id="toast"></div>
+      <div id="prompt"></div>
+    </div>
+
+    <!-- Sidebar menu: icon rail on the left edge, with panels that open beside it. -->
+    <nav id="menu" aria-label="Game menu">
+      <div class="rail">
+        <a class="mi go" href="./diorama.html" data-tip="Diorama" aria-label="Diorama">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path fill="#9b7356" d="M2.5 16.5h19l-1.5 4h-16z" />
+            <path fill="#fbfaf5" d="M2.5 16.5 8.5 7l3 3.5L15 4l6.5 12.5z" />
+            <path d="M6.3 10.4l1.6 1 1.4-1M12.4 8.6l1.6 1.2 1.5-1.1 1.6 1" />
+          </svg>
+        </a>
+        <hr />
+        <button class="mi" data-flyout="rider" data-tip="Rider" aria-label="Rider" aria-expanded="false" aria-controls="fly-rider">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path fill="#4f8fd6" d="M4.5 21.5c.4-3.9 3.6-6 7.5-6s7.1 2.1 7.5 6z" />
+            <circle fill="#f3d6bd" cx="12" cy="10" r="4.6" />
+            <path fill="#fbfaf5" d="M7 10.2a5 5 0 0 1 10 0z" />
+            <rect fill="#f0c24a" x="8" y="9.4" width="8" height="2.8" rx="1.3" />
+          </svg>
+        </button>
+        <button class="mi" data-flyout="outfit" data-tip="Outfit &amp; gear" aria-label="Outfit &amp; gear" aria-expanded="false" aria-controls="fly-outfit">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path fill="#d9534a" d="M9 3.5 5.5 5l-3 6 3 1.5L7 10v10.5h10V10l1.5 2.5 3-1.5-3-6L15 3.5c-.5 1.6-1.6 2.5-3 2.5s-2.5-.9-3-2.5z" />
+            <path d="M12 6v14.5M8.5 15h2M13.5 15h2" />
+          </svg>
+        </button>
+        <button class="mi" data-flyout="settings" data-tip="Settings" aria-label="Settings" aria-expanded="false" aria-controls="fly-settings">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path fill="#c9d3d6" d="M19.2 10.2L21.9 10.9L21.9 13.1L19.2 13.8A7.4 7.4 0 0 1 18.4 15.8L19.8 18.3L18.3 19.8L15.8 18.4A7.4 7.4 0 0 1 13.8 19.2L13.1 21.9L10.9 21.9L10.2 19.2A7.4 7.4 0 0 1 8.2 18.4L5.7 19.8L4.2 18.3L5.6 15.8A7.4 7.4 0 0 1 4.8 13.8L2.1 13.1L2.1 10.9L4.8 10.2A7.4 7.4 0 0 1 5.6 8.2L4.2 5.7L5.7 4.2L8.2 5.6A7.4 7.4 0 0 1 10.2 4.8L10.9 2.1L13.1 2.1L13.8 4.8A7.4 7.4 0 0 1 15.8 5.6L18.3 4.2L19.8 5.7L18.4 8.2A7.4 7.4 0 0 1 19.2 10.2Z" />
+            <circle fill="#fff" cx="12" cy="12" r="3" />
+          </svg>
+        </button>
+        <hr />
+        <button class="mi" id="mi-music" data-tip="Music" aria-label="Music" aria-pressed="true">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <g class="base">
+              <path d="M9 17.5V6.5l10-2.5v11" />
+              <path stroke-width="3" d="M9 6.5l10-2.5" />
+              <ellipse fill="currentColor" cx="6.6" cy="17.8" rx="2.5" ry="2" transform="rotate(-20 6.6 17.8)" />
+              <ellipse fill="currentColor" cx="16.6" cy="15.3" rx="2.5" ry="2" transform="rotate(-20 16.6 15.3)" />
+            </g>
+            <path class="off halo" d="M3.5 3.5l17 17" />
+            <path class="off" d="M3.5 3.5l17 17" />
+          </svg>
+        </button>
+        <button class="mi" id="mi-sfx" data-tip="Sound effects" aria-label="Sound effects" aria-pressed="true">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path class="base" fill="currentColor" d="M3 9.5h3.5l5-4.5v14l-5-4.5H3z" />
+            <path class="on" d="M15 9.5c1.3 1.5 1.3 3.5 0 5M17.8 6.8c2.8 2.9 2.8 7.5 0 10.4" />
+            <path class="off" d="M15.5 9.5l5 5M20.5 9.5l-5 5" />
+          </svg>
+        </button>
+      </div>
+
+      <section class="flyout hidden" id="fly-rider" aria-label="Rider">
+        <div class="tab">Rider</div>
+        <div class="riders" role="group" aria-label="Choose a rider" aria-describedby="rider-status">
+          <button type="button" data-rider="male" aria-pressed="false">Male rider</button>
+          <button type="button" data-rider="female" aria-pressed="false">Female rider</button>
+          <button type="button" data-rider="classic" aria-pressed="false">Classic rider</button>
+        </div>
+        <p id="rider-status" role="status" aria-live="polite">Loading rider…</p>
+        <p class="keys"><kbd>F</kbd> switch board / on foot<br><kbd>W</kbd> walk · <kbd>Shift</kbd> run<br><kbd>A</kbd> / <kbd>D</kbd> turn · <kbd>S</kbd> stop</p>
+      </section>
+      <section class="flyout hidden" id="fly-outfit" aria-label="Outfit &amp; gear">
+        <div class="tab">Outfit &amp; gear</div>
+        <ul class="slots">
+          <li>Helmet</li><li>Goggles</li><li>Jacket</li>
+          <li>Gloves</li><li>Pants</li><li>Board</li>
+        </ul>
+        <p class="soon">Coming soon</p>
+      </section>
+      <section class="flyout hidden" id="fly-settings" aria-label="Settings">
+        <div class="tab">Settings</div>
+        <p>Game settings will live here.</p>
+        <p class="soon">Coming soon</p>
+      </section>
+    </nav>
+
+    <div id="panel" class="panel hidden">
+      <div class="tab" id="panel-tab">Hemu · 禾木</div>
+      <div class="body" id="panel-body"></div>
+      <button class="next" id="panel-next" aria-label="Continue">▶</button>
+    </div>
+
+    <!-- The whole map, opened from the mini-map; the ride waits underneath. -->
+    <div id="bigmap" class="hidden">
+      <section class="sheet" role="dialog" aria-modal="true" aria-labelledby="bigmap-tab">
+        <div class="tab" id="bigmap-tab">Map · 禾木</div>
+        <button type="button" class="x" aria-label="Close the map">×</button>
+        <div class="frame">
+          <canvas></canvas>
+          <div class="pick hidden" aria-hidden="true"></div>
+          <div class="zoom" role="group" aria-label="Zoom">
+            <button type="button" class="zin" aria-label="Zoom in (+)" title="Zoom in (+)">+</button>
+            <button type="button" class="zout" aria-label="Zoom out (−)" title="Zoom out (−)">−</button>
+            <button type="button" class="zme" aria-label="Centre on you" title="Centre on you">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="6" /><circle cx="12" cy="12" r="1.6" fill="currentColor" /><path d="M12 2.5v4M12 17.5v4M2.5 12h4M17.5 12h4" /></svg>
+            </button>
+            <button type="button" class="zfit" aria-label="Whole map (0)" title="Whole map (0)">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5" /></svg>
+            </button>
+          </div>
+          <div class="you" aria-hidden="true">
+            <i></i>
+            <svg viewBox="-12 -12 24 24"><path d="M0-11 7 8 0 4-7 8z" /></svg>
+            <b>You</b>
+          </div>
+        </div>
+        <div class="foot">
+          <p class="dest"><span class="badge"></span><span class="what"></span><button type="button" class="clear hidden">Clear route</button></p>
+          <p class="here"><span class="badge"></span><span class="name"></span><span class="alt"></span></p>
+          <div class="acts">
+            <button type="button" class="go">See it on the diorama ▸</button>
+            <button type="button" class="back">Back to riding</button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div id="title">
+      <div class="where">禾木 · Jikepulin · Altay</div>
+      <button id="begin">Begin</button>
+    </div>
+    <div id="cloud"></div>
+
+    <div id="loading"><div class="env">✉</div><div>Loading</div></div>
+  </body>
+</html>
