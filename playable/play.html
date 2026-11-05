@@ -55,6 +55,30 @@
     <link rel="modulepreload" crossorigin href="./assets/GLTFLoader-ZQPYWCkq.js">
     <link rel="modulepreload" crossorigin href="./assets/names-rQ4i12J3.js">
     <link rel="stylesheet" crossorigin href="./assets/names-Dptv4clm.css">
+    <style>
+      #touch { display: none; }
+      @media (pointer: coarse) {
+        #game { touch-action: none; }
+        #touch { display: block; }
+        #touch .pad { position: absolute; bottom: 18px; display: grid; grid-template-columns: 64px 64px; gap: 10px; align-items: end; justify-items: center; pointer-events: auto; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+        #touch .left { left: 18px; }
+        #touch .right { right: 18px; }
+        #touch button { width: 64px; height: 64px; padding: 0; border-radius: 50%; background: var(--paper); border: 2.5px solid var(--ink); box-shadow: 4px 4px #23303a59; color: var(--ink); font: 26px "Patrick Hand SC", cursive; touch-action: none; -webkit-tap-highlight-color: transparent; }
+        #touch button.sm { width: 48px; height: 48px; font-size: 22px; }
+        #touch button[data-key="Space"] { font-size: 19px; }
+        #touch button.on { background: var(--accent); box-shadow: 2px 2px #23303a59; transform: translate(2px, 2px); }
+        #hud .stats { top: 64px; bottom: auto; max-width: calc(100% - 156px); flex-wrap: wrap; gap: 6px; }
+        #hud .stats > div { min-width: 0; padding: 2px 7px 4px; }
+        #prompt { bottom: 226px; }
+        #prompt.show { pointer-events: auto; cursor: pointer; }
+      }
+      @media (pointer: coarse) and (height <= 520px) {
+        #touch .left { left: 76px; }
+        #hud .stats { top: auto; bottom: 18px; left: 230px; max-width: none; }
+        #prompt { bottom: 92px; }
+        #minimap { width: 120px; height: 120px; }
+      }
+    </style>
   </head>
   <body>
     <canvas id="game"></canvas>
@@ -76,6 +100,21 @@
       </div>
       <div id="toast"></div>
       <div id="prompt"></div>
+      <!-- Phone controls: each button holds the matching key while pressed. -->
+      <div id="touch">
+        <div class="pad left">
+          <button type="button" data-key="KeyA" aria-label="Turn left">◀</button>
+          <button type="button" data-key="KeyD" aria-label="Turn right">▶</button>
+        </div>
+        <div class="pad right">
+          <button type="button" class="sm" data-key="KeyR" aria-label="Restart run">↺</button>
+          <button type="button" class="sm" data-key="KeyF" aria-label="Board or on foot">F</button>
+          <button type="button" data-key="Space" aria-label="Jump (hold to charge)">Jump</button>
+          <button type="button" data-key="KeyW" aria-label="Push / tuck">▲</button>
+          <i></i>
+          <button type="button" data-key="KeyS" aria-label="Brake">▼</button>
+        </div>
+      </div>
     </div>
 
     <!-- Sidebar menu: icon rail on the left edge, with panels that open beside it. -->
@@ -211,5 +250,31 @@
     <div id="cloud"></div>
 
     <div id="loading"><div class="env">✉</div><div>Loading</div></div>
+    <script>
+      (function () {
+        function send(type, code) { window.dispatchEvent(new KeyboardEvent(type, { code: code })); }
+        document.querySelectorAll("#touch [data-key]").forEach(function (b) {
+          var code = b.dataset.key, id = null;
+          function up() { if (id === null) return; id = null; b.classList.remove("on"); send("keyup", code); }
+          b.addEventListener("pointerdown", function (e) {
+            e.preventDefault();
+            if (id !== null) return;
+            id = e.pointerId;
+            b.classList.add("on");
+            send("keydown", code);
+          });
+          b.addEventListener("pointerup", up);
+          b.addEventListener("pointercancel", up);
+          b.addEventListener("lostpointercapture", up);
+        });
+        // Prompt actions (ride lift, drive, get out) are all E; E does nothing when the prompt is only a hint.
+        document.getElementById("prompt").addEventListener("pointerdown", function (e) {
+          e.preventDefault();
+          send("keydown", "KeyE");
+          send("keyup", "KeyE");
+        });
+        document.getElementById("touch").addEventListener("contextmenu", function (e) { e.preventDefault(); });
+      })();
+    </script>
   </body>
 </html>
