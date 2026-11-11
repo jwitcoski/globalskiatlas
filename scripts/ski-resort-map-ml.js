@@ -3,7 +3,7 @@
  * Data: ski_areas_analyzed / ski_areas / pistes / lifts from PMTiles; resort detail at z12+.
  */
 import { config } from './map-config.js';
-import { createMapLibre } from './map-core.js?v=2';
+import { createMapLibre } from './map-core.js?v=3';
 import { getBasemapStyle, getSavedBasemapId } from './basemap-options.js';
 import {
   addSkiPmtilesToMap,

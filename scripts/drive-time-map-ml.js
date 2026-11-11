@@ -5,7 +5,7 @@
  * Entry for DriveTimeMap.html.
  */
 import { config } from './map-config.js?v=mb5';
-import { initSkiResortMap } from './ski-resort-map-ml.js?v=32';
+import { initSkiResortMap } from './ski-resort-map-ml.js?v=33';
 import { escapeHtml } from './utils.js';
 import { matchesPass, onPassFilterChange } from './pass-filter.js';
 
@@ -742,8 +742,19 @@ function firstSymbolLayerId(map) {
     drawBtn.disabled = !originLngLat;
   }
 
-  if (toggle) toggle.addEventListener('click', () => panel.classList.toggle('open'));
-  if (closeBtn) closeBtn.addEventListener('click', () => panel.classList.remove('open'));
+  if (toggle) {
+    toggle.addEventListener('click', () => {
+      panel.classList.toggle('open');
+      // Bottom-sheet / keyboard layout shifts on phones; keep the WebGL buffer matched.
+      requestAnimationFrame(() => { try { map.resize(); } catch (_) {} });
+    });
+  }
+  if (closeBtn) {
+    closeBtn.addEventListener('click', () => {
+      panel.classList.remove('open');
+      requestAnimationFrame(() => { try { map.resize(); } catch (_) {} });
+    });
+  }
 
   geocodeBtn.addEventListener('click', async () => {
     const q = (originInput && originInput.value) ? originInput.value.trim() : '';

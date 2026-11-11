@@ -157,7 +157,11 @@ html, body { height: 100%; font-family: system-ui, -apple-system, sans-serif; }
 .dt-warning::before { content: "⚠ "; }
 .dt-hint { font-size: 11px; color: #6b7280; margin-top: 4px; }
 @media (max-width: 768px) {
-  .map-wrapper { margin-top: var(--header-height); min-height: calc(100vh - var(--header-height)); }
+  .map-wrapper {
+    margin-top: var(--header-height);
+    min-height: calc(100vh - var(--header-height));
+    min-height: calc(100dvh - var(--header-height));
+  }
   .map-legend { bottom: 12px; left: 12px; padding: 8px 10px; font-size: 11px; }
   #driveTimePanel {
     top: auto;

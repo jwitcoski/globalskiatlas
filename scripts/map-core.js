@@ -57,6 +57,20 @@ export async function createMapLibre(options = {}) {
   console.log('[ski-map] basemap load', Math.round(performance.now() - tStyle) + 'ms');
   globalThis.__gsaMapLoad = Object.assign(globalThis.__gsaMapLoad || {}, { basemapMs: Math.round(performance.now() - tStyle) });
 
+  // Mobile keyboards / browser chrome change the container without a window resize
+  // event; without map.resize() MapLibre keeps the old drawing buffer and the
+  // basemap looks blank outside a small central patch (DriveTimeMap is hit hardest
+  // because it has a text field that opens the keyboard).
+  const onResize = () => {
+    try {
+      map.resize();
+    } catch (_) { /* map removed */ }
+  };
+  window.addEventListener('resize', onResize);
+  window.visualViewport?.addEventListener('resize', onResize);
+  onResize();
+  requestAnimationFrame(onResize);
+
   return { map };
 }
 
