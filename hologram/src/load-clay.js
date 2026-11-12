@@ -52,17 +52,18 @@ export async function loadClayTerrain(THREE, {
   mesh.receiveShadow = true;
 
   const { root, span } = fitMeshToSpan(THREE, mesh, targetSpan);
+  // Soft ground disc — keep dim so it doesn't wash out the bowl reflection.
   const shadow = new THREE.Mesh(
-    new THREE.CircleGeometry(span * 0.38, 48),
+    new THREE.CircleGeometry(Math.min(span, 100) * 0.42, 48),
     new THREE.MeshBasicMaterial({
-      color: 0x6a7f96,
+      color: 0x243040,
       transparent: true,
-      opacity: 0.28,
+      opacity: 0.35,
       depthWrite: false,
     }),
   );
   shadow.rotation.x = -Math.PI / 2;
-  shadow.position.y = -10;
+  shadow.position.y = -8;
   root.add(shadow);
   root.userData.manifest = manifest;
   root.userData.resortId = resortId;

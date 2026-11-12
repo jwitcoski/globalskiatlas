@@ -37,13 +37,15 @@ export function exaggerateHeights(mesh, factor = 2) {
   mesh.geometry.computeVertexNormals();
 }
 
-/** Bright snow-facing material for black-stage holograms. */
+/** Bright snow-facing material for black-stage holograms.
+ * Pepper's Ghost needs high luminance on pure black; prefer near-unlit snow.
+ */
 export function hologramSnowMaterial(THREE) {
   return new THREE.MeshStandardMaterial({
-    color: 0xf4f8fc,
-    roughness: 0.72,
-    metalness: 0.04,
-    emissive: 0x1a2430,
-    emissiveIntensity: 0.18,
+    color: 0xffffff,
+    roughness: 0.55,
+    metalness: 0.0,
+    emissive: 0xd7e6f5,
+    emissiveIntensity: 0.55,
   });
 }
