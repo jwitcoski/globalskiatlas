@@ -1,0 +1,14 @@
+{
+  "name": "pepper-ghost-clay",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Phone + glass-bowl Pepper's Ghost viewer for Global Ski Atlas clay scenes (sandbox).",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "check": "node src/check.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
