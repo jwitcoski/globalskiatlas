@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no"
+  />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#000000" />
+  <title>Pepper's Ghost Clay — sandbox</title>
+  <link rel="stylesheet" href="./css/app.css" />
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <main id="stage" class="stage" aria-label="Pepper's Ghost clay stage">
+    <canvas id="canvas" class="stage-canvas is-mirrored"></canvas>
+  </main>
+
+  <div id="chrome" class="chrome is-open" role="region" aria-label="Hologram controls">
+    <header class="chrome-head">
+      <p class="brand">Pepper's Ghost Clay</p>
+      <p class="hint">Phone face-up · glass bowl + 45° clear sheet · dark room · max brightness</p>
+    </header>
+
+    <label class="field">
+      <span>Resort</span>
+      <select id="resort"></select>
+    </label>
+
+    <div class="row">
+      <label class="toggle">
+        <input id="mirror" type="checkbox" checked />
+        <span>Mirror for reflection</span>
+      </label>
+      <label class="toggle">
+        <input id="spin" type="checkbox" checked />
+        <span>Auto-spin</span>
+      </label>
+    </div>
+
+    <div class="row actions">
+      <button id="fullscreen" type="button">Fullscreen</button>
+      <button id="wake" type="button">Keep screen on</button>
+      <button id="hide" type="button">Hide UI</button>
+    </div>
+
+    <p id="status" class="status" aria-live="polite">Loading…</p>
+  </div>
+
+  <button id="reveal" class="reveal" type="button" hidden aria-label="Show controls">Controls</button>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
