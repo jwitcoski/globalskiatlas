@@ -16,17 +16,21 @@ export function createHologramViewer({ canvas, reduceMotion = false }) {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x000000);
 
-  const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 500);
-  camera.position.set(0, 70, 145);
-  camera.lookAt(0, 4, 0);
+  const camera = new THREE.PerspectiveCamera(28, 1, 0.1, 500);
+  // High three-quarter view so the island reads as a floating object in the bowl.
+  camera.position.set(0, 120, 150);
+  camera.lookAt(0, 0, 0);
 
-  const hemi = new THREE.HemisphereLight(0xdbe7ff, 0x101820, 1.15);
+  const hemi = new THREE.HemisphereLight(0xe8f2ff, 0x0a1018, 1.35);
   scene.add(hemi);
-  const key = new THREE.DirectionalLight(0xffffff, 1.35);
-  key.position.set(40, 80, 20);
+  const key = new THREE.DirectionalLight(0xffffff, 1.55);
+  key.position.set(55, 110, 35);
   scene.add(key);
-  const rim = new THREE.DirectionalLight(0x9ad7ff, 0.55);
-  rim.position.set(-50, 30, -40);
+  const fill = new THREE.DirectionalLight(0xb9d7ff, 0.45);
+  fill.position.set(-40, 50, 60);
+  scene.add(fill);
+  const rim = new THREE.DirectionalLight(0x7ec8ff, 0.65);
+  rim.position.set(-60, 40, -50);
   scene.add(rim);
 
   const pivot = new THREE.Group();

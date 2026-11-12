@@ -30,7 +30,7 @@ export async function fetchJson(url) {
 export async function loadClayTerrain(THREE, {
   assetBase = "/clay_scenes",
   resortId,
-  heightExaggerate = 2.2,
+  heightExaggerate = 2.8,
   targetSpan = 100,
 } = {}) {
   if (!resortId) throw new Error("resortId required");
@@ -51,7 +51,19 @@ export async function loadClayTerrain(THREE, {
   mesh.castShadow = false;
   mesh.receiveShadow = true;
 
-  const { root } = fitMeshToSpan(THREE, mesh, targetSpan);
+  const { root, span } = fitMeshToSpan(THREE, mesh, targetSpan);
+  const shadow = new THREE.Mesh(
+    new THREE.CircleGeometry(span * 0.38, 48),
+    new THREE.MeshBasicMaterial({
+      color: 0x6a7f96,
+      transparent: true,
+      opacity: 0.28,
+      depthWrite: false,
+    }),
+  );
+  shadow.rotation.x = -Math.PI / 2;
+  shadow.position.y = -10;
+  root.add(shadow);
   root.userData.manifest = manifest;
   root.userData.resortId = resortId;
   return { root, manifest };
