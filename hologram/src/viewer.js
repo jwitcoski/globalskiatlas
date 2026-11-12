@@ -54,7 +54,7 @@ export function createHologramViewer({ canvas, reduceMotion = false }) {
     raf = requestAnimationFrame(frame);
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
-    if (spinning && content) content.rotation.y += dt * 0.28;
+    if (spinning && content) content.rotation.y += dt * 0.18;
     renderer.render(scene, camera);
   }
 

@@ -43,5 +43,6 @@ export function exaggerateHeights(mesh, factor = 2) {
 export function hologramSnowMaterial(THREE) {
   return new THREE.MeshBasicMaterial({
     color: 0xe8f1fa,
+    side: THREE.DoubleSide,
   });
 }
