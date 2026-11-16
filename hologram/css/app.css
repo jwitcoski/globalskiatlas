@@ -30,22 +30,15 @@ body {
   inset: 0;
   z-index: 1;
   background: #000;
-  /* WebGL canvases can composite above HTML; keep stage inert while chrome is open. */
-  pointer-events: none;
 }
 
-.stage.is-interactive {
-  pointer-events: auto;
-}
-
-.stage-canvas {
+.stage canvas {
   display: block;
   width: 100%;
   height: 100%;
-  touch-action: none;
 }
 
-.stage-canvas.is-mirrored {
+.stage.is-mirrored canvas {
   transform: scaleX(-1);
 }
 

@@ -11,6 +11,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = __dirname;
 const PAGE = path.resolve(__dirname, "../hologram.html");
 const CLAY_ROOT = path.resolve(__dirname, "../clay_scenes");
+const SCRIPTS = path.resolve(__dirname, "../scripts");
 const PORT = Number(process.env.PORT) || 3040;
 
 const MIME = {
@@ -55,6 +56,8 @@ const server = http.createServer((req, res) => {
     file = tryFile(PAGE);
   } else if (pathname.startsWith("/hologram/")) {
     file = tryFile(safeJoin(ROOT, pathname.slice("/hologram".length)));
+  } else if (pathname.startsWith("/scripts/")) {
+    file = tryFile(safeJoin(SCRIPTS, pathname.slice("/scripts".length)));
   } else if (pathname.startsWith("/clay_scenes/")) {
     file = tryFile(safeJoin(CLAY_ROOT, pathname.slice("/clay_scenes".length)));
   } else {

@@ -893,7 +893,7 @@ export async function initHeroMontageMap(container, options = {}) {
   }
 
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(PALETTE.bg);
+  scene.background = new THREE.Color(options.background != null ? options.background : PALETTE.bg);
   scene.fog = null;
 
   const camera = new THREE.PerspectiveCamera(36, 1, 0.5, 1200);

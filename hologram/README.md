@@ -38,18 +38,9 @@ npm run check
 
 Deep link: `/hologram.html?resort=montage_mountain_pa`
 
-## Scope (v0)
+## Scope
 
-- Terrain GLB only (no trails/lifts yet)
+The stage is `initHeroMontageMap` with a black background. Trails, trees, lifts, and buildings come from that viewer.
+
 - Single-view bowl mode (not a 4-sided pyramid)
-- Local sandbox; not wired into homepage/wiki
-
-## Later port to main site
-
-Reuse:
-
-- black clear color + hidden chrome
-- CSS `scaleX(-1)` mirror toggle
-- wake lock + fullscreen helpers
-
-against `scripts/hero-montage-map.js` / clay runtime.
+- Unlisted page; nothing else on the site links here

@@ -1,24 +1,19 @@
-import { createHologramViewer } from "./viewer.js";
-import { fetchJson } from "./load-clay.js";
+import { initHeroMontageMap } from "/scripts/hero-montage-map.js";
 
 const stage = document.getElementById("stage");
-const canvas = document.getElementById("canvas");
 const chrome = document.getElementById("chrome");
 const reveal = document.getElementById("reveal");
 const resortSelect = document.getElementById("resort");
 const mirrorToggle = document.getElementById("mirror");
-const spinToggle = document.getElementById("spin");
 const statusEl = document.getElementById("status");
 const fullscreenBtn = document.getElementById("fullscreen");
 const wakeBtn = document.getElementById("wake");
 const hideBtn = document.getElementById("hide");
 
-const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const params = new URLSearchParams(location.search);
-const viewer = createHologramViewer({ canvas, reduceMotion });
-
+let map = null;
 let wakeLock = null;
-let assetBase = "/clay_scenes";
+let token = 0;
 
 function setStatus(text) {
   statusEl.textContent = text;
@@ -27,14 +22,19 @@ function setStatus(text) {
 function setChromeOpen(open) {
   chrome.classList.toggle("is-open", open);
   reveal.hidden = open;
-  // When UI is hidden, allow a tap on the stage to bring controls back.
-  stage.classList.toggle("is-interactive", !open);
+}
+
+function applyMirror() {
+  stage.classList.toggle("is-mirrored", mirrorToggle.checked);
 }
 
 async function loadCatalog() {
-  const data = await fetchJson(new URL("../resorts.json", import.meta.url));
-  assetBase = data.asset_base || assetBase;
-  const resorts = data.resorts || [];
+  const res = await fetch("/clay_scenes/catalog.json");
+  if (!res.ok) throw new Error(`catalog ${res.status}`);
+  const data = await res.json();
+  const resorts = (data.resorts || []).slice().sort((a, b) =>
+    String(a.display_name || a.id).localeCompare(String(b.display_name || b.id)),
+  );
   resortSelect.innerHTML = "";
   for (const resort of resorts) {
     const opt = document.createElement("option");
@@ -42,28 +42,35 @@ async function loadCatalog() {
     opt.textContent = resort.display_name || resort.id;
     resortSelect.appendChild(opt);
   }
-  const procedural = document.createElement("option");
-  procedural.value = "procedural";
-  procedural.textContent = "Procedural island (offline)";
-  resortSelect.appendChild(procedural);
   return resorts;
 }
 
 async function showSelected() {
-  const id = resortSelect.value || "montage_mountain_pa";
-  setStatus(`Loading ${id}…`);
-  try {
-    viewer.setSpinning(spinToggle.checked);
-    const manifest = id === "procedural"
-      ? viewer.showProcedural()
-      : await viewer.showResort(id, assetBase);
-    const name = manifest?.display_name || id;
-    setStatus(`${name} ready — place bowl over phone`);
-    history.replaceState(null, "", `?resort=${encodeURIComponent(id)}`);
-  } catch (err) {
-    console.error(err);
-    setStatus(String(err.message || err));
+  const id = resortSelect.value;
+  const my = ++token;
+  const name = resortSelect.selectedOptions[0]?.textContent || id;
+  setStatus(`Loading ${name}…`);
+  map?.dispose();
+  map = null;
+  stage.replaceChildren();
+  const next = await initHeroMontageMap(stage, {
+    resortId: id,
+    skipNearest: true,
+    background: 0x000000,
+  });
+  if (my !== token) {
+    next?.dispose();
+    return;
   }
+  map = next;
+  await map?.whenReady;
+  if (my !== token) return;
+  setStatus(
+    map?.sceneLoaded?.()
+      ? `${name} ready — place bowl over phone`
+      : `${name} failed to load`,
+  );
+  history.replaceState(null, "", `?resort=${encodeURIComponent(id)}`);
 }
 
 async function requestWakeLock() {
@@ -99,43 +106,26 @@ wakeBtn.addEventListener("click", () => {
 
 hideBtn.addEventListener("click", () => setChromeOpen(false));
 reveal.addEventListener("click", () => setChromeOpen(true));
-
-canvas.addEventListener("pointerdown", () => {
-  if (!chrome.classList.contains("is-open")) setChromeOpen(true);
-});
-
-mirrorToggle.addEventListener("change", () => {
-  viewer.setMirrored(mirrorToggle.checked);
-});
-
-spinToggle.addEventListener("change", () => {
-  viewer.setSpinning(spinToggle.checked);
-});
-
+mirrorToggle.addEventListener("change", applyMirror);
 resortSelect.addEventListener("change", () => {
   showSelected();
 });
-
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible" && wakeLock) requestWakeLock();
 });
 
-viewer.setMirrored(mirrorToggle.checked);
-viewer.setSpinning(spinToggle.checked && !reduceMotion);
-if (reduceMotion) spinToggle.checked = false;
+applyMirror();
 
 try {
   const resorts = await loadCatalog();
   const wanted = params.get("resort");
   if (wanted && [...resortSelect.options].some((o) => o.value === wanted)) {
     resortSelect.value = wanted;
-  } else if (resorts[0]) {
-    resortSelect.value = resorts[0].id;
+  } else if (resorts.some((r) => r.id === "montage_mountain_pa")) {
+    resortSelect.value = "montage_mountain_pa";
   }
   await showSelected();
 } catch (err) {
   console.error(err);
-  setStatus("Catalog failed — using procedural island");
-  resortSelect.innerHTML = `<option value="procedural">Procedural island</option>`;
-  await showSelected();
+  setStatus(String(err.message || err));
 }

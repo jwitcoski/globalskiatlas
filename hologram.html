@@ -22,9 +22,7 @@
   </script>
 </head>
 <body>
-  <main id="stage" class="stage" aria-label="Pepper's Ghost clay stage">
-    <canvas id="canvas" class="stage-canvas is-mirrored"></canvas>
-  </main>
+  <main id="stage" class="stage" aria-label="Pepper's Ghost clay stage"></main>
 
   <div id="chrome" class="chrome is-open" role="region" aria-label="Hologram controls">
     <header class="chrome-head">
@@ -37,16 +35,10 @@
       <select id="resort"></select>
     </label>
 
-    <div class="row">
-      <label class="toggle">
-        <input id="mirror" type="checkbox" checked />
-        <span>Mirror for reflection</span>
-      </label>
-      <label class="toggle">
-        <input id="spin" type="checkbox" checked />
-        <span>Auto-spin</span>
-      </label>
-    </div>
+    <label class="toggle">
+      <input id="mirror" type="checkbox" checked />
+      <span>Mirror for reflection</span>
+    </label>
 
     <div class="row actions">
       <button id="fullscreen" type="button">Fullscreen</button>
