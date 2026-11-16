@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { loadClayTerrain } from "./load-clay.js";
 import { makeProceduralIsland } from "./procedural-island.js";
-import { mirrorCssScaleX } from "./geometry.js";
+import { cameraFitDistance, mirrorCssScaleX } from "./geometry.js";
 
 export function createHologramViewer({ canvas, reduceMotion = false }) {
   const renderer = new THREE.WebGLRenderer({
@@ -48,6 +48,7 @@ export function createHologramViewer({ canvas, reduceMotion = false }) {
     renderer.setSize(w, h, false);
     camera.aspect = w / Math.max(h, 1);
     camera.updateProjectionMatrix();
+    if (content) frameContent(content);
   }
 
   function frame(now) {
@@ -75,11 +76,13 @@ export function createHologramViewer({ canvas, reduceMotion = false }) {
     const box = new THREE.Box3().setFromObject(root);
     const size = box.getSize(new THREE.Vector3());
     const center = box.getCenter(new THREE.Vector3());
-    const radius = Math.max(size.x, size.y, size.z, 1) * 0.55;
-    camera.position.set(center.x, center.y + radius * 1.15, center.z + radius * 1.55);
-    camera.near = Math.max(0.1, radius / 100);
-    camera.far = Math.max(500, radius * 20);
-    camera.lookAt(center.x, center.y - radius * 0.05, center.z);
+    const radius = 0.5 * Math.max(1, Math.hypot(size.x, size.y, size.z));
+    const dist = cameraFitDistance(radius, camera.fov, camera.aspect, 1.45);
+    const dir = new THREE.Vector3(0.22, 0.62, 1).normalize();
+    camera.position.copy(center).addScaledVector(dir, dist);
+    camera.near = Math.max(0.05, dist / 200);
+    camera.far = Math.max(500, dist * 8);
+    camera.lookAt(center);
     camera.updateProjectionMatrix();
   }
 

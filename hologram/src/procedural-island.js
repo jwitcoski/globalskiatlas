@@ -1,4 +1,4 @@
-import { fitMeshToSpan, hologramSnowMaterial } from "./geometry.js";
+import { fitMeshToSpan, hologramSnowMaterial, shadeTerrainColors } from "./geometry.js";
 
 /** Offline fallback so the sandbox still demos without clay_scenes. */
 export function makeProceduralIsland(THREE, targetSpan = 100) {
@@ -14,6 +14,7 @@ export function makeProceduralIsland(THREE, targetSpan = 100) {
   }
   pos.needsUpdate = true;
   geo.computeVertexNormals();
+  shadeTerrainColors(THREE, geo);
 
   const mesh = new THREE.Mesh(geo, hologramSnowMaterial(THREE));
   mesh.name = "procedural-island";

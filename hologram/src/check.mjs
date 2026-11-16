@@ -6,13 +6,22 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { mirrorCssScaleX } from "./geometry.js";
+import { cameraFitDistance, mirrorCssScaleX, terrainVertexColor } from "./geometry.js";
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 const project = path.resolve(root, "..");
 
 assert.equal(mirrorCssScaleX(true), "scaleX(-1)");
 assert.equal(mirrorCssScaleX(false), "none");
+
+const wide = cameraFitDistance(50, 28, 1.6);
+const tall = cameraFitDistance(50, 28, 0.5);
+assert.ok(tall > wide, "portrait view needs more distance");
+const peak = terrainVertexColor(1, 0, 1, 0);
+const valley = terrainVertexColor(0, 0, 1, 0);
+const cliff = terrainVertexColor(1, 1, 0, 0);
+assert.ok(peak[0] > valley[0], "peaks are lighter than valleys");
+assert.ok(peak[0] > cliff[0], "faces away from the light are darker");
 
 for (const rel of [
   "../hologram.html",

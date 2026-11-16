@@ -4,6 +4,7 @@ import {
   exaggerateHeights,
   fitMeshToSpan,
   hologramSnowMaterial,
+  shadeTerrainColors,
 } from "./geometry.js";
 
 let loader;
@@ -47,6 +48,7 @@ export async function loadClayTerrain(THREE, {
   if (!mesh) throw new Error("terrain mesh missing");
 
   exaggerateHeights(mesh, heightExaggerate);
+  shadeTerrainColors(THREE, mesh.geometry);
   mesh.material = hologramSnowMaterial(THREE);
   mesh.castShadow = false;
   mesh.receiveShadow = true;
