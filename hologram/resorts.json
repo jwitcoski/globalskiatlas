@@ -1,0 +1,32 @@
+{
+  "schema_version": "0.1",
+  "asset_base": "/clay_scenes",
+  "note": "Sandbox list of clay scenes with local terrain meshes. Expand as more GLBs land locally.",
+  "resorts": [
+    {
+      "id": "montage_mountain_pa",
+      "display_name": "Montage Mountain",
+      "country": "US"
+    },
+    {
+      "id": "pal_arinsal_andorra",
+      "display_name": "Pal-Arinsal",
+      "country": "Andorra"
+    },
+    {
+      "id": "hakuba_cortina_japan",
+      "display_name": "Hakuba Cortina",
+      "country": "Japan"
+    },
+    {
+      "id": "cerro_perito_moreno_argentina",
+      "display_name": "Cerro Perito Moreno",
+      "country": "Argentina"
+    },
+    {
+      "id": "perisher_australia",
+      "display_name": "Perisher",
+      "country": "Australia"
+    }
+  ]
+}
