@@ -151,6 +151,7 @@
               <tr>
                 <th>Time</th>
                 <th>Status</th>
+                <th>OSM</th>
                 <th>Resort</th>
                 <th>Message</th>
               </tr>
@@ -381,7 +382,12 @@
           running.forEach(function (job) {
             var item = document.createElement('li');
             appendResort(item, job);
-            item.appendChild(document.createTextNode(' — ' + explainMessage(job.message, job) + ' — ' + formatTime(job.updated)));
+            var osm = dash(job.osm_source);
+            item.appendChild(document.createTextNode(
+              ' — ' + explainMessage(job.message, job) +
+              (osm !== '—' ? ' — OSM: ' + osm : '') +
+              ' — ' + formatTime(job.updated)
+            ));
             if (job.message) item.title = String(job.message);
             runningEl.appendChild(item);
           });
@@ -392,7 +398,7 @@
         recent.forEach(function (job) {
           var row = document.createElement('tr');
           if (job.status === 'failed') row.className = 'failed';
-          [formatTime(job.updated), dash(job.status)].forEach(function (value) {
+          [formatTime(job.updated), dash(job.status), dash(job.osm_source)].forEach(function (value) {
             var cell = document.createElement('td');
             cell.textContent = value;
             row.appendChild(cell);
