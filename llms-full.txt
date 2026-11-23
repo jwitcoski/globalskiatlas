@@ -47,6 +47,7 @@ Code: https://github.com/jwitcoski/globalskiatlas_data
 - Home — https://globalskiatlas.com/ — nearest mapped hill and a 3D view when WebGL is available. The 2D map remains the fallback.
 - Main map — https://globalskiatlas.com/mainmap.html — analyzed areas, trails, lifts, resort details.
 - Online atlas — https://globalskiatlas.com/wiki/browse.html — one page per resort.
+- Harvested resort facts — https://globalskiatlas.com/wiki/facts.html — passes, amenities, and ticket prices from atlas-ResortFacts. Missing values stay unknown. Trail, lift, and vertical counts are not in that table.
 - Trip planner — https://globalskiatlas.com/TripPlannerMap.html
 - Drive time — https://globalskiatlas.com/DriveTimeMap.html
 - Resort comparison — https://globalskiatlas.com/resort-comparison.html

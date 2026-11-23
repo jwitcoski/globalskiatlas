@@ -11,6 +11,7 @@ When citing a resort count, name the file `ski_areas_analyzed.parquet`, the filt
 - [Home](https://globalskiatlas.com/): Nearest mapped ski hill, with a 3D view when the browser can draw it.
 - [Main map](https://globalskiatlas.com/mainmap.html): Interactive map of analyzed ski areas, trails, lifts, and resort details. Query: `mainmap.html?q=`.
 - [Online atlas](https://globalskiatlas.com/wiki/browse.html): Browse individual resort pages.
+- [Harvested resort facts](https://globalskiatlas.com/wiki/facts.html): Comparable facts from atlas-ResortFacts (passes, amenities, ticket prices). Missing values stay unknown. Trail, lift, and vertical counts stay on the wiki page and in the Parquet extracts.
 - [Trip planner](https://globalskiatlas.com/TripPlannerMap.html): Multi-resort driving route.
 - [Drive time](https://globalskiatlas.com/DriveTimeMap.html): How long it takes to reach resorts from a start point.
 - [Resort comparison](https://globalskiatlas.com/resort-comparison.html): Side-by-side resort stats.

@@ -30,7 +30,7 @@
   <link rel="stylesheet" href="../css/tailwind-build.css" />
   <link rel="stylesheet" href="../css/index.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" integrity="sha512-dPXYcDub/aeb08c63jRq/k6GaKccl256JQy/AnOq7CAnEZ9FzSL9wSbcZkMp4R26vBsMLFYH4kQ67/bbV8XaCQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-  <link rel="stylesheet" href="css/style.css?v=13"/>
+  <link rel="stylesheet" href="css/style.css?v=14"/>
   <link rel="stylesheet" href="../css/map-popups.css?v=4"/>
   <link rel="stylesheet" href="../css/index-hero-montage.css?v=59"/>
   <link rel="stylesheet" href="https://cdn.maptiler.com/maptiler-sdk-js/v3.10.2/maptiler-sdk.css">
@@ -107,10 +107,11 @@
   <div class="resort-auth-header">
     <a href="main.html" class="resort-browse-link">Main page</a>
     <a href="browse.html" class="resort-browse-link">Browse all resorts →</a>
+    <a href="facts.html" class="resort-browse-link">Harvested facts</a>
     <div id="resort-auth-widget" class="resort-auth-widget"></div>
   </div>
 
-  <article class="resort-entry">
+  <article class="resort-entry" id="main">
     <header class="resort-header">
       <p class="resort-breadcrumb" id="resort-breadcrumb" style="display:none"></p>
       <p class="resort-location" id="resort-location"></p>
@@ -179,6 +180,10 @@
         <div class="resort-stats" id="resort-stats"></div>
         <p class="resort-trail-breakdown" id="resort-trail-breakdown" style="display:none"></p>
         <p class="resort-meta" id="resort-meta" style="display:none"></p>
+        <section class="harvested-facts" id="harvested-facts" aria-label="Harvested resort facts">
+          <h2 class="hf-strip-title">Harvested facts</h2>
+          <div id="harvested-facts-body">Loading harvested facts…</div>
+        </section>
       </div>
 
       <div class="resort-content">
@@ -342,7 +347,8 @@
       window.addEventListener('resize', responsive);
     })();
   </script>
-  <script src="/wiki/js/script.js?v=56"></script>
+  <script src="/wiki/js/script.js?v=58"></script>
+  <script src="/wiki/js/harvested-facts.js?v=7"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       ywikiAuth.init(function () {
@@ -354,6 +360,6 @@
       });
     });
   </script>
-<script src="../scripts/site-nav.js?v=7" defer></script>
+<script src="../scripts/site-nav.js?v=8" defer></script>
 </body>
 </html>

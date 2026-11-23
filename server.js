@@ -566,6 +566,40 @@ app.post('/api/wiki/resort-jobs', handleResortJobs);
 app.get('/api/wiki/resort-jobs', handleResortJobs);
 app.get('/api/wiki/resort-jobs/:jobId', handleResortJobs);
 
+const { handleResortFactsRequest } = require('./lambda/wiki-api/resort-facts');
+
+async function handleResortFacts(req, res) {
+  const auth = req.headers.authorization || '';
+  const token = auth.startsWith('Bearer ') ? auth.slice(7).trim() : '';
+  const parts = req.path.replace(/^\/api\/?/, '').split('/').filter(Boolean);
+  try {
+    const result = await handleResortFactsRequest({
+      method: req.method,
+      pathParts: parts,
+      query: req.query,
+      body: req.body,
+      token,
+      validateToken: async (raw) => {
+        if (!raw) return null;
+        if (!isCognitoConfigured || !jwtValidator) return { sub: 'local' };
+        return jwtValidator.validate('Bearer ' + raw);
+      },
+    });
+    if (!result) return res.status(404).json({ error: 'Not Found' });
+    res.status(result.status).json(result.body);
+  } catch (err) {
+    console.error('resort facts', err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+}
+
+app.get('/api/resorts/facts', handleResortFacts);
+app.get('/api/resorts/facts/stats', handleResortFacts);
+app.post('/api/resorts/facts/:winterSportsId', handleResortFacts);
+app.get('/api/wiki/resorts/facts', handleResortFacts);
+app.get('/api/wiki/resorts/facts/stats', handleResortFacts);
+app.post('/api/wiki/resorts/facts/:winterSportsId', handleResortFacts);
+
 app.get('/api/wiki/resort-search', async (req, res) => {
   const auth = req.headers.authorization || '';
   const token = auth.startsWith('Bearer ') ? auth.slice(7).trim() : '';

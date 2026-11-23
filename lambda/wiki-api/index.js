@@ -7,6 +7,7 @@
 const store = require('./store');
 const { handleResortJobRequest } = require('./resort-jobs');
 const { handleResortSearchRequest } = require('./resort-search');
+const { handleResortFactsRequest } = require('./resort-facts');
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -110,6 +111,16 @@ exports.handler = async (event) => {
   const method = (event.requestContext?.http?.method || event.httpMethod || 'GET').toUpperCase();
 
   try {
+    const resortFacts = await handleResortFactsRequest({
+      method,
+      pathParts,
+      query: event.queryStringParameters || {},
+      body: method === 'POST' ? getBody(event) : null,
+      token: getAuth(event),
+      validateToken,
+    });
+    if (resortFacts) return json(resortFacts.status, resortFacts.body);
+
     const resortJob = await handleResortJobRequest({
       method,
       pathParts,

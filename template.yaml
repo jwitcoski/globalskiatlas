@@ -71,6 +71,8 @@ Resources:
             TableName: !Sub '${DynamoDBTablePrefix}-WikiRevisions'
         - DynamoDBCrudPolicy:
             TableName: !Sub '${DynamoDBTablePrefix}-WikiComments'
+        - DynamoDBCrudPolicy:
+            TableName: !Sub '${DynamoDBTablePrefix}-ResortFacts'
       Events:
         WikiApiRoot:
           Type: HttpApi
@@ -83,6 +85,18 @@ Resources:
           Properties:
             ApiId: !Ref WikiApi
             Path: /api/wiki/{proxy+}
+            Method: ANY
+        ResortFacts:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref WikiApi
+            Path: /api/resorts/facts
+            Method: ANY
+        ResortFactsProxy:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref WikiApi
+            Path: /api/resorts/facts/{proxy+}
             Method: ANY
 
   IcebergStatsFunction:
