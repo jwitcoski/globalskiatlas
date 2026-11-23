@@ -25,6 +25,47 @@
   </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>
+    (function () {
+      if (!/[?&]debug=1(?:&|$)/.test(location.search)) return;
+      var queued = [];
+      var box = null;
+      function line(kind, msg) {
+        var text = kind + ' ' + msg;
+        if (!document.body) { queued.push(text); return; }
+        if (!box) {
+          box = document.createElement('pre');
+          box.id = 'gsa-phone-log';
+          box.setAttribute('role', 'log');
+          box.style.cssText = 'position:fixed;left:8px;right:8px;bottom:8px;max-height:38vh;overflow:auto;z-index:100000;margin:0;padding:8px;border-radius:8px;background:rgba(17,17,17,.92);color:#f8fafc;font:12px/1.35 ui-monospace,monospace;white-space:pre-wrap;';
+          document.body.appendChild(box);
+          if (queued.length) box.textContent = queued.join('\n') + '\n';
+        }
+        box.textContent += text + '\n';
+        box.scrollTop = box.scrollHeight;
+      }
+      window.addEventListener('error', function (e) {
+        line('error', (e.message || 'error') + (e.filename ? ' @ ' + e.filename.split('/').pop() + ':' + e.lineno : ''));
+      });
+      window.addEventListener('unhandledrejection', function (e) {
+        var r = e.reason;
+        line('reject', (r && (r.stack || r.message)) || String(r));
+      });
+      ['error', 'warn'].forEach(function (k) {
+        var orig = console[k].bind(console);
+        console[k] = function () {
+          var msg = Array.prototype.map.call(arguments, function (a) {
+            if (a instanceof Error) return a.stack || a.message;
+            if (typeof a === 'string') return a;
+            try { return JSON.stringify(a); } catch (err) { return String(a); }
+          }).join(' ');
+          line(k, msg);
+          return orig.apply(null, arguments);
+        };
+      });
+      document.addEventListener('DOMContentLoaded', function () { line('log', 'debug on'); });
+    })();
+  </script>
   <title>Ski Resorts by Drive Time – Global Ski Atlas</title>
   <meta name="description" content="See which ski resorts you can drive to in 2, 3, or 4 hours from any location. Drive-time map with 3,000+ ski areas worldwide." />
   <link rel="preconnect" href="https://api.maptiler.com" crossorigin />
