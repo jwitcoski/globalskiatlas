@@ -55,7 +55,8 @@ jobs:
             --exclude "docs/*" \
             --exclude "playable-old/*" \
             --exclude "cloudfront-functions/*" \
-            --exclude "resort-jobs/status.json"
+            --exclude "resort-jobs/status.json" \
+            --exclude "ai-copy/status.json"
 
       - name: Publish CloudFront directory-index function
         run: |

@@ -903,8 +903,8 @@ function sendResortStatus(res, statusCode, body, contentType) {
   res.send(body);
 }
 
-function proxyPublishedStatus(res) {
-  const req = https.get(RESORT_JOBS_STATUS_URL, { headers: { 'Accept-Encoding': 'identity' } }, (up) => {
+function proxyPublishedStatus(res, url, publicPath) {
+  const req = https.get(url, { headers: { 'Accept-Encoding': 'identity' } }, (up) => {
     const chunks = [];
     up.on('data', (chunk) => chunks.push(chunk));
     up.on('end', () => {
@@ -913,7 +913,7 @@ function proxyPublishedStatus(res) {
       if (code >= 400) {
         sendResortStatus(res, code, JSON.stringify({
           error: code === 404 ? 'Not Found' : 'Failed to read status',
-          path: '/resort-jobs/status.json',
+          path: publicPath,
         }), 'application/json; charset=utf-8');
         return;
       }
@@ -924,7 +924,7 @@ function proxyPublishedStatus(res) {
   req.on('error', (err) => {
     sendResortStatus(res, 502, JSON.stringify({
       error: err.message,
-      path: '/resort-jobs/status.json',
+      path: publicPath,
     }), 'application/json; charset=utf-8');
   });
 }
@@ -932,12 +932,30 @@ function proxyPublishedStatus(res) {
 app.get('/resort-jobs/status.json', (req, res) => {
   res.set('Cache-Control', 'no-store');
   if (!fs.existsSync(RESORT_JOBS_STATUS)) {
-    proxyPublishedStatus(res);
+    proxyPublishedStatus(res, RESORT_JOBS_STATUS_URL, '/resort-jobs/status.json');
     return;
   }
   res.sendFile(RESORT_JOBS_STATUS, (err) => {
     if (!err || res.headersSent) return;
-    proxyPublishedStatus(res);
+    proxyPublishedStatus(res, RESORT_JOBS_STATUS_URL, '/resort-jobs/status.json');
+  });
+});
+
+// Homeserver AI copy queue. Separate from OSM resort-jobs.
+const AI_COPY_STATUS =
+  process.env.AI_COPY_STATUS || '/home/lola/ski/output/resort_copy_status.json';
+const AI_COPY_STATUS_URL =
+  process.env.AI_COPY_STATUS_URL || 'https://globalskiatlas.com/ai-copy/status.json';
+
+app.get('/ai-copy/status.json', (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  if (!fs.existsSync(AI_COPY_STATUS)) {
+    proxyPublishedStatus(res, AI_COPY_STATUS_URL, '/ai-copy/status.json');
+    return;
+  }
+  res.sendFile(AI_COPY_STATUS, (err) => {
+    if (!err || res.headersSent) return;
+    proxyPublishedStatus(res, AI_COPY_STATUS_URL, '/ai-copy/status.json');
   });
 });
 

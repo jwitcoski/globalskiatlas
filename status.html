@@ -59,6 +59,32 @@
       border-radius: 0.5rem;
       background: #fff;
     }
+    .ai-copy p { margin: 0.75rem 0 0; font-size: 1.05rem; line-height: 1.6; color: #1f2937; }
+    .ai-copy .ai-stale { color: #92400e; }
+    .ai-bar-wrap { margin: 0.75rem 0 0; max-width: 28rem; }
+    .ai-bar {
+      height: 0.5rem;
+      background: #e5e7eb;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .ai-bar-fill { height: 100%; width: 0; background: #0f766e; }
+    .ai-log {
+      margin: 0.75rem 0 0;
+      padding: 0.75rem 1rem;
+      max-height: 12rem;
+      overflow: auto;
+      border: 1px solid #e5e7eb;
+      border-radius: 0.5rem;
+      background: #f9fafb;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.8rem;
+      line-height: 1.45;
+      white-space: pre;
+    }
+    @media (max-width: 640px) {
+      .ai-copy .status-counts { flex-direction: column; }
+    }
   </style>
 </head>
 <body class="tw-flex tw-min-h-[100vh] tw-flex-col tw-bg-[#fff]">
@@ -159,6 +185,21 @@
             <tbody id="status-recent"></tbody>
           </table>
         </div>
+      </section>
+      <section class="status-section ai-copy" aria-labelledby="ai-copy-heading">
+        <h2 id="ai-copy-heading">AI writing</h2>
+        <p>A second home PC writes English resort pages from search notes, walking the world one state or province at a time. 499 regions, United States first. “Complete” means a page was written. “Insufficient data” means search did not gather enough notes, so no page. Counts are resorts in the region currently running, not the whole world.</p>
+        <p id="ai-heartbeat">Loading AI writing status…</p>
+        <p id="ai-error" class="status-error" hidden></p>
+        <p id="ai-where"></p>
+        <div id="ai-bar-wrap" class="ai-bar-wrap" hidden>
+          <div class="ai-bar" role="progressbar" aria-valuemin="0" aria-valuemax="499" aria-valuenow="0" aria-labelledby="ai-where">
+            <div id="ai-bar-fill" class="ai-bar-fill"></div>
+          </div>
+        </div>
+        <ul id="ai-chips" class="status-counts" hidden></ul>
+        <p id="ai-now" hidden></p>
+        <pre id="ai-log" class="ai-log" hidden></pre>
       </section>
       <p class="status-note">Refreshes every 60 seconds.</p>
     </main>
@@ -448,6 +489,121 @@
       load();
       loadWiki();
       setInterval(load, 60000);
+
+      var AI_STATUS_PATH = '/ai-copy/status.json';
+      var aiHeartbeat = document.getElementById('ai-heartbeat');
+      var aiError = document.getElementById('ai-error');
+      var aiWhere = document.getElementById('ai-where');
+      var aiBarWrap = document.getElementById('ai-bar-wrap');
+      var aiBarFill = document.getElementById('ai-bar-fill');
+      var aiBar = aiBarWrap.querySelector('.ai-bar');
+      var aiChips = document.getElementById('ai-chips');
+      var aiNow = document.getElementById('ai-now');
+      var aiLog = document.getElementById('ai-log');
+      var lastAiPaint = false;
+
+      function aiCount(byStatus, key) {
+        var n = byStatus && byStatus[key];
+        return n == null || n === '' ? 0 : Number(n) || 0;
+      }
+
+      function aiStatusLabel(status) {
+        if (status === 'complete') return 'written';
+        if (status === 'insufficient_data') return 'not enough notes';
+        if (status === 'in_progress') return 'writing';
+        if (status === 'skipped') return 'skipped';
+        return status == null || status === '' ? '—' : String(status);
+      }
+
+      function renderAiChip(label, value) {
+        var item = document.createElement('li');
+        var num = document.createElement('span');
+        num.className = 'num';
+        num.textContent = String(value);
+        item.appendChild(num);
+        item.appendChild(document.createTextNode(label));
+        aiChips.appendChild(item);
+      }
+
+      function renderAi(data) {
+        lastAiPaint = true;
+        aiError.hidden = true;
+        aiChips.hidden = false;
+        aiNow.hidden = false;
+        aiLog.hidden = false;
+        var running = !!data.running;
+        var updated = formatTime(data.updated_at);
+        var parsed = data.updated_at ? new Date(data.updated_at) : null;
+        var stale = parsed && !isNaN(parsed.getTime()) && (Date.now() - parsed.getTime() > 5 * 60 * 1000);
+        aiHeartbeat.textContent =
+          (running ? 'Running' : 'Idle') +
+          (data.host ? ' on ' + String(data.host) : '') +
+          '. Updated ' + updated + '.';
+        if (stale) {
+          aiHeartbeat.appendChild(document.createTextNode(' '));
+          var staleMark = document.createElement('span');
+          staleMark.className = 'ai-stale';
+          staleMark.textContent = 'Stale.';
+          aiHeartbeat.appendChild(staleMark);
+        }
+
+        var state = data.state == null || data.state === '' ? '' : String(data.state);
+        var country = data.country == null || data.country === '' ? '' : String(data.country);
+        var place = state && country ? state + ', ' + country : (state || country || '—');
+        var idx = data.region_index;
+        var total = data.region_total;
+        aiWhere.textContent = 'Region ' + dash(idx) + ' of ' + dash(total) + ': ' + place;
+
+        var idxN = Number(idx);
+        var totalN = Number(total);
+        if (totalN > 0 && idxN >= 0) {
+          aiBarWrap.hidden = false;
+          aiBar.setAttribute('aria-valuemax', String(totalN));
+          aiBar.setAttribute('aria-valuenow', String(idxN));
+          aiBarFill.style.width = Math.min(100, (idxN / totalN) * 100) + '%';
+        } else {
+          aiBarWrap.hidden = true;
+        }
+
+        clear(aiChips);
+        var by = data.by_status || {};
+        renderAiChip('complete', aiCount(by, 'complete'));
+        renderAiChip('insufficient data', aiCount(by, 'insufficient_data'));
+        renderAiChip('skipped', aiCount(by, 'skipped'));
+        renderAiChip('finished this region', data.jsonl_rows == null ? 0 : Number(data.jsonl_rows) || 0);
+
+        var resort = data.last_resort == null || data.last_resort === '' ? '' : String(data.last_resort);
+        var logTail = Array.isArray(data.log_tail) ? data.log_tail : [];
+        var sticky = running && logTail.some(function (line) {
+          return String(line).toLowerCase().indexOf('sticky') !== -1;
+        });
+        if (sticky && resort) {
+          aiNow.textContent = 'researching ' + resort;
+        } else {
+          aiNow.textContent = (resort || '—') + ' — ' + aiStatusLabel(data.last_status);
+        }
+
+        var lines = logTail.slice(-8);
+        aiLog.textContent = lines.length ? lines.join('\n') : '—';
+      }
+
+      function loadAi() {
+        fetch(AI_STATUS_PATH, { cache: 'no-store' })
+          .then(function (resp) {
+            if (!resp.ok) throw new Error('HTTP ' + resp.status + ' ' + resp.statusText);
+            return resp.json();
+          })
+          .then(renderAi)
+          .catch(function (err) {
+            aiError.hidden = false;
+            aiError.textContent = (err && err.message ? err.message : 'Failed to load AI writing status.') +
+              ' Requested ' + AI_STATUS_PATH + '.';
+            if (!lastAiPaint) aiHeartbeat.textContent = 'AI writing status unavailable.';
+          });
+      }
+
+      loadAi();
+      setInterval(loadAi, 60000);
     })();
   </script>
 </body>
