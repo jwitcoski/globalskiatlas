@@ -61,6 +61,25 @@
     }
     .ai-copy p { margin: 0.75rem 0 0; font-size: 1.05rem; line-height: 1.6; color: #1f2937; }
     .ai-copy .ai-stale { color: #92400e; }
+    .ai-boxes {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1.25rem;
+      margin: 1.25rem 0 0;
+    }
+    .ai-box {
+      padding: 1rem 1.1rem 1.15rem;
+      border: 1px solid #e5e7eb;
+      border-radius: 0.5rem;
+      background: #fafafa;
+    }
+    .ai-box h3 {
+      margin: 0;
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: #111;
+    }
+    .ai-box p { margin: 0.55rem 0 0; font-size: 0.98rem; }
     .ai-bar-wrap { margin: 0.75rem 0 0; max-width: 28rem; }
     .ai-bar {
       height: 0.5rem;
@@ -82,7 +101,8 @@
       line-height: 1.45;
       white-space: pre;
     }
-    @media (max-width: 640px) {
+    @media (max-width: 800px) {
+      .ai-boxes { grid-template-columns: 1fr; }
       .ai-copy .status-counts { flex-direction: column; }
     }
   </style>
@@ -188,18 +208,10 @@
       </section>
       <section class="status-section ai-copy" aria-labelledby="ai-copy-heading">
         <h2 id="ai-copy-heading">AI writing</h2>
-        <p>A second home PC writes English resort pages from search notes, walking the world one state or province at a time. 499 regions, United States first. “Complete” means a page was written. “Insufficient data” means search did not gather enough notes, so no page. Counts are resorts in the region currently running, not the whole world.</p>
+        <p>Two home PCs write English resort pages from search notes, walking the world one state or province at a time. They split the 499-region queue (even / odd). United States first. “Complete” means a page was written. “Insufficient data” means search did not gather enough notes, so no page. Counts are resorts in the region currently running on that box, not the whole world.</p>
         <p id="ai-heartbeat">Loading AI writing status…</p>
         <p id="ai-error" class="status-error" hidden></p>
-        <p id="ai-where"></p>
-        <div id="ai-bar-wrap" class="ai-bar-wrap" hidden>
-          <div class="ai-bar" role="progressbar" aria-valuemin="0" aria-valuemax="499" aria-valuenow="0" aria-labelledby="ai-where">
-            <div id="ai-bar-fill" class="ai-bar-fill"></div>
-          </div>
-        </div>
-        <ul id="ai-chips" class="status-counts" hidden></ul>
-        <p id="ai-now" hidden></p>
-        <pre id="ai-log" class="ai-log" hidden></pre>
+        <div id="ai-boxes" class="ai-boxes" hidden></div>
       </section>
       <p class="status-note">Refreshes every 60 seconds.</p>
     </main>
@@ -493,13 +505,7 @@
       var AI_STATUS_PATH = '/ai-copy/status.json';
       var aiHeartbeat = document.getElementById('ai-heartbeat');
       var aiError = document.getElementById('ai-error');
-      var aiWhere = document.getElementById('ai-where');
-      var aiBarWrap = document.getElementById('ai-bar-wrap');
-      var aiBarFill = document.getElementById('ai-bar-fill');
-      var aiBar = aiBarWrap.querySelector('.ai-bar');
-      var aiChips = document.getElementById('ai-chips');
-      var aiNow = document.getElementById('ai-now');
-      var aiLog = document.getElementById('ai-log');
+      var aiBoxes = document.getElementById('ai-boxes');
       var lastAiPaint = false;
 
       function aiCount(byStatus, key) {
@@ -515,76 +521,133 @@
         return status == null || status === '' ? '—' : String(status);
       }
 
-      function renderAiChip(label, value) {
+      function aiBoxTitle(host) {
+        var h = host == null || host === '' ? 'box' : String(host);
+        if (h === 'homeserver') return 'Homeserver';
+        if (h === '3070') return '3070';
+        return h;
+      }
+
+      function renderAiChipInto(list, label, value) {
         var item = document.createElement('li');
         var num = document.createElement('span');
         num.className = 'num';
         num.textContent = String(value);
         item.appendChild(num);
         item.appendChild(document.createTextNode(label));
-        aiChips.appendChild(item);
+        list.appendChild(item);
       }
 
-      function renderAi(data) {
-        lastAiPaint = true;
-        aiError.hidden = true;
-        aiChips.hidden = false;
-        aiNow.hidden = false;
-        aiLog.hidden = false;
+      function renderAiBox(data) {
+        var box = document.createElement('article');
+        box.className = 'ai-box';
+
+        var title = document.createElement('h3');
+        title.textContent = aiBoxTitle(data.host);
+        box.appendChild(title);
+
+        var heartbeat = document.createElement('p');
         var running = !!data.running;
         var updated = formatTime(data.updated_at);
         var parsed = data.updated_at ? new Date(data.updated_at) : null;
         var stale = parsed && !isNaN(parsed.getTime()) && (Date.now() - parsed.getTime() > 5 * 60 * 1000);
-        aiHeartbeat.textContent =
+        heartbeat.textContent =
           (running ? 'Running' : 'Idle') +
-          (data.host ? ' on ' + String(data.host) : '') +
           '. Updated ' + updated + '.';
         if (stale) {
-          aiHeartbeat.appendChild(document.createTextNode(' '));
+          heartbeat.appendChild(document.createTextNode(' '));
           var staleMark = document.createElement('span');
           staleMark.className = 'ai-stale';
           staleMark.textContent = 'Stale.';
-          aiHeartbeat.appendChild(staleMark);
+          heartbeat.appendChild(staleMark);
         }
+        box.appendChild(heartbeat);
 
         var state = data.state == null || data.state === '' ? '' : String(data.state);
         var country = data.country == null || data.country === '' ? '' : String(data.country);
         var place = state && country ? state + ', ' + country : (state || country || '—');
         var idx = data.region_index;
         var total = data.region_total;
-        aiWhere.textContent = 'Region ' + dash(idx) + ' of ' + dash(total) + ': ' + place;
+        var where = document.createElement('p');
+        where.textContent = 'Region ' + dash(idx) + ' of ' + dash(total) + ': ' + place;
+        box.appendChild(where);
 
         var idxN = Number(idx);
         var totalN = Number(total);
         if (totalN > 0 && idxN >= 0) {
-          aiBarWrap.hidden = false;
-          aiBar.setAttribute('aria-valuemax', String(totalN));
-          aiBar.setAttribute('aria-valuenow', String(idxN));
-          aiBarFill.style.width = Math.min(100, (idxN / totalN) * 100) + '%';
-        } else {
-          aiBarWrap.hidden = true;
+          var barWrap = document.createElement('div');
+          barWrap.className = 'ai-bar-wrap';
+          var bar = document.createElement('div');
+          bar.className = 'ai-bar';
+          bar.setAttribute('role', 'progressbar');
+          bar.setAttribute('aria-valuemin', '0');
+          bar.setAttribute('aria-valuemax', String(totalN));
+          bar.setAttribute('aria-valuenow', String(idxN));
+          var fill = document.createElement('div');
+          fill.className = 'ai-bar-fill';
+          fill.style.width = Math.min(100, (idxN / totalN) * 100) + '%';
+          bar.appendChild(fill);
+          barWrap.appendChild(bar);
+          box.appendChild(barWrap);
         }
 
-        clear(aiChips);
+        var chips = document.createElement('ul');
+        chips.className = 'status-counts';
         var by = data.by_status || {};
-        renderAiChip('complete', aiCount(by, 'complete'));
-        renderAiChip('insufficient data', aiCount(by, 'insufficient_data'));
-        renderAiChip('skipped', aiCount(by, 'skipped'));
-        renderAiChip('finished this region', data.jsonl_rows == null ? 0 : Number(data.jsonl_rows) || 0);
+        renderAiChipInto(chips, 'complete', aiCount(by, 'complete'));
+        renderAiChipInto(chips, 'insufficient data', aiCount(by, 'insufficient_data'));
+        renderAiChipInto(chips, 'skipped', aiCount(by, 'skipped'));
+        renderAiChipInto(chips, 'finished this region', data.jsonl_rows == null ? 0 : Number(data.jsonl_rows) || 0);
+        box.appendChild(chips);
 
         var resort = data.last_resort == null || data.last_resort === '' ? '' : String(data.last_resort);
         var logTail = Array.isArray(data.log_tail) ? data.log_tail : [];
         var sticky = running && logTail.some(function (line) {
           return String(line).toLowerCase().indexOf('sticky') !== -1;
         });
+        var now = document.createElement('p');
         if (sticky && resort) {
-          aiNow.textContent = 'researching ' + resort;
+          now.textContent = 'researching ' + resort;
         } else {
-          aiNow.textContent = (resort || '—') + ' — ' + aiStatusLabel(data.last_status);
+          now.textContent = (resort || '—') + ' — ' + aiStatusLabel(data.last_status);
         }
+        box.appendChild(now);
 
+        var log = document.createElement('pre');
+        log.className = 'ai-log';
         var lines = logTail.slice(-8);
-        aiLog.textContent = lines.length ? lines.join('\n') : '—';
+        log.textContent = lines.length ? lines.join('\n') : '—';
+        box.appendChild(log);
+
+        return box;
+      }
+
+      function normalizeAiBoxes(data) {
+        if (data && Array.isArray(data.boxes) && data.boxes.length) return data.boxes;
+        if (data && (data.host || data.region_index != null || data.running != null)) return [data];
+        return [];
+      }
+
+      function renderAi(data) {
+        lastAiPaint = true;
+        aiError.hidden = true;
+        var boxes = normalizeAiBoxes(data);
+        clear(aiBoxes);
+        if (!boxes.length) {
+          aiBoxes.hidden = true;
+          aiHeartbeat.textContent = 'No AI writing boxes reporting yet.';
+          return;
+        }
+        aiBoxes.hidden = false;
+        var runningN = 0;
+        boxes.forEach(function (box) {
+          if (box && box.running) runningN += 1;
+          aiBoxes.appendChild(renderAiBox(box));
+        });
+        var updated = formatTime(data.updated_at || (boxes[0] && boxes[0].updated_at));
+        aiHeartbeat.textContent =
+          boxes.length + ' box' + (boxes.length === 1 ? '' : 'es') +
+          ', ' + runningN + ' running. Combined update ' + updated + '.';
       }
 
       function loadAi() {
