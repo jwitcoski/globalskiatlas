@@ -244,6 +244,7 @@
           <div class="unknown" id="unknown"></div>
           <div class="map-tools">
             <button type="button" class="ico" id="map-reset" aria-label="Reset map">Reset</button>
+            <button type="button" class="ico" id="map-done" aria-pressed="true" title="Finished sweep regions">Done</button>
           </div>
           <div id="map" role="img" aria-label="Worker locations on MapTiler winter map"></div>
           <div class="map-cap" id="map-cap">Workers</div>
@@ -257,6 +258,7 @@
         <button type="button" data-panel="osm" aria-expanded="false">OSM sources</button>
         <button type="button" data-panel="flow" aria-expanded="false">Job steps</button>
         <button type="button" data-panel="ai" aria-expanded="false">AI logs</button>
+        <button type="button" data-panel="regions" aria-expanded="false">Regions</button>
         <button type="button" data-panel="def" aria-expanded="false">Definitions</button>
       </div>
       <div id="drawer" class="drawer" hidden></div>
@@ -309,8 +311,12 @@
   <script src="https://cdn.maptiler.com/maptiler-sdk-js/v3.10.2/maptiler-sdk.umd.min.js"></script>
   <script type="module">
     import { config } from './scripts/map-config.js';
+    import { addSkiPmtilesToMap } from './scripts/pmtiles-core.js';
     window.__gsaMaptilerKey = config.MAPTILER_KEY;
     if (typeof maptilersdk !== 'undefined') maptilersdk.config.apiKey = config.MAPTILER_KEY;
+    window.__gsaAttachSkiPmtiles = function (map) {
+      return addSkiPmtilesToMap(map, { includeResortDetail: false });
+    };
     window.dispatchEvent(new Event('gsa-maptiler-ready'));
   </script>
   <script>
@@ -405,6 +411,144 @@
       hit = GEO[slug];
     }
     return hit ? { lat: hit[0], lon: hit[1], precision: hit[2] } : null;
+  }
+  var CONTINENTS = { europe: 1, 'north-america': 1, 'south-america': 1, asia: 1, africa: 1, oceania: 1, antarctica: 1 };
+  function geocodeQuery(slugOrLabel) {
+    var raw = String(slugOrLabel || '').trim();
+    if (!raw) return '';
+    var parts = raw.indexOf('/') >= 0 ? raw.split('/') : raw.split(',').map(function (p) { return p.trim(); });
+    parts = parts.filter(Boolean);
+    if (parts.length && CONTINENTS[foldName(parts[0])]) parts = parts.slice(1);
+    return parts.map(function (part) {
+      if (foldName(part) === 'us' || foldName(part) === 'usa') return 'United States';
+      return regionLabel(part.replace(/-/g, ' '));
+    }).reverse().join(', ');
+  }
+  var geoPending = {};
+  var geoStore = (function () {
+    try { return JSON.parse(localStorage.getItem('gsa-region-geo') || '{}'); } catch (e) { return {}; }
+  })();
+  function rememberGeo(slug, geo) {
+    if (!slug || !geo) return;
+    GEO[foldName(String(slug).replace(/\//g, ', '))] = [geo.lat, geo.lon, geo.precision || 'region'];
+    GEO[foldName(slug)] = [geo.lat, geo.lon, geo.precision || 'region'];
+    geoStore[slug] = geo;
+    try { localStorage.setItem('gsa-region-geo', JSON.stringify(geoStore)); } catch (e) {}
+  }
+  function geocodeRegion(slugOrLabel) {
+    var cached = geoLookup(slugOrLabel) || geoStore[slugOrLabel];
+    if (cached) return Promise.resolve(cached.lat != null ? cached : { lat: cached[0], lon: cached[1], precision: cached[2] });
+    if (geoStore[slugOrLabel] && geoStore[slugOrLabel].lat != null) return Promise.resolve(geoStore[slugOrLabel]);
+    var q = geocodeQuery(slugOrLabel);
+    if (!q) return Promise.resolve(null);
+    if (geoPending[q]) return geoPending[q];
+    var key = window.__gsaMaptilerKey;
+    if (!key) return Promise.resolve(null);
+    geoPending[q] = fetch('https://api.maptiler.com/geocoding/' + encodeURIComponent(q) + '.json?key=' + encodeURIComponent(key) + '&limit=1')
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        var f = data && data.features && data.features[0];
+        var c = f && f.center;
+        if (!c || c.length < 2) return null;
+        var geo = { lon: c[0], lat: c[1], precision: 'region' };
+        rememberGeo(slugOrLabel, geo);
+        return geo;
+      })
+      .catch(function () { return null; });
+    return geoPending[q];
+  }
+  function resolveWorkerGeos(model) {
+    return Promise.all(model.workers.map(function (w) {
+      var jobs = [];
+      if (!w.geo) {
+        jobs.push(geocodeRegion(w.regionSlug || w.region_label).then(function (g) { if (g) w.geo = g; }));
+      }
+      if (w.id === 'sweep' && !w.nextGeo && w.nextSlug) {
+        jobs.push(geocodeRegion(w.nextSlug).then(function (g) { if (g) w.nextGeo = g; }));
+      }
+      return Promise.all(jobs);
+    }));
+  }
+  var sweepRegions = [];
+  var showDone = true;
+  var sweepClickBound = false;
+  function mapPool(items, limit, fn) {
+    var i = 0;
+    var n = Math.min(limit, Math.max(1, items.length));
+    var workers = [];
+    function next() {
+      if (i >= items.length) return Promise.resolve();
+      var item = items[i++];
+      return Promise.resolve(fn(item)).then(next);
+    }
+    for (var w = 0; w < n; w++) workers.push(next());
+    return Promise.all(workers);
+  }
+  function pointOf(slug) {
+    var g = geoLookup(slug) || geoStore[slug];
+    if (!g) return null;
+    if (g.lat != null) return g;
+    if (Array.isArray(g)) return { lat: g[0], lon: g[1] };
+    return null;
+  }
+  function plotSweepDone(model) {
+    if (!basemap || !basemap.getSource) return Promise.resolve();
+    var idx = Math.max(0, num(model.regionIndex) - 1);
+    var done = (sweepRegions || []).slice(0, idx);
+    if (!showDone || !done.length) {
+      if (basemap.getLayer && basemap.getLayer('sweep-done')) {
+        basemap.setLayoutProperty('sweep-done', 'visibility', 'none');
+      }
+      return Promise.resolve();
+    }
+    return mapPool(done, 4, geocodeRegion).then(function () {
+      var feats = [];
+      done.forEach(function (slug) {
+        var g = pointOf(slug);
+        if (!g) return;
+        feats.push({
+          type: 'Feature',
+          properties: { slug: slug, label: regionLabel(slug) },
+          geometry: { type: 'Point', coordinates: [g.lon, g.lat] }
+        });
+      });
+      var data = { type: 'FeatureCollection', features: feats };
+      if (basemap.getSource('sweep-done')) {
+        basemap.getSource('sweep-done').setData(data);
+      } else {
+        basemap.addSource('sweep-done', { type: 'geojson', data: data });
+        basemap.addLayer({
+          id: 'sweep-done',
+          type: 'circle',
+          source: 'sweep-done',
+          paint: {
+            'circle-radius': 4,
+            'circle-color': '#1a4d8c',
+            'circle-opacity': 0.7,
+            'circle-stroke-width': 1,
+            'circle-stroke-color': '#ffffff'
+          }
+        });
+      }
+      if (basemap.getLayer('sweep-done')) {
+        basemap.setLayoutProperty('sweep-done', 'visibility', 'visible');
+      }
+      if (!sweepClickBound) {
+        sweepClickBound = true;
+        basemap.on('click', 'sweep-done', function (e) {
+          var f = e.features && e.features[0];
+          if (!f) return;
+          var html = document.createElement('div');
+          html.className = 'wk-pop';
+          var t = document.createElement('p'); t.className = 't'; t.textContent = 'Map files updated';
+          var p = document.createElement('p'); p.textContent = (f.properties && f.properties.label) || '';
+          html.appendChild(t); html.appendChild(p);
+          new maptilersdk.Popup({ offset: 8 }).setLngLat(e.lngLat).setDOMContent(html).addTo(basemap);
+        });
+        basemap.on('mouseenter', 'sweep-done', function () { basemap.getCanvas().style.cursor = 'pointer'; });
+        basemap.on('mouseleave', 'sweep-done', function () { basemap.getCanvas().style.cursor = ''; });
+      }
+    }).catch(function () {});
   }
   function rememberWiki(name, pageId) {
     var key = foldName(name);
@@ -520,8 +664,10 @@
         return {
           id: w.id, name: w.name, kind: w.kind, state: w.state || 'idle',
           updated_at: w.updated_at, region_label: w.region_label || '',
+          regionSlug: w.regionSlug || w.region_label || '',
           region_index: num(w.region_index), region_total: num(w.region_total),
           next_region_label: w.next_region_label || '',
+          nextSlug: w.nextSlug || w.next_region_label || '',
           geo: geo, counts: w.counts || {}, current_item: w.current_item || '',
           log_tail: Array.isArray(w.log_tail) ? w.log_tail : [],
           raw: w
@@ -535,7 +681,10 @@
         state: (running.length || num(counts.running)) ? 'running' : 'idle',
         updated_at: r.updated, region_label: regionLabel(r.lastRegion),
         region_index: num(r.regionIndex), region_total: num(r.regionCount) || 373,
-        next_region_label: regionLabel(r.nextRegion), geo: sweepGeo,
+        regionSlug: r.lastRegion || '',
+        next_region_label: regionLabel(r.nextRegion),
+        nextSlug: r.nextRegion || '',
+        geo: sweepGeo,
         nextGeo: nextGeo,
         counts: { succeeded: num(counts.succeeded), failed: num(counts.failed), running: num(counts.running), waiting: num(counts.queued != null ? counts.queued : counts.waiting) },
         current_item: running[0] ? running[0].name : '',
@@ -551,6 +700,7 @@
           state: b.error ? 'error' : (b.running ? 'running' : 'idle'),
           updated_at: b.updated_at,
           region_label: label,
+          regionSlug: label,
           region_index: num(b.region_index), region_total: num(b.region_total) || 499,
           geo: geoLookup(label),
           counts: { complete: num((b.by_status || {}).complete), insufficient_data: num((b.by_status || {}).insufficient_data), skipped: num((b.by_status || {}).skipped), finished: num(b.jsonl_rows) },
@@ -665,7 +815,13 @@
       navigationControl: false
     });
     return new Promise(function (resolve) {
-      var done = function () { resolve(basemap); };
+      var done = function () {
+        if (typeof window.__gsaAttachSkiPmtiles === 'function') {
+          window.__gsaAttachSkiPmtiles(basemap).catch(function () {});
+        }
+        try { basemap.resize(); } catch (e) {}
+        resolve(basemap);
+      };
       basemap.once('load', done);
       basemap.once('error', function () {
         try { basemap.setStyle(osmRasterStyle()); } catch (e) {}
@@ -777,7 +933,10 @@
   function renderMap(model) {
     ensureMap().then(function (map) {
       if (!map) return;
-      syncMarkers(model);
+      return resolveWorkerGeos(model).then(function () {
+        syncMarkers(model);
+        return plotSweepDone(model);
+      });
     });
   }
 
@@ -1117,6 +1276,37 @@
         pre.textContent = (w.log_tail || []).join('\n') || '—';
         d.appendChild(pre);
       });
+    } else if (id === 'regions') {
+      var idx = Math.max(0, num(view.regionIndex) - 1);
+      var done = (sweepRegions || []).slice(0, idx);
+      var h = document.createElement('h3');
+      h.textContent = 'Map file updates';
+      d.appendChild(h);
+      var p = document.createElement('p');
+      p.textContent = done.length + ' of ' + (sweepRegions.length || view.regionCount) +
+        ' pipeline regions finished this lap. Current: ' + regionLabel(view.lastRegion) +
+        ' (' + view.regionIndex + '/' + view.regionCount + '). Navy dots on the map are finished regions.';
+      d.appendChild(p);
+      var ul = document.createElement('ul');
+      done.slice(-40).reverse().forEach(function (slug) {
+        var li = document.createElement('li');
+        li.textContent = regionLabel(slug);
+        ul.appendChild(li);
+      });
+      d.appendChild(ul);
+      var h2 = document.createElement('h3');
+      h2.textContent = 'AI writing';
+      d.appendChild(h2);
+      var ap = document.createElement('p');
+      ap.textContent = 'Each box reports only the region it is on now. status.json does not list finished AI regions. Homeserver and 3070 split the 499-region queue even/odd, United States first.';
+      d.appendChild(ap);
+      var aul = document.createElement('ul');
+      (view.workers || []).filter(function (w) { return w.kind === 'ai'; }).forEach(function (w) {
+        var li = document.createElement('li');
+        li.textContent = w.name + ': ' + (w.region_label || '—') + ' · ' + w.region_index + '/' + w.region_total;
+        aul.appendChild(li);
+      });
+      d.appendChild(aul);
     } else if (id === 'def') {
       var ul = document.createElement('ul');
       ['Queued to add — waiting list, nothing built yet.', 'Updated — existing resort rebuilt from current map data.', 'In progress — job is running; OSM source not assigned yet.', 'Failed — no publishable run, unknown region, or another error. Sweep continues.', 'Complete (AI) — a page was written.', 'Insufficient data (AI) — search notes were too thin.', 'Timeout — transient network wait, not a DNS outage unless clustered.'].forEach(function (t) {
@@ -1185,6 +1375,11 @@
 
   document.getElementById('refresh-now').addEventListener('click', function () { backoff = 0; loadAll(); });
   document.getElementById('map-reset').addEventListener('click', resetMap);
+  document.getElementById('map-done').addEventListener('click', function () {
+    showDone = !showDone;
+    this.setAttribute('aria-pressed', showDone ? 'true' : 'false');
+    if (view) plotSweepDone(view);
+  });
   document.addEventListener('visibilitychange', function () { if (!document.hidden) { backoff = 0; loadAll(); } });
   var themeBtn = document.getElementById('theme-toggle');
   function applyTheme(t) {
@@ -1219,6 +1414,10 @@
     }
     if (view) renderMap(view);
   });
+  fetch('data/pipeline-sweep-regions.json').then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
+    sweepRegions = (d && d.regions) || [];
+    if (view) renderMap(view);
+  }).catch(function () {});
   loadAll();
   setInterval(tick, 1000);
 })();
