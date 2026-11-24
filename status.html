@@ -10,6 +10,8 @@
   <link rel="stylesheet" href="./css/tailwind-build.css" />
   <link rel="stylesheet" href="css/index.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" integrity="sha512-dPXYcDub/aeb08c63jRq/k6GaKccl256JQy/AnOq7CAnEZ9FzSL9wSbcZkMp4R26vBsMLFYH4kQ67/bbV8XaCQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="preconnect" href="https://api.maptiler.com" crossorigin />
+  <link rel="stylesheet" href="https://cdn.maptiler.com/maptiler-sdk-js/v3.10.2/maptiler-sdk.css" />
   <style>
     :root {
       --ops-bg: #eef1f4; --ops-surface: #fff; --ops-ink: #14202b; --ops-muted: #4b5563;
@@ -68,8 +70,24 @@
       min-height: 0;
     }
     .map-card { position: relative; overflow: hidden; }
-    #map { width: 100%; height: 100%; display: block; touch-action: none; }
-    .map-tools { position: absolute; top: 6px; right: 6px; display: flex; gap: 4px; }
+    #map { position: absolute; inset: 0; width: 100%; height: 100%; }
+    .map-tools { position: absolute; top: 6px; right: 6px; display: flex; gap: 4px; z-index: 2; }
+    .unknown { z-index: 2; }
+    .wk-mark {
+      width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center;
+      color: #fff; font: 700 12px/1 Roboto, system-ui, sans-serif; cursor: pointer;
+      border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.35);
+    }
+    .wk-mark.next { background: transparent !important; color: var(--run); border: 2px dashed var(--run); }
+    .wk-lab {
+      background: var(--ops-surface); color: var(--ops-ink); border: 1px solid var(--ops-line);
+      border-radius: 6px; padding: 1px 5px; font-size: 10px; white-space: nowrap;
+      box-shadow: 0 1px 3px rgba(0,0,0,.15);
+    }
+    .wk-pop { font: 12px/1.35 Roboto, system-ui, sans-serif; color: #14202b; min-width: 10rem; }
+    .wk-pop p { margin: 0 0 .2rem; }
+    .wk-pop .t { font-weight: 700; font-size: 13px; }
+    .wk-pop .m { color: #4b5563; }
     .map-cap { position: absolute; left: 8px; bottom: 6px; font-size: .72rem; color: var(--ops-muted); max-width: 70%; }
     .unknown { position: absolute; left: 8px; top: 6px; display: flex; flex-wrap: wrap; gap: 4px; }
     .tiles { display: flex; gap: .4rem; overflow-x: auto; scroll-snap-type: x mandatory; min-height: 0; }
@@ -227,7 +245,7 @@
           <div class="map-tools">
             <button type="button" class="ico" id="map-reset" aria-label="Reset map">Reset</button>
           </div>
-          <svg id="map" viewBox="0 0 960 480" role="img" aria-label="Worker locations"></svg>
+          <div id="map" role="img" aria-label="Worker locations on MapTiler winter map"></div>
           <div class="map-cap" id="map-cap">Workers</div>
         </div>
         <div class="tiles" id="tiles"></div>
@@ -288,9 +306,13 @@
 
   <script src="scripts/header-toggle.js"></script>
   <script src="scripts/site-nav.js?v=7" defer></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-array/3.2.4/d3-array.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-geo/3.1.1/d3-geo.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/topojson-client/3.1.0/topojson-client.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdn.maptiler.com/maptiler-sdk-js/v3.10.2/maptiler-sdk.umd.min.js"></script>
+  <script type="module">
+    import { config } from './scripts/map-config.js';
+    window.__gsaMaptilerKey = config.MAPTILER_KEY;
+    if (typeof maptilersdk !== 'undefined') maptilersdk.config.apiKey = config.MAPTILER_KEY;
+    window.dispatchEvent(new Event('gsa-maptiler-ready'));
+  </script>
   <script>
 (function () {
   /**
@@ -351,7 +373,8 @@
   var wikiById = {}, wikiByName = {};
   var view = null, lastGoodAt = 0, pollTimer = 0, nextAt = 0, backoff = 0;
   var pieMode = 'volume', incNet = false, sourceFilter = '', openPanel = '', openPhoneOnly = '';
-  var mapState = { k: 1, x: 0, y: 0, path: null, countries: null };
+  var basemap = null;
+  var mapMarkers = [];
   var logStick = {};
   var jsonFmt = { sweep: true, ai_home: true, ai_3070: true };
 
@@ -591,42 +614,7 @@
     };
   }
 
-  /* ---------- map ---------- */
-  function projectBase() {
-    var d3g = window.d3;
-    if (!d3g || !d3g.geoEquirectangular) return null;
-    return d3g.geoEquirectangular().fitExtent([[8, 8], [952, 472]], { type: 'Sphere' });
-  }
-  function applyZoom(g) {
-    g.setAttribute('transform', 'translate(' + mapState.x + ',' + mapState.y + ') scale(' + mapState.k + ')');
-  }
-  function drawLand(g, proj) {
-    var d3g = window.d3, topo = window.topojson;
-    g.textContent = '';
-    var ocean = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-    ocean.setAttribute('x', -2000); ocean.setAttribute('y', -1000);
-    ocean.setAttribute('width', 5000); ocean.setAttribute('height', 3000);
-    ocean.setAttribute('fill', document.documentElement.getAttribute('data-theme') === 'dark' ? '#0f1720' : '#dbe7ef');
-    g.appendChild(ocean);
-    if (mapState.countries && d3g && d3g.geoPath) {
-      var path = d3g.geoPath(proj);
-      mapState.path = path;
-      var p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-      p.setAttribute('d', path(mapState.countries));
-      p.setAttribute('fill', document.documentElement.getAttribute('data-theme') === 'dark' ? '#243140' : '#f7fafc');
-      p.setAttribute('stroke', document.documentElement.getAttribute('data-theme') === 'dark' ? '#3a4a58' : '#9aa8b5');
-      p.setAttribute('stroke-width', '0.4');
-      g.appendChild(p);
-    } else {
-      for (var lat = -60; lat <= 60; lat += 30) {
-        var y = proj ? proj([0, lat])[1] : (90 - lat) / 180 * 480;
-        var line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        line.setAttribute('x1', 0); line.setAttribute('x2', 960); line.setAttribute('y1', y); line.setAttribute('y2', y);
-        line.setAttribute('stroke', '#9aa8b5'); line.setAttribute('stroke-dasharray', '4 4');
-        g.appendChild(line);
-      }
-    }
-  }
+  /* ---------- map (same MapTiler winter tiles as the rest of the site) ---------- */
   function colorFor(w) {
     if (w.state === 'error') return 'var(--bad)';
     if (w.state === 'idle') return 'var(--wait)';
@@ -635,132 +623,162 @@
     return 'var(--ops-gold)';
   }
   function letterFor(w) { return w.id === 'sweep' ? 'S' : w.id === 'ai_3070' ? '3' : 'H'; }
-  function xy(geo, proj) {
-    if (!geo) return null;
-    if (proj) return proj([geo.lon, geo.lat]);
-    return [(geo.lon + 180) / 360 * 960, (90 - geo.lat) / 180 * 480];
+  function osmRasterStyle() {
+    return {
+      version: 8,
+      sources: {
+        osm: { type: 'raster', tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'], tileSize: 256, attribution: '© OpenStreetMap' }
+      },
+      layers: [{ id: 'osm', type: 'raster', source: 'osm' }]
+    };
   }
-  function drawWorkers(g, proj, model) {
-    var marks = g.querySelector('#marks') || document.createElementNS('http://www.w3.org/2000/svg', 'g');
-    marks.setAttribute('id', 'marks');
-    marks.textContent = '';
-    g.appendChild(marks);
+  function winterRasterStyle(key) {
+    return {
+      version: 8,
+      sources: {
+        raster: {
+          type: 'raster',
+          tiles: ['https://api.maptiler.com/maps/winter-v4/256/{z}/{x}/{y}.png?key=' + key],
+          tileSize: 256,
+          attribution: '© MapTiler © OpenStreetMap'
+        }
+      },
+      layers: [{ id: 'raster', type: 'raster', source: 'raster' }]
+    };
+  }
+  function ensureMap() {
+    if (basemap) {
+      try { basemap.resize(); } catch (e) {}
+      return Promise.resolve(basemap);
+    }
+    if (typeof maptilersdk === 'undefined') return Promise.resolve(null);
+    var key = window.__gsaMaptilerKey || '';
+    if (key) maptilersdk.config.apiKey = key;
+    var style = key ? ((maptilersdk.MapStyle && maptilersdk.MapStyle.WINTER) || winterRasterStyle(key)) : osmRasterStyle();
+    basemap = new maptilersdk.Map({
+      container: 'map',
+      style: style,
+      center: [12, 30],
+      zoom: 1.3,
+      minZoom: 0,
+      maxZoom: 12,
+      navigationControl: false
+    });
+    return new Promise(function (resolve) {
+      var done = function () { resolve(basemap); };
+      basemap.once('load', done);
+      basemap.once('error', function () {
+        try { basemap.setStyle(osmRasterStyle()); } catch (e) {}
+        done();
+      });
+    });
+  }
+  function setCap(w) {
+    document.getElementById('map-cap').textContent = w.name + ' · ' + (w.region_label || '—') + ' · ' + w.region_index + ' of ' + w.region_total;
+  }
+  function zoomTo(geo) {
+    if (!basemap || !geo) return;
+    basemap.flyTo({ center: [geo.lon, geo.lat], zoom: 5.5, duration: 700 });
+  }
+  function resetMap() {
+    if (!basemap) return;
+    basemap.flyTo({ center: [12, 30], zoom: 1.3, duration: 500 });
+  }
+  function popupBody(w) {
+    var box = document.createElement('div');
+    box.className = 'wk-pop';
+    function line(text, cls) {
+      if (!text) return;
+      var p = document.createElement('p');
+      if (cls) p.className = cls;
+      p.textContent = text;
+      box.appendChild(p);
+    }
+    var state = w.state === 'running' ? 'Running' : w.state === 'error' ? 'Error' : w.state === 'idle' ? 'Idle' : (w.state || '');
+    line(w.name || 'Worker', 't');
+    line(state, 'm');
+    line(w.region_label || '—');
+    if (w.region_total) line(w.region_index + ' of ' + w.region_total);
+    if (w.current_item) line(w.current_item, 'm');
+    if (w.next_region_label) line('Next: ' + w.next_region_label, 'm');
+    return box;
+  }
+  function addMark(lngLat, node, w) {
+    var popup = new maptilersdk.Popup({ closeButton: true, offset: 18, maxWidth: '260px' }).setDOMContent(popupBody(w));
+    var m = new maptilersdk.Marker({ element: node, anchor: 'center' })
+      .setLngLat(lngLat)
+      .setPopup(popup)
+      .addTo(basemap);
+    node.addEventListener('click', function () {
+      zoomTo(w.geo || { lon: lngLat[0], lat: lngLat[1] });
+      setCap(w);
+    });
+    mapMarkers.push(m);
+  }
+  function syncMarkers(model) {
+    mapMarkers.forEach(function (m) { try { m.remove(); } catch (e) {} });
+    mapMarkers = [];
+    if (!basemap || typeof maptilersdk === 'undefined') return;
     var unknown = document.getElementById('unknown');
     unknown.textContent = '';
-    var pts = [];
+    if (basemap.getLayer && basemap.getLayer('next-line')) {
+      try { basemap.removeLayer('next-line'); } catch (e) {}
+    }
+    if (basemap.getSource && basemap.getSource('next-line')) {
+      try { basemap.removeSource('next-line'); } catch (e) {}
+    }
     model.workers.forEach(function (w) {
-      var geo = w.geo || geoLookup(w.region_label);
-      w.geo = geo;
-      if (!geo) {
+      w.geo = w.geo || geoLookup(w.region_label);
+      if (!w.geo) {
         var chip = document.createElement('span');
         chip.className = 'badge waiting';
         chip.textContent = w.name + ' location unknown';
         unknown.appendChild(chip);
         return;
       }
-      pts.push({ w: w, xy: xy(geo, proj) });
-      if (w.id === 'sweep' && w.next_region_label) {
+      var letter = letterFor(w);
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'wk-mark' + (w.state === 'running' ? ' pulse' : '');
+      btn.style.background = colorFor(w);
+      btn.setAttribute('aria-label', w.name + ' ' + (w.region_label || ''));
+      btn.textContent = letter;
+      addMark([w.geo.lon, w.geo.lat], btn, w);
+      if (w.id === 'sweep') {
         var ng = w.nextGeo || geoLookup(w.next_region_label);
         if (ng) {
-          var a = xy(geo, proj), b = xy(ng, proj);
-          var ln = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-          ln.setAttribute('x1', a[0]); ln.setAttribute('y1', a[1]); ln.setAttribute('x2', b[0]); ln.setAttribute('y2', b[1]);
-          ln.setAttribute('stroke', colorFor(w)); ln.setAttribute('stroke-dasharray', '4 3'); ln.setAttribute('stroke-width', '1.2');
-          marks.appendChild(ln);
-          var hol = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-          hol.setAttribute('cx', b[0]); hol.setAttribute('cy', b[1]); hol.setAttribute('r', 6);
-          hol.setAttribute('fill', 'none'); hol.setAttribute('stroke', colorFor(w));
-          marks.appendChild(hol);
+          var nb = document.createElement('button');
+          nb.type = 'button';
+          nb.className = 'wk-mark next';
+          nb.setAttribute('aria-label', 'Next region');
+          nb.textContent = 'N';
+          addMark([ng.lon, ng.lat], nb, {
+            name: 'Next region',
+            state: '',
+            region_label: w.next_region_label,
+            region_index: num(w.region_index) + 1,
+            region_total: w.region_total,
+            geo: ng
+          });
+          if (basemap.isStyleLoaded && basemap.isStyleLoaded()) {
+            basemap.addSource('next-line', {
+              type: 'geojson',
+              data: { type: 'Feature', geometry: { type: 'LineString', coordinates: [[w.geo.lon, w.geo.lat], [ng.lon, ng.lat]] } }
+            });
+            basemap.addLayer({
+              id: 'next-line', type: 'line', source: 'next-line',
+              paint: { 'line-color': '#1a4d8c', 'line-width': 2, 'line-dasharray': [2, 2] }
+            });
+          }
         }
       }
     });
-    pts.forEach(function (p, i) {
-      pts.forEach(function (q, j) {
-        if (i >= j) return;
-        if (Math.abs(p.xy[1] - q.xy[1]) < 14 && Math.abs(p.xy[0] - q.xy[0]) < 40) {
-          p.labelNudge = (p.labelNudge || 0) - 8;
-          q.labelNudge = (q.labelNudge || 0) + 8;
-        }
-      });
-    });
-    pts.forEach(function (p) {
-      var g1 = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-      g1.setAttribute('tabindex', '0');
-      g1.setAttribute('role', 'button');
-      g1.setAttribute('aria-label', p.w.name + ', ' + p.w.region_label + ', ' + p.w.region_index + ' of ' + p.w.region_total);
-      g1.style.cursor = 'pointer';
-      var c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-      c.setAttribute('cx', p.xy[0]); c.setAttribute('cy', p.xy[1]); c.setAttribute('r', 7);
-      c.setAttribute('fill', colorFor(p.w));
-      if (p.w.state === 'running') c.setAttribute('class', 'pulse');
-      g1.appendChild(c);
-      var t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-      t.setAttribute('x', p.xy[0]); t.setAttribute('y', p.xy[1] + 3);
-      t.setAttribute('text-anchor', 'middle'); t.setAttribute('font-size', '8'); t.setAttribute('fill', '#fff'); t.setAttribute('font-weight', '700');
-      t.textContent = letterFor(p.w);
-      g1.appendChild(t);
-      var lab = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-      lab.setAttribute('x', p.xy[0] + 10); lab.setAttribute('y', p.xy[1] + (p.labelNudge || 0) - 8);
-      lab.setAttribute('font-size', '9'); lab.setAttribute('fill', 'currentColor');
-      lab.textContent = letterFor(p.w) + ' ' + (p.w.region_label || '');
-      g1.appendChild(lab);
-      g1.addEventListener('click', function () { zoomTo(p.xy); setCap(p.w); });
-      g1.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); zoomTo(p.xy); setCap(p.w); } });
-      marks.appendChild(g1);
-    });
-  }
-  function setCap(w) {
-    document.getElementById('map-cap').textContent = w.name + ' · ' + (w.region_label || '—') + ' · ' + w.region_index + ' of ' + w.region_total;
-  }
-  function zoomTo(pt) {
-    mapState.k = 3.2;
-    mapState.x = 480 - pt[0] * mapState.k;
-    mapState.y = 240 - pt[1] * mapState.k;
-    var g = document.querySelector('#map g.world');
-    if (g) applyZoom(g);
-  }
-  function resetMap() {
-    mapState.k = 1; mapState.x = 0; mapState.y = 0;
-    var g = document.querySelector('#map g.world');
-    if (g) applyZoom(g);
-  }
-  function bindMapPan(svg) {
-    var drag = null;
-    svg.addEventListener('pointerdown', function (e) { drag = { x: e.clientX, y: e.clientY, ox: mapState.x, oy: mapState.y }; svg.setPointerCapture(e.pointerId); });
-    svg.addEventListener('pointermove', function (e) {
-      if (!drag) return;
-      mapState.x = drag.ox + (e.clientX - drag.x);
-      mapState.y = drag.oy + (e.clientY - drag.y);
-      var g = svg.querySelector('g.world'); if (g) applyZoom(g);
-    });
-    svg.addEventListener('pointerup', function () { drag = null; });
-    svg.addEventListener('wheel', function (e) {
-      e.preventDefault();
-      var nk = Math.max(1, Math.min(8, mapState.k * (e.deltaY < 0 ? 1.15 : 0.87)));
-      mapState.k = nk;
-      var g = svg.querySelector('g.world'); if (g) applyZoom(g);
-    }, { passive: false });
   }
   function renderMap(model) {
-    var svg = document.getElementById('map');
-    var world = svg.querySelector('g.world');
-    if (!world) {
-      world = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-      world.setAttribute('class', 'world');
-      svg.appendChild(world);
-      bindMapPan(svg);
-    }
-    var proj = projectBase();
-    drawLand(world, proj);
-    drawWorkers(world, proj, model);
-    applyZoom(world);
-  }
-  function loadAtlas() {
-    if (!window.d3 || !window.topojson) return Promise.resolve();
-    return fetch('https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-110m.json').then(function (r) { return r.json(); }).then(function (topo) {
-      mapState.countries = window.topojson.feature(topo, topo.objects.countries);
-      if (view) renderMap(view);
-    }).catch(function () {});
+    ensureMap().then(function (map) {
+      if (!map) return;
+      syncMarkers(model);
+    });
   }
 
   /* ---------- tiles ---------- */
@@ -815,7 +833,7 @@
         });
         el.addEventListener('click', function (e) {
           if (e.target.closest('.flip-btn')) return;
-          if (w.geo) zoomTo(xy(w.geo, projectBase()) || [480, 240]);
+          if (w.geo) { zoomTo(w.geo); setCap(w); }
           setCap(w);
         });
       }
@@ -1193,7 +1211,14 @@
     if (view) paint(view, true);
   }).catch(function () {});
 
-  loadAtlas();
+  window.addEventListener('gsa-maptiler-ready', function () {
+    var key = window.__gsaMaptilerKey;
+    if (key && typeof maptilersdk !== 'undefined') maptilersdk.config.apiKey = key;
+    if (basemap && key) {
+      try { basemap.setStyle(maptilersdk.MapStyle.WINTER || winterRasterStyle(key)); } catch (e) {}
+    }
+    if (view) renderMap(view);
+  });
   loadAll();
   setInterval(tick, 1000);
 })();
