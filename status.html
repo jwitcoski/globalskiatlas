@@ -4,110 +4,155 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Pipeline status – Global Ski Atlas</title>
-  <meta name="description" content="Resort pipeline progress: region, job counts, running jobs, and recent results." />
+  <meta name="description" content="Operations log for the Global Ski Atlas home pipeline: world sweep, discovery, and AI writing." />
   <link rel="canonical" href="https://globalskiatlas.com/status.html" />
   <link rel="shortcut icon" href="./assets/logo.png?v=2" type="image/x-icon" />
   <link rel="stylesheet" href="./css/tailwind-build.css" />
   <link rel="stylesheet" href="css/index.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" integrity="sha512-dPXYcDub/aeb08c63jRq/k6GaKccl256JQy/AnOq7CAnEZ9FzSL9wSbcZkMp4R26vBsMLFYH4kQ67/bbV8XaCQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <style>
-    .status-wrap { width: 100%; max-width: 68rem; margin: 0 auto; padding: 2.5rem 1.5rem 3rem; }
-    .status-wrap h1 { font-size: 2rem; font-weight: 500; margin: 0; }
-    .status-progress { margin: 1rem 0 0; font-size: 1.05rem; line-height: 1.5; color: #111; }
-    .status-error {
-      margin-top: 1rem;
-      padding: 0.75rem 1rem;
-      border: 1px solid #b91c1c;
-      border-radius: 0.5rem;
-      background: #fef2f2;
-      color: #991b1b;
+    :root {
+      --ops-bg: #f4f6f8;
+      --ops-surface: #ffffff;
+      --ops-ink: #14202b;
+      --ops-muted: #4b5563;
+      --ops-line: #d7dee6;
+      --ops-teal: #0f766e;
+      --ops-gold: #c4a35a;
+      --ops-navy: #1a4d8c;
+      --ok: #157347;
+      --bad: #b42318;
+      --run: #1a4d8c;
+      --wait: #6b7280;
+      --warn: #b45309;
+      --ok-bg: #ecf8f1;
+      --bad-bg: #fdecea;
+      --run-bg: #e8f0fa;
+      --wait-bg: #f3f4f6;
+      --warn-bg: #fff7ed;
+      --term: #0b1220;
+      --term-fg: #d7e2ea;
+      --focus: #0f766e;
     }
-    .status-counts { display: flex; flex-wrap: wrap; gap: 0.75rem; margin: 1.25rem 0 0; padding: 0; list-style: none; }
-    .status-counts li {
-      min-width: 7rem;
-      padding: 0.75rem 1rem;
-      border: 1px solid #e5e7eb;
-      border-radius: 0.5rem;
-      background: #f9fafb;
+    html[data-theme="dark"] {
+      --ops-bg: #10161c;
+      --ops-surface: #182028;
+      --ops-ink: #e8eef3;
+      --ops-muted: #9aa8b5;
+      --ops-line: #2a3640;
+      --ok-bg: #14301f;
+      --bad-bg: #3a1512;
+      --run-bg: #152433;
+      --wait-bg: #222a31;
+      --warn-bg: #33240f;
+      --term: #070b12;
     }
-    .status-counts .num { display: block; font-size: 1.5rem; font-weight: 600; color: #1a4d8c; }
-    .status-counts-note { margin: 0.65rem 0 0; color: #374151; font-size: 0.95rem; line-height: 1.45; }
-    .status-section { margin-top: 2rem; }
-    .status-section h2 { font-size: 1.25rem; font-weight: 600; margin: 0 0 0.75rem; }
-    .status-running { margin: 0; padding: 0; list-style: none; }
-    .status-running li { padding: 0.45rem 0; border-bottom: 1px solid #e5e7eb; }
-    .status-running a, .status-recent a { color: #1a4d8c; }
-    .status-recent tr.failed a { color: #991b1b; }
-    .status-table-wrap { overflow-x: auto; }
-    table.status-recent { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
-    .status-recent th, .status-recent td { text-align: left; padding: 0.55rem 0.7rem; border-bottom: 1px solid #e5e7eb; vertical-align: top; }
-    .status-recent th { font-weight: 600; color: #374151; background: #f9fafb; }
-    .status-recent tr.failed { background: #fef2f2; color: #991b1b; }
-    .status-recent tr.failed td { border-bottom-color: #fecaca; }
-    .status-note { margin-top: 1.5rem; color: #6b7280; font-size: 0.875rem; }
-    .status-essay { margin: 1.25rem 0 0; }
-    .status-essay p { margin: 0.9rem 0 0; font-size: 1.05rem; line-height: 1.6; color: #1f2937; }
-    .status-essay p:first-child { margin-top: 0.4rem; }
-    .status-essay a { color: #1a4d8c; }
-    .status-flow { margin: 1.25rem 0 0; }
-    .status-flow figcaption { font-size: 0.95rem; font-weight: 600; margin: 0 0 0.75rem; }
-    .status-flow img {
-      display: block;
-      width: 100%;
-      height: auto;
-      border: 1px solid #e5e7eb;
-      border-radius: 0.5rem;
-      background: #fff;
+    @media (prefers-color-scheme: dark) {
+      html:not([data-theme="light"]) {
+        --ops-bg: #10161c;
+        --ops-surface: #182028;
+        --ops-ink: #e8eef3;
+        --ops-muted: #9aa8b5;
+        --ops-line: #2a3640;
+        --ok-bg: #14301f;
+        --bad-bg: #3a1512;
+        --run-bg: #152433;
+        --wait-bg: #222a31;
+        --warn-bg: #33240f;
+        --term: #070b12;
+      }
     }
-    .ai-copy p { margin: 0.75rem 0 0; font-size: 1.05rem; line-height: 1.6; color: #1f2937; }
-    .ai-copy .ai-stale { color: #92400e; }
-    .ai-boxes {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 1.25rem;
-      margin: 1.25rem 0 0;
+    .ops { background: var(--ops-bg); color: var(--ops-ink); font-family: Roboto, system-ui, sans-serif; }
+    .ops-wrap { width: 100%; max-width: 72rem; margin: 0 auto; padding: 1.25rem 1.25rem 3rem; }
+    .ops-top { display: flex; flex-wrap: wrap; gap: .75rem 1rem; align-items: flex-start; justify-content: space-between; margin-bottom: 1rem; }
+    .ops-wrap h1 { font-size: 1.75rem; font-weight: 500; margin: 0; }
+    .ops-toolbar { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+    .ops-btn {
+      min-height: 44px; padding: 0 .9rem; border: 1px solid var(--ops-line);
+      border-radius: 8px; background: var(--ops-surface); color: var(--ops-ink); cursor: pointer;
     }
-    .ai-box {
-      padding: 1rem 1.1rem 1.15rem;
-      border: 1px solid #e5e7eb;
-      border-radius: 0.5rem;
-      background: #fafafa;
+    .ops-btn:focus-visible, .ops a:focus-visible, .ops summary:focus-visible, .ops input:focus-visible, .ops select:focus-visible, .ops button:focus-visible {
+      outline: 2px solid var(--focus); outline-offset: 2px;
     }
-    .ai-box h3 {
-      margin: 0;
-      font-size: 1.05rem;
-      font-weight: 600;
-      color: #111;
+    .health {
+      display: flex; flex-wrap: wrap; gap: .5rem 1rem; align-items: center;
+      padding: .85rem 1rem; border-radius: 10px; border: 1px solid var(--ops-line); margin-bottom: .75rem;
     }
-    .ai-box p { margin: 0.55rem 0 0; font-size: 0.98rem; }
-    .ai-bar-wrap { margin: 0.75rem 0 0; max-width: 28rem; }
-    .ai-bar {
-      height: 0.5rem;
-      background: #e5e7eb;
-      border-radius: 999px;
-      overflow: hidden;
+    .health.healthy { background: var(--ok-bg); border-color: #86d4a8; }
+    .health.degraded { background: var(--warn-bg); border-color: #f0c27a; }
+    .health.down { background: var(--bad-bg); border-color: #f0a8a0; }
+    .health-dot { font-weight: 700; }
+    .fresh { font-size: .95rem; color: var(--ops-muted); }
+    .fresh.amber { color: var(--warn); font-weight: 600; }
+    .fresh.red { color: var(--bad); font-weight: 600; }
+    .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr)); gap: .75rem; margin: 1rem 0; }
+    .kpi { background: var(--ops-surface); border: 1px solid var(--ops-line); border-radius: 10px; padding: .85rem 1rem; }
+    .kpi .n { font-size: 1.6rem; font-weight: 650; line-height: 1.1; }
+    .kpi .l { color: var(--ops-muted); font-size: .85rem; margin-top: .2rem; }
+    .kpi.ok .n { color: var(--ok); }
+    .kpi.bad .n { color: var(--bad); }
+    .kpi.run .n { color: var(--run); }
+    .bar { height: 10px; background: var(--ops-line); border-radius: 99px; overflow: hidden; }
+    .bar > i { display: block; height: 100%; background: var(--ops-teal); }
+    .card { background: var(--ops-surface); border: 1px solid var(--ops-line); border-radius: 12px; padding: 1rem 1.1rem; margin: 1rem 0; }
+    .card h2 { font-size: 1.15rem; font-weight: 650; margin: 0 0 .75rem; }
+    details.fold > summary { cursor: pointer; font-weight: 650; list-style: none; }
+    details.fold > summary::-webkit-details-marker { display: none; }
+    details.fold > summary:after { content: " ▾"; color: var(--ops-teal); }
+    .muted { color: var(--ops-muted); }
+    .badge {
+      display: inline-flex; align-items: center; gap: .3rem; padding: .12rem .5rem;
+      border-radius: 999px; font-size: .78rem; font-weight: 650; white-space: nowrap;
     }
-    .ai-bar-fill { height: 100%; width: 0; background: #0f766e; }
-    .ai-log {
-      margin: 0.75rem 0 0;
-      padding: 0.75rem 1rem;
-      max-height: 12rem;
-      overflow: auto;
-      border: 1px solid #e5e7eb;
-      border-radius: 0.5rem;
-      background: #f9fafb;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-      font-size: 0.8rem;
-      line-height: 1.45;
-      white-space: pre;
+    .badge.succeeded { background: var(--ok-bg); color: var(--ok); }
+    .badge.failed { background: var(--bad-bg); color: var(--bad); }
+    .badge.running { background: var(--run-bg); color: var(--run); }
+    .badge.waiting, .badge.queued { background: var(--wait-bg); color: var(--wait); }
+    .badge.sys { background: #f3e8ff; color: #6b21a8; }
+    html[data-theme="dark"] .badge.sys, html:not([data-theme="light"]) .badge.sys { background: #2a1840; color: #e9d5ff; }
+    .badge.genuine { background: var(--warn-bg); color: var(--warn); }
+    .chip { min-height: 36px; border: 1px solid var(--ops-line); background: var(--ops-surface); border-radius: 999px; padding: 0 .7rem; cursor: pointer; color: var(--ops-ink); }
+    .chip.on { border-color: var(--ops-teal); background: #ccfbf1; color: #115e59; }
+    .filters { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin: .5rem 0 0.75rem; }
+    .filters input, .filters select { min-height: 40px; border: 1px solid var(--ops-line); border-radius: 8px; padding: 0 .6rem; background: var(--ops-surface); color: var(--ops-ink); }
+    .table-scroll { overflow-x: auto; max-width: 100%; }
+    table.ops-table { width: 100%; border-collapse: collapse; font-size: .92rem; }
+    .ops-table th, .ops-table td { text-align: left; padding: .55rem .65rem; border-bottom: 1px solid var(--ops-line); vertical-align: top; }
+    .ops-table thead th { position: sticky; top: 0; background: var(--ops-surface); z-index: 1; cursor: pointer; }
+    .ops-table tr.running-row { background: var(--run-bg); }
+    @media (prefers-reduced-motion: no-preference) {
+      .ops-table tr.running-row { animation: pulse 2.4s ease-in-out infinite; }
     }
+    @keyframes pulse { 50% { filter: brightness(1.06); } }
+    .msg-more { background: none; border: 0; color: var(--ops-teal); cursor: pointer; padding: 0; text-decoration: underline; }
+    .spark { width: 100%; height: 56px; display: block; }
+    .flow { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: .45rem; }
+    .flow li { list-style: none; background: var(--ops-bg); border: 1px solid var(--ops-line); border-radius: 8px; padding: .55rem; font-size: .8rem; }
+    .flow .n { display: block; color: var(--ops-gold); font-weight: 700; }
+    .flow-wrap { margin: 0; padding: 0; }
+    .donut-row { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; }
+    .legend button { display: flex; gap: .5rem; align-items: center; width: 100%; text-align: left; background: none; border: 0; color: inherit; cursor: pointer; padding: .25rem 0; }
+    .sw { width: 12px; height: 12px; border-radius: 2px; flex: none; }
+    .ai-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 1rem; }
+    .term { margin: .6rem 0 0; padding: .7rem .8rem; max-height: 12rem; overflow: auto; background: var(--term); color: var(--term-fg); border-radius: 8px; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .75rem; line-height: 1.45; white-space: pre-wrap; }
+    .stack { display: flex; height: 10px; border-radius: 99px; overflow: hidden; background: var(--ops-line); }
+    .stack i { display: block; height: 100%; }
+    .pager { display: flex; gap: .5rem; align-items: center; margin-top: .6rem; }
+    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+    .skel { height: 1.1rem; background: linear-gradient(90deg, var(--ops-line), var(--ops-surface), var(--ops-line)); background-size: 200% 100%; animation: sk 1.2s linear infinite; border-radius: 6px; margin: .4rem 0; }
+    @keyframes sk { to { background-position: -200% 0; } }
     @media (max-width: 800px) {
-      .ai-boxes { grid-template-columns: 1fr; }
-      .ai-copy .status-counts { flex-direction: column; }
+      .flow { grid-template-columns: 1fr; }
+      .ai-grid { grid-template-columns: 1fr; }
+      table.ops-table.stack-cards thead { display: none; }
+      table.ops-table.stack-cards tr { display: block; border: 1px solid var(--ops-line); border-radius: 8px; margin-bottom: .6rem; }
+      table.ops-table.stack-cards td { display: flex; justify-content: space-between; gap: 1rem; border: 0; }
+      table.ops-table.stack-cards td:before { content: attr(data-label); font-weight: 650; color: var(--ops-muted); }
     }
   </style>
 </head>
-<body class="tw-flex tw-min-h-[100vh] tw-flex-col tw-bg-[#fff]">
+<body class="tw-flex tw-min-h-[100vh] tw-flex-col tw-bg-[#fff] ops">
+  <a class="skip-link" href="#main">Skip to content</a>
   <header
     class="tw-absolute tw-top-0 tw-z-[100] tw-flex tw-h-[60px] tw-w-full tw-bg-opacity-0
            tw-px-[5%] max-lg:tw-mr-auto max-lg:tw-px-4 lg:tw-justify-around"
@@ -170,50 +215,140 @@
   </header>
 
   <div class="tw-flex-1 tw-min-h-0 tw-overflow-y-auto" style="margin-top: 60px;">
-    <main id="main" class="status-wrap">
-      <h1>Pipeline status</h1>
-      <div class="status-essay">
-        <p>Global Ski Atlas keeps a page for ski areas around the world. The boundaries, trails, and lifts come from OpenStreetMap, where people draw the mountain themselves. This page is the log of an Asus PB60 mini PC that keeps those pages in step with the map. The page is a work record, not a ranking or a place to buy a ticket.</p>
-        <p>Right now the whole process runs on that PC at home. It has a Core i5-9500T at 2.20 GHz and 8 GB of DDR4. It came from Facebook Marketplace for $60, and it can't run the new Windows. It does two jobs. One walks the world one region at a time (a state, a province, or a country) and rebuilds every resort the atlas already has there, then moves on. There are 373 regions, so a full lap takes days. The line under this note tells you which region just finished and which one is next. The other job runs once a day. It looks for a named ski area on the map that we have never added, and puts it on a waiting list. “Queued to add” means it is on that list and nothing has been built yet. “Updated” means we already had the resort and just rebuilt it from the current map.</p>
-        <p>A job reads that resort’s current map data and refreshes the numbers. It also downloads a fresh elevation grid for the resort, the DEM, from <a href="https://registry.opendata.aws/terrain-tiles/">Mapzen Skadi terrain tiles</a>. The resolution is 1 arc-second, about 30 meters. Tiles come in one-degree squares, and the job keeps only the piece that covers the resort. The 3D scene is built on that terrain. If the scene has no downhill run long enough to publish, or we cannot tell which region the area belongs to, the row is marked failed and the sweep keeps going. When an update succeeds, the resort’s wiki page is the place to read the result. The name in the table links there when the page exists. The counts under this note are ski resorts in that recent list, not regions. A copy of this summary is published to the website about once a minute.</p>
-      </div>
-      <figure class="status-flow">
-        <figcaption>How one resort job runs</figcaption>
-        <img src="assets/images/pipeline-architecture.png" alt="Docker starts on the home server. Python takes the next job, pulls OpenStreetMap and Mapzen Skadi terrain, writes the resort files, and CloudFront serves this page." width="1100" height="1240" />
-      </figure>
-      <p id="status-progress" class="status-progress">Loading pipeline status…</p>
-      <p id="status-error" class="status-error" hidden></p>
-      <ul id="status-counts" class="status-counts"></ul>
-      <p id="status-counts-note" class="status-counts-note" hidden>These numbers are ski resorts in the recent list, not regions. The line above is how far the world sweep has walked.</p>
-      <section class="status-section" aria-labelledby="running-heading">
-        <h2 id="running-heading">Running</h2>
-        <ul id="status-running" class="status-running"></ul>
-      </section>
-      <section class="status-section" aria-labelledby="recent-heading">
-        <h2 id="recent-heading">Recent</h2>
-        <div class="status-table-wrap">
-          <table class="status-recent">
-            <thead>
-              <tr>
-                <th>Time</th>
-                <th>Status</th>
-                <th>OSM</th>
-                <th>Resort</th>
-                <th>Message</th>
-              </tr>
-            </thead>
-            <tbody id="status-recent"></tbody>
-          </table>
+    <main id="main" class="ops-wrap">
+      <div class="ops-top">
+        <div>
+          <h1>Pipeline status</h1>
+          <p class="muted" style="margin:.35rem 0 0;">Work record for the home-run data pipeline. Not a ranking.</p>
         </div>
-      </section>
-      <section class="status-section ai-copy" aria-labelledby="ai-copy-heading">
-        <h2 id="ai-copy-heading">AI writing</h2>
-        <p>Two home PCs write English resort pages from search notes, walking the world one state or province at a time. They split the 499-region queue (even / odd). United States first. “Complete” means a page was written. “Insufficient data” means search did not gather enough notes, so no page. Counts are resorts in the region currently running on that box, not the whole world.</p>
-        <p id="ai-heartbeat">Loading AI writing status…</p>
-        <p id="ai-error" class="status-error" hidden></p>
-        <div id="ai-boxes" class="ai-boxes" hidden></div>
-      </section>
-      <p class="status-note">Refreshes every 60 seconds.</p>
+        <div class="ops-toolbar">
+          <span id="next-refresh" class="muted">Next refresh: —</span>
+          <button type="button" class="ops-btn" id="refresh-now">Refresh now</button>
+          <button type="button" class="ops-btn" id="theme-toggle" aria-pressed="false">Dark mode</button>
+        </div>
+      </div>
+
+      <div id="health" class="health" role="status" aria-live="polite">
+        <span class="health-dot">Loading</span>
+        <span id="health-reason">Fetching pipeline status…</span>
+      </div>
+      <p id="fresh" class="fresh" aria-live="polite">Updated —</p>
+      <p id="fetch-note" class="muted" hidden></p>
+
+      <div id="skel" class="card">
+        <div class="skel"></div><div class="skel"></div><div class="skel"></div>
+      </div>
+      <div id="dashboard" hidden>
+        <div class="kpis" id="kpis"></div>
+        <div class="card">
+          <h2>World sweep</h2>
+          <p id="sweep-line"></p>
+          <div class="bar" id="sweep-bar" role="progressbar" aria-valuemin="0" aria-valuemax="373" aria-valuenow="0"><i></i></div>
+          <p id="sweep-eta" class="muted"></p>
+          <p class="muted" style="margin:.4rem 0 0;">A daily job also looks for named ski areas in OpenStreetMap that are not yet in the atlas and adds them to the waiting list.</p>
+        </div>
+
+        <div class="card">
+          <h2>Failure insight</h2>
+          <p id="streak"></p>
+          <svg id="spark" class="spark" viewBox="0 0 320 56" role="img" aria-label="Recent succeeded versus failed jobs"></svg>
+          <h3 style="font-size:1rem;margin:1rem 0 .4rem;">Failures by category</h3>
+          <ul id="fail-cats" class="muted"></ul>
+          <h3 style="font-size:1rem;margin:1rem 0 .4rem;">Grouped error messages</h3>
+          <ol id="fail-groups"></ol>
+        </div>
+
+        <div class="card">
+          <h2>OSM data sources</h2>
+          <div class="filters">
+            <button type="button" class="chip on" id="pie-vol" aria-pressed="true">Share of jobs</button>
+            <button type="button" class="chip" id="pie-fail" aria-pressed="false">Failure share</button>
+            <label><input type="checkbox" id="inc-net"> Include network outages</label>
+          </div>
+          <div id="pie-msg" class="muted" hidden></div>
+          <div id="pie-block" class="donut-row">
+            <svg id="donut" width="220" height="220" viewBox="0 0 220 220" role="img" aria-label="OSM sources"></svg>
+            <div id="legend"></div>
+          </div>
+          <table class="sr-only" id="pie-a11y"><caption>OSM sources</caption><thead><tr><th>Source</th><th>Count</th></tr></thead><tbody></tbody></table>
+          <div class="table-scroll" style="margin-top:1rem;">
+            <table class="ops-table">
+              <thead><tr><th>Source</th><th>Total</th><th>Succeeded</th><th>Failed</th><th>Failure rate (%)</th></tr></thead>
+              <tbody id="src-table"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Recent resorts</h2>
+          <div class="filters">
+            <button type="button" class="chip on" data-status="">All</button>
+            <button type="button" class="chip" data-status="succeeded">Succeeded</button>
+            <button type="button" class="chip" data-status="failed">Failed</button>
+            <button type="button" class="chip" data-status="running">Running</button>
+            <button type="button" class="chip" data-status="waiting">Waiting</button>
+            <input type="search" id="q" placeholder="Search resort" aria-label="Search resort">
+            <select id="src-filter" aria-label="Filter OSM source"><option value="">All OSM sources</option></select>
+          </div>
+          <div class="table-scroll">
+            <table class="ops-table stack-cards" id="recent-table">
+              <thead>
+                <tr>
+                  <th data-sort="updated">Time</th>
+                  <th data-sort="status">Status</th>
+                  <th data-sort="source">OSM source</th>
+                  <th data-sort="name">Resort</th>
+                  <th data-sort="message">Message</th>
+                </tr>
+              </thead>
+              <tbody id="recent-body"></tbody>
+            </table>
+          </div>
+          <div class="pager">
+            <button type="button" class="ops-btn" id="prev-page">Previous</button>
+            <span id="page-label"></span>
+            <button type="button" class="ops-btn" id="next-page">Next</button>
+          </div>
+        </div>
+
+        <details class="card fold">
+          <summary>How one resort job runs</summary>
+          <ol class="flow flow-wrap" style="margin-top:1rem;">
+            <li><span class="n">1</span> Docker container starts on the home PC</li>
+            <li><span class="n">2</span> Python takes the next task from the job list</li>
+            <li><span class="n">3</span> Pull OpenStreetMap (outline, trails, lifts)</li>
+            <li><span class="n">4</span> Pull Mapzen Skadi 1″ (~30 m) terrain tiles from AWS</li>
+            <li><span class="n">5</span> Write resort files (stats, cropped DEM, 3D scene)</li>
+            <li><span class="n">6</span> Publish status.json to the website bucket about once a minute</li>
+            <li><span class="n">7</span> CloudFront serves this page</li>
+          </ol>
+        </details>
+
+        <section class="card" aria-labelledby="ai-h">
+          <h2 id="ai-h">AI writing</h2>
+          <p>Two home PCs write English resort pages from search notes, splitting a 499-region queue (even/odd), United States first.</p>
+          <p id="ai-sum"></p>
+          <div id="ai-boxes" class="ai-grid"></div>
+        </section>
+
+        <details class="card fold">
+          <summary>About this pipeline</summary>
+          <p style="margin:.75rem 0 0;">An Asus PB60 mini PC (Core i5-9500T, 8 GB DDR4, bought for $60) runs the sweep at home. It walks 373 regions one at a time; a full lap takes days. OpenStreetMap supplies boundaries, trails, and lifts. Terrain is Mapzen Skadi 1 arc-second tiles from AWS. This page is a work log, not a storefront.</p>
+        </details>
+
+        <section class="card" aria-labelledby="def-h">
+          <h2 id="def-h">Definitions</h2>
+          <ul>
+            <li><strong>Queued to add</strong> — on the waiting list; nothing has been built yet.</li>
+            <li><strong>Updated</strong> — the resort already existed and was rebuilt from current map data.</li>
+            <li><strong>Failed</strong> — no downhill run long enough to publish, the region cannot be determined, or another error. The sweep continues.</li>
+            <li><strong>Systemic / network</strong> — the same infrastructure error across many resorts (for example DNS).</li>
+            <li><strong>Per-resort failure</strong> — a genuine skip for that mountain (no publishable run, unknown region).</li>
+            <li><strong>Complete</strong> (AI) — a page was written.</li>
+            <li><strong>Insufficient data</strong> (AI) — search did not gather enough notes, so no page.</li>
+          </ul>
+        </section>
+      </div>
     </main>
   </div>
 
@@ -221,10 +356,7 @@
     class="tw-flex tw-w-full tw-place-content-around tw-gap-3 tw-border-t tw-border-gray-200
            tw-bg-gray-50 tw-py-6 tw-px-[10%] tw-text-black max-md:tw-flex-col"
   >
-    <div
-      class="tw-flex tw-h-full tw-w-[250px] tw-flex-col tw-place-items-center tw-gap-6
-             max-md:tw-w-full"
-    >
+    <div class="tw-flex tw-h-full tw-w-[250px] tw-flex-col tw-place-items-center tw-gap-6 max-md:tw-w-full">
       <img src="./assets/logo.png?v=2" alt="Global Ski Atlas" class="tw-max-w-[120px]" />
       <div>Global Ski Atlas</div>
       <div class="tw-mt-3 tw-text-lg tw-font-semibold">Follow us</div>
@@ -267,407 +399,864 @@
   <script src="scripts/header-toggle.js"></script>
   <script src="scripts/site-nav.js?v=7" defer></script>
   <script>
-    (function () {
-      var STATUS_PATH = '/resort-jobs/status.json';
-      var progressEl = document.getElementById('status-progress');
-      var errorEl = document.getElementById('status-error');
-      var countsEl = document.getElementById('status-counts');
-      var runningEl = document.getElementById('status-running');
-      var recentEl = document.getElementById('status-recent');
-      var wikiById = {};
-      var wikiByName = {};
-      var lastStatus = null;
+(function () {
+  /**
+   * Assumed schema (live files on this origin):
+   *
+   * GET /resort-jobs/status.json
+   * {
+   *   updated: ISO-8601 UTC string,
+   *   lastRegion, nextRegion, queuedThrough: "continent/country/region" slugs,
+   *   regionIndex: number, regionCount: number,
+   *   counts: { succeeded, failed, running, queued },
+   *   osm_sources: { [sourceLabel]: { succeeded, failed, running, queued } },
+   *     tallied from every job file this sweep (not the 20-row recent list).
+   *   running: Job[], recent: Job[]  // recent is a 20-row window only
+   * }
+   * Job: {
+   *   jobId, status: "succeeded"|"failed"|"running"|"queued",
+   *   message, winter_sports_id, region,
+   *   source / osm_source: OSM puller label (e.g. "Overpass (kumi)", "MapLark", "" ),
+   *   updated, name
+   * }
+   *
+   * GET /ai-copy/status.json
+   * {
+   *   updated_at, box_count,
+   *   boxes: [{ host, updated_at, running, region_index, region_total, country, state,
+   *             jsonl_rows, by_status: { complete, insufficient_data, skipped },
+   *             last_resort, last_status, log_tail: string[] }]
+   * }
+   *
+   * normalizeStatus maps those payloads into one view model. Adjust here if names change.
+   */
+  var PAGE = 50;
+  var FAIL_STREAK_N = 8;
+  var STATUS_PATH = '/resort-jobs/status.json';
+  var AI_PATH = '/ai-copy/status.json';
+  var wikiById = {};
+  var wikiByName = {};
+  var view = null;
+  var lastGoodAt = 0;
+  var pollTimer = 0;
+  var nextAt = 0;
+  var backoff = 0;
+  var pieMode = 'volume';
+  var incNet = false;
+  var sourceFilter = '';
+  var statusFilter = '';
+  var sortKey = 'updated';
+  var sortDir = -1;
+  var page = 0;
+  var logStick = {};
+  var ui = {
+    health: document.getElementById('health'),
+    reason: document.getElementById('health-reason'),
+    fresh: document.getElementById('fresh'),
+    note: document.getElementById('fetch-note'),
+    skel: document.getElementById('skel'),
+    dash: document.getElementById('dashboard'),
+    kpis: document.getElementById('kpis'),
+    sweepLine: document.getElementById('sweep-line'),
+    sweepBar: document.getElementById('sweep-bar'),
+    sweepEta: document.getElementById('sweep-eta'),
+    streak: document.getElementById('streak'),
+    spark: document.getElementById('spark'),
+    failCats: document.getElementById('fail-cats'),
+    failGroups: document.getElementById('fail-groups'),
+    pieMsg: document.getElementById('pie-msg'),
+    pieBlock: document.getElementById('pie-block'),
+    donut: document.getElementById('donut'),
+    legend: document.getElementById('legend'),
+    pieA11y: document.getElementById('pie-a11y').querySelector('tbody'),
+    srcTable: document.getElementById('src-table'),
+    recent: document.getElementById('recent-body'),
+    q: document.getElementById('q'),
+    srcSel: document.getElementById('src-filter'),
+    pageLabel: document.getElementById('page-label'),
+    aiSum: document.getElementById('ai-sum'),
+    aiBoxes: document.getElementById('ai-boxes'),
+    next: document.getElementById('next-refresh')
+  };
 
-      function foldName(value) {
-        return String(value || '').normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().trim();
-      }
+  function dash(v) { return v == null || v === '' ? '—' : String(v); }
+  function foldName(v) { return String(v || '').normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().trim(); }
+  function num(v) { var n = Number(v); return isFinite(n) ? n : 0; }
+  function parseTime(v) { var d = v ? new Date(v) : null; return d && !isNaN(d.getTime()) ? d : null; }
+  function fmtUtc(v) {
+    var d = parseTime(v);
+    if (!d) return '—';
+    var m = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return d.getUTCDate() + ' ' + m[d.getUTCMonth()] + ' ' + d.getUTCFullYear() + ', ' +
+      String(d.getUTCHours()).padStart(2,'0') + ':' + String(d.getUTCMinutes()).padStart(2,'0') + ' UTC';
+  }
+  function rel(v, now) {
+    var d = parseTime(v);
+    if (!d) return '—';
+    var s = Math.round((now - d.getTime()) / 1000);
+    if (s < 0) s = 0;
+    if (s < 60) return s + ' s ago';
+    if (s < 3600) return Math.round(s / 60) + ' min ago';
+    if (s < 86400) return (s / 3600).toFixed(1) + ' h ago';
+    return Math.round(s / 86400) + ' d ago';
+  }
+  function regionLabel(value) {
+    if (value == null || value === '') return '—';
+    return String(value).split('/').filter(Boolean).map(function (part) {
+      if (part.length === 2) return part.toUpperCase();
+      return part.replace(/-/g, ' ').replace(/\b[a-z]/g, function (c) { return c.toUpperCase(); });
+    }).join(', ');
+  }
+  function rememberWiki(name, pageId) {
+    var key = foldName(name);
+    if (!key) return;
+    if (Object.prototype.hasOwnProperty.call(wikiByName, key) && wikiByName[key] !== pageId) wikiByName[key] = '';
+    else wikiByName[key] = pageId;
+  }
+  function resortId(job) {
+    var wid = job && job.winter_sports_id ? String(job.winter_sports_id).trim() : '';
+    if (wid) return wid;
+    var jobId = job && job.jobId ? String(job.jobId) : '';
+    if (/^sweep-\d+$/.test(jobId)) return jobId.slice(6);
+    var action = /^(?:update|add|delete) (\d+)$/.exec(job && job.message ? String(job.message) : '');
+    return action ? action[1] : '';
+  }
+  function resortName(job) {
+    if (job && job.name) return String(job.name);
+    var slug = /'--resort',\s*'([^']+)'/.exec(job && job.message ? String(job.message) : '');
+    if (slug) return slug[1].replace(/_/g, ' ');
+    return resortId(job);
+  }
+  function explainMessage(message, job) {
+    if (message == null || String(message).trim() === '') return '—';
+    var text = String(message);
+    var named = job && job.name ? String(job.name) : '';
+    var action = /^(update|add|delete)(?: \d+)?$/.exec(text);
+    if (action) {
+      if (action[1] === 'update') return 'Updated';
+      if (action[1] === 'add') return 'Queued to add';
+      return 'Deleted';
+    }
+    var exit = /exit status (\d+)/.exec(text);
+    var resortMatch = /'--resort',\s*'([^']+)'/.exec(text);
+    var resort = named || (resortMatch ? resortMatch[1].replace(/_/g, ' ') : '');
+    var place = resort || 'This resort';
+    if (exit && text.indexOf('game_export') !== -1) {
+      if (exit[1] === '3') return place + ' has no downhill run long enough to publish (exit 3).';
+      if (exit[1] === '2') return place + ' has no resort config (exit 2).';
+      if (exit[1] === '1') return place + ' scene build failed: missing input or bad terrain (exit 1).';
+      return place + ' scene build failed (exit ' + exit[1] + ').';
+    }
+    if (exit) {
+      var step = /'([^']+\.py)'/.exec(text);
+      var name = step ? step[1].replace(/^scripts\//, '') : 'A pipeline step';
+      return name + ' failed (exit ' + exit[1] + ').';
+    }
+    var region = /^no region for (.+)$/.exec(text);
+    if (region) return 'No pipeline region for ' + region[1] + '.';
+    var several = /^several regions for (.+)$/.exec(text);
+    if (several) return 'More than one pipeline region matches ' + several[1] + '.';
+    if (text === 'not in OSM') return 'Resort is not in OpenStreetMap.';
+    if (text === 'winter_sports_id is required' || text === 'winter_sports_id and region are required') return 'Job is missing a resort id or region.';
+    if (text === 'winter sports element has no location') return 'OpenStreetMap feature has no location.';
+    if (text === 'winter sports element has no geometry') return 'OpenStreetMap feature has no geometry.';
+    if (text === 'add needs state, country, or lat/lon') return 'Add job needs a state, country, or coordinates.';
+    return text;
+  }
+  function failCategory(raw, explained) {
+    var t = String(raw || '') + ' ' + String(explained || '');
+    var low = t.toLowerCase();
+    if (/urlopen|name resolution|errno -3|dns|timed out|timeout|connection refused|temporary failure/.test(low)) return 'network';
+    if (/no downhill|exit 3|exit status 3/.test(low)) return 'no_run';
+    if (/no (pipeline )?region|unknown region|several regions/.test(low)) return 'region';
+    return 'other';
+  }
+  function normSource(s) {
+    s = s == null ? '' : String(s).trim();
+    return s ? s : 'No source recorded';
+  }
+  function wikiHref(job) {
+    var id = resortId(job);
+    if (id && wikiById[id]) return '/wiki/resort.html?page=' + encodeURIComponent(wikiById[id]);
+    var key = foldName(resortName(job));
+    if (key && wikiByName[key]) return '/wiki/resort.html?page=' + encodeURIComponent(wikiByName[key]);
+    return '';
+  }
 
-      function rememberWikiName(name, pageId) {
-        var key = foldName(name);
-        if (!key) return;
-        if (Object.prototype.hasOwnProperty.call(wikiByName, key) && wikiByName[key] !== pageId) wikiByName[key] = '';
-        else wikiByName[key] = pageId;
-      }
+  function normalizeJob(job) {
+    var raw = job && job.message != null ? String(job.message) : '';
+    var explained = explainMessage(raw, job);
+    var status = job && job.status ? String(job.status) : '';
+    if (status === 'queued') status = 'waiting';
+    var source = job && (job.source != null && job.source !== '') ? job.source : (job && job.osm_source);
+    return {
+      jobId: job && job.jobId ? String(job.jobId) : '',
+      status: status || 'waiting',
+      message: explained,
+      rawMessage: raw,
+      winterSportsId: resortId(job),
+      region: job && job.region ? String(job.region) : '',
+      source: normSource(source),
+      sourceRaw: source,
+      updated: job && job.updated,
+      name: resortName(job) || '—',
+      wiki: wikiHref(job),
+      category: status === 'failed' ? failCategory(raw, explained) : '',
+      systemic: status === 'failed' && failCategory(raw, explained) === 'network'
+    };
+  }
 
-      function dash(value) {
-        return value == null || value === '' ? '—' : String(value);
-      }
-
-      function formatTime(value) {
-        if (!value) return '—';
-        var parsed = new Date(value);
-        if (isNaN(parsed.getTime())) return String(value);
-        var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        var hh = String(parsed.getUTCHours()).padStart(2, '0');
-        var mm = String(parsed.getUTCMinutes()).padStart(2, '0');
-        return parsed.getUTCDate() + ' ' + months[parsed.getUTCMonth()] + ' ' + parsed.getUTCFullYear() + ', ' + hh + ':' + mm + ' UTC';
-      }
-
-      function regionLabel(value) {
-        if (value == null || value === '') return '—';
-        return String(value).split('/').filter(Boolean).map(function (part) {
-          if (part.length === 2) return part.toUpperCase();
-          return part.replace(/-/g, ' ').replace(/\b[a-z]/g, function (c) { return c.toUpperCase(); });
-        }).join(', ');
-      }
-
-      function clear(el) {
-        while (el.firstChild) el.removeChild(el.firstChild);
-      }
-
-      function resortId(job) {
-        var wid = job && job.winter_sports_id ? String(job.winter_sports_id).trim() : '';
-        if (wid) return wid;
-        var jobId = job && job.jobId ? String(job.jobId) : '';
-        if (/^sweep-\d+$/.test(jobId)) return jobId.slice(6);
-        var action = /^(?:update|add|delete) (\d+)$/.exec(job && job.message ? String(job.message) : '');
-        return action ? action[1] : '';
-      }
-
-      function resortName(job) {
-        if (job && job.name) return String(job.name);
-        var slug = /'--resort',\s*'([^']+)'/.exec(job && job.message ? String(job.message) : '');
-        if (slug) return slug[1].replace(/_/g, ' ');
-        return resortId(job);
-      }
-
-      function explainMessage(message, job) {
-        if (message == null || message === '') return '—';
-        var text = String(message);
-        var named = job && job.name ? String(job.name) : '';
-        var action = /^(update|add|delete)(?: \d+)?$/.exec(text);
-        if (action) {
-          if (action[1] === 'update') return 'Updated';
-          if (action[1] === 'add') return 'Queued to add';
-          return 'Deleted';
-        }
-        var exit = /exit status (\d+)/.exec(text);
-        var resortMatch = /'--resort',\s*'([^']+)'/.exec(text);
-        var resort = named || (resortMatch ? resortMatch[1].replace(/_/g, ' ') : '');
-        var place = resort || 'This resort';
-        if (exit && text.indexOf('game_export') !== -1) {
-          if (exit[1] === '3') return place + ' has no downhill run long enough to publish (exit 3).';
-          if (exit[1] === '2') return place + ' has no resort config (exit 2).';
-          if (exit[1] === '1') return place + ' scene build failed: missing input or bad terrain (exit 1).';
-          return place + ' scene build failed (exit ' + exit[1] + ').';
-        }
-        if (exit) {
-          var step = /'([^']+\.py)'/.exec(text);
-          var name = step ? step[1].replace(/^scripts\//, '') : 'A pipeline step';
-          return name + ' failed (exit ' + exit[1] + ').';
-        }
-        var region = /^no region for (.+)$/.exec(text);
-        if (region) return 'No pipeline region for ' + region[1] + '.';
-        var several = /^several regions for (.+)$/.exec(text);
-        if (several) return 'More than one pipeline region matches ' + several[1] + '.';
-        if (text === 'not in OSM') return 'Resort is not in OpenStreetMap.';
-        if (text === 'winter_sports_id is required' || text === 'winter_sports_id and region are required') {
-          return 'Job is missing a resort id or region.';
-        }
-        if (text === 'winter sports element has no location') return 'OpenStreetMap feature has no location.';
-        if (text === 'winter sports element has no geometry') return 'OpenStreetMap feature has no geometry.';
-        if (text === 'add needs state, country, or lat/lon') return 'Add job needs a state, country, or coordinates.';
-        return text;
-      }
-
-      function wikiPageId(job) {
-        var id = resortId(job);
-        if (id && wikiById[id]) return wikiById[id];
-        var key = foldName(resortName(job));
-        return key && wikiByName[key] ? wikiByName[key] : '';
-      }
-
-      function appendResort(parent, job) {
-        var label = resortName(job) || dash(job.jobId);
-        var pageId = wikiPageId(job);
-        if (!pageId) {
-          parent.appendChild(document.createTextNode(label));
-          return;
-        }
-        var link = document.createElement('a');
-        link.href = '/wiki/resort.html?page=' + encodeURIComponent(pageId);
-        link.textContent = label;
-        if (job.jobId) link.title = String(job.jobId);
-        parent.appendChild(link);
-      }
-
-      function showError(message) {
-        errorEl.hidden = false;
-        errorEl.textContent = message + ' Requested ' + STATUS_PATH + '.';
-      }
-
-      function render(data) {
-        lastStatus = data;
-        errorEl.hidden = true;
-        progressEl.textContent =
-          'World sweep, region ' + dash(data.regionIndex) + ' of ' + dash(data.regionCount) +
-          '. Just finished ' + regionLabel(data.lastRegion) +
-          '. Next is ' + regionLabel(data.nextRegion) +
-          '. Updated ' + formatTime(data.updated) + '.';
-
-        clear(countsEl);
-        var counts = data.counts || {};
-        var countLabels = {
-          succeeded: 'resorts succeeded',
-          failed: 'resorts failed',
-          running: 'resorts running',
-          queued: 'resorts waiting'
+  function normalizeStatus(resortJson, aiJson) {
+    var r = resortJson || {};
+    var counts = r.counts || {};
+    var recent = (Array.isArray(r.recent) ? r.recent : []).map(normalizeJob);
+    var running = (Array.isArray(r.running) ? r.running : []).map(normalizeJob);
+    var aiBoxes = [];
+    if (aiJson && Array.isArray(aiJson.boxes)) aiBoxes = aiJson.boxes;
+    else if (aiJson && (aiJson.host || aiJson.region_index != null)) aiBoxes = [aiJson];
+    return {
+      updated: r.updated || null,
+      lastRegion: r.lastRegion || '',
+      nextRegion: r.nextRegion || '',
+      regionIndex: num(r.regionIndex),
+      regionCount: num(r.regionCount) || 373,
+      counts: {
+        succeeded: num(counts.succeeded),
+        failed: num(counts.failed),
+        running: num(counts.running),
+        waiting: num(counts.queued != null ? counts.queued : counts.waiting)
+      },
+      running: running,
+      recent: recent,
+      osmSources: r.osm_sources && typeof r.osm_sources === 'object' ? r.osm_sources : null,
+      aiUpdated: aiJson && aiJson.updated_at,
+      aiBoxes: aiBoxes.map(function (b) {
+        var by = b.by_status || {};
+        return {
+          host: b.host || 'box',
+          updated: b.updated_at,
+          running: !!b.running,
+          error: !!b.error,
+          regionIndex: num(b.region_index),
+          regionTotal: num(b.region_total) || 499,
+          country: b.country || '',
+          state: b.state || '',
+          finished: num(b.jsonl_rows),
+          complete: num(by.complete),
+          insufficient: num(by.insufficient_data),
+          skipped: num(by.skipped),
+          lastResort: b.last_resort || '',
+          lastStatus: b.last_status || '',
+          log: Array.isArray(b.log_tail) ? b.log_tail : []
         };
-        ['succeeded', 'failed', 'running', 'queued'].forEach(function (key) {
-          var item = document.createElement('li');
-          var num = document.createElement('span');
-          num.className = 'num';
-          num.textContent = dash(counts[key]);
-          item.appendChild(num);
-          item.appendChild(document.createTextNode(countLabels[key]));
-          countsEl.appendChild(item);
+      })
+    };
+  }
+
+  function demoData() {
+    var dns = '<urlopen error [Errno -3] Temporary failure in name resolution>';
+    var t = function (m) { return '2026-11-24T' + m + ':00Z'; };
+    var recent = [
+      { jobId: 'sweep-1', status: 'succeeded', message: 'update 1', winter_sports_id: '1', region: 'europe/france/rhone-alpes', osm_source: 'MapLark', updated: t('14:14'), name: 'Albiez-Montrond' },
+      { jobId: 'sweep-2', status: 'running', message: 'update', winter_sports_id: '601126774', region: 'europe/france/rhone-alpes', osm_source: '', updated: t('14:14'), name: 'Les Karellis' },
+      { jobId: 'sweep-3', status: 'succeeded', message: 'update 3', winter_sports_id: '3', region: 'europe/france/rhone-alpes', osm_source: 'Overpass (kumi)', updated: t('14:11'), name: 'Aillon-le-Jeune' },
+      { jobId: 'sweep-4', status: 'succeeded', message: 'update 4', winter_sports_id: '4', region: 'europe/france/rhone-alpes', osm_source: 'MapLark', updated: t('14:09'), name: 'Col de Plainpalais' },
+      { jobId: 'sweep-5', status: 'succeeded', message: 'update 5', winter_sports_id: '5', region: 'europe/france/rhone-alpes', osm_source: 'Overpass (kumi)', updated: t('14:04'), name: 'Le Semnoz' }
+    ];
+    var names = ['La Clusaz','Espace Diamant (Les Saisies)','Cordon',"La Chapelle d'Abondance",'Saint-Nizier du Moucherotte','Les Arcs / Peisey-Vallandry','La Plagne','Col de Porte','Stade de Bosses','Stade de Saut','Stade de Ballet','Chalmazel','La Croix de Bauzon','Les Saisies','Megève','Combloux','Praz-sur-Arly'];
+    for (var i = 0; i < 17; i++) {
+      var mins = 43 + i;
+      recent.push({
+        jobId: 'sweep-f' + i, status: 'failed', message: dns, winter_sports_id: String(100 + i),
+        region: 'europe/france/rhone-alpes', osm_source: i % 2 ? 'MapLark' : 'Overpass (kumi)',
+        updated: t('13:' + String(mins).padStart(2, '0')), name: names[i] || ('Resort ' + i)
+      });
+    }
+    recent.push({ jobId: 'sweep-r', status: 'failed', message: 'no region for Example', winter_sports_id: '9', region: '', osm_source: '', updated: t('13:40'), name: 'Unplaced area' });
+    recent.push({ jobId: 'sweep-d', status: 'failed', message: "game_export.py' exit status 3", winter_sports_id: '8', region: 'europe/france/rhone-alpes', osm_source: 'MapLark', updated: t('13:38'), name: 'Tiny hill' });
+    return {
+      resort: {
+        updated: '2026-11-24T14:15:10Z',
+        lastRegion: 'europe/france/rhone-alpes',
+        nextRegion: 'europe/georgia',
+        regionIndex: 121, regionCount: 373,
+        counts: { succeeded: 702, failed: 4630, running: 1, queued: 0 },
+        osm_sources: {
+          'MapLark': { succeeded: 410, failed: 80, running: 0, queued: 0 },
+          'Overpass (kumi)': { succeeded: 292, failed: 40, running: 1, queued: 0 },
+          'No source recorded': { succeeded: 0, failed: 4510, running: 0, queued: 0 }
+        },
+        running: [recent[1]],
+        recent: recent
+      },
+      ai: {
+        updated_at: '2026-11-24T14:16:02Z',
+        boxes: [
+          { host: 'homeserver', updated_at: '2026-11-24T14:16:01Z', running: true, region_index: 1, region_total: 499, country: 'United States of America', state: 'Colorado', jsonl_rows: 14, by_status: { complete: 4, insufficient_data: 10 }, last_resort: 'Powderhorn Ski Area, Colorado, United States of America', last_status: 'insufficient_data', log_tail: [' sticky season: hit in 392s', ' sticky famous_people: hit in 463s', ' sticky 17/20 review: 10 indexed pages'] },
+          { host: '3070', updated_at: '2026-11-24T14:16:01Z', running: true, region_index: 2, region_total: 499, country: 'United States of America', state: 'New Hampshire', jsonl_rows: 18, by_status: { complete: 1, insufficient_data: 17 }, last_resort: 'Kanc Recreation Area, New Hampshire, United States of America', last_status: 'insufficient_data', log_tail: [' sticky pass: hit in 79s', ' json parse failed; raw follows'] }
+        ]
+      }
+    };
+  }
+
+  function healthOf(model, now, fetchOk) {
+    var age = model.updated ? now - new Date(model.updated).getTime() : Infinity;
+    if (!fetchOk && age > 5 * 60 * 1000) return { level: 'down', reason: 'status.json has not updated in more than 5 minutes.' };
+    if (age > 5 * 60 * 1000) return { level: 'down', reason: 'status.json is older than 5 minutes (' + rel(model.updated, now) + ').' };
+    var chrono = model.recent.slice().sort(function (a, b) { return (parseTime(a.updated) || 0) - (parseTime(b.updated) || 0); });
+    var streak = 0, lastCat = '';
+    for (var i = chrono.length - 1; i >= 0; i--) {
+      if (chrono[i].status !== 'failed') break;
+      streak++;
+      lastCat = chrono[i].category;
+    }
+    if (streak >= FAIL_STREAK_N) {
+      return { level: 'degraded', reason: streak + ' consecutive resort jobs failed' + (lastCat === 'network' ? ' (network/DNS).' : '.') };
+    }
+    if (!fetchOk) return { level: 'degraded', reason: 'Latest fetch failed; showing last good data.' };
+    if (age > 90 * 1000) return { level: 'degraded', reason: 'Data is getting stale.' };
+    return { level: 'healthy', reason: 'World sweep is reporting and recent jobs include successes.' };
+  }
+
+  function analyzeFailures(recent) {
+    var chrono = recent.slice().sort(function (a, b) {
+      return (parseTime(a.updated) ? parseTime(a.updated).getTime() : 0) - (parseTime(b.updated) ? parseTime(b.updated).getTime() : 0);
+    });
+    var i = chrono.length - 1;
+    while (i >= 0 && chrono[i].status === 'running') i--;
+    var recoveredAt = null;
+    if (i >= 0 && chrono[i].status === 'succeeded') {
+      recoveredAt = chrono[i].updated;
+      i--;
+    }
+    var end = i;
+    while (i >= 0 && chrono[i].status === 'failed') i--;
+    var start = i + 1;
+    var streak = end >= start && start >= 0 ? chrono.slice(start, end + 1) : [];
+    var cats = { network: 0, no_run: 0, region: 0, other: 0 };
+    var groups = {};
+    recent.forEach(function (j) {
+      if (j.status !== 'failed') return;
+      cats[j.category] = (cats[j.category] || 0) + 1;
+      var key = j.message === '—' ? '(empty message)' : j.message;
+      groups[key] = (groups[key] || 0) + 1;
+    });
+    var grouped = Object.keys(groups).map(function (k) { return { msg: k, n: groups[k] }; }).sort(function (a, b) { return b.n - a.n; });
+    var netN = streak.filter(function (j) { return j.category === 'network'; }).length;
+    var text = 'No consecutive failure streak in the recent list.';
+    if (streak.length >= 3) {
+      text = streak.length + ' consecutive failures, ' + fmtUtc(streak[0].updated) + ' to ' + fmtUtc(streak[streak.length - 1].updated);
+      if (netN === streak.length) text += ', all DNS/network errors, likely a network outage.';
+      else if (netN > streak.length / 2) text += ', mostly network/DNS.';
+      else text += ', mixed per-resort errors.';
+      if (recoveredAt) text += ' Recovered at ' + fmtUtc(recoveredAt) + '.';
+    }
+    return { cats: cats, grouped: grouped, streakText: text, spark: chrono };
+  }
+
+  function sourceStats(model, includeNet, failOnly) {
+    if (model.osmSources) {
+      return Object.keys(model.osmSources).map(function (k) {
+        var raw = model.osmSources[k] || {};
+        var succeeded = num(raw.succeeded);
+        var failed = num(raw.failed);
+        var running = num(raw.running);
+        var queued = num(raw.queued);
+        var total = succeeded + failed + running + queued;
+        var rateDen = succeeded + failed;
+        return {
+          source: k || 'No source recorded',
+          total: total,
+          succeeded: succeeded,
+          failed: failed,
+          failedNet: 0,
+          rate: rateDen ? (failed / rateDen) * 100 : 0,
+          slice: failOnly ? failed : total
+        };
+      }).filter(function (s) { return s.slice > 0; });
+    }
+    var map = {};
+    model.recent.forEach(function (j) {
+      if (failOnly && j.status !== 'failed') return;
+      var k = j.source;
+      if (!map[k]) map[k] = { source: k, total: 0, succeeded: 0, failed: 0, failedNet: 0 };
+      map[k].total++;
+      if (j.status === 'succeeded') map[k].succeeded++;
+      if (j.status === 'failed') {
+        if (j.category === 'network') map[k].failedNet++;
+        else map[k].failed++;
+      }
+    });
+    return Object.keys(map).map(function (k) {
+      var s = map[k];
+      var failed = includeNet ? s.failed + s.failedNet : s.failed;
+      var rateDen = includeNet ? (s.succeeded + s.failed + s.failedNet) : (s.succeeded + s.failed);
+      s.failCount = failed;
+      s.rate = rateDen ? (failed / rateDen) * 100 : 0;
+      s.slice = failOnly ? (includeNet ? s.failed + s.failedNet : s.failed) : s.total;
+      return s;
+    }).filter(function (s) { return s.slice > 0; });
+  }
+
+  var SLICE = ['#7c3aed', '#c4a35a', '#0f766e', '#ea580c', '#0369a1', '#86198f', '#78716c'];
+
+  function setText(el, t) { el.textContent = t; }
+
+  function renderHealth(model, now, fetchOk) {
+    var h = healthOf(model, now, fetchOk);
+    ui.health.className = 'health ' + h.level;
+    ui.health.firstElementChild.textContent = h.level === 'healthy' ? 'Healthy' : h.level === 'degraded' ? 'Degraded' : 'Down';
+    setText(ui.reason, h.reason);
+    var age = model.updated ? now - new Date(model.updated).getTime() : 0;
+    ui.fresh.className = 'fresh' + (age > 5 * 60 * 1000 ? ' red' : age > 90 * 1000 ? ' amber' : '');
+    setText(ui.fresh, 'Updated ' + rel(model.updated, now) + ' · ' + fmtUtc(model.updated));
+  }
+
+  function renderKpis(model) {
+    var c = model.counts;
+    var done = c.succeeded + c.failed;
+    var rate = done ? ((c.succeeded / done) * 100).toFixed(1) : '—';
+    var items = [
+      ['Succeeded', c.succeeded, 'ok'],
+      ['Failed', c.failed, 'bad'],
+      ['Running', c.running, 'run'],
+      ['Waiting', c.waiting, ''],
+      ['Success rate', rate + (rate === '—' ? '' : '%'), '']
+    ];
+    if (!ui.kpis.childNodes.length) {
+      items.forEach(function () {
+        var d = document.createElement('div');
+        d.className = 'kpi';
+        d.innerHTML = '<div class="n"></div><div class="l"></div>';
+        ui.kpis.appendChild(d);
+      });
+    }
+    Array.prototype.forEach.call(ui.kpis.children, function (el, i) {
+      el.className = 'kpi ' + items[i][2];
+      el.querySelector('.n').textContent = String(items[i][1]);
+      el.querySelector('.l').textContent = items[i][0];
+    });
+    var pct = model.regionCount ? Math.round(model.regionIndex / model.regionCount * 100) : 0;
+    setText(ui.sweepLine, 'Region ' + dash(model.regionIndex) + ' of ' + dash(model.regionCount) +
+      '. Just finished ' + regionLabel(model.lastRegion) + '. Next is ' + regionLabel(model.nextRegion) +
+      '. Updated ' + fmtUtc(model.updated) + '.');
+    ui.sweepBar.setAttribute('aria-valuenow', String(model.regionIndex));
+    ui.sweepBar.setAttribute('aria-valuemax', String(model.regionCount));
+    ui.sweepBar.firstElementChild.style.width = pct + '%';
+    var times = model.recent.map(function (j) { return parseTime(j.updated); }).filter(Boolean).sort(function (a, b) { return a - b; });
+    var eta = 'ETA estimate unavailable (need a longer recent window).';
+    if (times.length >= 3) {
+      var span = (times[times.length - 1] - times[0]) / 1000;
+      var perJob = span / (times.length - 1);
+      var remainRegions = Math.max(0, model.regionCount - model.regionIndex);
+      var jobsInSampleRegion = model.recent.filter(function (j) { return j.region === model.lastRegion; }).length || times.length;
+      var sec = remainRegions * jobsInSampleRegion * perJob;
+      var hours = sec / 3600;
+      eta = 'Estimate: ~' + (hours >= 10 ? hours.toFixed(0) : hours.toFixed(1)) +
+        ' h to finish the remaining ' + remainRegions + ' regions, from recent job pace in this list. Coarse estimate only.';
+    }
+    setText(ui.sweepEta, model.regionIndex + ' / ' + model.regionCount + ' = ' + pct + '%. ' + eta);
+  }
+
+  function renderFailures(model) {
+    var a = analyzeFailures(model.recent);
+    setText(ui.streak, a.streakText);
+    var labels = { network: 'Network/DNS (systemic)', no_run: 'No publishable run', region: 'Region unknown', other: 'Other' };
+    ui.failCats.textContent = '';
+    Object.keys(labels).forEach(function (k) {
+      var li = document.createElement('li');
+      var b = document.createElement('span');
+      b.className = 'badge ' + (k === 'network' ? 'sys' : k === 'other' ? 'failed' : 'genuine');
+      b.textContent = k === 'network' ? 'systemic' : 'per-resort';
+      li.appendChild(b);
+      li.appendChild(document.createTextNode(' ' + labels[k] + ': ' + (a.cats[k] || 0)));
+      ui.failCats.appendChild(li);
+    });
+    ui.failGroups.textContent = '';
+    a.grouped.slice(0, 12).forEach(function (g) {
+      var li = document.createElement('li');
+      li.textContent = g.msg + ' × ' + g.n;
+      ui.failGroups.appendChild(li);
+    });
+    var w = 320, h = 56, n = a.spark.length || 1;
+    var pathS = '', pathF = '';
+    var sRun = 0, fRun = 0;
+    ui.spark.textContent = '';
+    a.spark.forEach(function (j, i) {
+      if (j.status === 'succeeded') sRun++;
+      if (j.status === 'failed') fRun++;
+      var x = n === 1 ? 0 : i / (n - 1) * (w - 4) + 2;
+      var ys = h - 4 - (sRun / n) * (h - 8);
+      var yf = h - 4 - (fRun / n) * (h - 8);
+      pathS += (i ? 'L' : 'M') + x + ' ' + ys;
+      pathF += (i ? 'L' : 'M') + x + ' ' + yf;
+    });
+    function p(d, c) {
+      var el = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      el.setAttribute('d', d); el.setAttribute('fill', 'none'); el.setAttribute('stroke', c); el.setAttribute('stroke-width', '2');
+      ui.spark.appendChild(el);
+    }
+    p(pathS, '#157347'); p(pathF, '#b42318');
+  }
+
+  function polar(cx, cy, r, a) {
+    return [cx + r * Math.cos(a), cy + r * Math.sin(a)];
+  }
+  function arcPath(cx, cy, r1, r2, a0, a1) {
+    var large = a1 - a0 > Math.PI ? 1 : 0;
+    var p0 = polar(cx, cy, r2, a0), p1 = polar(cx, cy, r2, a1);
+    var q0 = polar(cx, cy, r1, a1), q1 = polar(cx, cy, r1, a0);
+    return ['M', p0[0], p0[1], 'A', r2, r2, 0, large, 1, p1[0], p1[1], 'L', q0[0], q0[1], 'A', r1, r1, 0, large, 0, q1[0], q1[1], 'Z'].join(' ');
+  }
+
+  function renderPie(model) {
+    var netBox = document.getElementById('inc-net');
+    netBox.disabled = !!model.osmSources;
+    netBox.parentElement.title = model.osmSources
+      ? 'Network split is only available on the 20-row recent table, not the full sweep tally.'
+      : '';
+    var stats = sourceStats(model, incNet, pieMode === 'fail');
+    var uniq = {};
+    stats.forEach(function (s) { uniq[s.source] = 1; });
+    model.recent.forEach(function (j) { uniq[j.source] = 1; });
+    var jobTotal = stats.reduce(function (s, x) { return s + x.total; }, 0);
+    var scope = model.osmSources
+      ? 'All ' + jobTotal + ' job files this sweep (same set as succeeded/failed counts). The table below is still the last 20.'
+      : 'Only the last ' + model.recent.length + ' jobs in recent. Full-sweep source counts are not in status.json yet.';
+    if (Object.keys(uniq).length < 2) {
+      ui.pieMsg.hidden = false;
+      ui.pieBlock.hidden = true;
+      setText(ui.pieMsg, 'Only one OSM source: ' + (Object.keys(uniq)[0] || '—') + '. ' + scope);
+    } else {
+      ui.pieMsg.hidden = false;
+      ui.pieBlock.hidden = false;
+      setText(ui.pieMsg, scope);
+    }
+    var total = stats.reduce(function (s, x) { return s + x.slice; }, 0) || 1;
+    ui.donut.textContent = '';
+    ui.legend.textContent = '';
+    ui.pieA11y.textContent = '';
+    var angle = -Math.PI / 2;
+    stats.forEach(function (s, i) {
+      var slice = s.slice / total * Math.PI * 2;
+      var color = s.source === 'No source recorded' ? '#78716c' : SLICE[i % SLICE.length];
+      var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', arcPath(110, 110, 52, 92, angle, angle + Math.max(slice, 0.01)));
+      path.setAttribute('fill', color);
+      path.setAttribute('tabindex', '0');
+      path.setAttribute('role', 'img');
+      var tip = s.source + ': ' + s.total + ' jobs, ' + s.succeeded + ' succeeded, ' +
+        (incNet ? s.failed + s.failedNet : s.failed) + ' failed, ' + s.rate.toFixed(0) + '% failure';
+      path.setAttribute('aria-label', tip);
+      path.appendChild(document.createElementNS('http://www.w3.org/2000/svg', 'title')).textContent = tip;
+      path.addEventListener('click', function () { toggleSource(s.source); });
+      ui.donut.appendChild(path);
+      angle += slice;
+      var row = document.createElement('button');
+      row.type = 'button';
+      var sw = document.createElement('span'); sw.className = 'sw'; sw.style.background = color;
+      row.appendChild(sw);
+      row.appendChild(document.createTextNode(s.source + ' — ' + s.slice + ' (' + ((s.slice / total) * 100).toFixed(0) + '%)'));
+      row.addEventListener('click', function () { toggleSource(s.source); });
+      ui.legend.appendChild(row);
+      var tr = document.createElement('tr');
+      var td1 = document.createElement('td'); td1.textContent = s.source;
+      var td2 = document.createElement('td'); td2.textContent = String(s.slice);
+      tr.appendChild(td1); tr.appendChild(td2); ui.pieA11y.appendChild(tr);
+    });
+    var mid = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    mid.setAttribute('x', '110'); mid.setAttribute('y', '114'); mid.setAttribute('text-anchor', 'middle');
+    mid.setAttribute('font-size', '22'); mid.setAttribute('font-weight', '700'); mid.setAttribute('fill', 'currentColor');
+    mid.textContent = String(jobTotal || model.recent.length);
+    ui.donut.appendChild(mid);
+    var relStats = sourceStats(model, incNet, false).sort(function (a, b) { return b.rate - a.rate; });
+    ui.srcTable.textContent = '';
+    relStats.forEach(function (s) {
+      var tr = document.createElement('tr');
+      function cell(t, label) { var td = document.createElement('td'); td.setAttribute('data-label', label); td.textContent = t; tr.appendChild(td); return td; }
+      cell(s.source, 'Source');
+      cell(String(s.total), 'Total');
+      cell(String(s.succeeded), 'Succeeded');
+      cell(String(incNet ? s.failed + s.failedNet : s.failed), 'Failed');
+      var rateTd = cell('', 'Failure rate (%)');
+      rateTd.appendChild(document.createTextNode(s.rate.toFixed(0) + '% '));
+      if (s.rate > 25) {
+        var w = document.createElement('span'); w.className = 'badge genuine'; w.textContent = 'warning'; rateTd.appendChild(w);
+      }
+      var bar = document.createElement('div'); bar.className = 'bar'; bar.style.marginTop = '.25rem';
+      var iel = document.createElement('i'); iel.style.width = Math.min(100, s.rate) + '%'; iel.style.background = s.rate > 25 ? 'var(--bad)' : 'var(--ops-teal)';
+      bar.appendChild(iel); rateTd.appendChild(bar);
+      ui.srcTable.appendChild(tr);
+    });
+    var opts = Object.keys(uniq).sort();
+    var cur = ui.srcSel.value;
+    ui.srcSel.textContent = '';
+    var all = document.createElement('option'); all.value = ''; all.textContent = 'All OSM sources';
+    ui.srcSel.appendChild(all);
+    opts.forEach(function (o) {
+      var op = document.createElement('option'); op.value = o; op.textContent = o; ui.srcSel.appendChild(op);
+    });
+    if (cur) ui.srcSel.value = cur;
+  }
+
+  function toggleSource(src) {
+    sourceFilter = sourceFilter === src ? '' : src;
+    ui.srcSel.value = sourceFilter === 'No source recorded' ? 'No source recorded' : sourceFilter;
+    page = 0;
+    renderTable(view);
+  }
+
+  function filteredRows(model) {
+    var q = ui.q.value.trim().toLowerCase();
+    var rows = model.recent.slice();
+    model.running.forEach(function (r) {
+      if (!rows.some(function (x) { return x.jobId === r.jobId; })) rows.unshift(r);
+    });
+    rows.sort(function (a, b) {
+      var ra = a.status === 'running' ? 1 : 0, rb = b.status === 'running' ? 1 : 0;
+      if (ra !== rb) return rb - ra;
+      var va = a[sortKey], vb = b[sortKey];
+      if (sortKey === 'updated') { va = parseTime(va) ? parseTime(va).getTime() : 0; vb = parseTime(vb) ? parseTime(vb).getTime() : 0; }
+      va = va == null ? '' : va; vb = vb == null ? '' : vb;
+      if (va < vb) return -1 * sortDir;
+      if (va > vb) return 1 * sortDir;
+      return 0;
+    });
+    return rows.filter(function (j) {
+      if (statusFilter && j.status !== statusFilter) return false;
+      if (sourceFilter && j.source !== sourceFilter) return false;
+      if (q && j.name.toLowerCase().indexOf(q) === -1) return false;
+      return true;
+    });
+  }
+
+  function statusBadge(st) {
+    var span = document.createElement('span');
+    span.className = 'badge ' + st;
+    var icon = st === 'succeeded' ? '✓' : st === 'failed' ? '✕' : st === 'running' ? '●' : '○';
+    span.textContent = icon + ' ' + st;
+    return span;
+  }
+
+  function renderTable(model) {
+    var rows = filteredRows(model);
+    var pages = Math.max(1, Math.ceil(rows.length / PAGE));
+    if (page >= pages) page = pages - 1;
+    var slice = rows.slice(page * PAGE, page * PAGE + PAGE);
+    ui.recent.textContent = '';
+    var now = Date.now();
+    slice.forEach(function (j) {
+      var tr = document.createElement('tr');
+      if (j.status === 'running') tr.className = 'running-row';
+      var t = document.createElement('td'); t.setAttribute('data-label', 'Time');
+      t.textContent = rel(j.updated, now);
+      t.title = fmtUtc(j.updated);
+      tr.appendChild(t);
+      var s = document.createElement('td'); s.setAttribute('data-label', 'Status');
+      s.appendChild(statusBadge(j.status));
+      if (j.status === 'failed') {
+        var kind = document.createElement('span');
+        kind.className = 'badge ' + (j.systemic ? 'sys' : 'genuine');
+        kind.textContent = j.systemic ? 'systemic' : 'per-resort';
+        s.appendChild(document.createTextNode(' '));
+        s.appendChild(kind);
+      }
+      tr.appendChild(s);
+      var src = document.createElement('td'); src.setAttribute('data-label', 'OSM source'); src.textContent = j.source; tr.appendChild(src);
+      var name = document.createElement('td'); name.setAttribute('data-label', 'Resort');
+      if (j.wiki) {
+        var a = document.createElement('a'); a.href = j.wiki; a.textContent = j.name; name.appendChild(a);
+      } else name.textContent = j.name;
+      tr.appendChild(name);
+      var m = document.createElement('td'); m.setAttribute('data-label', 'Message');
+      var full = j.message;
+      if (full.length > 90) {
+        m.appendChild(document.createTextNode(full.slice(0, 90) + '… '));
+        var btn = document.createElement('button'); btn.type = 'button'; btn.className = 'msg-more'; btn.textContent = 'expand';
+        btn.addEventListener('click', function () {
+          m.textContent = full;
         });
-        var countsNote = document.getElementById('status-counts-note');
-        if (countsNote) countsNote.hidden = false;
+        m.appendChild(btn);
+      } else m.textContent = full;
+      if (j.rawMessage && j.rawMessage !== full) m.title = j.rawMessage;
+      tr.appendChild(m);
+      ui.recent.appendChild(tr);
+    });
+    setText(ui.pageLabel, 'Page ' + (page + 1) + ' of ' + pages + ' (' + rows.length + ' rows)');
+  }
 
-        clear(runningEl);
-        var running = Array.isArray(data.running) ? data.running : [];
-        if (!running.length) {
-          var empty = document.createElement('li');
-          empty.textContent = 'No resort is running right now.';
-          runningEl.appendChild(empty);
-        } else {
-          running.forEach(function (job) {
-            var item = document.createElement('li');
-            appendResort(item, job);
-            var osm = dash(job.osm_source);
-            item.appendChild(document.createTextNode(
-              ' — ' + explainMessage(job.message, job) +
-              (osm !== '—' ? ' — OSM: ' + osm : '') +
-              ' — ' + formatTime(job.updated)
-            ));
-            if (job.message) item.title = String(job.message);
-            runningEl.appendChild(item);
-          });
-        }
-
-        clear(recentEl);
-        var recent = Array.isArray(data.recent) ? data.recent : [];
-        recent.forEach(function (job) {
-          var row = document.createElement('tr');
-          if (job.status === 'failed') row.className = 'failed';
-          [formatTime(job.updated), dash(job.status), dash(job.osm_source)].forEach(function (value) {
-            var cell = document.createElement('td');
-            cell.textContent = value;
-            row.appendChild(cell);
-          });
-          var resortCell = document.createElement('td');
-          appendResort(resortCell, job);
-          if (job.jobId && !resortCell.title) resortCell.title = String(job.jobId);
-          row.appendChild(resortCell);
-          var messageCell = document.createElement('td');
-          messageCell.textContent = explainMessage(job.message, job);
-          if (job.message && messageCell.textContent !== String(job.message)) messageCell.title = String(job.message);
-          row.appendChild(messageCell);
-          recentEl.appendChild(row);
-        });
+  function renderAi(model) {
+    var boxes = model.aiBoxes;
+    var complete = 0, finished = 0, run = 0;
+    boxes.forEach(function (b) { complete += b.complete; finished += b.finished; if (b.running) run++; });
+    var yieldPct = finished ? ((complete / finished) * 100).toFixed(0) : '—';
+    setText(ui.aiSum, boxes.length + ' boxes, ' + run + ' running. Combined yield: ' +
+      complete + ' complete of ' + finished + ' finished (' + yieldPct + '%). Most pages currently come back as insufficient data.');
+    boxes.forEach(function (b, idx) {
+      var el = ui.aiBoxes.children[idx];
+      if (!el) {
+        el = document.createElement('article');
+        el.className = 'card';
+        el.innerHTML = '<h3></h3><p class="state"></p><p class="where"></p><div class="bar" role="progressbar"><i></i></div><p class="stack-note muted"></p><div class="stack"></div><p class="now"></p><pre class="term"></pre>';
+        ui.aiBoxes.appendChild(el);
       }
+      var state = b.error ? 'Error' : b.running ? 'Running' : 'Idle';
+      el.querySelector('h3').textContent = b.host === 'homeserver' ? 'Homeserver' : b.host;
+      el.querySelector('.state').textContent = state + '. Updated ' + fmtUtc(b.updated) + '.';
+      el.querySelector('.where').textContent = 'Region ' + dash(b.regionIndex) + ' of ' + dash(b.regionTotal) + ': ' +
+        ([b.state, b.country].filter(Boolean).join(', ') || '—');
+      var bar = el.querySelector('.bar');
+      bar.setAttribute('aria-valuenow', String(b.finished));
+      bar.querySelector('i').style.width = (b.finished ? Math.min(100, b.finished) : 0) + '%';
+      var tot = b.complete + b.insufficient + b.skipped || 1;
+      el.querySelector('.stack-note').textContent = 'Complete ' + b.complete + ' · insufficient ' + b.insufficient + ' · skipped ' + b.skipped + ' · finished this region ' + b.finished;
+      var stack = el.querySelector('.stack');
+      stack.textContent = '';
+      [['#157347', b.complete], ['#b45309', b.insufficient], ['#6b7280', b.skipped]].forEach(function (p) {
+        var iel = document.createElement('i'); iel.style.width = (p[1] / tot * 100) + '%'; iel.style.background = p[0]; stack.appendChild(iel);
+      });
+      el.querySelector('.now').textContent = 'Researching ' + (b.lastResort || '—') + ' (' + dash(b.lastStatus) + ')';
+      var pre = el.querySelector('.term');
+      var stick = logStick[b.host] !== false;
+      if (pre.scrollHeight - pre.scrollTop - pre.clientHeight > 24) stick = false;
+      logStick[b.host] = stick;
+      pre.textContent = b.log.length ? b.log.join('\n') : '—';
+      if (stick) pre.scrollTop = pre.scrollHeight;
+      pre.onscroll = function () {
+        logStick[b.host] = pre.scrollHeight - pre.scrollTop - pre.clientHeight < 24;
+      };
+    });
+    while (ui.aiBoxes.children.length > boxes.length) ui.aiBoxes.removeChild(ui.aiBoxes.lastChild);
+  }
 
-      function load() {
-        fetch(STATUS_PATH, { cache: 'no-store' })
-          .then(function (resp) {
-            if (!resp.ok) throw new Error('HTTP ' + resp.status + ' ' + resp.statusText);
-            return resp.json();
-          })
-          .then(render)
-          .catch(function (err) {
-            showError(err && err.message ? err.message : 'Failed to load pipeline status.');
-            if (!countsEl.childNodes.length) progressEl.textContent = 'Pipeline status unavailable.';
-          });
-      }
+  function paint(model, fetchOk) {
+    view = model;
+    var now = Date.now();
+    ui.skel.hidden = true;
+    ui.dash.hidden = false;
+    renderHealth(model, now, fetchOk);
+    renderKpis(model);
+    renderFailures(model);
+    renderPie(model);
+    renderTable(model);
+    renderAi(model);
+  }
 
-      function loadWiki() {
-        fetch('/api/wiki/index')
-          .then(function (resp) { return resp.ok ? resp.json() : []; })
-          .then(function (data) {
-            var pages = Array.isArray(data) ? data : (data && data.pages) || [];
-            pages.forEach(function (page) {
-              if (!page || !page.pageId) return;
-              if (page.pageType === 'country' || page.pageType === 'state' || page.pageType === 'continent') return;
-              if (page.winterSportsId != null && page.winterSportsId !== '') wikiById[String(page.winterSportsId)] = page.pageId;
-              rememberWikiName(page.englishName, page.pageId);
-              rememberWikiName(page.title, page.pageId);
-            });
-            if (lastStatus) render(lastStatus);
-          })
-          .catch(function () {});
-      }
+  function fetchJson(path) {
+    return fetch(path + (path.indexOf('?') >= 0 ? '&' : '?') + 't=' + Date.now(), { cache: 'no-store' }).then(function (resp) {
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      return resp.json();
+    });
+  }
 
-      load();
-      loadWiki();
-      setInterval(load, 60000);
+  function loadAll() {
+    if (document.hidden) return Promise.resolve();
+    var demo = /(?:\?|&)demo=1(?:&|$)/.test(location.search);
+    var p;
+    if (demo) {
+      var d = demoData();
+      p = Promise.resolve([d.resort, d.ai]);
+    } else {
+      p = Promise.all([fetchJson(STATUS_PATH), fetchJson(AI_PATH).catch(function () { return null; })]);
+    }
+    return p.then(function (pair) {
+      backoff = 0;
+      lastGoodAt = Date.now();
+      ui.note.hidden = true;
+      paint(normalizeStatus(pair[0], pair[1]), true);
+    }).catch(function (err) {
+      backoff = Math.min(300000, backoff ? backoff * 2 : 15000);
+      ui.note.hidden = false;
+      ui.note.textContent = 'Fetch failed (' + (err && err.message ? err.message : 'error') + '). Keeping last good data from ' +
+        (lastGoodAt ? rel(new Date(lastGoodAt).toISOString(), Date.now()) : 'never') + '. Retrying with backoff.';
+      if (view) paint(view, false);
+    }).then(schedule);
+  }
 
-      var AI_STATUS_PATH = '/ai-copy/status.json';
-      var aiHeartbeat = document.getElementById('ai-heartbeat');
-      var aiError = document.getElementById('ai-error');
-      var aiBoxes = document.getElementById('ai-boxes');
-      var lastAiPaint = false;
+  function schedule() {
+    clearTimeout(pollTimer);
+    var wait = backoff || 60000;
+    nextAt = Date.now() + wait;
+    pollTimer = setTimeout(loadAll, wait);
+  }
 
-      function aiCount(byStatus, key) {
-        var n = byStatus && byStatus[key];
-        return n == null || n === '' ? 0 : Number(n) || 0;
-      }
+  function tick() {
+    var s = Math.max(0, Math.round((nextAt - Date.now()) / 1000));
+    ui.next.textContent = document.hidden ? 'Polling paused (tab hidden)' : ('Next refresh in ' + s + 's');
+    if (view) {
+      var now = Date.now();
+      renderHealth(view, now, true);
+    }
+  }
 
-      function aiStatusLabel(status) {
-        if (status === 'complete') return 'written';
-        if (status === 'insufficient_data') return 'not enough notes';
-        if (status === 'in_progress') return 'writing';
-        if (status === 'skipped') return 'skipped';
-        return status == null || status === '' ? '—' : String(status);
-      }
+  document.querySelectorAll('.chip[data-status]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      statusFilter = btn.getAttribute('data-status') || '';
+      document.querySelectorAll('.chip[data-status]').forEach(function (b) { b.classList.toggle('on', b === btn); });
+      page = 0;
+      if (view) renderTable(view);
+    });
+  });
+  ui.q.addEventListener('input', function () { page = 0; if (view) renderTable(view); });
+  ui.srcSel.addEventListener('change', function () { sourceFilter = ui.srcSel.value; page = 0; if (view) renderTable(view); });
+  document.getElementById('prev-page').addEventListener('click', function () { page = Math.max(0, page - 1); if (view) renderTable(view); });
+  document.getElementById('next-page').addEventListener('click', function () { page += 1; if (view) renderTable(view); });
+  document.getElementById('recent-table').querySelectorAll('th[data-sort]').forEach(function (th) {
+    th.addEventListener('click', function () {
+      var k = th.getAttribute('data-sort');
+      if (sortKey === k) sortDir *= -1; else { sortKey = k; sortDir = 1; }
+      if (view) renderTable(view);
+    });
+  });
+  document.getElementById('pie-vol').addEventListener('click', function () {
+    pieMode = 'volume'; this.classList.add('on'); this.setAttribute('aria-pressed', 'true');
+    document.getElementById('pie-fail').classList.remove('on');
+    document.getElementById('pie-fail').setAttribute('aria-pressed', 'false');
+    if (view) renderPie(view);
+  });
+  document.getElementById('pie-fail').addEventListener('click', function () {
+    pieMode = 'fail'; this.classList.add('on'); this.setAttribute('aria-pressed', 'true');
+    document.getElementById('pie-vol').classList.remove('on');
+    document.getElementById('pie-vol').setAttribute('aria-pressed', 'false');
+    if (view) renderPie(view);
+  });
+  document.getElementById('inc-net').addEventListener('change', function () {
+    incNet = this.checked; if (view) renderPie(view);
+  });
+  document.getElementById('refresh-now').addEventListener('click', function () { backoff = 0; loadAll(); });
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden) { backoff = 0; loadAll(); }
+  });
+  var themeBtn = document.getElementById('theme-toggle');
+  function applyTheme(t) {
+    document.documentElement.setAttribute('data-theme', t);
+    themeBtn.textContent = t === 'dark' ? 'Light mode' : 'Dark mode';
+    themeBtn.setAttribute('aria-pressed', t === 'dark' ? 'true' : 'false');
+  }
+  var saved = localStorage.getItem('ops-theme');
+  if (saved) applyTheme(saved);
+  else applyTheme(matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  themeBtn.addEventListener('click', function () {
+    var next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    localStorage.setItem('ops-theme', next);
+    applyTheme(next);
+  });
 
-      function aiBoxTitle(host) {
-        var h = host == null || host === '' ? 'box' : String(host);
-        if (h === 'homeserver') return 'Homeserver';
-        if (h === '3070') return '3070';
-        return h;
-      }
+  fetch('/api/wiki/index').then(function (r) { return r.ok ? r.json() : []; }).then(function (data) {
+    var pages = Array.isArray(data) ? data : (data && data.pages) || [];
+    pages.forEach(function (page) {
+      if (!page || !page.pageId) return;
+      if (page.pageType === 'country' || page.pageType === 'state' || page.pageType === 'continent') return;
+      if (page.winterSportsId != null && page.winterSportsId !== '') wikiById[String(page.winterSportsId)] = page.pageId;
+      rememberWiki(page.englishName, page.pageId);
+      rememberWiki(page.title, page.pageId);
+    });
+    if (view) paint(view, true);
+  }).catch(function () {});
 
-      function renderAiChipInto(list, label, value) {
-        var item = document.createElement('li');
-        var num = document.createElement('span');
-        num.className = 'num';
-        num.textContent = String(value);
-        item.appendChild(num);
-        item.appendChild(document.createTextNode(label));
-        list.appendChild(item);
-      }
-
-      function renderAiBox(data) {
-        var box = document.createElement('article');
-        box.className = 'ai-box';
-
-        var title = document.createElement('h3');
-        title.textContent = aiBoxTitle(data.host);
-        box.appendChild(title);
-
-        var heartbeat = document.createElement('p');
-        var running = !!data.running;
-        var updated = formatTime(data.updated_at);
-        var parsed = data.updated_at ? new Date(data.updated_at) : null;
-        var stale = parsed && !isNaN(parsed.getTime()) && (Date.now() - parsed.getTime() > 5 * 60 * 1000);
-        heartbeat.textContent =
-          (running ? 'Running' : 'Idle') +
-          '. Updated ' + updated + '.';
-        if (stale) {
-          heartbeat.appendChild(document.createTextNode(' '));
-          var staleMark = document.createElement('span');
-          staleMark.className = 'ai-stale';
-          staleMark.textContent = 'Stale.';
-          heartbeat.appendChild(staleMark);
-        }
-        box.appendChild(heartbeat);
-
-        var state = data.state == null || data.state === '' ? '' : String(data.state);
-        var country = data.country == null || data.country === '' ? '' : String(data.country);
-        var place = state && country ? state + ', ' + country : (state || country || '—');
-        var idx = data.region_index;
-        var total = data.region_total;
-        var where = document.createElement('p');
-        where.textContent = 'Region ' + dash(idx) + ' of ' + dash(total) + ': ' + place;
-        box.appendChild(where);
-
-        var idxN = Number(idx);
-        var totalN = Number(total);
-        if (totalN > 0 && idxN >= 0) {
-          var barWrap = document.createElement('div');
-          barWrap.className = 'ai-bar-wrap';
-          var bar = document.createElement('div');
-          bar.className = 'ai-bar';
-          bar.setAttribute('role', 'progressbar');
-          bar.setAttribute('aria-valuemin', '0');
-          bar.setAttribute('aria-valuemax', String(totalN));
-          bar.setAttribute('aria-valuenow', String(idxN));
-          var fill = document.createElement('div');
-          fill.className = 'ai-bar-fill';
-          fill.style.width = Math.min(100, (idxN / totalN) * 100) + '%';
-          bar.appendChild(fill);
-          barWrap.appendChild(bar);
-          box.appendChild(barWrap);
-        }
-
-        var chips = document.createElement('ul');
-        chips.className = 'status-counts';
-        var by = data.by_status || {};
-        renderAiChipInto(chips, 'complete', aiCount(by, 'complete'));
-        renderAiChipInto(chips, 'insufficient data', aiCount(by, 'insufficient_data'));
-        renderAiChipInto(chips, 'skipped', aiCount(by, 'skipped'));
-        renderAiChipInto(chips, 'finished this region', data.jsonl_rows == null ? 0 : Number(data.jsonl_rows) || 0);
-        box.appendChild(chips);
-
-        var resort = data.last_resort == null || data.last_resort === '' ? '' : String(data.last_resort);
-        var logTail = Array.isArray(data.log_tail) ? data.log_tail : [];
-        var sticky = running && logTail.some(function (line) {
-          return String(line).toLowerCase().indexOf('sticky') !== -1;
-        });
-        var now = document.createElement('p');
-        if (sticky && resort) {
-          now.textContent = 'researching ' + resort;
-        } else {
-          now.textContent = (resort || '—') + ' — ' + aiStatusLabel(data.last_status);
-        }
-        box.appendChild(now);
-
-        var log = document.createElement('pre');
-        log.className = 'ai-log';
-        var lines = logTail.slice(-8);
-        log.textContent = lines.length ? lines.join('\n') : '—';
-        box.appendChild(log);
-
-        return box;
-      }
-
-      function normalizeAiBoxes(data) {
-        if (data && Array.isArray(data.boxes) && data.boxes.length) return data.boxes;
-        if (data && (data.host || data.region_index != null || data.running != null)) return [data];
-        return [];
-      }
-
-      function renderAi(data) {
-        lastAiPaint = true;
-        aiError.hidden = true;
-        var boxes = normalizeAiBoxes(data);
-        clear(aiBoxes);
-        if (!boxes.length) {
-          aiBoxes.hidden = true;
-          aiHeartbeat.textContent = 'No AI writing boxes reporting yet.';
-          return;
-        }
-        aiBoxes.hidden = false;
-        var runningN = 0;
-        boxes.forEach(function (box) {
-          if (box && box.running) runningN += 1;
-          aiBoxes.appendChild(renderAiBox(box));
-        });
-        var updated = formatTime(data.updated_at || (boxes[0] && boxes[0].updated_at));
-        aiHeartbeat.textContent =
-          boxes.length + ' box' + (boxes.length === 1 ? '' : 'es') +
-          ', ' + runningN + ' running. Combined update ' + updated + '.';
-      }
-
-      function loadAi() {
-        fetch(AI_STATUS_PATH, { cache: 'no-store' })
-          .then(function (resp) {
-            if (!resp.ok) throw new Error('HTTP ' + resp.status + ' ' + resp.statusText);
-            return resp.json();
-          })
-          .then(renderAi)
-          .catch(function (err) {
-            aiError.hidden = false;
-            aiError.textContent = (err && err.message ? err.message : 'Failed to load AI writing status.') +
-              ' Requested ' + AI_STATUS_PATH + '.';
-            if (!lastAiPaint) aiHeartbeat.textContent = 'AI writing status unavailable.';
-          });
-      }
-
-      loadAi();
-      setInterval(loadAi, 60000);
-    })();
+  loadAll();
+  setInterval(tick, 1000);
+})();
   </script>
 </body>
 </html>
