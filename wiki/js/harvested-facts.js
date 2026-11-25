@@ -100,13 +100,14 @@
   function sourceBits(row, field) {
     if (!row) return '';
     var kind = row[field + 'SourceKind'] || row[field + 'Source'] || '';
-    var url = row[field + 'SourceUrl'] || '';
+    var url = safeUrl(row[field + 'SourceUrl'] || '');
     var locked = row[field + 'Locked'] === true;
-    var parts = [];
-    if (kind) parts.push(esc(kind));
-    if (safeUrl(url)) parts.push('<a href="' + esc(url) + '" rel="noopener noreferrer">' + esc(url) + '</a>');
-    if (locked) parts.push('locked');
-    return parts.length ? '<span class="hf-source">' + parts.join(' · ') + '</span>' : '';
+    var label = kind || 'source';
+    var html = '';
+    if (url) html = '<a class="hf-source" href="' + esc(url) + '" rel="noopener noreferrer">' + esc(label) + '</a>';
+    else if (kind) html = '<span class="hf-source">' + esc(kind) + '</span>';
+    if (locked) html += (html ? ' ' : '') + '<span class="hf-source">locked</span>';
+    return html;
   }
 
   function profileHtml(row) {

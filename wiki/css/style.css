@@ -1138,8 +1138,10 @@ body {
 .hf-card-title { margin: 0; font-size: 1.05rem; }
 .hf-card-title a { color: #1a4d8c; }
 .hf-place, .hf-id, .hf-profile-line, .hf-edit-note { margin: 0.25rem 0; }
+.hf-profile-line { overflow-wrap: anywhere; }
 .hf-id, .hf-source, .hf-edit-note { color: #6b7280; font-size: 0.8rem; }
-.hf-profile-line span { color: #1a4d8c; font-weight: 600; margin-right: 0.35rem; }
+.hf-profile-line > span:not(.hf-source) { color: #1a4d8c; font-weight: 600; margin-right: 0.35rem; }
+a.hf-source { margin-left: 0.35rem; color: #0f766e; }
 .hf-ticket { font-weight: 650; color: #1a4d8c; text-decoration: none; }
 .hf-extra-price { font-size: 0.85rem; color: #374151; }
 .hf-stats { margin: 0.5rem 0 1rem; }
