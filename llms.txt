@@ -63,4 +63,4 @@ When citing a resort count, name the file `ski_areas_analyzed.parquet`, the filt
 - [Coffee table book](https://globalskiatlas.com/coffee-table-book.html): Print atlas.
 - [Book pitch](https://globalskiatlas.com/bookpitch.html): Pitch page for the book.
 - [Privacy policy](https://globalskiatlas.com/privacy-policy.html): Privacy policy.
-- [Ski game](https://globalskiatlas.com/playable/): Playable demo. It is not a data source.
+- [Ski Map Game](https://globalskiatlas.com/playable/): Free GeoPeaks ski game—fly over real resort dioramas and ski mapped trails in the browser. Not a data source.

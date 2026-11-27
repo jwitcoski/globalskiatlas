@@ -81,4 +81,4 @@ Code: https://github.com/jwitcoski/globalskiatlas_data
 - FAQ: https://globalskiatlas.com/faq.html
 - Contact: https://globalskiatlas.com/contact.html
 - Sitemap: https://globalskiatlas.com/sitemap.xml
-- The playable demo at https://globalskiatlas.com/playable/ is a game, not a source for resort facts.
+- The Ski Map Game (GeoPeaks) at https://globalskiatlas.com/playable/ lets you fly over real resort dioramas and ski mapped trails in the browser. It is a game, not a source for resort facts.

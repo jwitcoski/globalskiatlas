@@ -40,15 +40,41 @@
       })(window, document, "script", "https://scripts.stay22.com/letmeallez.js");
     </script>
     <script src="./stay.js" defer></script>
-    <title>Ski Game – Global Ski Atlas</title>
-    <meta name="description" content="Pick a mapped ski resort, fly over its 3D diorama, then ski a trail in the browser." />
+    <title>Ski Map Game: Fly Over and Ski Real Resorts in 3D (Free) | Global Ski Atlas</title>
+    <meta name="description" content="Pick a real ski resort, fly over its 3D diorama, then ski its actual trails in your browser. Free, no download." />
     <link rel="shortcut icon" href="/assets/logo.webp?v=2" type="image/x-icon" />
     <link rel="canonical" href="https://globalskiatlas.com/playable/" />
-    <meta property="og:title" content="Ski Game – Global Ski Atlas" />
-    <meta property="og:description" content="Pick a mapped ski resort, fly over its 3D diorama, then ski a trail in the browser." />
+    <meta property="og:title" content="Ski Map Game: Fly Over and Ski Real Resorts in 3D (Free) | Global Ski Atlas" />
+    <meta property="og:description" content="Pick a real ski resort, fly over its 3D diorama, then ski its actual trails in your browser. Free, no download." />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://globalskiatlas.com/playable/" />
     <meta property="og:image" content="https://globalskiatlas.com/assets/og-banner.png" />
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "SoftwareApplication",
+          "@id": "https://globalskiatlas.com/playable/#app",
+          "name": "Ski Map Game",
+          "alternateName": ["GeoPeaks ski game", "GeoPeaks"],
+          "description": "Pick a real ski resort, fly over its 3D diorama, then ski its actual trails in your browser. Free, no download.",
+          "applicationCategory": "GameApplication",
+          "operatingSystem": "Web",
+          "isAccessibleForFree": true,
+          "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+          "url": "https://globalskiatlas.com/playable/"
+        },
+        {
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://globalskiatlas.com/" },
+            { "@type": "ListItem", "position": 2, "name": "Ski Map Game", "item": "https://globalskiatlas.com/playable/" }
+          ]
+        }
+      ]
+    }
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand+SC&family=Patrick+Hand&display=swap" rel="stylesheet" />
@@ -61,19 +87,27 @@
       .card { position: absolute; z-index: 2; background: var(--paper); border: 3px solid var(--ink); border-radius: 10px; box-shadow: 4px 4px 0 rgba(35, 48, 58, 0.35); }
       .card .tab { position: absolute; left: -3px; top: -16px; background: var(--tab); border: 3px solid var(--ink); border-radius: 8px; padding: 2px 12px; font: 22px "Patrick Hand SC", cursive; letter-spacing: 0.5px; }
       #head { top: 28px; left: 16px; width: min(340px, calc(100% - 32px)); padding: 22px 14px 12px; }
+      #head h1 { margin: 0 0 4px; font: 28px "Patrick Hand SC", cursive; line-height: 1.1; }
+      #head .intro { margin: 0 0 10px; font-size: 17px; line-height: 1.25; }
       #head p { margin: 0 0 8px; font-size: 18px; }
+      #wiki-links { margin: 0 0 10px; font-size: 15px; line-height: 1.45; }
+      #wiki-links a { color: #1a4d8c; }
       #search { width: 100%; padding: 6px 10px; border: 2px solid var(--ink); border-radius: 8px; font: 18px "Patrick Hand", cursive; background: #fff; }
       #list { margin: 8px 0 0; padding: 0; list-style: none; max-height: 40vh; overflow: auto; }
-      #list li button { display: block; width: 100%; text-align: left; border: 0; background: none; padding: 5px 6px; border-radius: 6px; font: 18px "Patrick Hand", cursive; color: var(--ink); cursor: pointer; }
+      #list li { display: flex; align-items: flex-start; gap: 4px; }
+      #list li button { display: block; flex: 1; text-align: left; border: 0; background: none; padding: 5px 6px; border-radius: 6px; font: 18px "Patrick Hand", cursive; color: var(--ink); cursor: pointer; }
       #list li button:hover, #list li button.on { background: #e8f1fb; }
+      #list li a.wiki { flex: 0 0 auto; margin-top: 6px; padding: 4px 6px; min-height: 44px; min-width: 44px; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; color: #1a4d8c; text-decoration: none; border-radius: 6px; }
+      #list li a.wiki:hover { background: #e8f1fb; text-decoration: underline; }
       #list small { display: block; opacity: 0.65; font-size: 15px; }
       #pick { left: 50%; bottom: 28px; transform: translateX(-50%); width: min(380px, calc(100% - 32px)); padding: 22px 16px 14px; display: none; }
       #pick.show { display: block; }
       #pick h2 { margin: 0; font: 26px "Patrick Hand SC", cursive; }
       #pick p { margin: 2px 0 8px; font-size: 18px; }
-      #pick .acts { display: flex; gap: 8px; }
-      #pick a { flex: 1; text-align: center; text-decoration: none; color: var(--ink); background: #fff; border: 3px solid var(--ink); border-radius: 8px; padding: 5px 8px; font: 20px "Patrick Hand SC", cursive; box-shadow: 2px 2px 0 rgba(35, 48, 58, 0.35); }
+      #pick .acts { display: flex; flex-wrap: wrap; gap: 8px; }
+      #pick a { flex: 1 1 40%; text-align: center; text-decoration: none; color: var(--ink); background: #fff; border: 3px solid var(--ink); border-radius: 8px; padding: 5px 8px; font: 20px "Patrick Hand SC", cursive; box-shadow: 2px 2px 0 rgba(35, 48, 58, 0.35); }
       #pick a.go { background: var(--accent); }
+      #pick a.wiki-missing { opacity: 0.45; pointer-events: none; }
       #pick a:hover { transform: translate(-1px, -1px); }
       .pin { width: 22px; height: 22px; border-radius: 50%; background: var(--accent); border: 3px solid var(--ink); box-shadow: 2px 2px 0 rgba(35, 48, 58, 0.4); cursor: pointer; }
       .pin.on { background: #d9534a; transform: scale(1.25); }
@@ -83,8 +117,18 @@
   <body>
     <div id="map"></div>
 
-    <section class="card" id="head" aria-label="Resorts">
+    <section class="card" id="head" aria-label="Ski Map Game">
       <div class="tab">Choose a mountain</div>
+      <h1>Ski Map Game</h1>
+      <p class="intro">Pick a real ski resort, fly over its 3D diorama, then ski its actual trails in your browser. Free, no download—this is Global Ski Atlas’s GeoPeaks ski game.</p>
+      <nav id="wiki-links" aria-label="Resort wiki pages">
+        <a href="/wiki/resort.html?page=montage-mountain-ski-area-pennsylvania">Montage Mountain</a> ·
+        <a href="/wiki/resort.html?page=kvitfjell-oppland">Kvitfjell</a> ·
+        <a href="/wiki/resort.html?page=pal-arinsal-la-massana">Pal-Arinsal</a> ·
+        <a href="/wiki/resort.html?page=perisher-new-south-wales">Perisher</a> ·
+        <a href="/wiki/resort.html?page=snow-king-mountain-wyoming">Snow King Mountain</a> ·
+        <a href="/wiki/resort.html?page=vogel-bohinj">Vogel</a>
+      </nav>
       <p id="count"></p>
       <input id="search" type="search" placeholder="Search resorts…" autocomplete="off" aria-label="Search resorts" />
       <ul id="list"></ul>
@@ -98,6 +142,7 @@
       <div class="acts">
         <a class="go" id="go-ride" href="#">Ride it ▸</a>
         <a id="go-dio" href="#">Diorama</a>
+        <a id="go-wiki" href="/wiki/browse.html">Wiki</a>
         <a id="go-stay" href="#" target="_blank" rel="noopener noreferrer sponsored">Hotels</a>
       </div>
     </section>
@@ -111,16 +156,63 @@
 
       const GP = params.get("data") || "https://globalskiatlas-backend-k8s-output.s3.us-east-1.amazonaws.com/game_play/";
 
+      function foldName(s) {
+        return String(s || "")
+          .normalize("NFD")
+          .replace(/\p{M}/gu, "")
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, " ")
+          .trim();
+      }
+
+      function wikiNameKeys(name) {
+        const k = foldName(name);
+        if (!k) return [];
+        const keys = [k];
+        // ponytail: strip common wiki suffixes only; do not strip "mountain …" or "Montage Mountain" collapses to "montage"
+        const stripped = k
+          .replace(/\b(ski area|ski resort|ski hill|mountain resort)\b/g, " ")
+          .replace(/\s+/g, " ")
+          .trim();
+        if (stripped && stripped !== k) keys.push(stripped);
+        return keys;
+      }
+
+      function buildWikiByName(pages) {
+        const byName = new Map();
+        for (const p of pages || []) {
+          if (p.pageType && p.pageType !== "resort") continue;
+          if (!p.pageId) continue;
+          for (const key of [...wikiNameKeys(p.title), ...wikiNameKeys(p.englishName)]) {
+            if (!byName.has(key)) byName.set(key, p);
+          }
+        }
+        return byName;
+      }
+
+      function wikiHrefFor(w, byName) {
+        const keys = wikiNameKeys(w?.name);
+        for (const k of keys) {
+          const hit = byName.get(k);
+          if (hit?.pageId) return `/wiki/resort.html?page=${encodeURIComponent(hit.pageId)}`;
+        }
+        return "";
+      }
+
       Promise.all([
         fetch("./data/worlds.json").then((r) => r.json()).catch(() => []),
         fetch(GP + "worlds.json").then((r) => r.json()).then((j) => j.resorts || []).catch(() => []),
-      ]).then(([local, remote]) => {
+        fetch("/api/wiki/index", { cache: "no-store" })
+          .then((r) => (r.ok ? r.json() : { pages: [] }))
+          .then((j) => (Array.isArray(j) ? j : j.pages || []))
+          .catch(() => []),
+      ]).then(([local, remote, wikiPages]) => {
         const byId = new Map();
         for (const w of [...remote, ...local.filter((w) => w.id === "hemu")]) byId.set(w.id, w);
-        init([...byId.values()]);
+        init([...byId.values()], buildWikiByName(wikiPages));
       });
 
-      function init(worlds) {
+      function init(worlds, wikiByName) {
         $("count").textContent = `${worlds.length.toLocaleString()} playable resort${worlds.length === 1 ? "" : "s"}`;
         const map = new maplibregl.Map({
           container: "map",
@@ -149,6 +241,11 @@
           $("pick-stats").textContent = `${w.runs} runs \u00b7 ${w.lifts} lifts \u00b7 ${w.min.toLocaleString()}\u2013${w.max.toLocaleString()} m`;
           $("go-ride").href = `./play.html?world=${encodeURIComponent(w.id)}`;
           $("go-dio").href = `./diorama.html?world=${encodeURIComponent(w.id)}`;
+          const wikiHref = wikiHrefFor(w, wikiByName);
+          const goWiki = $("go-wiki");
+          goWiki.href = wikiHref || "/wiki/browse.html";
+          goWiki.classList.toggle("wiki-missing", !wikiHref);
+          goWiki.setAttribute("aria-disabled", wikiHref ? "false" : "true");
           $("go-stay").href = playableStayHref(w, "playable-map");
           $("pick").classList.add("show");
           if (fly) map.flyTo({ center: [w.lon, w.lat], zoom: Math.max(map.getZoom(), 9), speed: 1.4 });
@@ -231,6 +328,16 @@
               b.append(s);
               b.addEventListener("click", () => select(w));
               li.append(b);
+              const wikiHref = wikiHrefFor(w, wikiByName);
+              if (wikiHref) {
+                const a = document.createElement("a");
+                a.className = "wiki";
+                a.href = wikiHref;
+                a.textContent = "Wiki";
+                a.title = `Wiki page for ${w.name}`;
+                a.setAttribute("aria-label", `Wiki page for ${w.name}`);
+                li.append(a);
+              }
               return li;
             })
           );
