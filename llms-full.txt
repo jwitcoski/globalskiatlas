@@ -52,7 +52,7 @@ Code: https://github.com/jwitcoski/globalskiatlas_data
 - Drive time — https://globalskiatlas.com/DriveTimeMap.html
 - Resort comparison — https://globalskiatlas.com/resort-comparison.html
 - Tier ranking — https://globalskiatlas.com/resort-tier-rank.html
-- Resort, trail, and lift facts — https://globalskiatlas.com/SkiResortFacts.html , https://globalskiatlas.com/SkiTrailFacts.html , https://globalskiatlas.com/SkiLiftFacts.html
+- Which country has the most ski resorts? — https://globalskiatlas.com/SkiResortFacts.html : Japan, 413 downhill rows in ski_areas_analyzed.parquet (resort_type=downhill ski resort) among 3,036 mapped resorts. Trail and lift records: https://globalskiatlas.com/SkiTrailFacts.html , https://globalskiatlas.com/SkiLiftFacts.html
 - Weather map — https://globalskiatlas.com/weather-map.html
 - Skiing AI — https://globalskiatlas.com/skiing-ai.html — assistant on the site. Still bound by the dataset above.
 
