@@ -58,6 +58,45 @@ jobs:
             --exclude "resort-jobs/status.json" \
             --exclude "ai-copy/status.json"
 
+      # CloudFront auto-compress skips application/geo+json; pre-gzip so browsers get Content-Encoding.
+      - name: Pre-compress JSON and GeoJSON for CloudFront
+        run: |
+          python3 <<'PY'
+          import gzip, os, subprocess, tempfile
+          root = "."
+          skip_dirs = {".git", ".github", "node_modules", "docs", "playable-old", "cloudfront-functions"}
+          uploaded = 0
+          for dirpath, dirnames, filenames in os.walk(root):
+              dirnames[:] = [d for d in dirnames if d not in skip_dirs and not d.startswith(".")]
+              for name in filenames:
+                  if not (name.endswith(".json") or name.endswith(".geojson")):
+                      continue
+                  path = os.path.join(dirpath, name)
+                  key = os.path.relpath(path, root).replace("\\", "/")
+                  if key in ("resort-jobs/status.json", "ai-copy/status.json"):
+                      continue
+                  raw = open(path, "rb").read()
+                  if len(raw) < 256:
+                      continue
+                  gz = gzip.compress(raw, compresslevel=9)
+                  ctype = "application/geo+json; charset=utf-8" if name.endswith(".geojson") else "application/json; charset=utf-8"
+                  with tempfile.NamedTemporaryFile(delete=False) as tmp:
+                      tmp.write(gz)
+                      tmp_path = tmp.name
+                  try:
+                      subprocess.check_call([
+                          "aws", "s3", "cp", tmp_path, f"s3://globalskiatlas.com/{key}",
+                          "--content-type", ctype,
+                          "--content-encoding", "gzip",
+                          "--cache-control", "public, max-age=86400",
+                      ])
+                      uploaded += 1
+                      print(f"gzip {key}: {len(raw)} -> {len(gz)}")
+                  finally:
+                      os.unlink(tmp_path)
+          print(f"pre-compressed {uploaded} json/geojson objects")
+          PY
+
       - name: Publish CloudFront directory-index function
         run: |
           ETAG=$(aws cloudfront describe-function --name redirect-to-canonical --stage DEVELOPMENT --query ETag --output text)

@@ -135,13 +135,23 @@ const OLYMPIC_HOSTS = [
   { name: "Cortina d'Ampezzo", lat: 46.5369, lon: 12.1356 }
 ];
 
+/** Mobile /mainmap: PMTiles dots only — no full ski_areas_analyzed.geojson. */
+export function isMobileMapLight(mql = globalThis.matchMedia) {
+  try {
+    return Boolean(mql?.("(max-width: 1024px), (pointer: coarse)")?.matches);
+  } catch {
+    return false;
+  }
+}
+
+const mobileMapLight = isMobileMapLight();
+
 const SKI_PMTILES_OPTIONS = {
   liftsWidth: 2,
   pistesWidth: 3,
-  includeAnalyzedPoints: false
+  // Desktop keeps custom tier icons from the GeoJSON catalog; mobile uses overview PMTiles points.
+  includeAnalyzedPoints: mobileMapLight
 };
-
-fetchSkiAreaCatalog().catch(() => {});
 
 async function addResortMarkerLayers(map, resortFeatures) {
   resortFeatures.forEach((f, i) => { if (f.id == null) f.id = i + 1; });
@@ -247,10 +257,16 @@ export async function initSkiResortMap(options = {}) {
   const skipOlympics = !!options.skipOlympics || !!region;
   const onPlayablePick = typeof options.onPlayablePick === 'function' ? options.onPlayablePick : null;
   const wantPlayableDotsOnly = !!options.playableDotsOnly;
-  const catalogP = fetchSkiAreaCatalog().catch((e) => {
-    console.warn('[ski-resort-map-ml] catalog load failed:', e);
-    return [];
-  });
+  const initialQ = new URLSearchParams(location.search).get('q');
+  // Mobile skips the multi-MB GeoJSON unless search deep-link needs it; focus loads later.
+  const catalogEager = !mobileMapLight || Boolean(initialQ);
+  let catalogLoaded = catalogEager;
+  const catalogP = catalogEager
+    ? fetchSkiAreaCatalog().catch((e) => {
+        console.warn('[ski-resort-map-ml] catalog load failed:', e);
+        return [];
+      })
+    : Promise.resolve([]);
   const playableP = options.playableResorts
     ? Promise.resolve(options.playableResorts)
     : fetchPlayableCatalog().catch((e) => {
@@ -579,9 +595,16 @@ export async function initSkiResortMap(options = {}) {
     else fitFeatures(map, resortFeatures);
   };
   const tDots = performance.now();
-  await addResortMarkerLayers(map, resortFeatures);
-  console.log('[ski-map] first dots', loadMs(tInit) + 'ms from init,', loadMs(tDots) + 'ms addLayer,', resortFeatures.length, 'features');
-  globalThis.__gsaMapLoad = Object.assign(globalThis.__gsaMapLoad || {}, { firstDotsFromInitMs: loadMs(tInit), addLayerMs: loadMs(tDots), features: resortFeatures.length });
+  if (!mobileMapLight) {
+    await addResortMarkerLayers(map, resortFeatures);
+  }
+  console.log('[ski-map] first dots', loadMs(tInit) + 'ms from init,', loadMs(tDots) + 'ms addLayer,', mobileMapLight ? 'pmtiles' : resortFeatures.length, 'features');
+  globalThis.__gsaMapLoad = Object.assign(globalThis.__gsaMapLoad || {}, {
+    firstDotsFromInitMs: loadMs(tInit),
+    addLayerMs: loadMs(tDots),
+    features: resortFeatures.length,
+    mobileMapLight
+  });
 
   function applyCirclePaint() {
     map._skiPlayableMode = playableMode;
@@ -606,8 +629,10 @@ export async function initSkiResortMap(options = {}) {
     const needRebuild = wantPlayableDotsOnly || !!onPlayablePick;
     if (needRebuild) {
       rebuildResortData();
-      applyCirclePaint();
-      addResortMarkerLayers(map, resortFeatures);
+      if (!mobileMapLight) {
+        applyCirclePaint();
+        addResortMarkerLayers(map, resortFeatures);
+      }
     } else {
       for (const r of searchResorts) {
         const wp = findWikiPage(r.properties);
@@ -843,19 +868,38 @@ export async function initSkiResortMap(options = {}) {
     });
   }
 
-  attachResortLayerEvents([
-    'ski-small-circles',
-    'ski-medium-circles',
-    'ski-large-circles',
-    'ski-mega-circles'
-  ]);
-
-  attachResortLayerEvents(['ski-icons-large', 'ski-icons-mega', 'ski-icons-medium', 'ski-icons-small']);
+  if (!mobileMapLight) {
+    attachResortLayerEvents([
+      'ski-small-circles',
+      'ski-medium-circles',
+      'ski-large-circles',
+      'ski-mega-circles'
+    ]);
+    attachResortLayerEvents(['ski-icons-large', 'ski-icons-mega', 'ski-icons-medium', 'ski-icons-small']);
+  } else {
+    const analyzedId = 'ski-areas-analyzed';
+    map.on('mouseenter', analyzedId, () => { map.getCanvas().style.cursor = 'pointer'; });
+    map.on('mouseleave', analyzedId, () => { map.getCanvas().style.cursor = ''; hideVtTip(); });
+    map.on('mousemove', analyzedId, (e) => {
+      if (!e.features?.length) return;
+      const properties = e.features[0].properties || {};
+      const name = getProp(properties, NAME_KEYS) || properties.name || 'Ski area';
+      showVtTip(e.point, `<strong>${escapeHtml(String(name))}</strong>`);
+    });
+    map.on('click', analyzedId, (e) => {
+      if (!e.features?.length) return;
+      const feat = e.features[0];
+      const properties = feat.properties || {};
+      const [featLng, featLat] = feat.geometry?.coordinates || [];
+      const at = Number.isFinite(featLng) ? { lng: featLng, lat: featLat } : e.lngLat;
+      showResortPopup(at, {}, { properties, latlng: at });
+    });
+  }
 
   async function restoreOverlays() {
     await restoreSkiPmtilesAfterStyleChange(map, SKI_PMTILES_OPTIONS);
     if (adminGeometry) addAdminRegionOverlay(map, adminGeometry);
-    await addResortMarkerLayers(map, resortFeatures);
+    if (!mobileMapLight) await addResortMarkerLayers(map, resortFeatures);
     applyTripHighlights();
     if (isCountryRegion && admin1Collection.features.length) {
       addAdmin1InteractiveLayer(map, admin1Collection);
@@ -873,10 +917,23 @@ export async function initSkiResortMap(options = {}) {
   const searchBox      = document.getElementById('searchBox');
   const searchInput    = document.getElementById('searchInput');
   const searchDropdown = document.getElementById('searchDropdown');
-  if (searchResorts.length && searchBox) searchBox.style.display = 'block';
+  if (searchBox) searchBox.style.display = 'block';
 
   const maxSuggestions = 8;
   let selectedIndex = -1, currentMatches = [];
+
+  async function ensureCatalogForSearch() {
+    if (catalogLoaded) return;
+    catalogLoaded = true;
+    try {
+      const loaded = await fetchSkiAreaCatalog();
+      rows.length = 0;
+      rows.push(...(loaded || []));
+      rebuildResortData();
+    } catch (e) {
+      console.warn('[ski-resort-map-ml] deferred catalog failed:', e);
+    }
+  }
 
   function renderDropdown(matches) {
     currentMatches = matches.slice(0, maxSuggestions);
@@ -923,14 +980,15 @@ export async function initSkiResortMap(options = {}) {
   const searchable = (r) => foldDiacritics(r.searchText || r.name).toLowerCase();
   const searchMatches = (q) => searchResorts.filter((r) => searchable(r).includes(q) && matchesPass(r.passes));
   if (searchInput) {
-    searchInput.addEventListener('input', () =>
-      renderDropdown(searchMatches(foldDiacritics(searchInput.value).toLowerCase().trim()).slice(0, maxSuggestions))
-    );
-    searchInput.addEventListener('focus', () => {
+    searchInput.addEventListener('input', async () => {
+      await ensureCatalogForSearch();
+      renderDropdown(searchMatches(foldDiacritics(searchInput.value).toLowerCase().trim()).slice(0, maxSuggestions));
+    });
+    searchInput.addEventListener('focus', async () => {
+      await ensureCatalogForSearch();
       const q = foldDiacritics(searchInput.value).toLowerCase().trim();
       renderDropdown(q ? searchMatches(q).slice(0, maxSuggestions) : []);
     });
-    const initialQ = new URLSearchParams(location.search).get('q');
     if (initialQ) {
       searchInput.value = initialQ;
       const needle = foldDiacritics(initialQ).toLowerCase().trim();

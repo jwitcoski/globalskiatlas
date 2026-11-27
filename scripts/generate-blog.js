@@ -75,7 +75,7 @@ function siteHeader(activeBlog) {
            tw-px-[5%] max-lg:tw-mr-auto max-lg:tw-px-4 lg:tw-justify-around"
   >
     <a class="tw-h-[50px] tw-w-[50px] tw-p-[4px]" href="../index.html" aria-label="Global Ski Atlas home">
-      <img src="../assets/logo.png?v=2" alt="Global Ski Atlas" class="tw-object tw-h-full tw-w-full" />
+      <img src="../assets/logo.webp?v=2" alt="Global Ski Atlas" class="tw-object tw-h-full tw-w-full" />
     </a>
     <div class="collapsible-header animated-collapse max-lg:tw-shadow-md" id="collapsed-header-items">
       <div
@@ -137,7 +137,7 @@ function siteFooter() {
            tw-bg-gray-50 tw-py-6 tw-px-[10%] tw-text-black max-md:tw-flex-col"
   >
     <div class="tw-flex tw-h-full tw-w-[250px] tw-flex-col tw-place-items-center tw-gap-6 max-md:tw-w-full">
-      <img src="../assets/logo.png?v=2" alt="Global Ski Atlas" class="tw-max-w-[120px]" />
+      <img src="../assets/logo.webp?v=2" alt="Global Ski Atlas" class="tw-max-w-[120px]" />
       <div>Global Ski Atlas</div>
       <div class="tw-mt-3 tw-text-lg tw-font-semibold">Follow us</div>
       <div class="tw-flex tw-gap-4 tw-text-2xl">
@@ -195,7 +195,7 @@ function headBlock({ title, description, canonical, type }) {
   <meta name="twitter:description" content="${escapeHtml(description)}" />
   <meta name="twitter:image" content="https://globalskiatlas.com/assets/og-banner.png" />
   <link rel="canonical" href="${escapeHtml(canonical)}" />
-  <link rel="shortcut icon" href="../assets/logo.png?v=2" type="image/x-icon" />
+  <link rel="shortcut icon" href="../assets/logo.webp?v=2" type="image/x-icon" />
   <link rel="stylesheet" href="../css/tailwind-build.css" />
   <link rel="stylesheet" href="../css/index.css" />
   <link rel="stylesheet" href="../css/blog.css" />
@@ -229,7 +229,7 @@ function generatePostHtml(post, bodyHtml, bySlug) {
     publisher: {
       '@type': 'Organization',
       name: 'Global Ski Atlas',
-      logo: { '@type': 'ImageObject', url: 'https://globalskiatlas.com/assets/logo.png' },
+      logo: { '@type': 'ImageObject', url: 'https://globalskiatlas.com/assets/logo.webp' },
     },
     mainEntityOfPage: { '@type': 'WebPage', '@id': canonical },
     image: 'https://globalskiatlas.com/assets/og-banner.png',

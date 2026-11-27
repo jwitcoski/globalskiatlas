@@ -1575,5 +1575,5 @@ export async function initHeroMontageMap(container, options = {}) {
   };
 }
 
-const mount = document.getElementById("hero-montage-stage");
-if (mount) initHeroMontageMap(mount);
+// Homepage boots via dynamic import in index.html (click / IntersectionObserver).
+// Wiki, blog, and compare call initHeroMontageMap() themselves.

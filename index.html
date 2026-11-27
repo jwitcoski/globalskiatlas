@@ -37,8 +37,8 @@
         <meta name="description" content="See the ski hill nearest you in 3D, then wander to the Alps, Japan, or a local day with the kids." />
         <link
             rel="shortcut icon"
-            href="./assets/logo.png?v=2"
-            type="image/x-icon"
+            href="./assets/logo.webp?v=3"
+            type="image/webp"
         />
 
         <!-- Open Graph -->
@@ -105,7 +105,7 @@
         >
             <a class="tw-h-[50px] tw-w-[50px] tw-p-[4px]" href="index.html" aria-label="Global Ski Atlas home">
                 <img
-                    src="./assets/logo.png?v=2"
+                    src="./assets/logo.webp?v=3"
                     alt="Global Ski Atlas"
                     class="tw-object tw-h-full tw-w-full"
                 />
@@ -217,11 +217,12 @@
                     >
                         <img
                             class="hero-poster"
-                            src="./assets/og-banner.png"
+                            src="./assets/hero-poster.webp"
                             alt="Montage Mountain on the Global Ski Atlas"
                             width="560"
                             height="420"
                             decoding="async"
+                            fetchpriority="high"
                         />
                         <div id="hero-montage-stage" class="hero-montage-stage"></div>
                         <div class="hero-montage-switcher" role="group" aria-label="Switch ski resort">
@@ -420,7 +421,7 @@
                         max-md:tw-w-full"
             >
                 <img
-                    src="./assets/logo.png?v=2"
+                    src="./assets/logo.webp?v=3"
                     alt="Global Ski Atlas"
                     srcset=""
                     class="tw-max-w-[120px]"
@@ -585,7 +586,41 @@
     </style>
 
     <script src="scripts/gsa-events.js"></script>
-    <script type="module" src="scripts/hero-montage-map.js?v=126"></script>
+    <script type="module">
+      // Defer Three.js until the hero is visible or the visitor taps it.
+      const embed = document.getElementById("hero-3d");
+      const mount = document.getElementById("hero-montage-stage");
+      if (embed && mount) {
+        let started = false;
+        async function startHero3d() {
+          if (started) return;
+          started = true;
+          const { initHeroMontageMap } = await import("./scripts/hero-montage-map.js?v=127");
+          initHeroMontageMap(mount);
+        }
+        embed.addEventListener(
+          "pointerdown",
+          (e) => {
+            if (e.target.closest("a, button, input, form, label")) return;
+            startHero3d();
+          },
+          { passive: true },
+        );
+        const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+        if (!reduceMotion && "IntersectionObserver" in window) {
+          const io = new IntersectionObserver(
+            (entries) => {
+              if (entries.some((en) => en.isIntersecting)) {
+                io.disconnect();
+                startHero3d();
+              }
+            },
+            { rootMargin: "80px", threshold: 0.15 },
+          );
+          io.observe(embed);
+        }
+      }
+    </script>
     <script type="module" src="scripts/home-search.js?v=3"></script>
     <script type="module">
         import { fetchSkiAreaCatalog, loadPmtilesLayerFeatures } from './scripts/pmtiles-core.js';
