@@ -1,10 +1,35 @@
 /** GA4 helpers for existing gtag (G-KJGNL3KJL0). No extra vendors. */
 (function () {
   var once = Object.create(null);
+  var MID = "G-KJGNL3KJL0";
+  var host = (location.hostname || "").toLowerCase();
+  var isLocal = host === "localhost" || host === "127.0.0.1";
+
+  if (isLocal) {
+    window["ga-disable-" + MID] = true;
+  }
+
+  function linkDomain(href) {
+    try {
+      return new URL(href, location.href).hostname.replace(/^www\./, "");
+    } catch (e) {
+      return "";
+    }
+  }
+
+  function resortParam() {
+    var el = document.getElementById("resort-title") || document.querySelector("[data-resort-name]");
+    if (el) {
+      var t = (el.getAttribute("data-resort-name") || el.textContent || "").trim();
+      if (t) return t;
+    }
+    var q = new URLSearchParams(location.search);
+    return q.get("resort") || q.get("q") || "";
+  }
 
   window.gsaEvent = function (name, params) {
-    if (typeof gtag !== "function") return;
-    gtag("event", name, Object.assign({ send_to: "G-KJGNL3KJL0" }, params || {}));
+    if (isLocal || typeof gtag !== "function") return;
+    gtag("event", name, Object.assign({ send_to: MID }, params || {}));
   };
 
   window.gsaEventOnce = function (name, params) {
@@ -25,6 +50,49 @@
 
   var path = (location.pathname || "").replace(/\/+$/, "") || "/";
   var onHome = path === "/" || /\/index\.html$/i.test(path);
+  var onDownloadPage = /DownloadData\.html$/i.test(location.pathname) || /\/DownloadData$/i.test(path);
+
+  function bindGlobal() {
+    document.addEventListener("click", function (e) {
+      var a = e.target.closest("a[href]");
+      if (!a) return;
+      var href = a.getAttribute("href") || "";
+      var domain = linkDomain(href);
+      if (domain === "stay22.com" || /\.stay22\.com$/i.test(domain)) {
+        var resort = resortParam();
+        if (resort === "Loading…") resort = "";
+        window.gsaEvent("stay22_click", {
+          link_domain: domain || "stay22.com",
+          link_url: href,
+          resort: resort,
+        });
+      }
+      if (onDownloadPage && a.closest(".download-card")) {
+        window.gsaEvent("data_download", {
+          link_domain: domain,
+          link_url: href,
+          file_name: (href.split("/").pop() || "").split("?")[0],
+        });
+      }
+    });
+
+    document.addEventListener("submit", function (e) {
+      var form = e.target;
+      if (!form || form.tagName !== "FORM") return;
+      if (form.classList.contains("newsletter-form") || form.querySelector("#newsletter-email")) {
+        window.gsaEvent("newsletter_signup", { form_id: form.id || "newsletter" });
+        window.gsaEvent("form_submit", { form_id: form.id || "newsletter", form_type: "newsletter" });
+        return;
+      }
+      if (/formspree\.io/i.test(form.getAttribute("action") || "")) {
+        window.gsaEvent("form_submit", { form_id: form.id || form.className || "formspree" });
+      }
+    });
+  }
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", bindGlobal);
+  else bindGlobal();
+
   if (!onHome) return;
 
   window.gsaEventOnce("homepage_view");

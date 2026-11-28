@@ -4,6 +4,11 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <!-- Google Analytics -->
+        <script>
+            if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+                window['ga-disable-G-KJGNL3KJL0'] = true;
+            }
+        </script>
         <script async src="https://www.googletagmanager.com/gtag/js?id=G-KJGNL3KJL0"></script>
         <script>
             window.dataLayer = window.dataLayer || [];
@@ -247,7 +252,7 @@
                             <a data-hero-play href="/playable/diorama.html?world=montage_mountain_pa" aria-label="Ski Montage Mountain in the 3D game">
                                 <span data-hero-play-label>Montage</span> <i class="bi bi-controller"></i>
                             </a>
-                            <a class="secondary" href="/wiki/browse.html" data-hero-open-mountain aria-label="Open this mountain">
+                            <a class="secondary" href="/wiki/resort.html?page=montage-mountain-ski-area-pennsylvania" data-hero-open-mountain data-mountain="Montage Mountain" aria-label="Open this mountain">
                                 Open the mountain <i class="bi bi-arrow-up-right"></i>
                             </a>
                         </div>
@@ -595,7 +600,7 @@
         async function startHero3d() {
           if (started) return;
           started = true;
-          const { initHeroMontageMap } = await import("./scripts/hero-montage-map.js?v=127");
+          const { initHeroMontageMap } = await import("./scripts/hero-montage-map.js?v=128");
           initHeroMontageMap(mount);
         }
         embed.addEventListener(
@@ -606,8 +611,9 @@
           },
           { passive: true },
         );
-        const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
-        if (!reduceMotion && "IntersectionObserver" in window) {
+        // Always resolve the mountain CTA (and WebGL when ready), including
+        // prefers-reduced-motion — orbit/auto-rotate already respects that flag.
+        if ("IntersectionObserver" in window) {
           const io = new IntersectionObserver(
             (entries) => {
               if (entries.some((en) => en.isIntersecting)) {
@@ -618,6 +624,8 @@
             { rootMargin: "80px", threshold: 0.15 },
           );
           io.observe(embed);
+        } else {
+          startHero3d();
         }
       }
     </script>

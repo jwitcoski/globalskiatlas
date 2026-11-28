@@ -649,6 +649,25 @@ function framingBoundsFromRoot(root, fallback) {
   return { center, radius, size };
 }
 
+/** Resolve clay resort → wiki page. Keeps a good fallback while the index loads. */
+export function wikiHrefForClayResort(resort, wikiIndexPages, fallbackHref = "/wiki/browse.html") {
+  const ws = String(resort?.winter_sports_id || "");
+  const name = resort?.display_name || resort?.short_name || "";
+  if (Array.isArray(wikiIndexPages)) {
+    if (ws) {
+      const hit = wikiIndexPages.find(
+        (p) => String(p.winterSportsId || p.winter_sports_id || "") === ws,
+      );
+      if (hit?.pageId) return `/wiki/resort.html?page=${encodeURIComponent(hit.pageId)}`;
+    }
+    if (name) return `/mainmap.html?q=${encodeURIComponent(name)}`;
+  }
+  const fb = String(fallbackHref || "");
+  if (fb.includes("resort.html") && /[?&]page=/.test(fb)) return fb;
+  if (name) return `/mainmap.html?q=${encodeURIComponent(name)}`;
+  return "/wiki/browse.html";
+}
+
 export async function initHeroMontageMap(container, options = {}) {
   if (!container) return null;
 
@@ -867,16 +886,6 @@ export async function initHeroMontageMap(container, options = {}) {
     return wikiIndexPromise;
   }
 
-  function wikiHrefForClay(resort) {
-    const ws = String(resort?.winter_sports_id || "");
-    if (ws && Array.isArray(wikiIndexPages)) {
-      const hit = wikiIndexPages.find(
-        (p) => String(p.winterSportsId || p.winter_sports_id || "") === ws,
-      );
-      if (hit?.pageId) return `/wiki/resort.html?page=${encodeURIComponent(hit.pageId)}`;
-    }
-    return "/wiki/browse.html";
-  }
   if (homepageHero) loadWikiIndex();
 
   function markHeroFallback(reason) {
@@ -1071,7 +1080,11 @@ export async function initHeroMontageMap(container, options = {}) {
       link.href = compareHref;
     }
     if (openLink && homepageHero) {
-      openLink.href = wikiHrefForClay(resort);
+      openLink.href = wikiHrefForClayResort(
+        resort,
+        wikiIndexPages,
+        openLink.getAttribute("href") || "/wiki/browse.html",
+      );
       openLink.setAttribute("data-mountain", resort.display_name || label);
     }
     if (posterEl) {

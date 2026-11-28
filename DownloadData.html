@@ -4,6 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Google Analytics -->
+  <script>
+    if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+      window['ga-disable-G-KJGNL3KJL0'] = true;
+    }
+  </script>
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-KJGNL3KJL0"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -499,5 +504,6 @@
     })();
   </script>
 <script src="scripts/site-nav.js?v=7" defer></script>
+  <script src="scripts/gsa-events.js"></script>
 </body>
 </html>
